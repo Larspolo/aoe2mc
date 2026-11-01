@@ -12,6 +12,8 @@ ROOT = os.path.dirname(SPECPATH)
 # an error only at run time, so the workflow converts a scenario and a record)
 DATAS = ([(os.path.join(ROOT, "tools", "mcdata", "26.3.json"), os.path.join("tools", "mcdata"))]
          + [(os.path.join(ROOT, "data", "*.jsonl"), "data")]   # units.py reads them (#1917)
+         + [(os.path.join(ROOT, "game", "data", f), os.path.join("game", "data"))   # aoe2mc.lang_files (#5345, #5482)
+            for f in ("texts.jsonl", "tutorial.jsonl", "challenges.jsonl")]
          + collect_data_files("AoE2ScenarioParser") + collect_data_files("mgz") + collect_data_files("aocref"))   # mgz reads aocref
 HIDDEN = collect_submodules("AoE2ScenarioParser") + collect_submodules("mgz") + ["aocref"]   # imported in functions, by name
 # game/abilities finds its modules with pkgutil (#4588): the analysis does not see them

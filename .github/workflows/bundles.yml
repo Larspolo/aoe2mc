@@ -119,6 +119,7 @@ jobs:
         run: |
           python tools/scenarios.py tiny tiny.aoe2scenario > /dev/null
           dist/aoe2mc/aoe2mc tiny.aoe2scenario out-tiny
+          dist/aoe2mc/aoe2mc --random-map arabia --seed 1 out-arabia   # the command of docs/PLAYTEST.md, section 2
           game="$GITHUB_WORKSPACE/dist/aoe2mc/aoe2mc-game"
           cd "$RUNNER_TEMP"                  # no source checkout next to it: the jar and the data of the bundle
           "$game" "$GITHUB_WORKSPACE/out-tiny" --bench 10

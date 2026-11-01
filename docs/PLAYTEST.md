@@ -4,19 +4,33 @@ Use this page to play a test game of aoe2mc and to report a bug. You do not need
 
 ## 1. Install
 
-1. Install Python 3.10 or newer, then get the repository and its packages:
+There are two paths: the installer of the release (no Python, no repository) or Python.
+
+1. Installer: download and start the installer of your system as README "Install", "Installer"
+   (https://github.com/Larspolo/aoe2mc#install) tells. It gives two commands: `aoe2mc` (the converter) and
+   `aoe2mc-game` (the game program). On Windows they are `aoe2mc.exe` and `aoe2mc-game.exe` in the install folder;
+   on macOS they are in `/Applications/aoe2mc.app/Contents/MacOS/`.
+
+   Python: install Python 3.10 or newer, then get the repository and its packages:
 
        git clone https://github.com/Larspolo/aoe2mc
        cd aoe2mc
        python3 -m pip install -r requirements.txt
 
-   The installers of the release also work (`README.md`, "Install"). Then use `aoe2mc-game` in place of
-   `python3 game/run.py`.
 2. Install Java 25 (for example Temurin 25 from adoptium.net). The game program builds a small server plugin, so
    it needs the JDK (with `javac`), not only the JRE.
 3. Install Minecraft Java Edition 26.3 in the Minecraft launcher.
 
 ## 2. Make a world
+
+With the installer:
+
+    aoe2mc --random-map arabia --seed 1 OUTWorld
+
+This command makes a random Arabia map with two players in the Minecraft world `OUTWorld`. The release also
+attaches example worlds: unzip one and use its folder in place of `OUTWorld`.
+
+With Python:
 
     python3 tools/scenarios.py owner_loop OUT.aoe2scenario
     python3 aoe2mc.py OUT.aoe2scenario OUTWorld
@@ -25,6 +39,12 @@ The first command makes a small test map with two players. The second command co
 world `OUTWorld`. You can also convert your own `.aoe2scenario` file.
 
 ## 3. Start and join
+
+With the installer:
+
+    aoe2mc-game OUTWorld --play --bot
+
+With Python:
 
 Start with the tutorial. It shows each step in the boss bar and the chat (select a villager, gather wood, build a
 house). After the last step, stop the game with Ctrl-C and start the bot game below. The installer path uses
