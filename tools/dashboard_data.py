@@ -3,7 +3,7 @@
     python3 tools/dashboard_data.py OUT_DIR
 
 Writes aoe2mc-merged-prs.json, aoe2mc-tickets.json, aoe2mc-epics.json, aoe2mc-roadmap.json, aoe2mc-release-bar.json,
-aoe2mc-usage.json, aoe2mc-tokens.json and aoe2mc-reviews.json, and copies aoe2mc-setup.json (written by hand: tools/dashboard_artifact/setup.json). The page
+aoe2mc-usage.json, aoe2mc-tokens.json, aoe2mc-spend.json and aoe2mc-reviews.json, and copies aoe2mc-setup.json (written by hand: tools/dashboard_artifact/setup.json). The page
 reads them as data files: `tools/dashboard_site.py` builds the GitHub Pages site with them (#982).
 
 With `DASHBOARD_CACHE` (a folder that `dashboard-site.yml` keeps with `actions/cache`), it reads only the issues and
@@ -23,7 +23,7 @@ import health  # noqa: E402
 DATASETS = {"merges": "aoe2mc-merged-prs.json", "tickets": "aoe2mc-tickets.json", "epics": "aoe2mc-epics.json",
             "roadmap": "aoe2mc-roadmap.json", "release_bar": "aoe2mc-release-bar.json", "usage": "aoe2mc-usage.json",
             "tokens": "aoe2mc-tokens.json", "reviews": "aoe2mc-reviews.json", "setup": "aoe2mc-setup.json",
-            "accounts": "aoe2mc-accounts.json"}
+            "accounts": "aoe2mc-accounts.json", "spend": "aoe2mc-spend.json"}
 ROWS = re.compile(r"\s*\.(filter|find|some|every|forEach|map|flatMap|sort)\(\s*\(?\s*(\w+)(?:\s*,\s*(\w+))?\s*\)?\s*=>")
 
 GOALS = {"1": "convert", "2": "play", "3": "replay", "4": "system"}
@@ -314,6 +314,65 @@ def insights(hours=168, comments=None):
                 days=activity(comments=comments))
 
 
+TICKET = re.compile(r"^Metrics: ticket #(\d+) · ([^·]*?) ·", re.M)
+COST = re.compile(r"· cost \$(\d+(?:\.\d+)?)")
+RUN_EQ = re.compile(r"^Run: .*?· eq ((?:\w+ \d+(?:\.\d+)?M(?:, )?)+)", re.M)
+
+
+def work_kind(number, size, process):
+    """The type of the work on one ticket: `improve` for a ticket with the label `process` (the improvement jobs of
+    the `improve` skill), else its size S, M or L, else `no size`."""
+    if number in process:
+        return "improve"
+    size = size.removeprefix("size:").strip()
+    return size if size in ("S", "M", "L") else "no size"
+
+
+def parts(c, body, eq):
+    """(phases, sinks) of one run report in M eq: the eq of each phase (the `Run:` line) and of each sink group (the
+    `Tokens:` line, top 5; the run record has the top 10). The phases scale to the eq of the Tokens: line. The part of
+    the eq that the listed sinks do not explain is `other`."""
+    tok = c.get("tokens") if isinstance(c.get("tokens"), dict) else {}
+    phases = {k: v / 1e6 for k, v in (tok.get("phases_eq") or {}).items()}
+    if not phases and (m := RUN_EQ.search(body)):
+        phases = {k: float(v) for k, v in re.findall(r"(\w+) (\d+(?:\.\d+)?)M", m[1])}
+    total = sum(phases.values())
+    phases = {k: eq * v / total for k, v in phases.items() if v} if total else {}
+    shares = tok.get("sinks") or {}
+    if not shares and (t := TOKEN_LINE.search(body)) and (m := SINKS.search(body[t.start():].split("\n", 1)[0])):
+        shares = {k.strip(): int(v) / 100 for k, v in SINK.findall(m[1])}
+    sinks = {k: eq * v for k, v in shares.items() if v}
+    if eq and sum(shares.values()) < 0.999:
+        sinks["other"] = eq * (1 - sum(shares.values()))
+    return phases, sinks
+
+
+def spend(hours=24 * 14, comments=None, process=()):
+    """The usage of each run over time (owner, 2026-11-01): one row per run report with a `Tokens:` line and per type
+    of its work (`work_kind`; a report with no ticket is a process `review` or `no ticket`), with its lane, M eq, cost
+    in $ and the split of the eq by phase and by sink (`parts`). A report with several tickets splits its numbers
+    evenly, as `insights` does: `runs` is the share of the run (1/tickets)."""
+    comments = health.status_comments(hours=hours) if comments is None else comments
+    process, rows = set(process), []
+    for c in comments:
+        body = c.get("body") or ""
+        t = TOKEN_LINE.search(body)
+        if not (t and c.get("created_at")):
+            continue
+        eq, cost = float(t[1]), COST.search(body)
+        lane = c.get("lane") or ((m := RUN_LANE.search(body)) and m[1]) or "opus"
+        work = [work_kind(int(n), s, process) for n, s in TICKET.findall(body)]
+        work = work or ["review" if REVIEW.match(body) else "no ticket"]
+        phases, sinks = parts(c, body, eq)
+        k = len(work)
+        for kind in work:
+            rows.append(dict(at=c["created_at"], lane=lane, kind=kind, runs=round(1 / k, 4), eq=round(eq / k, 4),
+                             cost=round(float(cost[1]) / k, 4) if cost else None,
+                             phases={p: round(v / k, 4) for p, v in phases.items()},
+                             sinks={s: round(v / k, 4) for s, v in sinks.items()}))
+    return sorted(rows, key=lambda r: r["at"])
+
+
 PHASE = re.compile(r"· phases ((?:\w+ \d+(?:\.\d+)?(?: · )?)+)")
 WORK = {"read": "read and triage", "claim": "read and triage", "code": "tickets", "verify": "tickets",
         "ci": "CI fixes", "conflict": "conflicts", "report": "reports"}
@@ -437,6 +496,8 @@ def main(out_dir):
         "aoe2mc-usage.json": usage(),
         "aoe2mc-tokens.json": tokens(),
         "aoe2mc-accounts.json": accounts(),
+        "aoe2mc-spend.json": spend(process=[i["number"] for i in issues
+                                            if "process" in {label["name"] for label in i["labels"]}]),
         "aoe2mc-reviews.json": reviews(merges),
         "aoe2mc-setup.json": json.load(open(os.path.join(root, "tools", "dashboard_artifact", "setup.json"))),
     }
