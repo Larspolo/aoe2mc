@@ -193,7 +193,7 @@
 {"name": "aoe2mc.cheat.sharing", "en_us": "Sharing is caring: your income goes to your allies"}
 {"name": "aoe2mc.cheat.wonders", "en_us": "You control nature: %s animals"}
 {"name": "aoe2mc.replay.now", "en_us": " now"}
-{"name": "aoe2mc.replay.team", "en_us": "Team %s \u00b7 "}
+{"name": "aoe2mc.replay.team", "en_us": "Team %s · "}
 {"name": "aoe2mc.replay_input.fight", "en_us": "Fight: "}
 {"name": "aoe2mc.train.active", "en_us": "%s is active."}
 {"name": "aoe2mc.train.rally", "en_us": "Right click the ground for the rally point."}
