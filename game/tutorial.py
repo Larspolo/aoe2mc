@@ -176,6 +176,9 @@ def tick(g):
     g.command("title @a subtitle " + json.dumps(lang.text("aoe2mc.tutorial.step_done", color="green")))
     g.command("title @a title " + json.dumps({"text": ""}))
     g.command("execute as @a at @s run playsound minecraft:entity.player.levelup master @s")
+    if tip := STEPS[n].get("tip"):                                     # after the step, not before (#5505)
+        g.command("tellraw @a " + json.dumps({"translate": f"aoe2mc.tutorial.tip_{STEPS[n]['name']}", "fallback": tip,
+                                              "color": "gray"}))
     g.tutorial_step = n = n + 1
     if n < len(STEPS):
         return show(g, n)
