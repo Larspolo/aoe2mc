@@ -434,6 +434,22 @@ def release_per_week(points):
     return ((pts[-1][2] - pts[0][2]) / used, pts[0][2], pts[-1][2]) if len(pts) > 1 and used else None
 
 
+RELEASE_MILESTONE = re.compile(r"v\d")
+
+
+def milestone_per_week(issues, points):
+    """(closed issues per 1 % of 7-day quota, closed issues, quota %, milestone titles) or None (#5552): the issues of a
+    release milestone ("v0.1.0") that closed as done between the first and the last point of weekly(). The release bar
+    stays at its level while the runs work only on the release focus, so this counts the work of the focus."""
+    if len(points) < 2:
+        return None
+    used = sum(b[1] - a[1] for a, b in zip(points, points[1:]) if b[1] > a[1])
+    done = [i for i in issues if "pull_request" not in i and i.get("closed_at") and i.get("state_reason") != "not_planned"
+            and RELEASE_MILESTONE.match((i.get("milestone") or {}).get("title") or "")
+            and points[0][0] <= ts(i["closed_at"]) <= points[-1][0]]
+    return (len(done) / used, len(done), used, sorted({i["milestone"]["title"] for i in done})) if used else None
+
+
 def weak_spots(issues, events, prs, runs, since):
     """Counts that cost quality: issues that the owner reopened, bug tickets that name a PR merged since `since` and
     before the bug (rework: a PR that merged later is a blocked PR, not the cause, #5461), bug tickets that name a
@@ -793,9 +809,13 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     weights, source, errors, pairs = lane_fit(status_comments)
     out.append(f"Lane weights (a lane run in Opus runs, #1727; {pairs} pairs, ± standard error, #2852): " + ", ".join(
         f"{k} {w:.2f}{f' ± {errors[k]:.2f}' if k in errors else ''} ({source[k]})" for k, w in weights.items()))
-    rw = release_per_week([p for p in weekly(status_comments) if p[0] >= since])
+    week = [p for p in weekly(status_comments) if p[0] >= since]
+    rw = release_per_week(week)
     out.append("Release per 1 % of 7-day quota: " + ("-" if rw is None else
                f"{rw[0]:.2f} points ({rw[1]:g} % to {rw[2]:g} %)"))
+    mw = milestone_per_week(issues, week)
+    out.append("Release milestone per 1 % of 7-day quota (#5552): " + ("-" if mw is None else
+               f"{mw[0]:.2f} closed issues ({mw[1]} closed in {', '.join(mw[3]) or '-'}, {mw[2]:g} % used)"))
     w = weak_spots(issues, issue_events, prs, runs, since)
     out.append("Weak spots: " + ", ".join(f"{k} {v}" for k, v in w.items()))
     lr = lane_rework(issues, prs, status_comments, since)
