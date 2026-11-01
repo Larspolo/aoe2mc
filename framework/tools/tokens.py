@@ -282,7 +282,7 @@ def phases(records):
         keys.append(ticket if ticket is not None else first)
         out.setdefault(keys[-1], dict.fromkeys(PHASES, 0.0))
     for i, (t, ph, _, res) in enumerate(calls):
-        end = calls[i + 1][0] if i + 1 < len(calls) else t
+        end = calls[i + 1][0] if i + 1 < len(calls) else max(t, res or t)   # the last call: up to its result
         cut = min(max(res, t), end) if res is not None else end
         out[keys[i]][ph] += (cut - t) / 60
         if cut < end:                                 # the model thinks and writes the next call
