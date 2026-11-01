@@ -184,6 +184,8 @@ NOT_SAVED = (                                                          # the fie
     "bastion_time",                                                    # regen.buildings: a tick timer
     "book_at",                                                         # scenario.py: the next check time (the world keeps the tags)
     "bots",                                                            # run.play makes the bots again
+    "camera_hinted",                                                   # camera.click: the hint about the view comes once again
+    "camera_speeds",                                                   # camera.click: a join ends the mode (Camera.java), the speed starts at START
     "capture",                                                         # herd.py: a tick timer
     "census",                                                          # train.py: a tick timer
     "challenge",                                                       # run.py: from the saved settings (#3900)
