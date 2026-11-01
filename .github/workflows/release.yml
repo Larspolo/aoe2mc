@@ -36,12 +36,20 @@ jobs:
           R: ${{ github.repository }}
         run: |
           have=$(gh api --paginate "repos/$R/milestones?state=all&per_page=100" --jq '.[].title')
-          for t in $(gh api --paginate "repos/$R/issues?state=open&labels=release&per_page=100" \
-                       --jq '.[] | select(.pull_request | not) | .title' | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+'); do
+          gh api --paginate "repos/$R/issues?state=open&labels=release&per_page=100" \
+                       --jq '.[] | select(.pull_request | not) | "\(.number) \(.title)"' | while read -r e title; do
+            t=$(grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' <<< "$title" | head -1)
+            [ -z "$t" ] && continue
             if ! grep -qx "$t" <<< "$have"; then
               gh api "repos/$R/milestones" -f title="$t" -f description="The scope of the release epic \"Release $t\" (steering/project/RELEASE.md, \"Release cycle\")." > /dev/null
               echo "made the milestone $t"
             fi
+            # the sub-issues with no milestone get the milestone of the epic, so that the release waits for them (#5527)
+            msn=$(gh api --paginate "repos/$R/milestones?state=all&per_page=100" --jq ".[] | select(.title == \"$t\") | .number")
+            [ -z "$msn" ] && continue
+            gh api --paginate "repos/$R/issues/$e/sub_issues?per_page=100" --jq '.[] | select(.milestone == null) | .number' | while read -r s; do
+              gh api -X PATCH "repos/$R/issues/$s" -F milestone="$msn" > /dev/null && echo "milestone $t for #$s (sub-issue of #$e)"
+            done
           done
       - name: Tag the closed release epics
         env:
