@@ -296,6 +296,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe box-corner <player>                    the block X Z of the last far corner of the border (#3082, a check)
  *   aoego <x> <z>                              (no permission) the player goes to a view of an alert place of the
  *                                              own team (#1816, Alerts.go): the click of an attack alert line
+ *   controls                                   (no permission) set the trigger score aoe_controls of the player to 1:
+ *                                              game/controls.py sends the controls to its chat (#5501)
  * Converted units have no AI (NoAI): an order turns it on. Such a unit finds no path before its first AI tick
  * (it is not "on the ground" yet), and vanilla goals (a random stroll) can take the navigation of a walking unit:
  * so the order sends the path again every 2 ticks (#437: 10 ticks made each walk 0.5 s longer), until the unit
@@ -3101,6 +3103,13 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (command.getName().equals("aoego")) {                       // a click on an attack alert (#1816)
             return alerts.go(sender, args);
+        }
+        if (command.getName().equals("controls")) {                    // the controls in the chat (#5501, game/controls.py)
+            Objective o = getServer().getScoreboardManager().getMainScoreboard().getObjective("aoe_controls");
+            if (sender instanceof Player p && o != null) {
+                o.getScore(p.getName()).setScore(1);
+            }
+            return true;
         }
         if (args.length >= 2 && args[0].startsWith("ghost")) {          // the ghost of a building (#794)
             return ghost.command(sender, args, players(sender, args[1]));
