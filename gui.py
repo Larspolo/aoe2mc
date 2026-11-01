@@ -43,6 +43,10 @@ CACHED = (("*", "bin", "java"), ("*", "Contents", "Home", "bin", "java"), ("*", 
 JAVA = {"26.3": 25}                                    # Java of each Minecraft version (mc_check reads the version JSON)
 JDK_INSTALL = {"Linux": "sudo apt-get install openjdk-{n}-jdk-headless", "Darwin": "brew install openjdk@{n}",
                "Windows": "Install the JDK {n} from https://adoptium.net/temurin/releases/?version={n}"}
+SHOWN = {f for _, f in VALUES + FLAGS} | {"--at", "--random-map", "--help"}   # the fields of the tab "Convert"
+# The look (#5170): AoE2 parchment and wood on Minecraft stone and grass
+THEME = {"bg": "#3b3b3b", "panel": "#e8d9b0", "wood": "#7a5230", "text": "#2b1d0e", "light": "#f5ecd2",
+         "grass": "#5d9b3a", "font": ("Georgia", 10), "title": ("Georgia", 16, "bold")}
 REPLAY_VALUES = (("speed", "--speed"), ("start", "--from"), ("follow", "--follow"), ("view", "--view"))
 
 
@@ -59,7 +63,32 @@ def argv(o):
     at = str(o.get("at") or "").strip()
     if at and not kind and str(o["input"]).lower().endswith(RECORDS):
         a += ["--at", at]
+    for flag, value in (o.get("extra") or {}).items():         # the tab "All options" (options())
+        if value is True:
+            a.append(flag)
+        elif value not in (None, False) and str(value).strip():
+            a += [flag, str(value).strip()]
     return a + shlex.split(o.get("more") or "")
+
+
+def options(ap=None):
+    """Each option of the command line (aoe2mc.parser) that the tab "Convert" does not show, as (flag, kind, choices,
+    default, help): kind "flag" (a check box), "choice" (a list) or "text". The window gets all options of the command
+    line without a second list to keep (#5170)."""
+    if ap is None:
+        import aoe2mc
+        ap = aoe2mc.parser()
+    out = []
+    for a in ap._actions:
+        flag = next((s for s in a.option_strings if s.startswith("--")), None)
+        if not flag or flag in SHOWN:
+            continue
+        if a.nargs == 0:
+            kind, default = ("flag", None)
+        else:
+            kind, default = ("choice" if a.choices else "text"), (None if a.default in (None, []) else a.default)
+        out.append((flag, kind, tuple(a.choices or ()), default, (a.help or "").replace("%%", "%")))
+    return out
 
 
 def saves_folder(system=None, env=None):
@@ -240,6 +269,53 @@ def stop_game(p, wait=30, line=os.name == "nt"):
         return p.wait()
 
 
+def style(root, ttk):
+    """The look of the window (THEME, #5170): parchment panels in a stone frame, wood buttons, grass for the
+    selected tab. The "clam" theme takes these colors on each system."""
+    t = THEME
+    root.configure(background=t["bg"])
+    s = ttk.Style(root)
+    s.theme_use("clam")
+    s.configure(".", background=t["panel"], foreground=t["text"], font=t["font"], fieldbackground=t["light"])
+    s.configure("Title.TLabel", background=t["bg"], foreground=t["light"], font=t["title"], padding=6)
+    s.configure("TButton", background=t["wood"], foreground=t["light"], padding=(10, 4))
+    s.map("TButton", background=[("disabled", "#9a8a70"), ("active", "#93673f")])
+    s.configure("TNotebook", background=t["bg"])
+    s.configure("TNotebook.Tab", background=t["wood"], foreground=t["light"], padding=(12, 4))
+    s.map("TNotebook.Tab", background=[("selected", t["grass"])])
+    return s
+
+
+def all_options(h, tk, ttk):
+    """The tab "All options": one field for each option of options() in a scrolled list, the help as its tool line.
+    Returns {flag: variable}; an empty field or a clear box keeps the default of the converter."""
+    canvas = tk.Canvas(h, highlightthickness=0, background=THEME["panel"], height=320)
+    bar = ttk.Scrollbar(h, orient="vertical", command=canvas.yview)
+    inner = ttk.Frame(canvas)
+    inner.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+    canvas.create_window((0, 0), window=inner, anchor="nw")
+    canvas.configure(yscrollcommand=bar.set)
+    canvas.grid(row=0, column=0, sticky="nsew")
+    bar.grid(row=0, column=1, sticky="ns")
+    h.columnconfigure(0, weight=1)
+    h.rowconfigure(0, weight=1)
+    out = {}
+    for r, (flag, kind, choices, default, text) in enumerate(options()):
+        ttk.Label(inner, text=flag).grid(row=r, column=0, sticky="nw", pady=2)
+        if kind == "flag":
+            out[flag] = tk.BooleanVar()
+            ttk.Checkbutton(inner, variable=out[flag]).grid(row=r, column=1, sticky="nw", padx=4)
+        else:
+            out[flag] = tk.StringVar()
+            values = ("",) + tuple(map(str, choices))
+            e = (ttk.Combobox(inner, textvariable=out[flag], values=values, state="readonly", width=18) if choices
+                 else ttk.Entry(inner, textvariable=out[flag], width=20))
+            e.grid(row=r, column=1, sticky="nw", padx=4)
+        note = text + (f" (default {default})" if default is not None and "default" not in text else "")
+        ttk.Label(inner, text=note, wraplength=420).grid(row=r, column=2, sticky="nw", pady=2)
+    return out
+
+
 def window():
     """The converter window (not yet in its main loop)."""
     import tkinter as tk
@@ -248,16 +324,20 @@ def window():
     import buildings
     root = tk.Tk()
     root.title("aoe2mc: AoE2 to Minecraft")
+    style(root, ttk)
+    ttk.Label(root, text="Age of Empires II  \u2192  Minecraft", style="Title.TLabel", anchor="center").grid(
+        row=0, column=0, sticky="ew")
     top = ttk.Frame(root, padding=8)
-    top.grid(sticky="nsew")
+    top.grid(row=1, column=0, sticky="nsew")
     root.columnconfigure(0, weight=1)
-    root.rowconfigure(0, weight=1)
+    root.rowconfigure(1, weight=1)
     top.columnconfigure(0, weight=1)
     tabs = ttk.Notebook(top)
     tabs.grid(row=0, column=0, sticky="ew")
-    f, g = ttk.Frame(tabs, padding=4), ttk.Frame(tabs, padding=4)
+    f, g, h = ttk.Frame(tabs, padding=4), ttk.Frame(tabs, padding=4), ttk.Frame(tabs, padding=4)
     tabs.add(f, text="Convert")
     tabs.add(g, text="Play")
+    tabs.add(h, text="All options")
     f.columnconfigure(1, weight=1)
     g.columnconfigure(1, weight=1)
     v = {k: tk.StringVar() for k in ("input", "output", "name", "tile_size", "level_height", "architecture", "seed",
@@ -363,6 +443,7 @@ def window():
     log = scrolledtext.ScrolledText(top, height=14, width=80, state="disabled")
     log.grid(row=1, column=0, sticky="nsew", pady=(6, 0))
     top.rowconfigure(1, weight=1)
+    extra = all_options(h, tk, ttk)
     line = ttk.Frame(top)
     line.grid(row=2, column=0, sticky="ew", pady=(4, 0))
     line.columnconfigure(1, weight=1)
@@ -373,7 +454,7 @@ def window():
     game = []                                                      # the running game program, or empty
 
     def start():
-        o = {k: x.get() for k, x in v.items()}
+        o = {k: x.get() for k, x in v.items()} | {"extra": {k: x.get() for k, x in extra.items()}}
         if not (o["input"] or o["random_map"]) or not o["output"]:
             messagebox.showerror("aoe2mc", "Select the input file (or a random map) and the world folder.")
             return

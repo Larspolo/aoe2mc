@@ -6794,7 +6794,8 @@ def map_size(text):
     raise argparse.ArgumentTypeError(f"{text!r}: use one of {', '.join(sorted(sizes))} or a number of tiles (40 to 1000)")
 
 
-def main(argv=None):
+def parser():
+    """The argument parser of the command line (main; the window reads its options, gui.options, #5170)."""
     ap = argparse.ArgumentParser(description="Convert an AoE2 DE scenario to a Minecraft Java world.")
     ap.add_argument("scenario", nargs="?", help=".aoe2scenario file, .aoe2record, .mgz, .mgx or .mgl (the start state of a recorded game), "
                     ".aoe2spgame or .aoe2mpgame (the state of a saved game of DE), .scx "
@@ -6883,6 +6884,12 @@ def main(argv=None):
                     help="recorded game: download the record of match GAME of player PROFILE (tools/record_api.py) "
                     "into out/records/ and convert it; give only the output (#4484)")
     ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
+    return ap
+
+
+def main(argv=None):
+    import rmap
+    ap = parser()
     a = ap.parse_args(argv)
     if a.match:
         if a.output is not None:
