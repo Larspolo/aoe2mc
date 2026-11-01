@@ -240,8 +240,8 @@ class Driver:
                 return
             if self.step() <= self.at(row["name"]):
                 do()
-            if time.time() > self.end or g.ended:
-                return
+            if (time.time() > self.end or g.ended) and self.step() < len(tutorial.STEPS):
+                return                                                 # the last step ends the game: the end shot
         t = time.time() + 10
         while self.step() < len(tutorial.STEPS) and time.time() < t:
             time.sleep(0.2)
