@@ -61,7 +61,7 @@ jobs:
           # An agent branch, or any branch with the label automerge (the owner's opt-in, #3383).
           AGENT='(.head.ref | test("^(agent/|claude/|ccr-)")) or ([.labels[].name] | index("automerge") != null)'
           # The check runs of the PR's own CI decide, not a `full` dispatch on the head (its job `slow` ran): the slow
-          # and Minecraft tests do not gate a PR, and the red jobs of a dispatch on a `hold` PR kept #5410 out of each
+          # and server tests do not gate a PR, and the red jobs of a dispatch on a `hold` PR kept #5410 out of each
           # sweep for 5 hours (#5462, as `pacer.pr_checks`).
           GREEN='[.[] | select(.name == "slow" and .conclusion != "skipped") | .check_suite.id] as $full
             | [.[] | select(.check_suite.id as $s | $full | index($s) | not)]

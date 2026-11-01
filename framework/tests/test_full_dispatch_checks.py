@@ -1,4 +1,4 @@
-"""A `full` CI dispatch on the head of a PR does not gate the PR (#5462): its red slow or Minecraft jobs kept #5410 out
+"""A `full` CI dispatch on the head of a PR does not gate the PR (#5462): its red slow or server jobs kept #5410 out
 of each Automerge sweep for 5 hours and gave its ticket #5400 2 takeovers. The PR's own CI decides, in the sweep of
 `automerge.yml` (GREEN) and in `pacer.ci_wait` (the stuck tickets)."""
 import json

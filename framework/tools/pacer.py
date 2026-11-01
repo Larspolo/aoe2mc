@@ -198,7 +198,7 @@ FAILED = ("action_required", "cancelled", "failure", "startup_failure", "timed_o
 
 def pr_checks(checks):
     """The check runs of the PR's own CI: without the runs of a `full` CI dispatch (its job `slow` ran, #5462). The
-    slow and Minecraft tests do not gate a PR (they run each night on main), but the red jobs of a dispatch on the head
+    slow and server tests do not gate a PR (they run each night on main), but the red jobs of a dispatch on the head
     of a `hold` PR kept #5410 out of each Automerge sweep for 5 hours and gave its ticket 2 takeovers."""
     full = {c.get("check_suite", {}).get("id") for c in checks if c.get("name") == "slow" and c.get("conclusion") != "skipped"}
     return [c for c in checks if c.get("check_suite", {}).get("id") not in full]
