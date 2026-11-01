@@ -830,7 +830,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     g.tutorial = settings["tutorial"]                            # tutorial.tick (#5161)
     g.unlock_speed = settings["unlock_speed"]                    # the Game menu of player 1 (diplomacy.faster, #2933)
     if people > 1 or getattr(game, "seats", ()):     # one Gather for each person, in the join order (#1308, #1310, #5451)
-        g.bots = [Side(make(n)) for n in range(2, players + 1)]
+        g.bots = [Side(make(n)) for n in range(2, players + 1) if n in getattr(game, "seats", ()) or not getattr(game, "seats", ())]
         for s in g.bots:                             # the same trees, bushes and mines, as with a bot
             s.g.map.trees, s.g.map.bushes, s.g.map.mines = g.map.trees, g.map.bushes, g.map.mines
             s.g.relics = g.relics                    # one list: each relic exists once (#3116)
@@ -851,6 +851,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         seats = scenario.bot_seats(data["players"], players)
     else:
         seats = bot_seats(data["players"], players, bot) if bot else []
+        if bot == "all" and 1 not in getattr(game, "seats", (1,)):   # --takeover P > 1: also the players below P (#5476)
+            seats = [(p, bot_foe(data["players"], p)) for p in sorted(int(p) for p in data["players"] if int(p) > 0)
+                     if p not in game.seats]
     for k, (player, foe) in enumerate(seats):        # after the people, next to their Sides (#1794)
         import bot as bots
         level = bots.level_of(settings["ai_difficulty"], k)   # one level for each bot in seat order (#4020)
@@ -866,7 +869,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         g.bots = [*g.bots, bots.Bot(game, data, player=player, share=g, log=log, foe=foe,
                                     attack=math.inf if attack == "never" else replay.aoe2mc.game_time(attack) / 1000,
                                     resources=settings["resources"], pop_limit=settings["pop_limit"],
-                                    difficulty=level, script=script).setup()]
+                                    difficulty=level, script=script, own=g if player == 1 else None).setup()]
         at = math.inf if attack == "never" else \
             replay.aoe2mc.game_time(attack) / 1000 * bots.LEVELS[level]["attack"]
         print(f"A bot ({level}) plays player {player}: {len(g.bots[-1].g.villagers)} villagers "
