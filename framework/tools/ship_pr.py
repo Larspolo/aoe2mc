@@ -190,7 +190,7 @@ def main(argv=None):
         if pr is None:
             print(f"no open PR of {head}" + ("" if a.pr_branch else ": a takeover gives --pr-branch B"))
             return 4
-        return ci(a.number, pr["head"]["sha"], deadline, pr["number"])
+        return ci(a.number, pr["head"]["sha"], deadline, pr.get("number"))
     if a.message:
         c = git("commit", "-q", "-F", a.message)
         if c.returncode:
