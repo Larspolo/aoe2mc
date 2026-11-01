@@ -17,7 +17,8 @@ def test_the_tiers_show_once_and_change_with_a_research():
     r = replay.Replay(Fake(), data([]))
     r.learn({"player": 1, "technology": "Forging", "time": 1000})
     first = r.upgrade_view(2000)
-    assert len(first) == 1 and first[0].startswith(f"item replace entity @a hotbar.{replay.STAT_BOOKS['Upgrades']} ")
+    assert first[0].startswith(f"item replace entity @a hotbar.{replay.STAT_BOOKS['Upgrades']} ")
+    assert all(c.startswith("item modify") for c in first[1:])         # longer translate lines (#5432, slot_book)
     assert page(first, 0)[:len(replay.SMITH)] == tiers(1) and page(first, 1)[:len(replay.SMITH)] == tiers(0)
     assert r.upgrade_view(3000) == []                                   # no new research: no command
     r.learn({"player": 1, "technology": "Iron Casting", "time": 4000})

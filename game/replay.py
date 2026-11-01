@@ -807,9 +807,9 @@ class Replay:
                         return None                                 # the black area of the view hides it (#5370)
                     who, color = self.player(p)
                     hp = combat.stats(n).hp
-                    parts = [text(f"{pretty(n)} ("), text(who, color), text(f"): {hp}/{hp}")]
+                    parts = [say("building_hp", lang.name(n), text(who, color), hp, hp)]   # translate texts (#5432)
                     if inside := len(self.garrisons.get((x0, x1, z0, z1), ())):
-                        parts.append(text(f" · garrison {inside}"))
+                        parts.append(say("building_garrison", inside))
                     if ref is not None and ref in self.panels:
                         parts.append(text(f" · {self.panels[ref]}"))
                     return json.dumps(parts)
@@ -963,11 +963,11 @@ class Replay:
         and the last value. Commands only when a value changed: the samples change once per minute."""
         stats = {p: ss[-GRAPH_MINUTES:] for p, ss in self.stats(t).items() if ss}
         lines = {p: [] for p in stats}
-        for i, name in enumerate(("Pop", "Vil", "Mil", "Res"), 1):
+        for i, name in enumerate(("pop", "vil", "mil", "res"), 1):
             top = max((s[i] for ss in stats.values() for s in ss), default=0) or 1
             for p in stats:
                 bars = "".join(GRAPH_BARS[round(s[i] / top * (len(GRAPH_BARS) - 1))] for s in stats[p])
-                lines[p].append(f"{name} {bars} {stats[p][-1][i]}")
+                lines[p].append(say(f"graph_{name}", bars, stats[p][-1][i]))   # translate texts (#5432)
         return self.stat_book("Graphs", lines)
 
     def army_view(self, t):
@@ -981,12 +981,12 @@ class Replay:
                 training[e["player"]][e["name"]] += 1
         lines = {}
         for p in (int(q) for q in self.data["players"] if q != "0"):
-            lines[p] = [f"Army: {counts_text(self.troops.get(p, {})) or '-'}"]
+            lines[p] = [say("army", counts_text(self.troops.get(p, {})) or "-")]       # translate texts (#5432)
             if training.get(p):
-                lines[p].append(f"Training: {counts_text(training[p])}")
+                lines[p].append(say("training", counts_text(training[p])))
             if lost := sum(self.fallen.get(p, {}).values()):
-                lines[p].append(f"Lost: {lost}")
-            lines[p] += ["", "Build order:"] + ([f"{mmss(s)} {label}" for s, label in self.build_order(p, t)[-4:]] or ["-"])
+                lines[p].append(say("lost", lost))
+            lines[p] += ["", say("build_order")] + ([f"{mmss(s)} {label}" for s, label in self.build_order(p, t)[-4:]] or ["-"])
         return self.stat_book("Army", lines)
 
     def upgrade_view(self, t):
@@ -998,10 +998,12 @@ class Replay:
             return []
         lines = {}
         for p in players:
-            lines[p] = [f"{line} {sum(n in done[p] for n in chain)}/{len(chain)}" for line, chain in SMITH + ECO_LINES]
-            uni = [TECH_ROW[n]["label"] for n in done[p] if TECH_ROW.get(n, {}).get("building") == "UNIVERSITY"]
+            lines[p] = [say("tier_" + line.lower().replace(" ", "_"), sum(n in done[p] for n in chain), len(chain))
+                        for line, chain in SMITH + ECO_LINES]                   # translate texts (#5432)
+            uni = [lang.name(n, "tech", TECH_ROW[n]["label"]) for n in done[p]
+                   if TECH_ROW.get(n, {}).get("building") == "UNIVERSITY"]
             if uni:
-                lines[p] += ["University:"] + uni[:UNI_SHOWN] + ([f"+{len(uni) - UNI_SHOWN}"] if len(uni) > UNI_SHOWN else [])
+                lines[p] += [say("university")] + uni[:UNI_SHOWN] + ([f"+{len(uni) - UNI_SHOWN}"] if len(uni) > UNI_SHOWN else [])
         return self.stat_book("Upgrades", lines)
 
     def ecoview(self, t=0):
@@ -3329,10 +3331,9 @@ class Replay:
             total = sum(spent.values())
             if any(t <= end for t, *_ in self.spends[p]):
                 share = lambda v: round(100 * v / total) if total else 0      # 0 % when nothing was paid
-                lines[p] = [f"{name} {v} ({share(v)} %)" for name, v in
-                            (("Economy", spent["economy"]), ("Military", spent["military"]),
-                             ("Technologies", spent["technologies"]), ("Buildings", spent["buildings"]))]
-                lines[p].append(f"Total {total}")
+                lines[p] = [say(f"share_{g}", spent[g], f"{share(spent[g])} %")        # translate texts (#5432)
+                            for g in ("economy", "military", "technologies", "buildings")]
+                lines[p].append(say("share_total", total))
         return self.book_command("Spending", lines)
 
     def score_commands(self, t=None):
