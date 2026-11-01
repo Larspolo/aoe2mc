@@ -27,11 +27,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           R: ${{ github.repository }}
+          EV: ${{ github.event.issue.number }}
         run: |
           n=0
-          for i in $(gh api --paginate "repos/$R/issues?state=open&labels=close&per_page=100" \
-                       --jq '.[] | select(.pull_request | not) | .number'); do
-            labels=$(gh api "repos/$R/issues/$i" --jq '[.labels[].name] | join(" ")')
+          # The issue of the event first: the label filter of the list lags some seconds after the label (#5575).
+          for i in $({ echo "$EV"; gh api --paginate "repos/$R/issues?state=open&labels=close&per_page=100" \
+                       --jq '.[] | select(.pull_request | not) | .number'; } | grep -x '[0-9][0-9]*' | awk '!s[$0]++'); do
+            labels=$(gh api "repos/$R/issues/$i" --jq '[.state, .labels[].name] | join(" ")')
+            if [[ " $labels " != " open "* || " $labels " != *" close "* ]]; then echo "skip #$i: closed or no label close"; continue; fi
             if [[ " $labels " == *" agent-status "* ]]; then echo "skip #$i: the status issue"; continue; fi
             for l in close needs-human in-progress; do
               gh api "repos/$R/issues/$i/labels/$l" -X DELETE > /dev/null 2>&1 || true
