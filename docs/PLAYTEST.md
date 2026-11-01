@@ -56,6 +56,10 @@ tutorial (section 3) teaches the same controls.
   Shift + left click: place more. Right click: cancel.
 - Train: right click your own building (town center, barracks ...) and click a unit in its menu.
 - Attack: select military units, then right click an enemy.
+- Camera: right click with the spyglass "Camera" (hotbar key 2). You walk fast on an invisible floor high above the
+  map, and you can give orders from there. Shift right click: the next speed (5, 10 or 20 times the walk speed). Right
+  click again: you fly down near the ground. Above 5 times the view gets wider: to stop this, set Options >
+  Accessibility Settings > FOV Effects to 0 %.
 
 The sidebar shows your wood, food, gold and stone.
 
