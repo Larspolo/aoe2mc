@@ -760,6 +760,12 @@ def start_places(data):
     return starts, data.get("yaw", 0.0)
 
 
+# The console text of --play (#5492): the build menu is a chest menu on a right click on a selected villager (#621)
+START_HINT = ("Hold the carrot on a stick: right click a villager to select it,\n"
+              "then right click a tree, a fruit bush or a mine. To build: select villagers, right click them for the\n"
+              "build menu, then right click the ground. Right click your town center to train a villager (50 food).\n"
+              "Ctrl-C stops.")
+
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,
          speed=1.0, state=None, wait=False, **settings):
     """state: the saved state of the players (savegame.dump) for a loaded game (#2255).
@@ -921,9 +927,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             game.command(c)
         game.command(f"aoe minimap frame {replay.FRAME * data['tile_size']}")
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}, multiplayer, direct connection).\n"
-          f"{len(g.villagers)} villagers of player 1. Hold the carrot on a stick: right click a villager to select it,\n"
-          "then right click a tree, a fruit bush or a mine. To build: /trigger aoe_build set N (the menu is in the chat),\n"
-          "then right click the ground. Right click your town center to train a villager (50 food). Ctrl-C stops.", file=sys.stderr)
+          f"{len(g.villagers)} villagers of player 1. " + START_HINT, file=sys.stderr)
     if people > 1:                                   # this console only: a person gets it in the chat on the join (#3555)
         print(CHAT_HINT, file=sys.stderr)
     game.g = g                                       # main saves its state on Ctrl-C (#2255)
