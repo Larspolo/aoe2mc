@@ -435,16 +435,18 @@ def release_per_week(points):
 
 
 def weak_spots(issues, events, prs, runs, since):
-    """Counts that cost quality: issues that the owner reopened, bug tickets that name a PR merged since `since`
-    (rework), bug tickets that name a check ticket ("Check ..."), and failed night runs of CI."""
+    """Counts that cost quality: issues that the owner reopened, bug tickets that name a PR merged since `since` and
+    before the bug (rework: a PR that merged later is a blocked PR, not the cause, #5461), bug tickets that name a
+    check ticket ("Check ..."), and failed night runs of CI."""
     new = [i for i in issues if "pull_request" not in i and ts(i["created_at"]) >= since]
     bugs = [i for i in new if "bug" in {lb["name"] for lb in i.get("labels", [])}]
-    merged = {p["number"] for p in prs if p.get("merged_at") and ts(p["merged_at"]) >= since}
+    merged_at = {p["number"]: ts(p["merged_at"]) for p in prs if p.get("merged_at") and ts(p["merged_at"]) >= since}
+    merged = lambda i: {n for n, t in merged_at.items() if t < ts(i["created_at"])}
     checks = {i["number"] for i in issues if i["title"].startswith("Check ")}
     named = lambda i: {int(n) for n in re.findall(r"#(\d+)", i.get("body") or "")}
     return {"reopened": sum(e["event"] == "reopened" and (e.get("actor") or {}).get("login") in OWNERS
                             and ts(e["created_at"]) >= since for e in events),
-            "rework": sum(bool(named(i) & merged) for i in bugs),
+            "rework": sum(bool(named(i) & merged(i)) for i in bugs),
             "check bugs": sum(bool(named(i) & checks) for i in bugs),
             "red nights": sum(r["name"] == "CI" and r.get("event") == "schedule" and r.get("conclusion") == "failure"
                               and ts(r["run_started_at"]) >= since for r in runs)}
