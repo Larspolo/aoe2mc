@@ -9,6 +9,7 @@ import buildings
 import units
 
 KEYS = {"animals.jsonl": ({"keys", "behavior", "mob"}, {"tags", "note"}),
+        "aoe2_langs.jsonl": ({"name", "code"}, set()),
         "achievements.jsonl": ({"name", "title", "description", "icon", "parent", "event"}, {"civ", "mode"}),
         "carriers.jsonl": ({"name", "garrison"}, set()),
         "tech_names.jsonl": ({"tech", "name"}, set()),
