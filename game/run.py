@@ -1550,6 +1550,9 @@ def main(argv=None, scenario=None):
                       file=sys.stderr)               # the player can look around, as after a replay (#2051)
         while not (folder and a.play) and commands.is_alive():                   # the end of stdin stops the server; a short join keeps Ctrl-C
             commands.join(0.5)
+            if a.play and getattr(g, "paper", False):    # the camera item still works after the end (#5538)
+                import camera  # noqa: E402
+                camera.after_end(g)
     except (KeyboardInterrupt, EOFError):
         pass
     finally:
