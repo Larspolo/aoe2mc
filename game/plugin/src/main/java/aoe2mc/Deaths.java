@@ -2,6 +2,8 @@ package aoe2mc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -32,6 +34,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * for SECONDS. So a spectator sees where the fights are. Vanilla has no "on death" command: the plugin listens to the
  * death event. The game program does not turn the marks on. The display is not persistent: a restart removes it.
  * A player who does not see the unit (the fog of Replay.fog: Player#hideEntity) gets no particles and no mark (#3084).
+ * The plugin also counts the deaths per block column and team (#5458): "aoe deathmarks heat T" prints the counts per tile
+ * of T blocks as "team x z n ..." for the death heat map (game/heatmap.py death_counts).
  */
 final class Deaths implements Listener {
     static final String TAG = "aoe2mc.pop";
@@ -40,12 +44,26 @@ final class Deaths implements Listener {
     static final float SCALE = 2.5f;                      // the default text is a quarter block: too small from afar
     private final JavaPlugin plugin;
     private boolean on;
+    private final Map<String, Integer> heat = new TreeMap<>();   // "team x z" (blocks) -> deaths
 
     Deaths(JavaPlugin plugin) {
         this.plugin = plugin;
     }
 
     boolean command(CommandSender sender, String[] args) {
+        if (args[1].equals("heat")) {
+            int t = args.length > 2 ? Math.max(1, Integer.parseInt(args[2])) : 1;
+            Map<String, Integer> tiles = new TreeMap<>();
+            heat.forEach((k, n) -> {
+                String[] f = k.split(" ");
+                tiles.merge(f[0] + " " + Math.floorDiv(Integer.parseInt(f[1]), t) + " "
+                        + Math.floorDiv(Integer.parseInt(f[2]), t), n, Integer::sum);
+            });
+            StringBuilder out = new StringBuilder("Deaths:");
+            tiles.forEach((k, n) -> out.append(' ').append(k).append(' ').append(n));
+            sender.sendMessage(out.toString());
+            return true;
+        }
         on = args[1].equals("on");
         sender.sendMessage("Death marks: " + (on ? "on" : "off"));
         return true;
@@ -66,6 +84,7 @@ final class Deaths implements Listener {
         NamedTextColor color = team != null && team.hasColor() && team.color() instanceof NamedTextColor c ? c
                 : NamedTextColor.WHITE;
         Location at = body.getLocation();
+        heat.merge((team != null ? team.getName() : "-") + " " + at.getBlockX() + " " + at.getBlockZ(), 1, Integer::sum);
         List<Player> blind = new ArrayList<>();
         for (Player p : e.getWorld().getPlayers()) {
             if (p.canSee(body)) {
