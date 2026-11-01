@@ -955,6 +955,10 @@ def start_on_join(game, sides, people, sleep=time.sleep):
     print(f"The game starts when {people} {'person' if people == 1 else 'people'} joined.", file=sys.stderr)
     while len(game.joined) < people:
         sleep(0.5)
+    for n in range(5, 0, -1):                        # the client loads the map after the join: count down (#5506)
+        game.command(f"title @a subtitle {json.dumps(lang.text('aoe2mc.run.starts_in', n))}")
+        game.command(f"title @a title {json.dumps(str(n))}")
+        sleep(1)
     import gather
     game.command("scoreboard players reset #wait aoe_trig")
     game.command("tick unfreeze")
