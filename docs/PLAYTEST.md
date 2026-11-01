@@ -30,7 +30,9 @@ world `OUTWorld`. You can also convert your own `.aoe2scenario` file.
 
 The first start downloads the Minecraft server (about 1 minute). When the console shows
 "Join the server localhost:PORT", start Minecraft 26.3, click "Multiplayer", "Direct Connection" and type that
-address. You play player 1; the bot plays player 2 and attacks you. Ctrl-C in the console stops the game.
+address. The game clock starts when you joined ("The game starts when 1 person joined"). You play player 1; the
+bot plays player 2 and attacks you. Ctrl-C in the console stops the game and saves it: the console shows the
+command to continue (`--load`).
 
 Add `--cheats` to use the AoE2 cheat codes in the chat (for example `aegis`: fast building and training).
 
