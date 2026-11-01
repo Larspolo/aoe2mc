@@ -543,6 +543,7 @@ def read_scenario(path):
             c["tile"] = None if c.get("unit") else tiles.get(c.get("ref"))
             c["next_tile"] = None if c.get("next_unit", True) else tiles.get(c.get("next"))
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
+    texts["xs_name"] = getattr(scn.xs_manager, "script_name", "") or ""   # a file of the AoE2 profile (#5122)
     texts["mood"] = (getattr(mood, "name", None) or str(mood or "DEFAULT")).upper()
     om = scn.option_manager                  # the tab "Global Victory" for the scenario mode (#2566, run.VICTORIES)
     win = VictoryCondition(om.victory_condition).name.lower().replace("_", "-") \
@@ -3331,6 +3332,8 @@ UNITS_GARRISONED = 18                                              # the conditi
 UNLOAD = 17                                                        # "Unload" (#2773)
 UNLOCK_GATE = 6
 VARIABLE_VALUE = 22
+SCRIPT_CALL = 25                                                    # the condition "Script Call": an XS expression (#5122)
+XS_EFFECT = 55                                                      # the effect "Script Call": its message is XS code (#5122)
 VICTORY_TIMER = 56                                                 # the condition "Victory Timer" (#2906)
 # The AoE2 UnitAIAction values of "Object Has Action" that the game program knows (game/scenario.py ACTIONS, #2867):
 # build, gather, hunt, move, enter (garrison), repair, idle. The others (attack, convert, heal ...): not supported yet.
@@ -3450,7 +3453,8 @@ CONDITION_KEYS = {
     OWN_OBJECTS: COUNT_KEYS,
     PLAYER_DEFEATED: {"player": "source_player"},                                        # (#2710)
     RESEARCHED: TECH_KEYS,
-    RESEARCHING_TECH: TECH_KEYS,                                                         # (#2769)
+    RESEARCHING_TECH: TECH_KEYS,
+    SCRIPT_CALL: {"xs": "xs_function"},                                                  # (#5122)                                                         # (#2769)
     TECHNOLOGY_STATE: TECH_KEYS | {"quantity": "quantity"},                              # (#2769)
     TRIGGER_ACTIVE: {"trigger": "trigger_id"},                                           # (#2699)
     TRIGGER_CHANCE: {"quantity": "quantity"},                                            # (#2574)
@@ -5470,6 +5474,14 @@ def visible_list(triggers):
 
 # The lists of aoe2mc.json that the scenario mode of the game program reads: key -> function of the triggers. A new
 # list is one line here, in alphabetical order (#2832): no new keyword of write_objects.
+def xs_list(triggers):
+    """The XS code of the Script Call conditions and effects (#5122): {"trigger": id, "kind": "condition" or "effect",
+    "code": text}, in the order of the triggers. A disabled trigger "XS SCRIPT" of AoE2ScenarioParser holds a whole script."""
+    return [{"trigger": t["id"], "kind": k, "code": c} for t in triggers for k, items, key, kind in
+            (("condition", t["conditions"], "xs", SCRIPT_CALL), ("effect", t["effects"], "message", XS_EFFECT))
+            for c in (i.get(key) or "" for i in items if i["type"] == kind) if c.strip()]
+
+
 TRIGGER_LISTS = {
     "actions": action_list,                                     # the units of aoe_action (#2867)
     "attacked": attacked_list,                                  # the buildings of aoe_hit (#3775)
@@ -5478,6 +5490,7 @@ TRIGGER_LISTS = {
     "research": research_list,                                  # the "Research Technology" effects (#2577)
     "tech_states": tech_state_list,                             # the [player, technology] pairs of aoe_techstate (#2769)
     "visible": visible_list,                                    # the [ref, player] pairs of aoe_seen (#2756)
+    "xs": xs_list,                                              # the XS code of the Script Call triggers (#5122)
 }
 
 
@@ -6340,9 +6353,10 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
             barriers=True, mc_version=VERSION_NAME, spawn=None, birds=True, orientation="ne", verbose=False,
             garrison="inside", border_design="diorama", ambience="basic", at=None, mood="on", fog=False,
             resource_pack=False, nplayers=2, teams=None, map_size=None, game_mode="standard", labels=(), together=True,
-            scenario=None, scenario_dir=None):
+            scenario=None, scenario_dir=None, xs=None):
     """scenario: a recorded game only, a scenario file of the same map size: its triggers and texts (--scenario FILE, #5156).
     scenario_dir: a recorded game only, the folder with the scenario file that the record names (--scenario-dir, #5157).
+    xs: the XS script file of the scenario (--xs, #5122): aoe2mc.json "xs_script" is [its name, its text].
     nplayers: the players of a random map script or --random-map (#3944), teams: their teams (#3946). map_size: the
     side in tiles of the map of a random map script (--map-size, #4823). game_mode: the
     game mode of a random map script (rmap.MODE_LABELS, #4824), labels: its other lobby labels (rmap.LOBBY_LABELS, #5017), together: the lobby box "Team Together" (#5050). at: recorded games only, the time in ms (--at): convert the state at that time (apply_timeline).
@@ -6356,7 +6370,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
                  verbose, garrison, border_design, ambience, at, mood, fog, resource_pack, nplayers, teams, map_size, game_mode, labels, together=together,
-                 scenario=scenario, scenario_dir=scenario_dir)
+                 scenario=scenario, scenario_dir=scenario_dir, xs=xs)
     finally:
         MC = VERSIONS[VERSION_NAME]
         PALETTE_CACHE.clear()
@@ -6380,7 +6394,7 @@ def clear_old_output(out):
 
 def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
              verbose, garrison, border_design, ambience, at=None, mood="on", fog=False, resource_pack=False,
-             nplayers=2, teams=None, map_size=None, game_mode="standard", labels=(), together=True, scenario=None, scenario_dir=None):
+             nplayers=2, teams=None, map_size=None, game_mode="standard", labels=(), together=True, scenario=None, scenario_dir=None, xs=None):
     buildings.BARRIERS = barriers
     buildings.TURN, yaw = ORIENTATIONS[orientation]
     MOVED.clear()           # the counts of an earlier conversion in this process
@@ -6412,6 +6426,11 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         if ssize != size:
             raise OptionError(f"--scenario {scenario}: map size {ssize}, the recorded game: {size}")
         texts |= {k: stexts.get(k, "") for k in CHAPTERS} | {"triggers": stexts.get("triggers", [])}
+    if xs is not None:                       # the map script: AoE2 DE does not put it in the scenario (--xs, #5122)
+        with open(xs, encoding="utf-8") as f:
+            texts["xs_script"] = [texts.get("xs_name") or os.path.splitext(os.path.basename(xs))[0], f.read()]
+    elif texts.get("xs_name"):
+        print(f"warning: the scenario uses the XS script {texts['xs_name']}: give its file with --xs FILE")
     record_state = {}
     timeline = read_timeline(src, record_state) if record else None
     views = record_state.get("views")
@@ -6544,6 +6563,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     write_objects(os.path.join(out, "aoe2mc.json"), size, T, H, players, objects, cols, ground, timeline,
                   texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
                   {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()} |
+                  ({"xs_script": texts["xs_script"]} if "xs_script" in texts else {}) |
                   ({"timers": timer_list(texts.get("triggers", []), T, ground, players)} if record else {}), yaw,
                   views and {"views": views, "recorder": record_state["recorder"]}, texts.get("lobby"),
                   terrain, elevation)
@@ -6883,6 +6903,7 @@ def parser():
     ap.add_argument("--match", type=match_spec, metavar="GAME:PROFILE",
                     help="recorded game: download the record of match GAME of player PROFILE (tools/record_api.py) "
                     "into out/records/ and convert it; give only the output (#4484)")
+    ap.add_argument("--xs", metavar="FILE", help="the XS script file of the scenario (AoE2 does not put it in the scenario)")
     ap.add_argument("--verbose", action="store_true", help="print the time of each phase")
     return ap
 
@@ -6926,7 +6947,7 @@ def main(argv=None):
               mood=a.mood, fog=a.fog, resource_pack=a.resource_pack, game_mode=a.game_mode,
               labels=tuple(label for k, label in sorted(rmap.LOBBY_LABELS.items()) if getattr(a, k))
               + tuple(v for v in (rmap.RESOURCE_LABELS[a.resources], rmap.AGE_LABELS[a.age]) if v),
-              together=not a.no_team_together)
+              together=not a.no_team_together, xs=a.xs)
     try:
         if a.at is not None and not a.scenario.lower().endswith(RECORDS):
             ap.error("--at needs a recorded game (.aoe2record)")
