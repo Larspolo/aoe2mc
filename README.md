@@ -112,7 +112,8 @@ and hold the carrot on a stick. Right click a villager of player 1 to select it,
 villager walks there, chops and carries the wood to the town center. Right click a fruit bush: the villager
 forages and carries the food to the town center or a mill, and goes on to the next bush when one is empty.
 The sidebar shows the wood and the food. Right click soldiers one after the other to select a group; a second
-right click on a selected soldier selects all soldiers of its type near it.
+right click on a selected soldier selects all soldiers of its type near it. A right click with the spyglass "Camera"
+(hotbar key 2) puts you on an invisible floor high above the map, where you walk fast (`docs/PLAYTEST.md`).
 
 Live replay of a recorded game: convert the record, then play its commands on a server.
 

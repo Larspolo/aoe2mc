@@ -68,11 +68,11 @@ def level(g):
     return g.map.level
 
 
-def pick(g, eye, d, reach=64):
+def pick(g, eye, d, reach=None):
     """The block cell (x, z) of the land or of the water surface that the ray from eye in direction d hits first, or
     None. Map.pick_ground goes through the water: a ship and a dock are on it."""
     top = level(g)
-    for k in range(1, reach * 4):
+    for k in range(1, (reach or gather.REACH) * 4):
         x, y, z = (eye[i] + d[i] * k / 4 for i in range(3))
         bx, bz = math.floor(x), math.floor(z)
         if not (0 <= bx < g.map.n and 0 <= bz < g.map.n):

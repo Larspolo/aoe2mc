@@ -4,6 +4,7 @@ Chest menus in the game program (#619, part of #618). Vanilla has no clickable i
 inventory, and a click on an item sets the score aoe_menu of the player to slot + 1 (a shift click: -(slot + 1), a right click:
 slot + 1 + RIGHT, #3523). A handler with a keyword `right` gets the right click; another handler gets a normal click. The player takes no item, and the
 menu stays open, so a second click queues one more (owner, 2026-10-26). `aoe menu-close <player>` closes it.
+When the player closes a menu (Escape), the plugin sets the score aoe_menu_closed to 1 and clicks() forgets the handler (#5484).
 The texts are URL-encoded: RCON splits the arguments at spaces, and ":" splits the fields of an item.
 One RCON command holds at most rcon.MAX bytes: a longer menu goes out as `aoe menu` with the item of the last slot (it
 gives the size of the inventory) and `aoe menu-add` commands with the other items (#1647).
@@ -19,11 +20,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rcon import MAX  # noqa: E402
 
 OBJECTIVE = "aoe_menu"
+CLOSED = "aoe_menu_closed"                                     # the player closed the menu (Escape, #5484)
 RIGHT = 1000                                                   # a right click adds it (AoePlugin MENU_RIGHT, #3523)
 
 
 def setup(g):
     g.command(f'scoreboard objectives add {OBJECTIVE} dummy "Menu"')
+    g.command(f'scoreboard objectives add {CLOSED} dummy "Menu closed"')
 
 
 def command(player, title, items):
@@ -95,4 +98,7 @@ def clicks(g):
                 handler(player, slot, False, right=True)
             else:
                 handler(player, slot, v < 0)
+        if g.menus.get(player) is handler and " has 1 " in g.command(f"scoreboard players get {player} {CLOSED}"):
+            g.command(f"scoreboard players reset {player} {CLOSED}")
+            g.menus.pop(player)                                    # no refresh opens it again (train.refresh, #5484)
     return out

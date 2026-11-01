@@ -1,10 +1,11 @@
 # Release bar
 
 The owner decision of #878 (2026-10-26): a goal is at 100 % when all its features of `steering/project/ROADMAP.md` are done
-(milestone C), its release checks pass and its bug reserve is used. The milestones B (a smaller first test) and A
+(level C), its release checks pass and its bug reserve is used. The levels B (a smaller first test) and A
 (the core) also set the release focus (below): the work outside the focus waits; inside it, the priority labels
 decide the order.
-`python3 tools/release.py` prints the progress of each goal and milestone.
+`python3 tools/release.py` prints the progress of each goal and level. A level
+(B, A or C, the column `level`) is not a GitHub milestone: a GitHub milestone holds the scope of one release.
 
 Bug reserve: 0.3
 
@@ -16,13 +17,14 @@ The next release is a play test: a person plays a full game, and the agents impr
 Until the next release (a tag `v*`), the agents work only on:
 
 - bugs, and the release checks of the table rows `...-check-...`;
-- the features of the milestones that the line "Release focus: X" counts (`A`: the milestones B and A);
+- the scope of the open release epic: the issues of its GitHub milestone ("Release cycle" below);
+- the features of the levels that the line "Release focus: X" counts (`A`: the levels B and A);
 - the user experience of the play test: what a player sees, controls and understands in a game (the play-test kit
   `docs/PLAYTEST.md`, the controls, the menus, the hints and the feedback of P9, the start of a game, the speed of
   the server), and the follow-ups of a play test of a person;
 - the upkeep of the agent system that the work above needs (tests, CI, the tools of the runs).
 
-All other work waits with the label `after-release`. That includes each feature of milestone C (a feature with no
+All other work waits with the label `after-release`. That includes each feature of level C (a feature with no
 row), and these kinds of work (the owner moved them first, #4175):
 
 - more input formats and mod content (mod center maps, data mods, script languages such as XS, saved games);
@@ -35,13 +37,51 @@ Work that started goes on: a ticket with `in-progress` or an open PR gets no `af
 so that its usage is not lost. Hold only the rest: its epic gets the label and no new sub-issue.
 
 `tools/release.py` prints the features that wait; `framework/tools/usage.py` gives them no refill run. The owner moves
-a feature into the focus with its milestone (a row `B` or `A`) or by removal of the label `after-release` from its
-ticket. After a release, the owner sets the milestones and the focus of the next release.
+a feature into the focus with its level (a row `B` or `A`) or by removal of the label `after-release` from its
+ticket.
+
+### A new feature: in the next release or after it?
+
+Decide by comparison, not only by the list above. Before you give a new feature ticket (or a new roadmap feature) its
+labels, list the open tickets with `after-release` and the issues of the milestone of the open release epic. Then:
+
+1. A feature that a play tester needs for a full game, or that makes a game easier to start, see, control or
+   understand, goes into the next release: give it the milestone of the release epic ("vX.Y.Z").
+2. A feature that is more like the held tickets than like the scope (the same kind of work, the same size of benefit
+   for a play tester) gets `after-release`.
+3. When both are equally near, it gets `after-release` (P4: ship fine for now).
+
+When the owner moves a ticket by hand (adds or removes `after-release`, or moves it into or out of the milestone), the
+owner is right: add the kind of that ticket to the list above, or correct the list, in the next PR, so that the next
+decision follows it. The roadmap review checks that each held ticket fits a kind of the list.
+
+### Release cycle (owner, 2026-11-01)
+
+1. The open release epic (labels `epic`, `release`, title "Release vX.Y.Z") has the acceptance criteria of the next
+   release. The GitHub milestone "vX.Y.Z" holds its scope: each ticket of the release, also the sub-issues of the
+   epic (the user experience and play-test work). `release.yml` makes the milestone of each open release epic.
+   A ticket can be in a feature epic and in the milestone. Criteria: the milestone has no open issue, no open bug
+   `P0` or `P1`, and the play-test check of the epic passes. The dashboard shows the closed issues of the milestone
+   (section "Releases").
+2. The epic check (`queue.md`) closes the epic when its criteria are met (label `close`).
+3. `.github/workflows/release.yml` then tags `vX.Y.Z` when the milestone has no open issue: the newest commit of
+   main with a green CI run, from after the close (the head of main often has no finished CI run). It makes the
+   GitHub release with notes (the closed issues of the milestone), closes the milestone, and starts the workflows of
+   the tag: the installers (`installers.yml`), the example worlds (`worlds.yml`) and the release of the held tickets
+   (`after-release.yml`).
+4. `after-release.yml` moves `after-release` to `rank` on all held tickets. `release.yml` opens the epic and the
+   milestone of the next release (vX.Y+1.0); the epic gets `rank`. A ticket with `rank` waits: no run takes it.
+5. A deep run (refill lock) ranks all `rank` tickets against each other (the `roadmap` skill, "Release cycle"): the
+   most useful third for a play tester gets `P1`, the next third `P2`, the rest `P3`. A ticket that must not come
+   back now gets `muted` with a one-line reason. All other ranked tickets get the milestone of the new release.
+   It also decides for each waiting roadmap feature (level C) if it goes into the next release (its row gets
+   level `A`) or waits. Then it removes `rank` from the tickets and the epic.
+6. The cycle repeats: new features in the next release or after it (above), a release when the epic closes.
 
 ## Rules
 
 1. A row names a feature of `steering/project/ROADMAP.md` by its key, or a release check by an id that ends in `-check-...`.
-   A roadmap feature without a row is milestone C. Give each new roadmap feature a row (`roadmap` skill).
+   A roadmap feature without a row is level C. Give each new roadmap feature a row (`roadmap` skill).
 2. The epics of a feature: an epic whose body has the line ``Roadmap: `key` ``, and the epics that its roadmap line
    names (`#N`).
 3. Default estimate = the median number of sub-issues of the closed epics with sub-issues.
@@ -51,13 +91,13 @@ ticket. After a release, the owner sets the milestones and the focus of the next
    without an epic counts the default estimate as done. Left = 0 when Done, else max(all sub-issues of its epics,
    estimate or default) − closed sub-issues.
 6. A release check: left = its estimate until its check ticket closes, then done = its estimate.
-7. Bug reserve of a milestone = ceil(0.3 × the feature tickets left of that milestone).
-8. Progress = done ÷ (done + left). B counts the B features, A the B and A features, C all features. Each milestone
+7. Bug reserve of a level = ceil(0.3 × the feature tickets left of that level).
+8. Progress = done ÷ (done + left). B counts the B features, A the B and A features, C all features. Each level
    counts all release checks of the goal and its own reserve.
 
 ## Convert maps
 
-| id | milestone | estimate | check | ticket |
+| id | level | estimate | check | ticket |
 |---|---|---|---|---|
 | `convert:terrain` | B | | | |
 | `convert:designs` | B | | | |
@@ -93,7 +133,7 @@ ticket. After a release, the owner sets the milestones and the focus of the next
 
 ## Play AoE2
 
-| id | milestone | estimate | check | ticket |
+| id | level | estimate | check | ticket |
 |---|---|---|---|---|
 | `play:program` | B | | | |
 | `play:gather` | B | | | |
@@ -176,7 +216,7 @@ ticket. After a release, the owner sets the milestones and the focus of the next
 
 ## Replay a game
 
-| id | milestone | estimate | check | ticket |
+| id | level | estimate | check | ticket |
 |---|---|---|---|---|
 | `replay:start` | B | | | |
 | `replay:live` | B | | | |
@@ -225,7 +265,7 @@ ticket. After a release, the owner sets the milestones and the focus of the next
 
 ## The agent system
 
-| id | milestone | estimate | check | ticket |
+| id | level | estimate | check | ticket |
 |---|---|---|---|---|
 | `system:improve` | A | | | |
 | `system:reuse` | C | | | |

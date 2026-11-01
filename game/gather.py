@@ -58,6 +58,7 @@ import autoscout  # noqa: E402
 import battle_royale  # noqa: E402
 import bossbar  # noqa: E402
 import build  # noqa: E402
+import camera  # noqa: E402
 import capture_relic  # noqa: E402
 import challenge  # noqa: E402
 import cheats  # noqa: E402
@@ -162,6 +163,7 @@ CIVILIANS = tuple(t['name'] for t in ROWS if t.get('civilian'))
 SELECT = "aoe2mc.selected"                                         # entity tag of the selected units
 VOICES = {r["name"]: r for r in table.load("sounds.jsonl")}   # unit class -> its select voice (#3499)
 TYPE_REACH = 16                                                    # blocks: a second click selects its type this near (#743)
+REACH = 160    # blocks: the ray of a click (the pick functions): far views of the camera mode (camera.py), 10 chunks
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
 LEFT = "aoe_left"                     # score of a left click with the command stick (Paper plugin, #1788)
 RELEASE = 0.45   # seconds without a wand use: the player released the held right click (uses come each 0.2 s, #992)
@@ -501,7 +503,7 @@ class Map:
                 todo.append(n)
         return True
 
-    def pick_ground(self, eye, d, reach=64):
+    def pick_ground(self, eye, d, reach=REACH):
         """The block cell (x, z) of the ground that the ray from eye in direction d hits first, or None."""
         for k in range(1, reach * 4):
             x, y, z = (eye[i] + d[i] * k / 4 for i in range(3))
@@ -513,7 +515,7 @@ class Map:
                 return bx, bz
         return None
 
-    def pick_tree(self, eye, d, reach=64):
+    def pick_tree(self, eye, d, reach=REACH):
         """The tree, fruit bush, mine or farm tile that the ray from eye in direction d hits first, or None."""
         for k in range(1, reach * 4):
             x, y, z = (eye[i] + d[i] * k / 4 for i in range(3))
@@ -539,7 +541,7 @@ def direction(yaw, pitch):
     return -math.sin(y) * math.cos(p), -math.sin(p), math.cos(y) * math.cos(p)
 
 
-def pick_unit(eye, d, units, reach=64, radius=0.8, ray=False):
+def pick_unit(eye, d, units, reach=REACH, radius=0.8, ray=False):
     """The unit (key of units: {key: (x, y, z) of the feet}) nearest to the eye on the ray, or None. ray=True: the
     unit nearest to the ray (a camera that cannot aim, #5440)."""
     best = None
@@ -849,6 +851,7 @@ class Gather:
                 self.villagers[o["uuid"]] = Villager(o["uuid"], pos)
         train.census(self)                                             # the population and the limit (#613)
         self.idle()
+        self.workers()
         return self
 
     def forage(self):
@@ -902,6 +905,18 @@ class Gather:
         if self.shown.get("Idle") != n:
             self.shown["Idle"] = n
             self.command(f"scoreboard players set Idle {self.board} {n}")
+
+    def workers(self):
+        """Show the number of villagers on each resource in the sidebar name, as "Wood (5)" (AoE2 shows it next to the
+        stock, #5507). Only the gather states count: a builder or an idle villager is no worker. Sent only when it changed."""
+        n = {r: 0 for r in RESOURCES}
+        for v in self.villagers.values():
+            if v.state in ("to_tree", "chop", "to_drop", "to_prey", "hunt") and v.res.capitalize() in n:
+                n[v.res.capitalize()] += 1
+        for r, k in n.items():
+            if self.shown.get(f"Workers {r}") != k:
+                self.shown[f"Workers {r}"] = k
+                self.command(f"scoreboard players display name {r} {self.board} {json.dumps(f'{r} ({k})')}")
 
     @property
     def selected(self):
@@ -1398,6 +1413,7 @@ class Gather:
                                  f"run item replace entity @s hotbar.{slot} with {group_item(n, len(self.groups.get(n, ())))}")
             diplomacy.give(self)                                       # the Game menu item (#1588)
             goto.give(self)                                            # the "Go to" compass (#1830)
+            camera.give(self)                                          # the camera mode (Paper)
         self.calls += 1
         if not self.paper:                                             # Paper: hold right click with the stick (#1786)
             self.command(f"execute as {self.who} unless items entity @s container.* minecraft:{WAND} "
@@ -1425,6 +1441,9 @@ class Gather:
                 elif "aoe_use" in used and goto.in_hand(self, name):    # the "Go to" compass (#1830): no ray
                     out.remove(name)
                     goto.open_menu(self, name)
+                elif "aoe_use" in used and self.paper and camera.in_hand(self, name):   # the camera mode: no ray
+                    out.remove(name)
+                    camera.click(self, name, "passed" in self.command(f"execute as {name} if predicate {SNEAK}"))
                 elif "aoe_use" in used and self.paper and not (name in self.rallying or name in self.ordering or build.chosen(self, name)):
                     out.remove(name)                                   # a click or a hold: short() or drag decides
                     self.hold(name, int(re.search(r"has (\d+)", scores["aoe_use"])[1]))
@@ -1893,7 +1912,7 @@ class Gather:
         for c in marker(self.map, cells, kind, name):
             self.command(c)
 
-    def pick_fort(self, eye, d, reach=64):
+    def pick_fort(self, eye, d, reach=REACH):
         """The target UUID of the enemy building that the ray from eye in direction d hits first (up to 3 tiles
         above its ground: about the height of a building), or None."""
         for k in range(1, reach * 4):
@@ -2067,6 +2086,7 @@ class Gather:
                 if not nxt:
                     self.next_task(site, {v.uuid for v in builders if v.uuid in self.villagers})
         self.idle()
+        self.workers()
 
     def work_time(self, res, herd=False, pos=None):
         """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS) and

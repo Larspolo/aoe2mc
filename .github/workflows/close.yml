@@ -49,5 +49,5 @@ jobs:
             done
             echo "closed #$i"; n=$((n + 1))
           done
-          # A close by GITHUB_TOKEN starts no workflow: delete the claim refs now.
-          if [ "$n" -gt 0 ]; then gh workflow run claims.yml --repo "$R" || true; fi
+          # A close by GITHUB_TOKEN starts no workflow: delete the claim refs now, and release a closed release epic.
+          if [ "$n" -gt 0 ]; then gh workflow run claims.yml --repo "$R" || true; gh workflow run release.yml --repo "$R" || true; fi
