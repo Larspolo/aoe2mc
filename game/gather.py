@@ -539,14 +539,16 @@ def direction(yaw, pitch):
     return -math.sin(y) * math.cos(p), -math.sin(p), math.cos(y) * math.cos(p)
 
 
-def pick_unit(eye, d, units, reach=64, radius=0.8):
-    """The unit (key of units: {key: (x, y, z) of the feet}) nearest to the eye on the ray, or None."""
+def pick_unit(eye, d, units, reach=64, radius=0.8, ray=False):
+    """The unit (key of units: {key: (x, y, z) of the feet}) nearest to the eye on the ray, or None. ray=True: the
+    unit nearest to the ray (a camera that cannot aim, #5440)."""
     best = None
     for key, (x, y, z) in units.items():
         v = (x - eye[0], y + 1 - eye[1], z - eye[2])
         t = sum(v[i] * d[i] for i in range(3))
-        if 0 < t < reach and math.dist(v, [t * d[i] for i in range(3)]) < radius and (best is None or t < best[0]):
-            best = t, key
+        off = math.dist(v, [t * d[i] for i in range(3)])
+        if 0 < t < reach and off < radius and (best is None or (off if ray else t) < best[0]):
+            best = (off if ray else t), key
     return best and best[1]
 
 

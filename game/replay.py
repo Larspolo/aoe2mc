@@ -92,7 +92,7 @@ END_BOOKS = {"Build order": 1, "Spending": 2, "Timeline": 0}   # book -> invento
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 CAMERA_ENTITY = "aoe2mc.camera"   # the tag of the display entity of --camera player (#4770)
 GLIDE = 20                  # ticks: the longest glide of the camera of --camera player (#4770; Minecraft: up to 59)
-CAMERA_PICK = 4             # blocks: the info line of a spectator through the camera entity picks a unit this near the ray (#5437)
+CAMERA_PICK = 24            # blocks: a spectator through the camera entity cannot aim: the info line picks the unit nearest the ray in this view (#5437, #5440)
 JUMP = 64                   # blocks: a view of --camera player this far from the last one jumps (#4770): well in the
                             # chunks that a client has around it (render distance 8: 128 blocks)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
@@ -757,7 +757,8 @@ class Replay:
         now = clock()
         for name in sorted(getattr(self.game, "joined", ())):         # run.Game.op_joined: no RCON command
             seen = self.eye(name)
-            i = seen and self.gather.pick_unit(*seen, at, radius=CAMERA_PICK if self.in_camera(name) else 0.8)
+            cam = seen and self.in_camera(name)
+            i = seen and self.gather.pick_unit(*seen, at, radius=CAMERA_PICK if cam else 0.8, ray=bool(cam))
             if i is None:
                 line = seen and self.building_line(*seen)                # no unit on the view line (#5288)
                 if not line:
