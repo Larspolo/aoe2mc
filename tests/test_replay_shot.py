@@ -23,6 +23,6 @@ def test_the_arguments_need_a_time_and_read_the_view(monkeypatch):
     with pytest.raises(SystemExit):
         replay_shot.main(["rec.aoe2record", "o.png"])
     seen = {}
-    monkeypatch.setattr(replay_shot, "run_shots", lambda *a: seen.setdefault("a", a) and [])
+    monkeypatch.setattr(replay_shot, "run_shots", lambda *a, **k: seen.setdefault("a", a) and [])
     replay_shot.main(["rec.aoe2record", "o.png", "--at-time", "0:11", "--view", "138,70,150,180,30", "--speed", "2"])
     assert seen["a"] == ("rec.aoe2record", "o.png", ["0:11"], (138.0, 70.0, 150.0, 180.0, 30.0), 2.0, None)

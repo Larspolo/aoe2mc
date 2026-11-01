@@ -106,6 +106,10 @@ Then it closes the ticket on this evidence with the label `owner-sample` (owner 
 No owner point for times, speeds, values or texts: the agent measures them against the original (#1159). A look point links an
 image before and an image after.
 When the check finds bugs, the check ticket depends on the bug tickets and closes only after a check without bugs (#668).
+A bug ticket of a check names the check command in its Verify line, and the fix runs it before the push (`verify`, level
+4, "Check tools", #5461). When the data of the check is only on the owner's computer (an install, a `.dat`), the bug
+ticket gives the measured cause (a traceback, a count of tiles). Without one, ask the owner for it first (`needs-human`):
+three fixes of a guessed cause came back as rework bugs (#5380 → #5422, #5381 → #5423, #5317 → #5361).
 
 ## Decision tickets
 

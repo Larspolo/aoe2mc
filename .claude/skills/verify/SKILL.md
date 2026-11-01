@@ -56,6 +56,17 @@ example "Recoverable errors when loading section", unknown block names, entity o
 does not log it: `mcvalid` finds those. `python3 tools/mc_check.py --reports VERSION` makes exact
 `tools/mcdata/VERSION.json` from Mojang's data reports.
 
+Check tools of the game program (#5461): a change of the code that a tool checks runs the tool before the push. Do not
+leave it to a later check ticket: 5 fixes of the replay info line merged with unit tests only, and each next check
+ticket found the next fault (#5312, #5313, #5413, #5440, #5443).
+
+| The change | The check (Paper and the real client) |
+|---|---|
+| The replay info line, `Replay.eye`, the camera, `aoe batch` | `python3 tools/replay_shot.py samples/de-64.3.aoe2record out/c.png --at-time 1:00 --camera player --info out/c.json` (exit 1: no unit line) |
+| The replay views, the trigger titles | `tools/replay_shot.py` (screenshots at game times) |
+| The tutorial (`run.py --play --tutorial`) | `tools/tutorial_check.py` |
+| The game of a person against the bot | `tools/play_check.py` (no client) |
+
 ## Level 5 – in-game screenshot (before you ask the owner)
 
 Use it when only the Minecraft client shows the answer: unit facing, map orientation, how a building looks
