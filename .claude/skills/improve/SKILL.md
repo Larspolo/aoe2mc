@@ -51,7 +51,8 @@ change of this review. Fewer than 50 merged PRs → too early: keep it and say s
 Run `python3 framework/tools/health.py --prs 100 --compare` (about 2 minutes): the last 100 merged PRs, and under each line that
 differs, the 100 PRs before (`  before: ...`). A change of more than 20 % between the two periods is a finding. It
 prints CI, setup, takeovers, conflicts and their files, phases, quota per merged PR, release points per 1 % of 7-day
-quota (the main number: progress to the goals 1 to 3 of `steering/project/ROADMAP.md` per quota), tokens and their sinks, lanes,
+quota (the main number: progress to the goals 1 to 3 of `steering/project/ROADMAP.md` per quota; during a release
+focus, the closed issues of the release milestone per 1 % of quota, #5552), tokens and their sinks, lanes,
 weak spots, misses, owner work, time waits, data in the code, review slots and files that do not belong in git.
 `--hours N` only for a real clock (the night runs).
 
