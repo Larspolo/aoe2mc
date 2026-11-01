@@ -1005,8 +1005,9 @@ def live_error(world, record):
 
 
 def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=None, replay_file=None, camera=None,
-           live=None, delay=None):
-    """guide: a poll(control) next to the hotbar input that gets `input` and the replay `r` (game/watch.py, #1123).
+           live=None, delay=None, stop=False):
+    """stop: end the replay when it reached `start` and return the Replay (--takeover, #5450), else the stats.
+    guide: a poll(control) next to the hotbar input that gets `input` and the replay `r` (game/watch.py, #1123).
     view: the replay starts with the view of player N (#1303: the units out of its sight are hidden).
     replay_file: the timeline of a game of --play --record on this world in place of the one of aoe2mc.json (#2649).
     live: the record file that AoE2 DE still writes: the replay follows it, `delay` seconds behind (game/live.py, #4663)."""
@@ -1052,18 +1053,32 @@ def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=N
         setup()
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}). The replay starts now "
           f"at speed {speed}. Right click the items in your hotbar, or /trigger aoe_replay set N.", file=sys.stderr)
+    made, poll = [], guide or control
+
     def make():
         r = replay.Replay(game, data, game.version, ai=game.kind == "paper", follow=follow, pov=view, camera=camera)
         if guide:
             guide.r = r
+        made.append(r)
         return r
+    if stop:                                         # the first poll at the --from time ends the replay (#5450)
+        def poll(c, inner=poll):
+            if c.get("time", 0) >= start:
+                raise Reached
+            inner(c)
     try:
-        stats = replay.live(make, speed, start, restart, bar=True, poll=guide or control, **kw)
+        stats = replay.live(make, speed, start, restart, bar=True, poll=poll, **kw)
+    except Reached:
+        return made[-1]
     finally:
         shutil.rmtree(saved, ignore_errors=True)
     print(f"{stats['events']} events, {stats['commands']} commands in {stats['busy']} s "
           f"({stats['rate']} commands per second, the timeline needs {stats['need']}), largest lag {stats['lag']} s")
     return stats
+
+
+class Reached(Exception):
+    """The replay of --takeover reached its --from time (#5450)."""
 
 
 CONSOLE = {}                                         # the one stdin thread and the game that gets its lines (#3812)
@@ -1366,6 +1381,8 @@ def main(argv=None, scenario=None):
                     "this world in place of the one of aoe2mc.json")
     ap.add_argument("--live", metavar="RECORD", help="--replay: follow the record file that AoE2 DE still writes "
                     "while the game runs (the world comes from the start of this record, game/live.py)")
+    ap.add_argument("--takeover", type=int, metavar="P", help="--replay: at the --from time save the state of the "
+                    "replay and go on as a game (--play) in which you play player P (only 1 now, epic #5448)")
     ap.add_argument("--delay", type=float, metavar="S", help="--replay --live: stay S seconds of game time behind "
                     "the newest event of the record (default 30)")
     ap.add_argument("--data-mod", metavar="DIR", help="a folder of data lines: each line of DIR/<file>.jsonl changes "
@@ -1403,6 +1420,10 @@ def main(argv=None, scenario=None):
             sys.exit(0)
         if not challenge.opened(a.challenge):
             ap.error(f"--challenge {a.challenge} is closed: win a medal in {challenge.CHALLENGES[a.challenge]['after']} first")
+    if a.takeover is not None and (not a.replay or a.play or a.live):
+        sys.exit("--takeover needs --replay, and not --play or --live (#5450)")
+    if a.takeover not in (None, 1):
+        sys.exit("--takeover: only player 1 now (#5451)")
     if a.camera and a.follow is not None:
         ap.error("--camera and --follow N both move the spectators: give only one of them")
     if "mode" not in given(ap, argv):              # the --game-mode of a random map conversion (#4825)
@@ -1461,9 +1482,15 @@ def main(argv=None, scenario=None):
         if not (a.play and not a.replay):            # else start_on_join sends them after the join (#3772)
             show_titles(game)
         if a.replay:                                 # after the end the player can look around (#978)
-            replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None, replay_file=a.replay_file,
-                   camera=a.camera, live=a.live, delay=a.delay)
-            print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
+            r = replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None, replay_file=a.replay_file,
+                       camera=a.camera, live=a.live, delay=a.delay, stop=a.takeover is not None)
+            if a.takeover is not None:               # the save of the replay state, then a game on it (#5450)
+                import takeover
+                state = savegame.read(takeover.write(game, r, savegame.folder(a.world)))
+                a.play, a.people = True, 1
+                print("The replay reached its --from time: you play player 1 now.", file=sys.stderr)
+            else:
+                print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
