@@ -274,3 +274,4 @@
 {"name": "aoe2mc.camera.off", "en_us": "Camera: off"}
 {"name": "aoe2mc.camera.on", "en_us": "Camera: on, speed x%s. Shift right click: next speed."}
 {"name": "aoe2mc.camera.speed", "en_us": "Camera speed: x%s"}
+{"name": "aoe2mc.recap.next", "en_us": "The game is over. Right click the Recap book in your hand to see the results. Stop the game program with Ctrl-C in its console."}
