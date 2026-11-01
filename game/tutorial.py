@@ -90,6 +90,32 @@ def destroyed(g, row):
     return not set(vars(g).get("tutorial_camp", ())) & g.forts.keys()
 
 
+def raid(g, row):
+    """Setup of step "raid" (#5504): the units of the key "raid" ({AoE2 name: count}) of player 2 about 20 blocks east of
+    the own town center attack the own villager nearest to it (aoe attack: the mob AI and path finding of the plugin).
+    The alert of the plugin (Alerts.java) shows the attack in the chat. g.tutorial_raid: their UUIDs."""
+    import ai  # they import gather, gather imports this module
+    import challenge
+    import train
+    g.tutorial_raid = []
+    if (tc := challenge.town(g)) is None:
+        return
+    cx, cz = (tc[0] + tc[1]) // 2, (tc[2] + tc[3]) // 2
+    x, z = min(max(cx + 20, 2), g.map.n - 3), cz
+    pos = (x + 0.5, float(g.map.y(x, z)), z + 0.5)
+    names = [n for n, k in sorted(row["raid"].items()) for _ in range(k)]
+    uuids = [train.summon(g, n, pos, player=2) for n in names]
+    g.tutorial_raid = [u for u in uuids if u]
+    near = sorted(g.villagers.values(), key=lambda v: (v.pos[0] - cx) ** 2 + (v.pos[2] - cz) ** 2)
+    if near:
+        ai.attack(g, g.tutorial_raid, [n for n, u in zip(names, uuids) if u], g.map.T, near[0].uuid)
+
+
+def repelled(g, row):
+    """Step "raid": no unit of the raid lives (g.positions: a dead unit has no position)."""
+    return not g.positions(vars(g).get("tutorial_raid", ()))
+
+
 def give(g, row):
     """Setup of a step: the resources of the key "give" go to the stock, so the step does not wait for a slow player.
     The board (the sidebar) gets them too: each payment removes from both (#3111), else the sidebar goes below 0 (#5332)."""

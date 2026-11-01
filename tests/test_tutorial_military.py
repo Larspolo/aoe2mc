@@ -20,7 +20,7 @@ def fake(**kw):
 
 def test_order_after_economy():
     names = [s["name"] for s in tutorial.STEPS]
-    assert names[names.index("feudal") + 1:] == ["barracks", "militia", "camp"]
+    assert names[names.index("feudal") + 1:] == ["barracks", "militia", "raid", "camp"]
 
 
 def test_barracks():
