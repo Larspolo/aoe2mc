@@ -851,6 +851,7 @@ class Gather:
                 self.villagers[o["uuid"]] = Villager(o["uuid"], pos)
         train.census(self)                                             # the population and the limit (#613)
         self.idle()
+        self.workers()
         return self
 
     def forage(self):
@@ -904,6 +905,18 @@ class Gather:
         if self.shown.get("Idle") != n:
             self.shown["Idle"] = n
             self.command(f"scoreboard players set Idle {self.board} {n}")
+
+    def workers(self):
+        """Show the number of villagers on each resource in the sidebar name, as "Wood (5)" (AoE2 shows it next to the
+        stock, #5507). Only the gather states count: a builder or an idle villager is no worker. Sent only when it changed."""
+        n = {r: 0 for r in RESOURCES}
+        for v in self.villagers.values():
+            if v.state in ("to_tree", "chop", "to_drop", "to_prey", "hunt") and v.res.capitalize() in n:
+                n[v.res.capitalize()] += 1
+        for r, k in n.items():
+            if self.shown.get(f"Workers {r}") != k:
+                self.shown[f"Workers {r}"] = k
+                self.command(f"scoreboard players display name {r} {self.board} {json.dumps(f'{r} ({k})')}")
 
     @property
     def selected(self):
@@ -2073,6 +2086,7 @@ class Gather:
                 if not nxt:
                     self.next_task(site, {v.uuid for v in builders if v.uuid in self.villagers})
         self.idle()
+        self.workers()
 
     def work_time(self, res, herd=False, pos=None):
         """Real seconds per unit of resource res ("farm" for farms) with the technologies of the player (WORK_TECHS) and
