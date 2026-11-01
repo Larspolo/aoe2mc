@@ -17,6 +17,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import amounts  # noqa: E402
 import lang  # noqa: E402
 
 SLOT = 1                                                           # hotbar slot of the item (key 2): free
@@ -70,10 +71,14 @@ def click(g, player, shift=False):
         active = False
         vars(g).setdefault("camera_off", set()).add(player)            # on, then off: the tutorial step (#5503)
         bar(g, player, lang.text("aoe2mc.camera.off"))
+        vars(g).setdefault("camera_on", set()).discard(player)
+        amounts.swap(g, player, False)                                 # the normal amounts again (#5537)
     else:
         g.command(on(g, player))
         active = True
         bar(g, player, lang.text("aoe2mc.camera.on", speed(g, player)))
+        vars(g).setdefault("camera_on", set()).add(player)
+        amounts.swap(g, player, True)                                  # the large amounts (#5537)
     hinted = vars(g).setdefault("camera_hinted", set())
     if speed(g, player) > PLAIN and player not in hinted:          # once per player
         hinted.add(player)
