@@ -1557,10 +1557,15 @@ def main(argv=None, scenario=None):
         state = savegame.dump(game.g) if getattr(game, "g", None) else None
         game.stop()                                  # the server writes the world when it stops
         if state:
-            print(f"Saved the game: python3 game/run.py {a.world} --play --load "
+            print(f"Saved the game: {program()} {a.world} --play --load "
                   f"{savegame.write(savegame.folder(a.world), a.world, state)}", file=sys.stderr)
     if after is not None:
         return main(argv, scenario=after)
+
+
+def program():
+    """The command of the game program for a printed command: the installer (sys.frozen) has no Python (#5542)."""
+    return os.path.basename(sys.argv[0]) if getattr(sys, "frozen", False) else "python3 game/run.py"
 
 
 if __name__ == "__main__":
