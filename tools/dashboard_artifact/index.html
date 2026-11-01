@@ -31,6 +31,7 @@
   border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); }
 .ax-chart { position: relative; min-height: 230px; }
 .ax-chart-sm { min-height: 190px; }
+.ax-chart-fit { min-height: 80px; }
 .ax-chart svg { display: block; }
 .ax-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
 .ax-legend span { display: inline-flex; align-items: center; gap: var(--cds-gap-xs); }
@@ -122,6 +123,7 @@
     <button class="ax-tab" id="tab-activity" role="tab" aria-controls="activity" aria-selected="true" data-page="activity">Activity</button>
     <button class="ax-tab" id="tab-progress" role="tab" aria-controls="progress" aria-selected="false" data-page="progress">Progress</button>
     <button class="ax-tab" id="tab-tickets" role="tab" aria-controls="tickets" aria-selected="false" data-page="tickets">Tickets</button>
+    <button class="ax-tab" id="tab-spend" role="tab" aria-controls="spend" aria-selected="false" data-page="spend">Usage</button>
     <button class="ax-tab" id="tab-improvements" role="tab" aria-controls="improvements" aria-selected="false" data-page="improvements">Improvements</button>
     <button class="ax-tab" id="tab-setup" role="tab" aria-controls="setup" aria-selected="false" data-page="setup">Setup</button>
   </nav>
@@ -455,6 +457,62 @@
     </div>
   </section>
 
+  <section class="ax-page" id="spend" role="tabpanel" aria-labelledby="tab-spend" hidden>
+    <div class="ax-card ax-wide" id="spend-card">
+      <div class="ax-card-top">
+        <div>
+          <h2 class="ax-card-title">Usage per lane and type of work</h2>
+          <p class="ax-note">From the run reports (the <code>Tokens:</code>, <code>Metrics:</code> and <code>Run:</code> lines). Type: the size of the ticket (S, M, L), <em>improve</em> for a ticket with the label <code>process</code> (an improvement job), <em>review</em> for a process review, <em>no ticket</em> for a run with no ticket (refill, triage, no ready ticket). A run with more tickets splits its usage evenly. Sum: stacked bars. Mean per run: one line per group. Hover a block for its numbers.</p>
+        </div>
+        <div class="ax-controls">
+          <label for="spend-group">Group
+            <select id="spend-group">
+              <option value="both">Lane and type</option>
+              <option value="lane">Lane</option>
+              <option value="kind">Type</option>
+            </select></label>
+          <label for="spend-measure">Value
+            <select id="spend-measure">
+              <option value="eq">Sum, million eq</option>
+              <option value="cost">Sum, cost in $</option>
+              <option value="per_run">Mean per run, million eq</option>
+            </select></label>
+          <label for="spend-block">Block
+            <select id="spend-block">
+              <option value="6">6 hours</option>
+              <option value="12">12 hours</option>
+              <option value="24">1 day</option>
+            </select></label>
+          <label for="spend-range">Period
+            <select id="spend-range">
+              <option value="3d">Last 3 days</option>
+              <option value="7d">Last 7 days</option>
+              <option value="14d">Last 14 days</option>
+            </select></label>
+        </div>
+      </div>
+      <div class="ax-chart" id="spend-chart" data-source="spend_rows"></div>
+      <div class="ax-legend" id="spend-legend"></div>
+    </div>
+    <div class="ax-card ax-wide" id="spend-split-card">
+      <div class="ax-card-top">
+        <div>
+          <h2 class="ax-card-title">Where the usage goes</h2>
+          <p class="ax-note">One bar per group (group and period as in the chart above): the share of each part of its usage. Phase: the work of the calls (read, claim, code, verify, ci, conflict, report; <code>framework/tools/tokens.py --phases</code>). Sink: what fills the context (base: the system prompt, tools and CLAUDE.md that each call reads again; output: text, thinking and tool input; a tool or command: its results, read again by each later call). <em>other</em>: the sinks that the report does not list. On the right: the sum, the runs and the mean per run. Hover a part for its numbers.</p>
+        </div>
+        <div class="ax-controls">
+          <label for="spend-split">Split
+            <select id="spend-split">
+              <option value="phases">Phase</option>
+              <option value="sinks">Sink</option>
+            </select></label>
+        </div>
+      </div>
+      <div class="ax-chart ax-chart-fit" id="spend-split-chart" data-source="spend_rows"></div>
+      <div class="ax-legend" id="spend-split-legend"></div>
+    </div>
+  </section>
+
   <section class="ax-page" id="improvements" role="tabpanel" aria-labelledby="tab-improvements" hidden>
     <div class="ax-card ax-wide" id="reviews-card">
       <div>
@@ -551,6 +609,15 @@
 </div>
 
 <script>
+dash.calc('spend_rows', {
+  inputs: ['spend'],
+  title: 'Usage of each run',
+  description: 'One row per run report and type of its work: the time, the lane, the type (size S, M, L, improve, review or no ticket), the share of the run, the million eq, the cost in $, and the million eq of each phase and each sink.',
+  fn: (spend) => spend.map((r) => ({ t: Date.parse(r.at), lane: r.lane, kind: r.kind, runs: Number(r.runs),
+    eq: Number(r.eq), cost: r.cost === null || r.cost === undefined ? null : Number(r.cost),
+    phases: r.phases || {}, sinks: r.sinks || {} })).filter((r) => !isNaN(r.t) && !isNaN(r.eq)),
+});
+
 dash.calc('merge_buckets', {
   inputs: ['merges'],
   title: 'Merges per 15 minutes',
@@ -1335,6 +1402,193 @@ dash.calc('goal_history', {
       .on('mouseleave', () => { bars.attr('opacity', 1); tip.hide(); });
   }
 
+  // The usage tab: the group of a row, the rows of the period, and a color per group or part.
+  const KINDS = ['S', 'M', 'L', 'no size', 'improve', 'review', 'no ticket'];
+  const nRuns = (v) => `${Math.round(v * 10) / 10} ${v === 1 ? 'run' : 'runs'}`;    // a run with 2 tickets counts 0.5 for each
+  function spendKey(r, group) {
+    return group === 'lane' ? r.lane : group === 'kind' ? r.kind : `${r.lane} · ${r.kind}`;
+  }
+  // By lane name, then by the order of KINDS.
+  function spendOrder(a, b) {
+    const sortKey = (k) => k.split(' · ').map((x) => (KINDS.includes(x) ? String(KINDS.indexOf(x)).padStart(2, '0') : x)).join('|');
+    return sortKey(a).localeCompare(sortKey(b));
+  }
+  function spendColor(keys) {
+    const pal = [...dash.colors, ...d3.schemeTableau10, ...d3.schemeSet3];
+    const m = new Map(keys.filter((k) => k !== 'other').map((k, i) => [k, pal[i % pal.length]]));
+    return (k) => m.get(k) || 'var(--cds-chart-muted)';
+  }
+  function spendRows() {
+    const d = dash.data('spend_rows');
+    if (d.status !== 'ok') return { d, rows: [] };
+    const p = dash.params();
+    const block = (Number(p.spend_block) || 24) * 60 * MIN;
+    const span = { '3d': 3, '7d': 7, '14d': 14 }[p.spend_range ?? '7d'] * 1440 * MIN;
+    const end = d.data.length ? (Math.floor(d3.max(d.data, (r) => r.t) / block) + 1) * block : 0;
+    const from = end - span;
+    return { d, block, from, end, group: p.spend_group ?? 'both', rows: d.data.filter((r) => r.t >= from && r.t < end) };
+  }
+  function legend(id, keys, color) {
+    const el = document.getElementById(id);
+    el.replaceChildren(...keys.map((k) => {
+      const s = document.createElement('span');
+      const sw = document.createElement('i');
+      sw.className = 'ax-swatch';
+      sw.style.background = color(k);
+      s.append(sw, document.createTextNode(k));
+      return s;
+    }));
+  }
+  function emptyChart(svg, W, H, text) {
+    svg.append('text').attr('x', W / 2).attr('y', H / 2).attr('text-anchor', 'middle')
+      .attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text(text);
+  }
+
+  function drawSpend() {
+    const el = document.getElementById('spend-chart');
+    const { d, block, from, end, group, rows } = spendRows();
+    document.getElementById('spend-legend').replaceChildren();
+    if (failed(el, d)) return;
+    const measure = dash.params().spend_measure ?? 'eq';
+    const keys = [...new Set(rows.map((r) => spendKey(r, group)))].sort(spendOrder);
+    const color = spendColor(keys);
+    const bins = [];
+    for (let k = from; k < end; k += block) bins.push({ t: k, v: {}, eq: {}, runs: {} });
+    for (const r of rows) {
+      const b = bins[Math.floor((r.t - from) / block)], key = spendKey(r, group);
+      b.eq[key] = (b.eq[key] || 0) + r.eq;
+      b.runs[key] = (b.runs[key] || 0) + r.runs;
+      b.v[key] = (b.v[key] || 0) + (measure === 'cost' ? r.cost || 0 : r.eq);
+    }
+    if (measure === 'per_run') for (const b of bins) for (const k in b.v) b.v[k] = b.runs[k] ? b.eq[k] / b.runs[k] : 0;
+    const unit = measure === 'cost' ? (v) => `$${v.toFixed(2)}` : (v) => `${v.toFixed(2)}M`;
+    const W = el.clientWidth, H = 260;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img')
+      .attr('aria-label', 'Usage per lane and type of work over time');
+    if (!rows.length) { emptyChart(svg, W, H, 'No run reports with a Tokens: line in this period'); return; }
+    legend('spend-legend', keys, color);
+    const stacked = measure !== 'per_run';
+    const series = d3.stack().keys(keys).value((b, k) => b.v[k] || 0)(bins);
+    const top = stacked ? d3.max(series.at(-1), (p) => p[1]) : d3.max(bins, (b) => d3.max(keys, (k) => b.v[k] || 0));
+    const y = d3.scaleLinear([0, top || 1], [H - 26, 10]).nice();
+    const yTicks = y.ticks(5);
+    const fmtY = measure === 'cost' ? (v) => `$${v}` : (v) => `${v}M`;
+    const left = Math.ceil(widest(svg, yTicks.map(fmtY))) + 10, right = 8;
+    const x = d3.scaleUtc([new Date(from), new Date(end)], [left, W - right]);
+    svg.append('g').attr('transform', `translate(${left},0)`)
+      .call(d3.axisLeft(y).tickValues(yTicks).tickFormat(fmtY).tickSize(-(W - right - left)))
+      .call(styleAxis)
+      .call((g) => g.select('.domain').remove())
+      .call((g) => g.selectAll('.tick line').attr('stroke', 'var(--cds-chart-grid)'));
+    svg.append('g').attr('transform', `translate(0,${H - 26})`)
+      .call(d3.axisBottom(x).ticks(Math.max(2, Math.floor((W - left - right) / 90)))
+        .tickFormat((t) => (t.getUTCHours() === 0 ? d3.utcFormat('%b %-d')(t) : fmtClock(t))))
+      .call(styleAxis)
+      .call((g) => keepInside(g, W));
+    const bw = Math.max(1, x(new Date(from + block)) - x(new Date(from)));
+    const gap = bw > 6 ? Math.min(4, bw * 0.15) : 0.5;
+    if (stacked) {
+      svg.append('g').selectAll('g').data(series).join('g').attr('fill', (s) => color(s.key))
+        .selectAll('rect').data((s) => s).join('rect')
+        .attr('x', (p) => x(new Date(p.data.t)) + gap / 2).attr('width', Math.max(0.5, bw - gap))
+        .attr('y', (p) => y(p[1])).attr('height', (p) => y(p[0]) - y(p[1]));
+    } else {
+      for (const k of keys) {
+        const pts = bins.filter((b) => b.runs[k]);
+        svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', color(k)).attr('stroke-width', 2)
+          .attr('d', d3.line().x((b) => x(new Date(b.t)) + bw / 2).y((b) => y(b.v[k])));
+        svg.append('g').selectAll('circle').data(pts).join('circle').attr('r', 3).attr('fill', color(k))
+          .attr('cx', (b) => x(new Date(b.t)) + bw / 2).attr('cy', (b) => y(b.v[k]));
+      }
+    }
+    const tip = tooltip(el);
+    const hl = svg.append('rect').attr('y', 10).attr('height', H - 36).attr('width', bw)
+      .attr('fill', 'var(--color-fg)').attr('opacity', 0).attr('pointer-events', 'none');
+    svg.append('g').selectAll('rect').data(bins).join('rect')
+      .attr('x', (b) => x(new Date(b.t))).attr('width', bw).attr('y', 10).attr('height', H - 36).attr('fill', 'transparent')
+      .on('mouseenter', (event, b) => {
+        hl.attr('x', x(new Date(b.t))).attr('opacity', 0.06);
+        const ks = keys.filter((k) => b.runs[k]);
+        const runs = d3.sum(ks, (k) => b.runs[k]), eq = d3.sum(ks, (k) => b.eq[k]);
+        tip.show(x(new Date(b.t)) + bw / 2, 40, [
+          [`${fmtShort(new Date(b.t))}–${fmtShort(new Date(b.t + block))}`, null, 'ax-tip-k'],
+          ...ks.slice().reverse().map((k) => [`${k}: ${unit(b.v[k])} (${nRuns(b.runs[k])})`, color(k)]),
+          [ks.length ? `All: ${eq.toFixed(2)}M eq, ${nRuns(runs)}` : 'No run in this block', null, 'ax-tip-k'],
+        ]);
+      })
+      .on('mouseleave', () => { hl.attr('opacity', 0); tip.hide(); });
+  }
+
+  function drawSpendSplit() {
+    const el = document.getElementById('spend-split-chart');
+    const { d, group, rows } = spendRows();
+    document.getElementById('spend-split-legend').replaceChildren();
+    if (failed(el, d)) return;
+    const split = dash.params().spend_split ?? 'phases';
+    const groups = new Map();
+    const totals = new Map();
+    for (const r of rows) {
+      const key = spendKey(r, group);
+      const g = groups.get(key) || { key, eq: 0, runs: 0, parts: {} };
+      g.eq += r.eq; g.runs += r.runs;
+      for (const [p, v] of Object.entries(r[split] || {})) {
+        g.parts[p] = (g.parts[p] || 0) + v;
+        totals.set(p, (totals.get(p) || 0) + v);
+      }
+      groups.set(key, g);
+    }
+    const order = [...totals.keys()].filter((p) => p !== 'other').sort((a, b) => totals.get(b) - totals.get(a));
+    const shown = split === 'phases' ? order : order.slice(0, 9);
+    const parts = [...shown, ...(order.length > shown.length || totals.has('other') ? ['other'] : [])];
+    const color = spendColor(parts);
+    const list = [...groups.values()].sort((a, b) => spendOrder(a.key, b.key));
+    for (const g of list) {
+      g.sum = d3.sum(Object.values(g.parts));
+      g.seg = {};
+      for (const [p, v] of Object.entries(g.parts)) {
+        const k = shown.includes(p) ? p : 'other';
+        g.seg[k] = (g.seg[k] || 0) + v;
+      }
+    }
+    const row = 26, W = el.clientWidth, H = Math.max(80, list.length * row + 30);
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img')
+      .attr('aria-label', 'The split of the usage of each group');
+    if (!list.length) { emptyChart(svg, W, H, 'No run reports with a Tokens: line in this period'); return; }
+    legend('spend-split-legend', parts, color);
+    const label = (g) => `${g.eq.toFixed(1)}M · ${nRuns(g.runs)} · ${(g.eq / (g.runs || 1)).toFixed(2)}M/run`;
+    const left = Math.ceil(widest(svg, list.map((g) => g.key))) + 10;
+    const right = W > 560 ? Math.ceil(widest(svg, list.map(label))) + 12 : 8;
+    const x = d3.scaleLinear([0, 1], [left, W - right]);
+    const y = (i) => 4 + i * row;
+    svg.append('g').attr('transform', `translate(0,${y(list.length) + 2})`)
+      .call(d3.axisBottom(x).ticks(5).tickFormat((v) => `${Math.round(v * 100)} %`))
+      .call(styleAxis);
+    const txt = (g) => g.attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)');
+    svg.append('g').selectAll('text').data(list).join('text').call(txt)
+      .attr('x', left - 8).attr('y', (g, i) => y(i) + row / 2).attr('dy', '0.35em').attr('text-anchor', 'end').text((g) => g.key);
+    if (W > 560) {
+      svg.append('g').selectAll('text').data(list).join('text').call(txt)
+        .attr('x', W - right + 8).attr('y', (g, i) => y(i) + row / 2).attr('dy', '0.35em').text(label);
+    }
+    const tip = tooltip(el);
+    list.forEach((g, i) => {
+      let at = 0;
+      const segs = parts.filter((p) => g.seg[p]).map((p) => {
+        const s = { p, a: at, share: g.sum ? g.seg[p] / g.sum : 0, v: g.seg[p] };
+        at += s.share;
+        return s;
+      });
+      svg.append('g').selectAll('rect').data(segs).join('rect')
+        .attr('x', (s) => x(s.a)).attr('width', (s) => Math.max(0, x(s.a + s.share) - x(s.a) - 1))
+        .attr('y', y(i) + 3).attr('height', row - 6).attr('fill', (s) => color(s.p))
+        .on('mouseenter', (event, s) => tip.show(x(s.a + s.share / 2), y(i), [
+          [g.key, null, 'ax-tip-k'],
+          [`${s.p}: ${Math.round(s.share * 100)} % · ${s.v.toFixed(2)}M eq · ${(s.v / (g.runs || 1)).toFixed(3)}M per run`, color(s.p)],
+        ]))
+        .on('mouseleave', () => tip.hide());
+    });
+  }
+
   function drawFlow() {
     const el = document.getElementById('flow-chart');
     const d = dash.data('backlog');
@@ -1772,7 +2026,7 @@ dash.calc('goal_history', {
   }));
 
   // Tabs: one page at a time; a hidden page has no width, so it draws when shown.
-  const pages = ['activity', 'progress', 'tickets', 'improvements', 'setup'];
+  const pages = ['activity', 'progress', 'tickets', 'spend', 'improvements', 'setup'];
   const named = location.hash.slice(1);
   let current = pages.includes(named) ? named : named.startsWith('goal-') ? 'progress' : 'activity';
   function showPage(id, link) {
@@ -1790,11 +2044,17 @@ dash.calc('goal_history', {
   const range = document.getElementById('ax-range');
   bucket.addEventListener('change', () => dash.setParams({ bucket: Number(bucket.value) }));
   range.addEventListener('change', () => dash.setParams({ range: range.value }));
+  const SPEND = { group: 'both', measure: 'eq', block: 24, range: '7d', split: 'phases' };
+  for (const k of Object.keys(SPEND)) {
+    const sel = document.getElementById(`spend-${k}`);
+    sel.addEventListener('change', () => dash.setParams({ [`spend_${k}`]: sel.value }));
+  }
 
   function draw() {
     fillMarks();
     bucket.value = String(dash.params().bucket ?? 15);
     range.value = String(dash.params().range ?? '24h');
+    for (const [k, v] of Object.entries(SPEND)) document.getElementById(`spend-${k}`).value = String(dash.params()[`spend_${k}`] ?? v);
     document.getElementById('sw-made').style.background = dash.colors[0];
     document.getElementById('sw-closed').style.background = dash.colors[1];
     const root = document.querySelector('.ax');
@@ -1803,6 +2063,7 @@ dash.calc('goal_history', {
     if (current === 'activity') { drawMerges(); drawUsage(); drawPerUsage(); drawPerPr(); drawRecent(); }
     if (current === 'progress') drawProgress();
     if (current === 'tickets') { drawFlow(); drawOpen(); drawPriority(); drawEpics(); }
+    if (current === 'spend') { drawSpend(); drawSpendSplit(); }
     if (current === 'improvements') drawReviews();
     if (current === 'setup') drawSetup();
   }
