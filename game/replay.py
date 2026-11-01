@@ -92,6 +92,7 @@ END_BOOKS = {"Build order": 1, "Spending": 2, "Timeline": 0}   # book -> invento
 FOLLOWED = "aoe2mc.followed"  # the tag of the entity that the spectators of --follow look through (#1095)
 CAMERA_ENTITY = "aoe2mc.camera"   # the tag of the display entity of --camera player (#4770)
 GLIDE = 20                  # ticks: the longest glide of the camera of --camera player (#4770; Minecraft: up to 59)
+CAMERA_PICK = 4             # blocks: the info line of a spectator through the camera entity picks a unit this near the ray (#5437)
 JUMP = 64                   # blocks: a view of --camera player this far from the last one jumps (#4770): well in the
                             # chunks that a client has around it (render distance 8: 128 blocks)
 TRAIL = 3                   # tiles: a follower farther than this from its target walks to it again (#2551)
@@ -756,7 +757,7 @@ class Replay:
         now = clock()
         for name in sorted(getattr(self.game, "joined", ())):         # run.Game.op_joined: no RCON command
             seen = self.eye(name)
-            i = seen and self.gather.pick_unit(*seen, at)
+            i = seen and self.gather.pick_unit(*seen, at, radius=CAMERA_PICK if self.in_camera(name) else 0.8)
             if i is None:
                 line = seen and self.building_line(*seen)                # no unit on the view line (#5288)
                 if not line:
@@ -842,6 +843,11 @@ class Replay:
         return say("task_garrisoned" if any(i in ids for ids in [*self.garrisons.values(), *self.cargo.values()])
                    else "task_idle")
 
+    def in_camera(self, name):
+        """True when player name is a spectator of --camera player that looks through the camera entity (#5437)."""
+        return self.glide is not None and (self.game.command(
+            f"data get entity {name} playerGameType") or "").rsplit(":", 1)[-1].strip() == "3"   # spectator
+
     def eye(self, name):
         """(eye, direction) of player name, or None (gather.Gather.look). --camera player (#5413): a spectator that
         looks through the camera entity (/spectate) keeps its own Pos and Rotation, so read those of the entity; the
@@ -849,8 +855,7 @@ class Replay:
         g = self.gather.Gather
         me = types.SimpleNamespace(command=self.game.command)
         me.pos = lambda n: g.pos(me, n)
-        if self.glide is not None and (self.game.command(
-                f"data get entity {name} playerGameType") or "").rsplit(":", 1)[-1].strip() == "3":   # spectator
+        if self.in_camera(name):
             cam = f"@e[type=item_display,tag={CAMERA_ENTITY},limit=1]"
             seen = g.look(me, cam)
             return seen and ((seen[0][0], seen[0][1] - 1.62, seen[0][2]), seen[1])
