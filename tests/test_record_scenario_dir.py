@@ -13,7 +13,7 @@ from AoE2ScenarioParser.datasets.players import PlayerId
 import aoe2mc
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-REC = os.path.join(ROOT, "samples", "de-63.0.aoe2record")
+REC = os.path.join(ROOT, "samples", "de-regicide.aoe2record")   # the smallest random map record (#5485)
 pytest.importorskip("mgz.model")
 
 
