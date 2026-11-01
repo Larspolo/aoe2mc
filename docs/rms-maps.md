@@ -190,5 +190,8 @@ of the Zetnus guide (the guide has neither word, #5068). AoE2 DE reads an undefi
 | `create_object_group NAME { add_object TYPE PERCENT ... }` | A pool of object types in `<OBJECTS_GENERATION>`. A later `create_object NAME` places objects of the pool (for example all cow variants as `HERDABLE_A`). AoE2 DE ignores the percent: each type of the pool has the same chance | `objects()`: each placed object draws a type of the pool; an `add_object` with an undefined object is skipped | aoe2-rms docs (docs.racket-lang.org/aoe2-rms, "create-object-group", "add-object") |
 | `enable_tile_shuffling` (a `create_object` flag) | No public source found (web search, 2026-10-31). By its name: the candidate tiles in random order | read with no effect: `objects()` takes random free tiles already | none |
 
+Owner decision (#3846, 2026-11-01): `enable_tile_shuffling` and `override_actor_radius_if_required` stay excluded.
+They keep the warning "is not read yet". A run reads them only when a source of their effect is found.
+
 The survey of #5087 also has `create_object: grouping` and `set_loose` (2 maps): no DE attribute has these names (the
 attribute is `set_loose_grouping`). The warnings stay.
