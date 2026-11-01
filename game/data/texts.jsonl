@@ -222,7 +222,7 @@
 {"name": "aoe2mc.treaty.refuse_endless", "en_us": "Treaty: you cannot attack in this game."}
 {"name": "aoe2mc.treaty.start", "en_us": "Treaty: no player can attack another player before %s."}
 {"name": "aoe2mc.treaty.start_endless", "en_us": "Treaty: no player can attack another player in this game."}
-{"name": "aoe2mc.tutorial.complete", "en_us": "The tutorial is complete."}
+{"name": "aoe2mc.tutorial.complete", "en_us": "The tutorial is complete. Next: play a game against the bot: python3 game/run.py OUTWorld --play --bot"}
 {"name": "aoe2mc.tutorial.complete_title", "en_us": "Tutorial complete"}
 {"name": "aoe2mc.tutorial.step_done", "en_us": "Step done"}
 {"name": "aoe2mc.tutorial.step_of", "en_us": "Step %s/%s: %s"}
