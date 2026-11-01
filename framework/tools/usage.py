@@ -183,18 +183,24 @@ def pending(started, lines, now, minutes=PENDING, refill_lane="deep"):
 
 def refill_need(ready, target, issues, due=lambda: [], reviews=lambda: [], free=lambda: []):
     """The reason of the refill runs, or "" when they have no work (#3547): an open epic with no open sub-issue and no
-    open "Part of #E" ticket (the epic check), a release check with no ticket, a due process or roadmap review (deep
+    open "Part of #E" ticket (the epic check; a release epic with an open ticket in its milestone has work), the tickets with
+    `rank` after a release (release.yml gives it to the next release epic too: the `roadmap` skill, "Release cycle"),
+    a release check with no ticket, a due process or roadmap review (deep
     locks: with no deep run they never run, #3560), and only while R < N (`queue.md`) the other refill sources. 5 deep
     runs in one hour found none with R >= N (2026-10-29), and one with R < N found no source (#3560). issues: the open
     issues and PRs; due, reviews, free: the release checks with no ticket, the due reviews and the other sources
     (free_sources), read only when needed."""
     import dashboard
     work = {int(n) for i in issues if "pull_request" not in i for n in re.findall(r"Part of #(\d+)", i.get("body") or "")}
+    work |= {i["number"] for i in issues if dashboard.RELEASE in dashboard.labels(i)
+             and dashboard.release_scope(i, issues)[2]}             # a release epic with open milestone tickets has work
     subs = lambda i: (s := i.get("sub_issues_summary") or {}).get("total", 0) - s.get("completed", 0)   # open sub-issues
     epics = [i["number"] for i in issues if "epic" in dashboard.labels(i) and i["number"] not in work and not subs(i)
-             and not {dashboard.MUTED, dashboard.AFTER, dashboard.CLOSE, "needs-human"} & dashboard.labels(i)]
+             and not {dashboard.MUTED, dashboard.AFTER, dashboard.RANK, dashboard.CLOSE, "needs-human"} & dashboard.labels(i)]
     if epics:
         return "epic check " + ", ".join(f"#{n}" for n in epics)
+    if rank := sum(dashboard.RANK in dashboard.labels(i) for i in issues if "pull_request" not in i):
+        return f"rank {rank} tickets after the release"                  # and the next release epic (`roadmap` skill)
     if checks := due():
         return f"{len(checks)} release checks"
     if kinds := reviews():

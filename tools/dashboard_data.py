@@ -244,11 +244,13 @@ WEEK_USED = re.compile(r" · week (\d+(?:\.\d+)?)%")
 
 def releases():
     """The rows of the "Releases" section of the status issue: `release.releases` of the progress on GitHub and the
-    release focus of steering/project/RELEASE.md, and the count of the features that wait for the release."""
+    release focus of steering/project/RELEASE.md, the count of the features that wait for the release, and the GitHub
+    milestones (the scope of the release epics)."""
     import release
     data = release.load()
     ms = release.focus()
-    return dict(rows=release.releases(release.current(data), ms), waiting=len(release.waiting(data[0], data[2], ms)))
+    return dict(rows=release.releases(release.current(data), ms), waiting=len(release.waiting(data[0], data[2], ms)),
+                milestones=pages("milestones?state=all"))      # the scope of each release epic (dashboard.release_scope)
 
 
 def accounts(hours=168, comments=None):

@@ -45,8 +45,9 @@ Design work follows `docs/DESIGN.md` and the `design` skill.
   path finding, riders, teams, scoreboards, attributes, block states and entities, datapack functions). Write own
   logic only when Minecraft has none, and say why in the PR. Worlds stay vanilla; the game program may use the Paper
   plugin where vanilla has no command. Details: `docs/DESIGN.md`, section 0.
-- **Release focus** (owner): until the next release, work only on bugs, release checks, the features in the focus and
-  the user experience of the play test. Give other work `after-release` (`steering/project/RELEASE.md`, "Release focus").
+- **Release focus** (owner): until the next release, work only on bugs, release checks, the release milestone
+  (the scope of the release epic, label `release`), the features in the focus and the user experience of the play test. Give other work
+  `after-release`. The epic's close makes the release (`steering/project/RELEASE.md`, "Release cycle").
 - Tile (x, y) → block (x × T, z = y × T), T = `--tile-size` (4). A design draws on a `Canvas` in local coordinates,
   the front (main door) on the south side (z = w-1).
 - An object keeps its blocks inside its footprint up to head height (3 blocks, `Edits`). Free footprint space gets

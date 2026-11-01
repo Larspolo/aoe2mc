@@ -36,7 +36,8 @@ session task tools `mcp__ccd_session` ...) from each session of the repository: 
 | `coverage.yml` (Coverage) | Each push to `main` | Writes `docs/coverage.md`, `MAX` of `tests/test_coverage.py` and a column of `docs/DESIGN.md`. PRs do not change these files, so they do not conflict there. |
 | `metrics.yml` (Metrics) | The cron (`*/15`, a few times a day), by hand with `days` | Writes the status issue comments to the orphan branch `metrics` (`framework/tools/metrics_log.py`, one file per day). `framework/tools/health.py` reads them, the run reports of `runs/` (each run adds its own file, `metrics_log.post`) and only the newest comments from the API (#1983). The tip keeps the last 14 days (`metrics_log.prune`: each reader fetches the whole tip); the git history of the branch keeps all days. A store outside GitHub (Cloudflare D1, free up to 5 million rows read a day) was not better: it adds an account, a token in the runs and a way to fail for the pacer (2026-10-29). The pacer loop writes the branch in each cycle too (2026-10-29): this workflow is the fallback and the backfill. |
 | `labels.yml` (Labels) | A change of `.github/labels.txt` | Creates the labels. |
-| `after-release.yml` (After release) | A push of a tag `v*`, by hand | Removes the label `after-release` from each open issue: the owner holds a ticket with it until the next release, and `framework/tools/dashboard.py` skips it until then (#4175). |
+| `after-release.yml` (After release) | A push of a tag `v*`, `release.yml`, by hand | Moves the label `after-release` of each open issue to `rank`: the owner holds a ticket with it until the next release, and `framework/tools/dashboard.py` skips it until then (#4175). A deep run ranks the `rank` tickets (P1 to P3) and gives the next release epic its scope (`roadmap` skill, "Release cycle"). |
+| `release.yml` (Release) | A closed issue with `release`, `close.yml`, each hour, by hand | Makes the milestone of each open release epic; tags main as `vX.Y.Z` of a closed release epic when its milestone has no open issue and CI is green, closes the milestone, starts `installers.yml`, `worlds.yml` and `after-release.yml` on the tag, and opens the next release epic (with `rank`) and milestone (owner, 2026-11-01). |
 
 ### Tools of the system
 
@@ -48,7 +49,7 @@ session task tools `mcp__ccd_session` ...) from each session of the repository: 
 | Tokens of a run | `python3 framework/tools/tokens.py [--top N]` (the tokens of this session and the largest sinks: files, commands; the `Tokens:` line of the run report; `--verify`: the minutes of each check command) |
 | Quota and pacing | `python3 framework/tools/usage.py` (5-hour and 7-day usage, resets; `--target`: the number of runs (90 % of the 5-hour window 2 hours before the reset, then 98 %); `--sample`: the `Usage:` line of the run report; `--fire`: the runs that the pacer starts now; `framework/tools/pacer.py` starts them, `pacer.yml`, #3193) |
 | Dashboard of #1 | `python3 framework/tools/dashboard.py --dry-run` (`--next`: ticket candidates in pick order) |
-| Release bar | `python3 tools/release.py` (percent of each goal for the milestones C = 100 %, A and B: `steering/project/RELEASE.md`, #878) |
+| Release bar | `python3 tools/release.py` (percent of each goal for the levels C = 100 %, A and B: `steering/project/RELEASE.md`, #878) |
 
 ## The loop of a run
 
@@ -221,7 +222,7 @@ second project starts).
 | `docs/LEARNINGS.md` | specific | The lessons of this project. The first section (environment and GitHub) is mostly generic. |
 | `steering/README.md` | steering | The list of the steering files: who writes each, and its kind. |
 | `steering/project/ROADMAP.md` | steering | The three goals and their features. |
-| `steering/project/RELEASE.md` | steering | The release bar: the milestones of each goal. |
+| `steering/project/RELEASE.md` | steering | The release bar: the levels of each goal, the release focus and the release cycle. |
 | `steering/project/PRINCIPLES.md` | steering | The direction of the project: the owner's preferences for aoe2mc, made general from the decisions. |
 | `steering/project/DECISIONS.md` | steering | The log of the owner's project decisions (one line each), the evidence of the project principles. |
 | `steering/system/PRINCIPLES.md` | steering | The owner's preferences for the agent system, made general from the decisions. |
@@ -243,5 +244,6 @@ second project starts).
 | `.github/workflows/coverage.yml` | specific | The coverage of the AoE2 types. |
 | `.github/workflows/bundles.yml` | specific | The app bundles of the converter (PyInstaller, `packaging/`, #1541) and their installers (#1542). |
 | `.github/workflows/installers.yml` | specific | On a tag `v*`: the installers of `bundles.yml` in the release of the tag (#1542). |
+| `.github/workflows/release.yml` | specific | Tags the closed release epic `vX.Y.Z`, starts `installers.yml`, `worlds.yml` and `after-release.yml` on the tag, opens the next release epic (owner, 2026-11-01). |
 | `.github/workflows/worlds.yml` | specific | The worlds of `examples/` and `samples/` as zips in a release (#207). |
 | `.gitattributes` | specific | The list of `merge=union` files, and `merge=jsonl` for `game/data/*.jsonl` and `tests/data/civ_bonuses.jsonl` (`framework/tools/merge_jsonl.py`, #2004, #2100). |
