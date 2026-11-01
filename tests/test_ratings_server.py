@@ -9,7 +9,7 @@ import sys
 
 import pytest
 
-from game import conquest, gather, lobby
+from game import conquest, gather, lang, lobby
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "game"))
 import ratings  # noqa: E402  (conquest imports the plain module: patch that one)
@@ -29,7 +29,7 @@ def play(game, data, winner, loser):
     finally:
         game.command = command
     assert g.ended == "Victory"
-    return [json.loads(c[len("tellraw @a "):])["text"] for c in sent if c.startswith("tellraw @a ") and "→" in c]
+    return [lang.plain(json.loads(c[len("tellraw @a "):])) for c in sent if c.startswith("tellraw @a ") and "→" in c]
 
 
 @pytest.mark.mc

@@ -1,4 +1,5 @@
 """A melee unit hits once per AoE2 reload time (#848): game/combat.py stats_command and the plugin on Paper."""
+import math
 import shutil
 import time
 
@@ -82,4 +83,5 @@ def test_three_champions_destroy_a_stable_at_the_aoe2_rate(tiny_world, tmp_path)
             assert game.command(f"aoe attack @e[tag={tag}] {uuid}").strip() == "Attack: 1 units"
         seen, at = times(game, lambda: hp(game, uuid), 200, end=80)
         assert seen[-1] is None, seen                                  # destroyed
-        assert abs(at[-1] - at[0] - 116 / 3 * 24 / 20) < 4, (at[-1] - at[0], seen)   # 116 hits of 13, 1.2 s each
+        hits = math.ceil(combat.stats("STABLE").hp / combat.damage("CHAMPION", "STABLE"))  # the values of the data (#5555)
+        assert abs(at[-1] - at[0] - hits / 3 * 24 / 20) < 4, (at[-1] - at[0], hits, seen)  # 1.2 s for each hit
