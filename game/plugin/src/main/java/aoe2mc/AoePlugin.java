@@ -146,6 +146,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe batch <command> ...                    run the commands in this order, each URL-encoded ("+" is a space): one
  *                                              RCON round trip for many commands, with no feedback in the log (#2761:
  *                                              a round trip took 2 to 5 ms at a 45 ms tick, the replay fell behind)
+ *   aoe camera <players> on <y> <x0> <z0> <x1> <z1> <speed>   the camera mode (Camera.java, game/camera.py): a
+ *                                              floor of barrier blocks at y that only the player sees and
+ *                                              feels, the walk speed times speed, no block reach
+ *   aoe camera <players> off                   the normal mode; aoe camera <player>: "Camera: on|off"
  *   aoe gate <team> <x0> <y0> <z0> <x1> <y1> <z1>
  *                                              a gate of the team (#1325, Gates.java): its iron bars in the box rise
  *                                              while an own or allied unit is near or walks a path through it; the
@@ -425,6 +429,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final MapTable mapTable = new MapTable();              // a click on the framed map (#2586)
     private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
     private final Follow camera = new Follow();                     // the follow camera of a replay (#738, #1660)
+    private final Camera cameraMode = new Camera();                 // the floor and speed of the camera mode
     private final Border border = new Border();
     private final Sight sight = new Sight(minimap);                 // the edge of the line of sight (#3330)
 
@@ -1442,6 +1447,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(deaths, this);
         Bukkit.getPluginManager().registerEvents(mapTable, this);
         Bukkit.getPluginManager().registerEvents(viewer, this);
+        Bukkit.getPluginManager().registerEvents(cameraMode, this);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -3287,6 +3293,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             }
             sender.sendMessage("Batch: " + n + "/" + (args.length - 1));
             return true;
+        }
+        if (args.length >= 2 && args[0].equals("camera")) {             // the camera mode (Camera.java)
+            return cameraMode.command(sender, args, players(sender, args[1]));
         }
         if (args.length == 7 && args[0].equals("charge")) {            // Siphons (#2165)
             return charges(sender, args[1], charges, args[2], args[3], args[4], args[5], args[6], false);

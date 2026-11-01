@@ -254,3 +254,7 @@
 {"name": "aoe2mc.train.rally", "en_us": "Right click the ground for the rally point."}
 {"name": "aoe2mc.train.researched", "en_us": "%s is researched."}
 {"name": "aoe2mc.replay_input.fight_units", "en_us": ", %s units"}
+{"name": "aoe2mc.camera.fov", "en_us": "The fast camera makes the view wider. To stop this, set Options > Accessibility Settings > FOV Effects to 0 %."}
+{"name": "aoe2mc.camera.off", "en_us": "Camera: off"}
+{"name": "aoe2mc.camera.on", "en_us": "Camera: on, speed x%s. Shift right click: next speed."}
+{"name": "aoe2mc.camera.speed", "en_us": "Camera speed: x%s"}
