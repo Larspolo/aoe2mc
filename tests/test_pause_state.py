@@ -10,6 +10,8 @@ import train  # noqa: E402
 import treaty  # noqa: E402
 from test_bot_gather import bot_map  # noqa: E402
 
+from game import gather as game_gather  # noqa: E402
+
 
 class FakeTime:
     """The clock of gather.time: sleep moves the time on, so 30 game seconds take no real time."""
@@ -32,7 +34,8 @@ def state(me):
 
 def test_a_pause_of_30_game_seconds_keeps_training_gathering_and_the_treaty(monkeypatch):
     fake = FakeTime()
-    monkeypatch.setattr(gather, "time", fake)
+    for g in (gather, game_gather):                  # bot_map makes the Gather of game.gather: patch both (#5485)
+        monkeypatch.setattr(g, "time", fake)
     _, me, _ = bot_map()
     me.clock = fake.monotonic
     me.clicks = lambda: ()

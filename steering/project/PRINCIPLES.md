@@ -54,8 +54,9 @@ the player is a bug ("this is not nice", #989).
 ## P12. Before a release, the play test first
 
 Until the next release, the agents make the game ready for a play test and improve what the player sees and does.
-New features of milestone C and extras wait with the label `after-release` (owner, 2026-11-01; #4175, #5120, #5378;
+New features of level C and extras wait with the label `after-release` (owner, 2026-11-01; #4175, #5120, #5378;
 the full rule: `steering/project/RELEASE.md`, "Release focus"). A ticket outside the focus is not urgent work: hold it.
+Decide by comparison with the held tickets. After each release, the held tickets come back, ranked against each other.
 
 ## Tensions
 

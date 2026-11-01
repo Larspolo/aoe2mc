@@ -161,7 +161,7 @@ def due_lines(rows):
 
 def main():
     data = load()
-    print("Release bar (C = 100 %, milestones A and B; left = features + checks + bug reserve):")
+    print("Release bar (C = 100 %, levels A and B; left = features + checks + bug reserve):")
     print("\n".join(lines(current(data))))
     if wait := waiting(data[0], data[2], ms := focus()):
         print(f"Release focus {ms}: {len(wait)} features wait for the release (no new epic, label `after-release`)")

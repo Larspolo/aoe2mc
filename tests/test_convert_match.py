@@ -9,7 +9,7 @@ import aoe2mc
 from tools import record_api
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-REC = os.path.join(ROOT, "samples", "de-64.3.aoe2record")
+REC = os.path.join(ROOT, "samples", "de-regicide.aoe2record")   # the smallest random map record (#5485)
 pytest.importorskip("mgz.model")
 
 

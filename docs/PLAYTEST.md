@@ -26,17 +26,28 @@ world `OUTWorld`. You can also convert your own `.aoe2scenario` file.
 
 ## 3. Start and join
 
+Start with the tutorial. It shows each step in the boss bar and the chat (select a villager, gather wood, build a
+house). After the last step, stop the game with Ctrl-C and start the bot game below. The installer path uses
+`aoe2mc-game` in place of `python3 game/run.py`.
+
+    python3 game/run.py OUTWorld --play --tutorial
+
+Then start the bot game:
+
     python3 game/run.py OUTWorld --play --bot
 
 The first start downloads the Minecraft server (about 1 minute). When the console shows
 "Join the server localhost:PORT", start Minecraft 26.3, click "Multiplayer", "Direct Connection" and type that
-address. You play player 1; the bot plays player 2 and attacks you. Ctrl-C in the console stops the game.
+address. The game clock starts when you joined ("The game starts when 1 person joined"). You play player 1; the
+bot plays player 2 and attacks you. Ctrl-C in the console stops the game and saves it: the console shows the
+command to continue (`--load`).
 
 Add `--cheats` to use the AoE2 cheat codes in the chat (for example `aegis`: fast building and training).
 
 ## 4. Controls
 
-Hold the carrot on a stick. The action bar at the bottom of the screen always shows the next possible step.
+Hold the carrot on a stick. The action bar at the bottom of the screen always shows the next possible step. The
+tutorial (section 3) teaches the same controls.
 
 - Select: right click a unit. Hold right click and look across the ground: a selection box.
 - Move: with a selection, right click the ground.
@@ -58,5 +69,5 @@ Make an issue in [Larspolo/aoe2mc](https://github.com/Larspolo/aoe2mc/issues/new
 - the steps that cause the bug, and what you expected,
 - the game time (the minutes since the start of the game),
 - a screenshot (F2 in Minecraft),
-- the server log: copy `.cache/<newest folder>/logs/latest.log` before you stop the game (the game program deletes
-  the server folder when it stops), and the text of the console.
+- the server log: attach the file `last-game.log` that the game program writes when it stops (its path is printed
+  as "Server log: ..."; the game program keeps it also after a crash or Ctrl-C), and the text of the console.
