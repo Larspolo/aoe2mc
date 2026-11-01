@@ -874,7 +874,7 @@ def order(g, player, rect, slot, shift=False):
 
 def rally(g, rect, cell, tile=None):
     """Set the rally point of the own building rect at the block cell (x, z); tile: the tree, bush, mine or farm tile
-    there, or None. A banner in the player color and the text "Rally point" show it for MARK AoE2 seconds."""
+    there, the UUID of an own sheep (#5545), or None. A banner in the player color and the text "Rally point" show it for MARK AoE2 seconds."""
     g.rally[rect] = cell, tile
     tag, (x, z) = f"aoe2mc.rally.{rect[0]}.{rect[2]}", cell
     y, color = g.map.y(x, z), g.players.get(str(g.player), {}).get("color", "white")
@@ -897,7 +897,11 @@ def go(g, rect, uuid, name):
     if uuid not in g.villagers:                                        # a military unit walks with the plugin
         import ai  # ai imports gather, gather imports this module
         ai.move(g, uuid, name, g.map.T, x + 0.5, g.map.y(x, z), z + 0.5, ai.NORMAL * speed(g, name, uuid))
-    elif tile:
+    elif isinstance(tile, str) and tile in g.prey and tile not in g.dead:   # a live sheep: hunt it (#5545)
+        g.hunt(tile, {uuid})
+    elif isinstance(tile, str) and g.dead.get(tile) in g.map.carcasses:     # its carcass (#5536)
+        g.send(g.dead[tile], {uuid})
+    elif tile and not isinstance(tile, str):
         g.send(tile, {uuid})
     else:
         g.go(g.villagers[uuid], "to_rally", {(x, z)} if g.map.free(x, z) else g.map.around({(x, z)}))
