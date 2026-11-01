@@ -286,6 +286,7 @@ class Game:
     people = 1
     spectators = frozenset()                         # the Minecraft players without a side (#2898)
     joined = frozenset()                             # the Minecraft players who joined (start_on_join, #3314)
+    ready = frozenset()                              # the people who clicked "Ready" (lobby.ready, #5508)
     starts, yaw = {}, 0.0                            # AoE2 player -> its start block, the spawn yaw (aoe2mc.json, #3347)
     placed = frozenset()                             # the Minecraft players who went to the start of their side
     seats = ()                                       # --seats: the AoE2 player of each person in the join order (#3489)
@@ -942,7 +943,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             h.speed = speed
     if wait:
         import savegame
-        start_on_join(game, savegame.sides(g), people)
+        start_on_join(game, savegame.sides(g), people, g=g)
     g.run(seconds)
     if g.ended:
         unveil(g)
@@ -966,13 +967,30 @@ def welcome(game):
                  click_event={"action": "run_command", "command": "/controls"})))
 
 
-def start_on_join(game, sides, people, sleep=time.sleep):
+def start_on_join(game, sides, people, sleep=time.sleep, g=None):
     """As in AoE2 DE, the game starts when all people are there (#3314): play froze the ticks (the `schedule` timers
     of the scenario triggers, the mobs) at the start of play(). Unfreeze them after the join of the people, and start
-    the game clock of each side (Gather.t0) then, so that the triggers, the treaty and the bots agree."""
-    print(f"The game starts when {people} {'person' if people == 1 else 'people'} joined.", file=sys.stderr)
-    while len(game.joined) < people:
+    the game clock of each side (Gather.t0) then, so that the triggers, the treaty and the bots agree.
+    More people: the game starts when all clicked "Ready" in the lobby page (lobby.ready, #5508). The wait opens that
+    page for each person at the join and reads the menu clicks of the Gather g (no Gather.run yet)."""
+    lobby_page = people > 1 and g is not None        # no Gather: nobody can click "Ready"
+    print(f"The game starts when {people} {'person' if people == 1 else 'people'} joined"
+          + (" and are ready." if lobby_page else "."), file=sys.stderr)
+    game.wait, game.ready, shown = True, set(), set()
+    while len(game.joined) < people or lobby_page and not set(game.joined) <= game.ready:
+        if lobby_page:
+            import lobby
+            import menu
+            for name in sorted(set(game.joined) - shown):
+                shown.add(name)
+                game.command(f"title {name} actionbar {json.dumps(lang.text('aoe2mc.run.wait_ready'))}")
+                lobby.show(g, name)
+            menu.clicks(g)
         sleep(0.5)
+    if shown:
+        import menu
+        for name in sorted(shown):
+            menu.close(g, name)
     for n in range(5, 0, -1):                        # the client loads the map after the join: count down (#5506)
         game.command(f"title @a subtitle {json.dumps(lang.text('aoe2mc.run.starts_in', n))}")
         game.command(f"title @a title {json.dumps(str(n))}")
