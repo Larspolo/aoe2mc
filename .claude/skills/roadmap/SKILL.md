@@ -21,8 +21,10 @@ epics have no goal left that an agent can do.
 2. Pick the goal: the goal whose newest epic is the oldest (the lowest issue number of the newest epics of the
    three goals; a goal without an epic first). Tie: the order of the file. Goal 4 (the agent system) takes no turn:
    its epics come from the `improve` skill and the owner.
-3. In that goal, take the first missing feature without an epic. Skip a feature whose line names an open `after-release`
-   or `muted` ticket: the owner holds it (`usage.held`, #5301). Grep the code for it first: a ticket can do a
+3. In that goal, take the first missing feature without an epic inside the release focus
+   (`steering/project/RELEASE.md`, "Release focus": `python3 tools/release.py` names the features that wait; a feature
+   with no row is milestone C). Make no epic for a feature that waits: no goal has one, make no epic. Skip a feature
+   whose line names an open `after-release` or `muted` ticket: the owner holds it (`usage.held`, #5301). Grep the code for it first: a ticket can do a
    feature with no epic (`play:taunts` by #3318). Then mark it `[x]` with the ticket in the next PR, and take the next one.
 4. Make the epic with the `ticket` skill: the title is an instruction, the body has the goal (what the player sees),
    the acceptance criteria (with a check that the whole feature is covered: `ticket` skill, "Split an L ticket"),
@@ -36,7 +38,8 @@ epics have no goal left that an agent can do.
 
 ## Release checks (`steering/project/RELEASE.md`, owner decision #878)
 
-Do not change the order of the work for the release bar: the priority labels alone decide it. Look at the bar in the
+Inside the release focus (`steering/project/RELEASE.md`), the priority labels decide the order of the work; the work
+outside it waits with `after-release`. Look at the bar in the
 roadmap review (below).
 When all features of a milestone (B, A or C) of a goal are done (`python3 tools/release.py`: 0 features left in that
 milestone), make each release check of the goal that has no ticket yet as a check ticket ("Check X in the game",
@@ -59,7 +62,8 @@ no merged PR, at the merged count, at least 1: `claim.ROADMAP_IDLE`), after step
    Before you add one, grep the open issues for its topic (all tickets, also `after-release` and `muted`, not only
    epics): a ticket that covers it goes into the line as `(#N)` (#5290: #4198 of the owner held the export).
 3. Keep the order: the features that the next features need come first.
-4. Give each new feature a row in `steering/project/RELEASE.md` (milestone C, unless the owner says otherwise), and correct the
+4. Give each new feature a row in `steering/project/RELEASE.md` (milestone C, unless the owner says otherwise: it waits
+   for the release, "Release focus"), and correct the
    estimates there. Do not remove an estimate: `release.py` takes the larger of the estimate and the sub-issues of
    the epic, and with no estimate the median of the closed epics, more than a small epic has (#3678: 20 tickets).
 5. Put the change into the PR of your ticket. A run with no ticket (a deep run after an empty refill) makes a

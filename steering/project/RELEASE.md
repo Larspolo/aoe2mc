@@ -2,10 +2,41 @@
 
 The owner decision of #878 (2026-10-26): a goal is at 100 % when all its features of `steering/project/ROADMAP.md` are done
 (milestone C), its release checks pass and its bug reserve is used. The milestones B (a smaller first test) and A
-(the core) are indications only: the priority labels alone decide the order of the work.
+(the core) also set the release focus (below): the work outside the focus waits; inside it, the priority labels
+decide the order.
 `python3 tools/release.py` prints the progress of each goal and milestone.
 
 Bug reserve: 0.3
+
+Release focus: A
+
+### Release focus (owner, 2026-11-01)
+
+The next release is a play test: a person plays a full game, and the agents improve what that person sees and does.
+Until the next release (a tag `v*`), the agents work only on:
+
+- bugs, and the release checks of the table rows `...-check-...`;
+- the features of the milestones that the line "Release focus: X" counts (`A`: the milestones B and A);
+- the user experience of the play test: what a player sees, controls and understands in a game (the play-test kit
+  `docs/PLAYTEST.md`, the controls, the menus, the hints and the feedback of P9, the start of a game, the speed of
+  the server), and the follow-ups of a play test of a person;
+- the upkeep of the agent system that the work above needs (tests, CI, the tools of the runs).
+
+All other work waits with the label `after-release`. That includes each feature of milestone C (a feature with no
+row), and these kinds of work (the owner moved them first, #4175):
+
+- more input formats and mod content (mod center maps, data mods, script languages such as XS, saved games);
+- more ways to make a map (random map scripts from the original files, lobby settings, game modes, export);
+- texts in other languages, achievements, statistics and analysis of a game (heat maps, graphs);
+- extra replay modes (take over a player), extra commands, a nicer UI of the installer program;
+- new systems for the agents (more accounts) and work for later Minecraft versions.
+
+Work that started goes on: a ticket with `in-progress` or an open PR gets no `after-release`. Let it finish and merge,
+so that its usage is not lost. Hold only the rest: its epic gets the label and no new sub-issue.
+
+`tools/release.py` prints the features that wait; `framework/tools/usage.py` gives them no refill run. The owner moves
+a feature into the focus with its milestone (a row `B` or `A`) or by removal of the label `after-release` from its
+ticket. After a release, the owner sets the milestones and the focus of the next release.
 
 ## Rules
 

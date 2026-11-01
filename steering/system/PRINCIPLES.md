@@ -1,6 +1,6 @@
 # Principles: the agent system
 
-The direction of aoe2mc: what the owner prefers when two good options compete, for the agent system (how the runs work). The agent made this file from the owner's decisions until 2026-10-27 (decision tickets, owner comments, `/human` sessions). Each principle names the decisions that it comes from. `steering/system/DECISIONS.md` is the log of these decisions. The project principles are in `steering/project/PRINCIPLES.md`. The numbers P1 to P11 are the same in both files.
+The direction of aoe2mc: what the owner prefers when two good options compete, for the agent system (how the runs work). The agent made this file from the owner's decisions until 2026-10-27 (decision tickets, owner comments, `/human` sessions). Each principle names the decisions that it comes from. `steering/system/DECISIONS.md` is the log of these decisions. The project principles are in `steering/project/PRINCIPLES.md`. The numbers P1 to P12 are the same in both files.
 
 How to use it:
 - **Agents.** Before you recommend an option (decision ticket, PR, epic), compare each option with these principles.

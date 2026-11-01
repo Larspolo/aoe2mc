@@ -39,6 +39,22 @@ def release(text):
     return share, rows
 
 
+def focus(root=None):
+    """The milestone of the line "Release focus: X" of steering/project/RELEASE.md (owner, 2026-11-01): until the next
+    release the agents make epics only for the features of the milestones that X counts (INCLUDES). "C" with no line
+    or no file."""
+    path = os.path.join(root or ROOT, "steering", "project", "RELEASE.md")
+    m = os.path.exists(path) and re.search(r"^Release focus: ([ABC])\b", open(path).read(), re.M)
+    return m[1] if m else "C"
+
+
+def waiting(features, rows, ms):
+    """The open features (keys) of `features` that wait for the release: their milestone (rows, default C) is not in
+    INCLUDES[ms] of the release focus ms."""
+    item = {r[1]: r[2] for r in rows}
+    return [k for k, (_, done, _) in features.items() if not done and item.get(k, "C") not in INCLUDES[ms]]
+
+
 def epic_key(body):
     m = re.search(r"Roadmap: `([^`]+)`", body or "")
     return m and m[1]
@@ -109,6 +125,17 @@ def total(result, m="C"):
     return 100 * done / (done + rest) if done + rest else 100.0
 
 
+def releases(result, ms):
+    """[(name, {goal name: (percent, tickets left)}, percent of all game goals, tickets left)] for the next release (the
+    milestone ms of the release focus) and for the full roadmap (C). Goal 4 is not a game goal (total())."""
+    out = []
+    for m, name in [(ms, f"Next release (focus {ms})"), ("C", "Full roadmap (C)")][:1 + (ms != "C")]:
+        goals = {GOALS.get(g, g): (r[m][0], r[m][2] + r[m][3] + r[m][4]) for g, r in sorted(result.items())
+                 if g != 4 and m in r}
+        out.append((name, goals, total(result, m), sum(left for _, left in goals.values())))
+    return out
+
+
 def load():
     """(features, share, rows, epics) of the files on disk and the epics on GitHub."""
     from dashboard import pages
@@ -136,6 +163,8 @@ def main():
     data = load()
     print("Release bar (C = 100 %, milestones A and B; left = features + checks + bug reserve):")
     print("\n".join(lines(current(data))))
+    if wait := waiting(data[0], data[2], ms := focus()):
+        print(f"Release focus {ms}: {len(wait)} features wait for the release (no new epic, label `after-release`)")
     if checks := due_lines(due(data[0], data[2], data[3])):
         print("Release checks with no ticket: " + " · ".join(checks))
 
