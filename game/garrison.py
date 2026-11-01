@@ -374,6 +374,8 @@ def board_tick(g):
     import transport  # transport imports this module
     pos = g.positions(sorted(set(boarding) | set(boarding.values())))
     for u, holder in sorted(boarding.items()):
+        if (n := g.soldiers.get(holder)) is not None and n not in CARRIERS:   # a siege tower: siege_tower.tick (#5555)
+            continue
         if u not in pos or holder not in pos or holder not in g.soldiers:
             del boarding[u]
         elif math.dist((pos[u][0], pos[u][2]), (pos[holder][0], pos[holder][2])) <= DOOR:

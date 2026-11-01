@@ -19,7 +19,7 @@ import math
 import lang
 from garrison import INSIDE, OUTSIDE
 
-from aoe2mc import GARRISONED
+from aoe2mc import CARRIERS, GARRISONED
 
 NAME = "SIEGE_TOWER"
 SIZE = 10                   # units inside, as in AoE2
@@ -101,6 +101,8 @@ def tick(g):
     if boarding:
         pos = g.positions(sorted(set(boarding) | set(boarding.values())))
         for u, tower in sorted(boarding.items()):
+            if g.soldiers.get(tower) in CARRIERS:                  # a ram or a ship: garrison.board_tick (#5555)
+                continue
             if u not in pos or tower not in pos or g.soldiers.get(tower) != NAME:
                 del boarding[u]                                    # dead, or the tower died
             elif math.dist((pos[u][0], pos[u][2]), (pos[tower][0], pos[tower][2])) <= DOOR:

@@ -18,7 +18,8 @@ def test_record_keeps_the_lobby_settings(tmp_path):
     aoe2mc.main([REC, str(tmp_path / "W"), "--at", "0:00"])
     lobby = json.load(open(tmp_path / "W" / "aoe2mc.json"))["lobby"]
     assert lobby == {"type": m.type, "dataset": m.dataset, "starting_age": m.starting_age,
-                     "population": m.population, "all_techs": m.all_technologies, "reveal": m.map_reveal}
+                     "population": m.population, "all_techs": m.all_technologies, "reveal": m.map_reveal,
+                     "scenario": ""}   # a random map game names no scenario (#5157)
 
 
 def test_scenario_has_no_record_lobby(tiny_world):
