@@ -25,4 +25,4 @@ def test_the_start_resets_wait_before_the_unfreeze():
     game = FakeGame()
     game.joined = {"Steve"}
     run.start_on_join(game, [Side(lambda: 0.0)], 1, sleep=lambda s: None)
-    assert game.sent[:2] == ["scoreboard players reset #wait aoe_trig", "tick unfreeze"]
+    assert game.sent[-2:] == ["scoreboard players reset #wait aoe_trig", "tick unfreeze"]   # after the countdown (#5506)
