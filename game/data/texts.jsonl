@@ -24,6 +24,13 @@
 {"name": "aoe2mc.challenge.time_silver", "en_us": "Silver medal in %s"}
 {"name": "aoe2mc.conquest.allies_end", "en_us": "Only allies are left: the alliances end. The last player alive wins."}
 {"name": "aoe2mc.conquest.defeated", "en_us": "Player %s is defeated."}
+{"name": "aoe2mc.controls.head", "en_us": "Controls (hold the carrot on a stick; the action bar shows the next step):"}
+{"name": "aoe2mc.controls.select", "en_us": "Select: right click a unit. Hold right click and look across the ground: a selection box."}
+{"name": "aoe2mc.controls.move", "en_us": "Move: with a selection, right click the ground."}
+{"name": "aoe2mc.controls.gather", "en_us": "Gather: select villagers, then right click a tree, a fruit bush, a mine or a farm."}
+{"name": "aoe2mc.controls.build", "en_us": "Build: select villagers, right click them for the build menu, select a building, then left click the ground. Shift + left click: place more. Right click: cancel."}
+{"name": "aoe2mc.controls.train", "en_us": "Train: right click your own building (town center, barracks ...) and click a unit in its menu."}
+{"name": "aoe2mc.controls.attack", "en_us": "Attack: select military units, then right click an enemy."}
 {"name": "aoe2mc.defeat", "en_us": "Defeat"}
 {"name": "aoe2mc.flare.placed", "en_us": "%s: Flare at %s %s"}
 {"name": "aoe2mc.follow.refuse_follow", "en_us": "Follow: click an own unit"}

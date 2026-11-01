@@ -47,7 +47,7 @@ Add `--cheats` to use the AoE2 cheat codes in the chat (for example `aegis`: fas
 ## 4. Controls
 
 Hold the carrot on a stick. The action bar at the bottom of the screen always shows the next possible step. The
-tutorial (section 3) teaches the same controls.
+tutorial (section 3) teaches the same controls. Type /controls in the game to see this list.
 
 - Select: right click a unit. Hold right click and look across the ground: a selection box.
 - Move: with a selection, right click the ground.

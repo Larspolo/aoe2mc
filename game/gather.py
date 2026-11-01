@@ -64,6 +64,7 @@ import challenge  # noqa: E402
 import cheats  # noqa: E402
 import civs  # noqa: E402
 import conquest  # noqa: E402
+import controls  # noqa: E402
 import defend_wonder  # noqa: E402
 import demolish  # noqa: E402
 import diplomacy  # noqa: E402
@@ -833,6 +834,7 @@ class Gather:
             self.command(f"team join p{self.player} @a")
         build.setup(self)
         menu.setup(self)
+        controls.setup(self)
         flare.setup(self)
         techtree.setup(self)
         if self.paper:
@@ -1396,6 +1398,7 @@ class Gather:
     def clicks(self):
         """Players who clicked since the last call. Clicks in a chest menu go to the handler of the menu (#619)."""
         build.tick(self)
+        controls.tick(self)
         flare.tick(self)
         techtree.tick(self)
         hints.tick(self)

@@ -11,6 +11,9 @@ commands:
   aoego:
     description: Go to the place of an attack alert of your team (a click on the alert line, #1816).
     usage: /aoego <x> <z>
+  controls:
+    description: Show the controls of the game in the chat (#5501, the trigger aoe_controls).
+    usage: /controls
 permissions:
   aoe2mc.order:
     default: op
