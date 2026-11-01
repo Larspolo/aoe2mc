@@ -52,7 +52,8 @@ tutorial (section 3) teaches the same controls.
 - Select: right click a unit. Hold right click and look across the ground: a selection box.
 - Move: with a selection, right click the ground.
 - Gather: select villagers, then right click a tree, a fruit bush, a mine or a farm.
-- Build: select villagers, right click them for the build menu, select a building, then right click the ground.
+- Build: select villagers, right click them for the build menu, select a building, then left click the ground.
+  Shift + left click: place more. Right click: cancel.
 - Train: right click your own building (town center, barracks ...) and click a unit in its menu.
 - Attack: select military units, then right click an enemy.
 

@@ -66,6 +66,7 @@
 {"name": "aoe2mc.hints.attack_ground", "en_us": "Attack Ground: right click the ground"}
 {"name": "aoe2mc.hints.attack_move", "en_us": "Attack Move: right click the ground"}
 {"name": "aoe2mc.hints.building", "en_us": "Place the %s: right click the ground · Shift + right click: place more · Cancel: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "en_us": "%s: left click to place · Shift: place more · Right click: cancel"}
 {"name": "aoe2mc.hints.corner", "en_us": "Selection box: right click the other corner"}
 {"name": "aoe2mc.hints.count_military", "en_us": "%s military unit"}
 {"name": "aoe2mc.hints.count_military_many", "en_us": "%s military units"}
