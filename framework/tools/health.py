@@ -452,6 +452,31 @@ def weak_spots(issues, events, prs, runs, since):
                               and ts(r["run_started_at"]) >= since for r in runs)}
 
 
+def lane_rework(issues, prs, comments, since):
+    """{lane: (rework bug tickets, merged PRs)} (#5533): the rule of `rework` in weak_spots, by the lane of each PR. The
+    lane of a PR is the lane of the first `Metrics:` line that names it (`· pr #N ·`, `· lane NAME`, else "opus")."""
+    lane_of = {}
+    for c in comments:
+        for line in (c.get("body") or "").splitlines():
+            m = re.match(r"Metrics: .*?· pr #(\d+) ·", line)
+            if m:
+                lane = re.search(r"· lane (\w+)", line)
+                lane_of.setdefault(int(m[1]), lane[1] if lane else "opus")
+    merged_at = {p["number"]: ts(p["merged_at"]) for p in prs if p.get("merged_at") and ts(p["merged_at"]) >= since
+                 and p["number"] in lane_of}
+    out = {k: [0, 0] for k in sorted({lane_of[n] for n in merged_at})}
+    for n in merged_at:
+        out[lane_of[n]][1] += 1
+    for i in issues:
+        if "pull_request" in i or ts(i["created_at"]) < since or "bug" not in {lb["name"] for lb in i.get("labels", [])}:
+            continue
+        hit = {int(n) for n in re.findall(r"#(\d+)", i.get("body") or "")} & \
+            {n for n, t in merged_at.items() if t < ts(i["created_at"])}
+        for k in {lane_of[n] for n in hit}:
+            out[k][0] += 1
+    return {k: tuple(v) for k, v in out.items()}
+
+
 def misses(issues, since):
     """The numbers of the issues that the owner opened since `since` to change the system (a label of MISS_LABELS):
     each one is a change that the improve loop did not find itself (#1909). The agent writes with the owner's login
@@ -773,6 +798,9 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
                f"{rw[0]:.2f} points ({rw[1]:g} % to {rw[2]:g} %)"))
     w = weak_spots(issues, issue_events, prs, runs, since)
     out.append("Weak spots: " + ", ".join(f"{k} {v}" for k, v in w.items()))
+    lr = lane_rework(issues, prs, status_comments, since)
+    out.append("Rework per lane (bug tickets / merged PRs, #5533): " + (", ".join(
+        f"{k} {b}/{n} ({b / n:.1%})" for k, (b, n) in lr.items()) or "-"))
     m = misses(issues, since)
     out.append(f"Misses (owner tickets for the system, improve step 0): {len(m)}"
                + (f" ({', '.join(f'#{n}' for n in m)})" if m else ""))
