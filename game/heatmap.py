@@ -9,7 +9,8 @@ import aoe2mc
 
 def grid(events, owner, n, kind="walk", start=0, end=math.inf):
     """{player: int array n × n (x, y)}: one count per event of the player at its `tile`, time in [start, end) ms.
-    kind "walk": the move and order events (aoe2mc.UNIT_USE). owner: replay.owners() for events with only object IDs.
+    kind "walk": the move and order events (aoe2mc.UNIT_USE); "fight": the attack orders at the tile of the target
+    (replay.attack, #5456). owner: replay.owners() for events with only object IDs.
     kind "death": events is the dict of death_counts() (the live replay counts the deaths, the record has none, #5458)."""
     if kind == "death":
         out = {}
@@ -17,11 +18,15 @@ def grid(events, owner, n, kind="walk", start=0, end=math.inf):
             if 0 <= x < n and 0 <= y < n:
                 out.setdefault(p, np.zeros((n, n), int))[x, y] += c
         return out
-    if kind != "walk":
+    if kind not in ("walk", "fight"):
         raise ValueError(f"unknown heat map kind: {kind}")
+    if kind == "fight":
+        import replay  # large module: only for this kind
     out = {}
     for e in events:
-        if e.get("kind") not in aoe2mc.UNIT_USE or not e.get("tile") or not start <= e.get("time", 0) < end:
+        if not e.get("tile") or not start <= e.get("time", 0) < end:
+            continue
+        if not (replay.attack(e, owner) if kind == "fight" else e.get("kind") in aoe2mc.UNIT_USE):
             continue
         p = e.get("player") or next((owner[i] for i in e.get("objects", ()) if i in owner), None)
         x, y = (int(v) for v in e["tile"][:2])

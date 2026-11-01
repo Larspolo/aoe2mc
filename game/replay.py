@@ -321,6 +321,14 @@ def owners(objects, events):
     return out
 
 
+def attack(e, owner):
+    """True for an attack order of a player (#2948, #5456): an ATTACK_MOVE, or an ORDER on a unit or building of another
+    player (not of Gaia). owner: owners()."""
+    p = e.get("player")
+    return bool(p) and (e.get("kind") == "attack_move" or
+                        e.get("kind") == "order" and owner.get(e.get("target")) not in (None, 0, p))
+
+
 def fights(events, owner):
     """The large fights of a record (#2948): the record has no deaths (#1086), so a fight is a group of attack orders
     (an ORDER on a unit or building of another player, not of Gaia, and an ATTACK_MOVE), each less than FIGHT_MS and FIGHT_TILES from
@@ -328,9 +336,7 @@ def fights(events, owner):
     Returns [{"start", "end" (ms), "tile" [x, y], "players", "units"}], the largest first."""
     groups = []
     for e in events:
-        p, t = e.get("player"), e.get("target")
-        if "tile" not in e or not p or not (e["kind"] == "attack_move" or
-                                            e["kind"] == "order" and owner.get(t) not in (None, 0, p)):
+        if "tile" not in e or not attack(e, owner):
             continue
         near = [g for g in groups if e["time"] - g[-1]["time"] <= FIGHT_MS
                 and any(math.dist(e["tile"], f["tile"]) <= FIGHT_TILES for f in g)]
@@ -481,6 +487,7 @@ class Replay:
         self.arriving = {}                      # object ID -> game time (ms) of its work start, until it is there (#766)
         self.entering = {}                      # object ID -> [footprint, building entry, arrival (ms) or None] (#809)
         self.builds = {}                        # object ID of a builder -> (game time (ms) of the build end, order then) (#1282)
+        self.raising = {}                       # object ID of a builder -> (footprint, start ms) of its build (#5453)
         self.garrisons = {}                     # building footprint -> object IDs of the units inside it
         self.cargo = {}                         # object ID of a ram, siege tower or ship -> object IDs inside it (#5369)
         self.boarding = {}                      # object ID -> [ID of its ram, tower or ship, arrival (ms) or None]
@@ -1299,6 +1306,7 @@ class Replay:
             due = self.walk_end(v, e["time"]) + work
             out += self.go(i, v, None, v.path, e["time"])
             self.builds[i] = due, then and dict(then, time=due, objects=[i], names=[None])
+            self.raising[i] = rect, e["time"]                       # a takeover gives the builder its site (#5453)
         return out
 
     def built(self, t):
