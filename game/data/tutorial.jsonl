@@ -1,4 +1,5 @@
 {"name": "select", "text": "Select a villager: right click on one of your villagers with the command stick.", "check": "tutorial.selected", "controls": ["carrot_on_a_stick"]}
+{"name": "camera", "text": "Move fast over the map: right click with the \"Camera\" item, walk, then right click with it again.", "check": "tutorial.camera", "controls": ["Camera"]}
 {"name": "wood", "text": "Gather 50 wood: select a villager and right click on a tree.", "need": 50, "check": "tutorial.wood", "controls": ["carrot_on_a_stick"]}
 {"name": "house", "text": "Build a house: right click on a selected villager, choose the house and place it.", "check": "tutorial.house", "controls": ["carrot_on_a_stick", "HOUSE"]}
 {"name": "villager", "text": "Train a villager: right click on your town center and choose the villager.", "give": {"food": 50}, "setup": "tutorial.give", "check": "tutorial.villager", "controls": ["carrot_on_a_stick"]}

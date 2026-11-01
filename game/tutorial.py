@@ -23,6 +23,11 @@ def selected(g, row):
     return bool(set(g.selected) & set(g.villagers))
 
 
+def camera(g, row):
+    """Step "camera": the player turned the camera mode on and then off (camera.click keeps g.camera_off)."""
+    return bool(vars(g).get("camera_off"))
+
+
 def wood(g, row):
     """Step "wood": the stock has the wood of the key "need"."""
     return g.stock["wood"] >= row["need"]
@@ -126,10 +131,10 @@ def give(g, row):
 
 def known():
     """The names of the controls that a step can name in "controls" (#5164): the command stick and the selection wand
-    (gather.py) and the items of the build menu (build.MENU)."""
+    (gather.py), the camera item (camera.py) and the items of the build menu (build.MENU)."""
     import build  # gather imports this module
     import gather
-    return {"carrot_on_a_stick", gather.WAND, *build.MENU}
+    return {"carrot_on_a_stick", gather.WAND, "Camera", *build.MENU}
 
 
 def unknown(row):

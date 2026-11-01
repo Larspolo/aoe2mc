@@ -68,6 +68,7 @@ def click(g, player, shift=False):
     elif active:
         g.command(f"aoe camera {player} off")
         active = False
+        vars(g).setdefault("camera_off", set()).add(player)            # on, then off: the tutorial step (#5503)
         bar(g, player, lang.text("aoe2mc.camera.off"))
     else:
         g.command(on(g, player))
