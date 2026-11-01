@@ -40,27 +40,25 @@ world `OUTWorld`. You can also convert your own `.aoe2scenario` file.
 
 ## 3. Start and join
 
+Start with the tutorial. It shows each step in the boss bar and the chat (select a villager, gather wood, build a
+house). After the last step, stop the game with Ctrl-C and start the bot game.
+
 With the installer:
 
+    aoe2mc-game OUTWorld --play --tutorial
     aoe2mc-game OUTWorld --play --bot
 
 With Python:
 
-Start with the tutorial. It shows each step in the boss bar and the chat (select a villager, gather wood, build a
-house). After the last step, stop the game with Ctrl-C and start the bot game below. The installer path uses
-`aoe2mc-game` in place of `python3 game/run.py`.
-
     python3 game/run.py OUTWorld --play --tutorial
-
-Then start the bot game:
-
     python3 game/run.py OUTWorld --play --bot
 
 The first start downloads the Minecraft server (about 1 minute). When the console shows
 "Join the server localhost:PORT", start Minecraft 26.3, click "Multiplayer", "Direct Connection" and type that
 address. The game clock starts when you joined ("The game starts when 1 person joined"). You play player 1; the
 bot plays player 2 and attacks you. Ctrl-C in the console stops the game and saves it: the console shows the
-command to continue (`--load`).
+command to continue (`--load`). With the installer, use `aoe2mc-game` in place of `python3 game/run.py`
+in that command.
 
 Add `--cheats` to use the AoE2 cheat codes in the chat (for example `aegis`: fast building and training).
 
