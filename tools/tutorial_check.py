@@ -272,6 +272,7 @@ class Driver:
         for _ in range(3):
             self.c.key(str(camera.SLOT + 1))
             time.sleep(1.0)
+            self.note(f"key {camera.SLOT + 1}: the Camera item in hand: {camera.in_hand(self.g, NAME)}")
             self.c.click(self.c.size[0] // 2, self.c.size[1] // 2, button=3)
             time.sleep(3.0)
             self.note("right click with the Camera item")
