@@ -83,6 +83,9 @@ tutorial (section 3) teaches the same controls. Type /controls in the game to se
   click again: you fly down near the ground. Two client options help with the fast camera, both in Options >
   Accessibility Settings: "View Bobbing" OFF keeps the held item still while you walk. "FOV Effects" shows a wider
   view, which shows more of the map; set it to 0 % to keep the normal view.
+- Go to: right click with the compass "Go to" (hotbar key 3): a menu of your town centers, your control groups and the next idle villager.
+- Game menu: right click with the book "Game menu" (hotbar key 4): diplomacy and tribute, flare, save, pause and the tech tree.
+- Control groups: select units, take a group item (hotbar keys 5 to 9) and Shift + right click to save the selection. Right click: select the group.
 
 The sidebar shows your wood, food, gold and stone.
 
