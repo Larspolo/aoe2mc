@@ -39,6 +39,22 @@ def release(text):
     return share, rows
 
 
+def focus(root=None):
+    """The milestone of the line "Release focus: X" of steering/project/RELEASE.md (owner, 2026-11-01): until the next
+    release the agents make epics only for the features of the milestones that X counts (INCLUDES). "C" with no line
+    or no file."""
+    path = os.path.join(root or ROOT, "steering", "project", "RELEASE.md")
+    m = os.path.exists(path) and re.search(r"^Release focus: ([ABC])\b", open(path).read(), re.M)
+    return m[1] if m else "C"
+
+
+def waiting(features, rows, ms):
+    """The open features (keys) of `features` that wait for the release: their milestone (rows, default C) is not in
+    INCLUDES[ms] of the release focus ms."""
+    item = {r[1]: r[2] for r in rows}
+    return [k for k, (_, done, _) in features.items() if not done and item.get(k, "C") not in INCLUDES[ms]]
+
+
 def epic_key(body):
     m = re.search(r"Roadmap: `([^`]+)`", body or "")
     return m and m[1]
@@ -136,6 +152,8 @@ def main():
     data = load()
     print("Release bar (C = 100 %, milestones A and B; left = features + checks + bug reserve):")
     print("\n".join(lines(current(data))))
+    if wait := waiting(data[0], data[2], ms := focus()):
+        print(f"Release focus {ms}: {len(wait)} features wait for the release (no new epic, label `after-release`)")
     if checks := due_lines(due(data[0], data[2], data[3])):
         print("Release checks with no ticket: " + " · ".join(checks))
 

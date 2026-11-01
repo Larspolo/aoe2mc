@@ -1,6 +1,6 @@
 # Principles: the project
 
-The direction of aoe2mc: what the owner prefers when two good options compete, for the project (what aoe2mc becomes). The agent made this file from the owner's decisions until 2026-10-27 (decision tickets, owner comments, `/human` sessions). Each principle names the decisions that it comes from. `steering/project/DECISIONS.md` is the log of these decisions. The system principles are in `steering/system/PRINCIPLES.md`. The numbers P1 to P11 are the same in both files.
+The direction of aoe2mc: what the owner prefers when two good options compete, for the project (what aoe2mc becomes). The agent made this file from the owner's decisions until 2026-10-27 (decision tickets, owner comments, `/human` sessions). Each principle names the decisions that it comes from. `steering/project/DECISIONS.md` is the log of these decisions. The system principles are in `steering/system/PRINCIPLES.md`. The numbers P1 to P12 are the same in both files.
 
 How to use it:
 - **Agents.** Before you recommend an option (decision ticket, PR, epic), compare each option with these principles.
@@ -50,6 +50,12 @@ Hotbar slots are scarce: put actions behind one item or a chest menu, and give e
 Show clear feedback: a larger mark on the target, a visible selection border, a ghost building, hints in the action
 bar, damage stages that look different from construction (#823, #988, #793, #797, #1332). An action that surprises
 the player is a bug ("this is not nice", #989).
+
+## P12. Before a release, the play test first
+
+Until the next release, the agents make the game ready for a play test and improve what the player sees and does.
+New features of milestone C and extras wait with the label `after-release` (owner, 2026-11-01; #4175, #5120, #5378;
+the full rule: `steering/project/RELEASE.md`, "Release focus"). A ticket outside the focus is not urgent work: hold it.
 
 ## Tensions
 
