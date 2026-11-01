@@ -68,7 +68,8 @@ report of step 8, and the `Usage:` line (of the brief, else of the first `cycle_
    Then it waits for the quick CI (about 6 minutes, #4784): give the Bash call `timeout: 600000`.
    Exit 3: do not push: `claim.py N --release` (when the claim is yours; it removes `in-progress`), comment the reason
    in one line on the ticket and pick the next ticket.
-8. It prints `mergeable_state`. `dirty`: run `python3 framework/tools/merge_main.py --push N` (`conflict.md`).
+8. It prints `mergeable_state`. `dirty`, or exit 6 (Automerge found a conflict after the green CI, #5584): run
+   `python3 framework/tools/merge_main.py --push N` (`conflict.md`), then `ship_pr.py N --ci`.
    Do not merge by hand: CI runs only the quick checks on each PR (lint and fast tests, about 6 minutes), and the
    Automerge workflow merges the PR when CI is green, removes `in-progress` and deletes the branch. Exit 5: the quick
    CI is red, go to 9 now (a red PR after the run ends costs a takeover by a cold run, #4784). The CI still runs at

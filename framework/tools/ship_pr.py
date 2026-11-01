@@ -16,10 +16,14 @@ one with `Closes #N` in its body; or the open PR of the branch), and `mergeable_
 minutes after its start (#4784): a red quick CI after the end of its run cost a takeover and a cold run 30 to 40
 minutes later (11 to 25 of 50 takeovers on 2026-10-30); the run that wrote the code fixes it with its warm context.
 Run it with the Bash `timeout` 600000. Exit 0: shipped (the quick CI is green, still runs at the time limit: `--ci`
-waits again, or a conflict stops it). Exit 2: ruff or a test fails, or a change of data
+waits again). Exit 2: ruff or a test fails, or a change of data
 files only adds a test (`docs/extend.md`; nothing pushed). Exit 3: the
 guard or the push fails (do not push by hand). Exit 4: no commit to ship, or the PR call fails. Exit 5: the quick CI
 is red: it prints the failed steps and tests; fix them, commit and run it again.
+After a green quick CI it reads the PR until Automerge merged it, up to the same time limit (#5584): in 3 of 9
+takeovers of 100 merged PRs on 2026-11-01, main moved during the CI wait, the merge of Automerge found a conflict 0 to 2
+minutes after the green CI, and the run had reported and stopped. Exit 6: the PR has a merge conflict (also at the
+push): run `python3 framework/tools/merge_main.py --push N`, then `ship_pr.py N --ci`.
 """
 import argparse
 import glob
@@ -121,8 +125,30 @@ def wait_ci(sha, deadline, get=quick, now=time.monotonic, sleep=time.sleep):
         sleep(POLL)
 
 
-def ci(number, sha, deadline):
-    """Wait for the quick CI of `sha` and print its result. Exit 5 when it is red, else 0."""
+def conflict(number):
+    return f"merge conflict: run `python3 framework/tools/merge_main.py --push {number}`, then `ship_pr.py {number} --ci`"
+
+
+def wait_merge(pr, deadline, get=None, now=time.monotonic, sleep=time.sleep):
+    """After the green quick CI: "merged", "dirty" (Automerge found a conflict: main moved during the CI, #5584),
+    "hold" (Automerge waits for the PR's own checks) or "open" at the deadline. At least one read."""
+    get = get or (lambda n: dashboard.api(f"pulls/{n}"))
+    while True:
+        p = get(pr)
+        if p.get("merged"):
+            return "merged"
+        if p.get("mergeable_state") == "dirty":
+            return "dirty"
+        if "hold" in {lb.get("name") for lb in p.get("labels", [])}:
+            return "hold"
+        if now() + POLL > deadline:
+            return "open"
+        sleep(POLL)
+
+
+def ci(number, sha, deadline, pr=None):
+    """Wait for the quick CI of `sha` and print its result; then wait for the merge of PR `pr`. Exit 5 when the CI is
+    red, 6 when the PR has a merge conflict, else 0."""
     print(f"waiting for the quick CI of {sha[:8]} (at most until {WAIT} minutes after the start)", flush=True)
     c = wait_ci(sha, deadline)
     if c is None:
@@ -130,7 +156,11 @@ def ci(number, sha, deadline):
         return 0
     print(f"quick CI {c['conclusion']}")
     if c["conclusion"] != "failure":
-        return 0
+        if pr is None:
+            return 0
+        m = wait_merge(pr, deadline)
+        print(conflict(number) if m == "dirty" else f"PR #{pr}: {m}" + (": Automerge merges it" if m == "open" else ""))
+        return 6 if m == "dirty" else 0
     print("\n".join(failures(c)) or "no failed step: open the run of the check")
     print(f"fix it, commit and run `python3 framework/tools/ship_pr.py {number}` again (autopilot step 6.9)")
     return 5
@@ -160,7 +190,7 @@ def main(argv=None):
         if pr is None:
             print(f"no open PR of {head}" + ("" if a.pr_branch else ": a takeover gives --pr-branch B"))
             return 4
-        return ci(a.number, pr["head"]["sha"], deadline)
+        return ci(a.number, pr["head"]["sha"], deadline, pr["number"])
     if a.message:
         c = git("commit", "-q", "-F", a.message)
         if c.returncode:
@@ -196,10 +226,12 @@ def main(argv=None):
         dashboard.api(f"issues/{pr['number']}/labels", "POST", {"labels": ["hold"]})
         print(f"label hold on PR #{pr['number']}")
     s = state(pr["number"])
-    print(f"mergeable_state {s}" + (f": run `python3 framework/tools/merge_main.py --push {a.number}`" if s == "dirty" else ""))
-    if s == "dirty" or a.wait <= 0:                 # a conflict: GitHub starts no CI on the PR
+    print(f"mergeable_state {s}" + (f": {conflict(a.number)}" if s == "dirty" else ""))
+    if s == "dirty":                                # a conflict: GitHub starts no CI on the PR
+        return 6
+    if a.wait <= 0:
         return 0
-    return ci(a.number, git("rev-parse", "HEAD").stdout.strip(), deadline)
+    return ci(a.number, git("rev-parse", "HEAD").stdout.strip(), deadline, pr["number"])
 
 
 if __name__ == "__main__":
