@@ -261,6 +261,9 @@ class Driver:
 
     def select(self, uuids):
         """Select the units uuids with right clicks (a new selection)."""
+        self.c.key("Escape")                                           # an open menu takes the clicks
+        menu.close(self.g, NAME)
+        time.sleep(1.0)
         self.g.choose(set())
         for u in uuids:
             for _ in range(3):
