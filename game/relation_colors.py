@@ -31,8 +31,7 @@ def command(players, person, me):
 
 def viewers(g):
     """The persons with the relation colors: name -> AoE2 player (kept on the Gather that runs the game)."""
-    import diplomacy
-    x = diplomacy.main(g)
+    x = getattr(getattr(g, "game", None), "g", None) or g          # diplomacy.main; a test g can have no game
     if not hasattr(x, "relation_colors"):
         x.relation_colors = {}
     return x.relation_colors
