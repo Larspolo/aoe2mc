@@ -85,9 +85,8 @@ These settings are on the account, not in the repository. They make each run use
 7. Keep Settings → Capabilities → "Artifacts" and "Run code in the cloud" as you like. A test of 2026-10-29 found
    that they do not change the base of a run (#3833).
 
-You cannot turn off the built-in parts. The built-in skills `anthropic-skills:*` (docs, docx, pdf, pptx, xlsx,
-built-in browser, Chrome browser, computer use) and the Claude Docs instructions have no switch. The repository
-removes all other unused tools (section 5).
+The repository turns off the built-in skills `anthropic-skills:*` (docs, docx, pdf, pptx, xlsx, built-in browser,
+Chrome browser, computer use) with `skillOverrides` (section 5, #5463). The Claude Docs instructions have no switch.
 
 ## 4. Cloud environment
 
@@ -114,6 +113,7 @@ account:
 |---|---|
 | `.claude/settings.json`, `disableBundledSkills: true` | Removes the bundled Claude Code skills from each session. |
 | `.claude/settings.json`, `permissions.deny` | Removes the session tools that no skill uses (`Artifact`, `Workflow`, `Cron*`, the plan, worktree, task-list, notification, `Suggest*` and `Search*` tools, `mcp__Claude_Docs`, `mcp__ccd_session`, `mcp__claude-code-remote` ...). Their descriptions were about 19,000 of the 66,000 base tokens of each call (#3424). Keep the list in the repository: a rule that a hook writes works only from the next session. |
+| `.claude/settings.json`, `skillOverrides` | Removes the skills that no run uses from the skill list of each call: `off` for the built-in `anthropic-skills:*`, `plugin-authoring` and `session-start-hook`; `user-invocable-only` for `demo`, `human` and `new-project` (you still type `/demo`). With the denied agent types `claude-code-guide` and `statusline-setup`: 3,400 fewer tokens in each call (#5463). |
 | `.claude/settings.json`, `permissions.allow` | Lets the runs use `python3`, `git`, `gh api` and the GitHub tools with no prompt. |
 | `.claude/hooks/` | `session-start.sh` (packages, the `merge=jsonl` driver, `TMPDIR`, the setup version), `guard-main.sh` and `guard-shell.sh` (block a force push and known shell pitfalls). |
 | `.claude/skills/scheduled/SKILL.md` | The rules of a scheduled run. So the prompt of each task is only one line, and a PR changes the rules. |
