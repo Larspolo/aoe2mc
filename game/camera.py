@@ -14,9 +14,11 @@ gather.Gather.clicks gives the item and calls click().
 """
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import amounts  # noqa: E402
 import lang  # noqa: E402
 
 SLOT = 1                                                           # hotbar slot of the item (key 2): free
@@ -70,10 +72,14 @@ def click(g, player, shift=False):
         active = False
         vars(g).setdefault("camera_off", set()).add(player)            # on, then off: the tutorial step (#5503)
         bar(g, player, lang.text("aoe2mc.camera.off"))
+        vars(g).setdefault("camera_on", set()).discard(player)
+        amounts.swap(g, player, False)                                 # the normal amounts again (#5537)
     else:
         g.command(on(g, player))
         active = True
         bar(g, player, lang.text("aoe2mc.camera.on", speed(g, player)))
+        vars(g).setdefault("camera_on", set()).add(player)
+        amounts.swap(g, player, True)                                  # the large amounts (#5537)
     hinted = vars(g).setdefault("camera_hinted", set())
     if speed(g, player) > PLAIN and player not in hinted:          # once per player
         hinted.add(player)
@@ -83,3 +89,19 @@ def click(g, player, shift=False):
 
 def bar(g, player, text):
     g.command(f"title {player} actionbar " + json.dumps(text))
+
+
+def after_end(g):
+    """After the end of a game (#5538): the game loop stops, but the camera item still works, so the player can look
+    around the map, as in AoE2. Read the use statistic of each person (as gather.Gather.clicks); only the camera item
+    acts, other items do nothing. Returns the players that switched the mode or the speed."""
+    import gather  # gather imports this module
+    out = []
+    for name in filter(None, g.people()):
+        if not re.search(r"has [1-9]", g.command(f"scoreboard players get {name} aoe_use")):
+            continue
+        g.command(f"scoreboard players reset {name} aoe_use")
+        if in_hand(g, name):
+            click(g, name, "passed" in g.command(f"execute as {name} if predicate {gather.SNEAK}"))
+            out.append(name)
+    return out

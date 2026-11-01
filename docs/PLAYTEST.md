@@ -76,8 +76,9 @@ tutorial (section 3) teaches the same controls. Type /controls in the game to se
 - Attack: select military units, then right click an enemy.
 - Camera: right click with the spyglass "Camera" (hotbar key 2). You walk fast on an invisible floor high above the
   map, and you can give orders from there. Shift right click: the next speed (5, 10 or 20 times the walk speed). Right
-  click again: you fly down near the ground. Above 5 times the view gets wider: to stop this, set Options >
-  Accessibility Settings > FOV Effects to 0 %.
+  click again: you fly down near the ground. Two client options help with the fast camera, both in Options >
+  Accessibility Settings: "View Bobbing" OFF keeps the held item still while you walk. "FOV Effects" shows a wider
+  view, which shows more of the map; set it to 0 % to keep the normal view.
 
 The sidebar shows your wood, food, gold and stone.
 
