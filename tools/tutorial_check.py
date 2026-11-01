@@ -258,8 +258,15 @@ class Driver:
         self.g.choose(set())
         for u in units:
             for _ in range(3):
-                if u in self.g.selected or self.unit(u):
+                if NAME in self.g.menus:                               # a click hit the building behind the unit
+                    self.c.key("Escape")
+                    menu.close(self.g, NAME)
+                    time.sleep(1.0)
+                if u in self.g.selected or self.unit(u) and u in self.g.selected:
                     break
+        if NAME in self.g.menus:
+            self.c.key("Escape")
+            menu.close(self.g, NAME)
         return self.g.selected & set(units)
 
     def do_select(self):
