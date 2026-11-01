@@ -28,7 +28,9 @@ STATUS, PAUSED = CONFIG["status"]["label"], CONFIG["status"]["paused"]
 MUTED = "muted"                # the owner mutes a ticket: no agent works on it, and "Waiting for you" hides it
 CLOSE = "close"                # the work is done, close.yml closes the ticket: no candidate (#2920)
 AFTER = "after-release"        # the owner holds a ticket until the next release: after-release.yml removes it (#4175)
-SKIP = {"needs-human", "blocked", "epic", STATUS, "in-progress", MUTED, CLOSE, AFTER}
+RANK = "rank"                  # after a release: the ticket waits until a deep run ranks all of them (after-release.yml)
+RELEASE = "release"            # the epic of the next release: release.yml tags v0.N.0 when it closes (owner, 2026-11-01)
+SKIP = {"needs-human", "blocked", "epic", STATUS, "in-progress", MUTED, CLOSE, AFTER, RANK}
 PRIORITY = ["P0", "P1", "P2", "P3"]
 # Names in ticket text that do not count for the overlap: tools for checks, and LEARNINGS.md (merge=union: no conflicts).
 # A PR that changes them still counts (work() takes the files of the PRs as they are).
@@ -199,7 +201,7 @@ def held(issue, now, after=prs_after):
         return True
 
 
-WATCHED = {"needs-human", MUTED, AFTER, "in-progress", "epic", STATUS, CLOSE}   # an owner, a run or a workflow acts
+WATCHED = {"needs-human", MUTED, AFTER, RANK, "in-progress", "epic", STATUS, CLOSE}   # an owner, a run or a workflow acts
 
 
 def orphans(issues, after=prs_after):
@@ -319,6 +321,14 @@ def process_changes(prs, now, hours=24):
                and datetime.datetime.fromisoformat(p["merged_at"].replace("Z", "+00:00")) >= since)
 
 
+def release_scope(epic, issues):
+    """(listed, open) numbers of the scope of a release epic: its checklist lines "- [ ] #N" or "- [x] #N", and those
+    of them that are still open in `issues` (the open issues)."""
+    listed = [int(n) for n in re.findall(r"^\s*- \[[ xX]\] #(\d+)", epic.get("body") or "", re.M)]
+    opened = {i["number"] for i in issues}
+    return listed, [n for n in listed if n in opened]
+
+
 def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now, unanswered=None, nxt=None, accounts=None,
            insights=None, releases=None):
     """The new body of the status issue. comments: {issue number: comments} for the needs-human and
@@ -350,6 +360,10 @@ def render(old_body, issues, comments, open_prs, closed_issues, closed_prs, now,
         cell = lambda pct, left: f"{pct:.0f} % ({left} left)"
         out += [f"| {name} | " + " | ".join(cell(*gs[g]) if g in gs else "–" for g in goals) + f" | {cell(pct, left)} |"
                 for name, gs, pct, left in releases["rows"]]
+        for e in sorted((i for i in issues if RELEASE in labels(i)), key=lambda i: i["number"]):
+            listed, left = release_scope(e, issues)
+            out.append(f"{e['title']} (#{e['number']}): {len(listed) - len(left)} of {len(listed)} scope tickets closed"
+                       + (", open: " + " ".join(f"#{n}" for n in left[:10]) if left else ""))
         if releases.get("waiting"):
             out.append(f"Wait for the release: {releases['waiting']} roadmap features outside the release focus "
                        "(`steering/project/RELEASE.md`)")

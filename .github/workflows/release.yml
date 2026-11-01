@@ -1,0 +1,57 @@
+name: Release
+
+# Makes the GitHub release of a closed release epic (owner, 2026-11-01; steering/project/RELEASE.md, "Release cycle").
+# A release epic has the labels `epic` and `release` and the title "Release vX.Y.Z". When it closes as completed and
+# the last CI run of main is green, this job tags main as vX.Y.Z and opens the next release epic (vX.Y+1.0, label
+# `rank`: a deep run gives it its scope). A tag of GITHUB_TOKEN starts no workflow, so this job starts the workflows
+# of the tag by `workflow_dispatch`: installers.yml (the installers and the release), worlds.yml (the example worlds)
+# and after-release.yml (the held tickets come back with `rank`).
+on:
+  issues:
+    types: [closed]        # the owner closes a release epic
+  workflow_dispatch:       # close.yml: a close by GITHUB_TOKEN starts no workflow
+  schedule:
+    - cron: "41 * * * *"   # each hour: a missed event, or a red CI of main that is green now
+
+permissions:
+  contents: write          # the tag
+  actions: write           # gh workflow run
+  issues: write            # the comment and the next release epic
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.event_name != 'issues' || contains(github.event.issue.labels.*.name, 'release')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Tag the closed release epics
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          R: ${{ github.repository }}
+          BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          for i in $(gh api --paginate "repos/$R/issues?state=closed&labels=release&per_page=100" \
+                       --jq '.[] | select(.pull_request | not) | select(.state_reason == "completed") | .number'); do
+            tag=$(gh api "repos/$R/issues/$i" --jq .title | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            if [ -z "$tag" ]; then echo "skip #$i: no vX.Y.Z in the title"; continue; fi
+            if gh api "repos/$R/git/ref/tags/$tag" > /dev/null 2>&1; then continue; fi   # released before
+            sha=$(gh api "repos/$R/commits/${BRANCH:-main}" --jq .sha)
+            ok=$(gh api "repos/$R/actions/workflows/ci.yml/runs?head_sha=$sha&status=completed&per_page=20" \
+                   --jq '[.workflow_runs[].conclusion] | any(. == "success")')
+            if [ "$ok" != "true" ]; then echo "wait #$i ($tag): no green CI run of $sha yet"; continue; fi
+            gh api "repos/$R/git/refs" -f ref="refs/tags/$tag" -f sha="$sha" > /dev/null
+            gh workflow run installers.yml --ref "$tag"
+            gh workflow run worlds.yml --ref "$tag" -f tag="$tag"
+            gh workflow run after-release.yml --ref "$tag"
+            IFS=. read -r major minor _ <<< "${tag#v}"
+            next="v$major.$((minor + 1)).0"
+            body="The epic of the next release (\`steering/project/RELEASE.md\`, \"Release cycle\"). A deep run ranks the tickets that came back after $tag (label \`rank\`), writes the scope here as a list of \"- [ ] #N\" lines and the acceptance criteria, and removes \`rank\`. When this epic closes, the Release workflow tags $next."
+            url=$(gh issue create --title "Release $next" --body "$body" --label epic --label release --label rank --label P1)
+            gh api "repos/$R/issues/$i/comments" -f body="Released by the Release workflow: tag \`$tag\` on \`${sha:0:7}\`. The installers and worlds follow in the release $tag. Next release: $url" > /dev/null
+            echo "released #$i as $tag; next: $url"
+          done

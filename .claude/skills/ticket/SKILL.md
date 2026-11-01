@@ -160,9 +160,10 @@ does not say?
 
 - One goal per ticket. If you write "and also", make two tickets.
 - Search the open issues first. Do not make a duplicate.
-- Release focus (`steering/project/RELEASE.md`): a new `feature` ticket outside the focus (milestone C, or an extra of
-  the list there) gets the label `after-release` (not a ticket with `in-progress` or an open PR: it finishes). Before the release, prefer tickets that make the play test work or
-  improve what the player sees and does.
+- Release focus (`steering/project/RELEASE.md`): decide for each new `feature` ticket if it goes into the next release
+  (a line "- [ ] #N" in the open release epic) or gets `after-release`, by comparison with the held tickets and the
+  scope ("A new feature: in the next release or after it?"). Not for a ticket with `in-progress` or an open PR: it
+  finishes. Before the release, prefer tickets that make the play test work or improve what the player sees and does.
 - Do not change the priority of a ticket that the owner set. Propose the change in a comment.
 - A ticket that uses a tool, file or function of a ticket that is not merged yet gets "Depends on: #<that ticket>": else it is a candidate at once, and a run claims it without the tool (#829 needed `tools/replay_drift.py` of the open PR #830).
 - A ticket that adds an item to the menu of a building (`train.ITEMS`) names its slot: the first free slot of that

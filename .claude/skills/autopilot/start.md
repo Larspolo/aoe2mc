@@ -58,9 +58,9 @@ For each issue of section `Triage` (no priority label):
 - Read the issue form. Use the priority that the owner selected, else `P2`. Add a kind label and a size label.
 - If the goal is not clear, ask one precise question, add `needs-human` and continue (`owner.md`).
 - If the size is L, split it (`queue.md`).
-- Release focus (`steering/project/RELEASE.md`): a `feature` ticket outside the focus (a milestone C feature or an
-  extra of the list there, also an owner ticket) gets `after-release` and a one-line comment that names the rule.
-  The owner removes the label to bring it back. Bugs, play-test and user experience tickets stay, and so does a
+- Release focus (`steering/project/RELEASE.md`, "A new feature: in the next release or after it?"): compare each
+  `feature` ticket (also an owner ticket) with the held tickets and the scope of the release epic. It goes into the
+  scope, or gets `after-release` and a one-line comment that names the rule. The owner removes the label to bring it back. Bugs, play-test and user experience tickets stay, and so does a
   ticket with `in-progress` or an open PR: let it finish and merge.
 
 ## 5. Pick and claim one ticket

@@ -36,6 +36,26 @@ epics have no goal left that an agent can do.
    alone. Name the files and functions that each one changes.
 6. Do not change `steering/project/ROADMAP.md` for a new epic: the key in the epic body is enough (no merge conflicts).
 
+## Release cycle (after a release, `steering/project/RELEASE.md`)
+
+Do this first in the refill when open issues have the label `rank` (the pacer starts a deep run for them:
+"rank N tickets after the release"). Lock it: `python3 framework/tools/claim.py 0 --refill`.
+
+1. List the `rank` tickets (also epics) and the new release epic "Release vX.Y.Z" (labels `release`, `rank`).
+2. Rank the tickets against each other, not one by one: the benefit for a play tester and a player of the release
+   first (P9: what the player sees and does), then the size (smaller first), then the order of the roadmap. Write the
+   ranked list in a comment on the release epic, one line per ticket with a short reason.
+3. Give the first third `P1`, the next third `P2`, the rest `P3` (replace the old priority label; not of a ticket whose
+   priority the owner set after its creation: keep it). A ticket that must not come back now gets `muted` and a
+   one-line reason (owner, 2026-11-01): the owner brings it back.
+4. Write the scope into the body of the release epic: one line "- [ ] #N" for each ranked ticket that is not muted
+   (epics: the epic number), and the acceptance criteria: each scope ticket closed, no open bug `P0` or `P1`, and a
+   play-test check (`tools/play_check.py`: a full game against the bot, no server error, no stuck unit).
+5. Look at the waiting roadmap features (`python3 tools/release.py`): a feature that the ranking puts into the next
+   release gets milestone `A` in its row of `steering/project/RELEASE.md` (a `docs` PR). Correct the kinds list of
+   "Release focus" when the ranking shows a new kind.
+6. Remove `rank` from each ticket and from the epic. Then do the other refill steps.
+
 ## Release checks (`steering/project/RELEASE.md`, owner decision #878)
 
 Inside the release focus (`steering/project/RELEASE.md`), the priority labels decide the order of the work; the work

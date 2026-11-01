@@ -16,6 +16,7 @@ The next release is a play test: a person plays a full game, and the agents impr
 Until the next release (a tag `v*`), the agents work only on:
 
 - bugs, and the release checks of the table rows `...-check-...`;
+- the scope of the open release epic (label `release`, "Release cycle" below);
 - the features of the milestones that the line "Release focus: X" counts (`A`: the milestones B and A);
 - the user experience of the play test: what a player sees, controls and understands in a game (the play-test kit
   `docs/PLAYTEST.md`, the controls, the menus, the hints and the feedback of P9, the start of a game, the speed of
@@ -36,7 +37,41 @@ so that its usage is not lost. Hold only the rest: its epic gets the label and n
 
 `tools/release.py` prints the features that wait; `framework/tools/usage.py` gives them no refill run. The owner moves
 a feature into the focus with its milestone (a row `B` or `A`) or by removal of the label `after-release` from its
-ticket. After a release, the owner sets the milestones and the focus of the next release.
+ticket.
+
+### A new feature: in the next release or after it?
+
+Decide by comparison, not only by the list above. Before you give a new feature ticket (or a new roadmap feature) its
+labels, list the open tickets with `after-release` and the scope of the open release epic. Then:
+
+1. A feature that a play tester needs for a full game, or that makes a game easier to start, see, control or
+   understand, goes into the next release: add its line "- [ ] #N" to the scope of the release epic.
+2. A feature that is more like the held tickets than like the scope (the same kind of work, the same size of benefit
+   for a play tester) gets `after-release`.
+3. When both are equally near, it gets `after-release` (P4: ship fine for now).
+
+When the owner moves a ticket by hand (adds or removes `after-release`, or moves it into or out of the scope), the
+owner is right: add the kind of that ticket to the list above, or correct the list, in the next PR, so that the next
+decision follows it. The roadmap review checks that each held ticket fits a kind of the list.
+
+### Release cycle (owner, 2026-11-01)
+
+1. The open release epic (labels `epic`, `release`, title "Release vX.Y.Z") holds the scope of the next release: the
+   lines "- [ ] #N" of its body, and its own sub-issues (the user experience and play-test work). Its acceptance
+   criteria: each scope ticket is closed, no open bug `P0` or `P1`, and the play-test check of its body passes.
+   The dashboard shows how many scope tickets are closed (section "Releases").
+2. The epic check (`queue.md`) closes the epic when its criteria are met (label `close`).
+3. `.github/workflows/release.yml` then tags main as `vX.Y.Z` when the last CI run of main is green, and starts the
+   workflows of the tag: the installers and the GitHub release (`installers.yml`), the example worlds (`worlds.yml`)
+   and the release of the held tickets (`after-release.yml`).
+4. `after-release.yml` moves `after-release` to `rank` on all held tickets. `release.yml` opens the epic of the next
+   release (vX.Y+1.0) with `rank`. A ticket with `rank` waits: no run takes it.
+5. A deep run (refill lock) ranks all `rank` tickets against each other (the `roadmap` skill, "Release cycle"): the
+   most useful third for a play tester gets `P1`, the next third `P2`, the rest `P3`. A ticket that must not come
+   back now gets `muted` with a one-line reason. All other ranked tickets go into the scope of the new release epic.
+   It also decides for each waiting roadmap feature (milestone C) if it goes into the next release (its row gets
+   milestone `A`) or waits. Then it removes `rank` from the tickets and the epic.
+6. The cycle repeats: new features in the next release or after it (above), a release when the epic closes.
 
 ## Rules
 

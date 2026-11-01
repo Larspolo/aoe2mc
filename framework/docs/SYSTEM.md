@@ -36,7 +36,8 @@ session task tools `mcp__ccd_session` ...) from each session of the repository: 
 | `coverage.yml` (Coverage) | Each push to `main` | Writes `docs/coverage.md`, `MAX` of `tests/test_coverage.py` and a column of `docs/DESIGN.md`. PRs do not change these files, so they do not conflict there. |
 | `metrics.yml` (Metrics) | The cron (`*/15`, a few times a day), by hand with `days` | Writes the status issue comments to the orphan branch `metrics` (`framework/tools/metrics_log.py`, one file per day). `framework/tools/health.py` reads them, the run reports of `runs/` (each run adds its own file, `metrics_log.post`) and only the newest comments from the API (#1983). The tip keeps the last 14 days (`metrics_log.prune`: each reader fetches the whole tip); the git history of the branch keeps all days. A store outside GitHub (Cloudflare D1, free up to 5 million rows read a day) was not better: it adds an account, a token in the runs and a way to fail for the pacer (2026-10-29). The pacer loop writes the branch in each cycle too (2026-10-29): this workflow is the fallback and the backfill. |
 | `labels.yml` (Labels) | A change of `.github/labels.txt` | Creates the labels. |
-| `after-release.yml` (After release) | A push of a tag `v*`, by hand | Removes the label `after-release` from each open issue: the owner holds a ticket with it until the next release, and `framework/tools/dashboard.py` skips it until then (#4175). |
+| `after-release.yml` (After release) | A push of a tag `v*`, `release.yml`, by hand | Moves the label `after-release` of each open issue to `rank`: the owner holds a ticket with it until the next release, and `framework/tools/dashboard.py` skips it until then (#4175). A deep run ranks the `rank` tickets (P1 to P3) and gives the next release epic its scope (`roadmap` skill, "Release cycle"). |
+| `release.yml` (Release) | A closed issue with `release`, `close.yml`, each hour, by hand | Tags main as `vX.Y.Z` of a closed release epic when its CI is green, starts `installers.yml`, `worlds.yml` and `after-release.yml` on the tag, and opens the next release epic with `rank` (owner, 2026-11-01). |
 
 ### Tools of the system
 
@@ -243,5 +244,6 @@ second project starts).
 | `.github/workflows/coverage.yml` | specific | The coverage of the AoE2 types. |
 | `.github/workflows/bundles.yml` | specific | The app bundles of the converter (PyInstaller, `packaging/`, #1541) and their installers (#1542). |
 | `.github/workflows/installers.yml` | specific | On a tag `v*`: the installers of `bundles.yml` in the release of the tag (#1542). |
+| `.github/workflows/release.yml` | specific | Tags the closed release epic `vX.Y.Z`, starts `installers.yml`, `worlds.yml` and `after-release.yml` on the tag, opens the next release epic (owner, 2026-11-01). |
 | `.github/workflows/worlds.yml` | specific | The worlds of `examples/` and `samples/` as zips in a release (#207). |
 | `.gitattributes` | specific | The list of `merge=union` files, and `merge=jsonl` for `game/data/*.jsonl` and `tests/data/civ_bonuses.jsonl` (`framework/tools/merge_jsonl.py`, #2004, #2100). |
