@@ -34,6 +34,9 @@
 {"name": "aoe2mc.controls.research", "en_us": "Research and age up: right click your own building and click a technology or the next age in its menu."}
 {"name": "aoe2mc.controls.garrison", "en_us": "Garrison: select units, then right click your own building. Its menu lets them out. Town center menu: Ring Town Bell."}
 {"name": "aoe2mc.controls.camera", "en_us": "Camera: right click with the spyglass Camera (hotbar key 2): you walk fast high above the map. Shift right click: the next speed. Right click again: you fly down."}
+{"name": "aoe2mc.controls.goto", "en_us": "Go to: right click with the compass Go to (hotbar key 3): a menu of your town centers, your control groups and the next idle villager."}
+{"name": "aoe2mc.controls.menu", "en_us": "Game menu: right click with the book Game menu (hotbar key 4): diplomacy and tribute, flare, save, pause and the tech tree."}
+{"name": "aoe2mc.controls.groups", "en_us": "Control groups: select units, take a group item (hotbar keys 5 to 9) and Shift + right click to save the selection. Right click: select the group."}
 {"name": "aoe2mc.defeat", "en_us": "Defeat"}
 {"name": "aoe2mc.flare.placed", "en_us": "%s: Flare at %s %s"}
 {"name": "aoe2mc.follow.refuse_follow", "en_us": "Follow: click an own unit"}
