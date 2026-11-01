@@ -29,6 +29,8 @@ bar and the hints, or shows them again.
 Taunts (#3318): a chat text that starts with a taunt number ("11", "11 haha") sets the score aoe_taunt of the player
 (the plugin, also with cheats off). taunts() shows the AoE2 text and plays the sound of replay.py to each player without
 the tag aoe2mc.mute: "!mute" adds the tag to the own player, "!nomute" removes it (#2961).
+The Minecraft way (#5153): "/give <target> gold" (also food, wood, stone; not a Minecraft item, so no vanilla /give
+breaks) is the code "give gold" in the plugin, the same cheat as "robin hood". The target and the count do not count.
 Excluded and partial codes (owner, #820, #985):
 - "marco": done as it is. The fog of war hides only units, not the map: "marco" only answers in the chat ("polo").
 """
@@ -304,6 +306,8 @@ CODES = {                                     # code -> the resources, the chat 
     "wimpywimpywimpy": lambda g, player: defeat(g, g.player) or g.ended and destroy(g, g.player),
     "woof woof": woof,
 }
+GIVE = {"food": "cheese steak jimmy's", "gold": "robin hood", "stone": "rock on", "wood": "lumberjack"}
+CODES |= {f"give {r}": CODES[c] for r, c in GIVE.items()}   # "/give <target> gold [n]" (#5153): the plugin
 # The unit and transformation codes: one line per code in data/cheats.jsonl (#2034). A Transform has "units" (a list
 # of unit names) or "rule" (the name of a function of this module).
 CODES = dict(sorted((CODES | {r["name"]: Unit(r["unit"]) if "unit" in r else Transform(r["transform"], set(
