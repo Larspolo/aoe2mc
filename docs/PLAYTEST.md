@@ -26,6 +26,14 @@ world `OUTWorld`. You can also convert your own `.aoe2scenario` file.
 
 ## 3. Start and join
 
+Start with the tutorial. It shows each step in the boss bar and the chat (select a villager, gather wood, build a
+house). After the last step, stop the game with Ctrl-C and start the bot game below. The installer path uses
+`aoe2mc-game` in place of `python3 game/run.py`.
+
+    python3 game/run.py OUTWorld --play --tutorial
+
+Then start the bot game:
+
     python3 game/run.py OUTWorld --play --bot
 
 The first start downloads the Minecraft server (about 1 minute). When the console shows
@@ -38,7 +46,8 @@ Add `--cheats` to use the AoE2 cheat codes in the chat (for example `aegis`: fas
 
 ## 4. Controls
 
-Hold the carrot on a stick. The action bar at the bottom of the screen always shows the next possible step.
+Hold the carrot on a stick. The action bar at the bottom of the screen always shows the next possible step. The
+tutorial (section 3) teaches the same controls.
 
 - Select: right click a unit. Hold right click and look across the ground: a selection box.
 - Move: with a selection, right click the ground.
