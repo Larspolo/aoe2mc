@@ -31,6 +31,7 @@ import lobby  # noqa: E402
 import market  # noqa: E402
 import menu  # noqa: E402
 import pause  # noqa: E402
+import relation_colors  # noqa: E402
 import savegame  # noqa: E402
 import table  # noqa: E402
 import techtree  # noqa: E402
@@ -46,6 +47,7 @@ BUTTONS = {0: ("writable_book", "Diplomacy", "Send tribute to other players."), 
 PAUSE_SLOT = 5
 TECH_TREE_SLOT = 6
 HUNT_SLOT = 7                                                      # the switch "Highlight huntable animals" (#5509)
+COLORS_SLOT = 7                                                    # the switch "Unique Player Colors" (#5510)
 SPEED_SLOT = 4                                                     # the button "Game speed" with --unlock-speed (#2933)
 SPEEDS = (1.0, 1.5, 2.0)                                           # times the Normal speed, as run.py --speed
 RESOURCES = {"food": "wheat", "wood": "oak_log", "gold": "gold_ingot", "stone": "cobblestone"}   # rows 1-4
@@ -76,6 +78,8 @@ def open_menu(g, player):
     buttons[HUNT_SLOT] = hunt_highlight.button(g, player)
     if getattr(main(g), "paused", False):
         buttons[PAUSE_SLOT] = ("clock", "Pause", "Continue")
+    buttons[COLORS_SLOT] = ("white_dye", "Unique Player Colors", "Off: you blue, allies yellow, enemies red. Click: on."
+                            if relation_colors.on(g, player) else "On. Click: off (Friend or Foe colors).")
     menu.show(g, player, "Game menu", [(s, m, n, lore) for s, (m, n, lore) in buttons.items()],
               lambda p, slot, shift: button(g, p, slot))
 
@@ -104,6 +108,9 @@ def button(g, player, slot):
     if slot == HUNT_SLOT:
         hunt_highlight.toggle(g, player)
         return open_menu(g, player)                                    # the lore shows the new state
+    if slot == COLORS_SLOT:
+        relation_colors.toggle(g, player)
+        return open_menu(g, player)
 
 
 def main(g):
@@ -183,6 +190,7 @@ def change(g, player, n):
     scenario.stance(g.players, g.player, n, kind)
     owners.update_enemies(g)                                           # the new enemies and allies (#2996)
     g.command(gather.allies_command(g.players))
+    relation_colors.refresh(g)                                         # the Friend or Foe colors (#5510)
     if not treaty.holds(g):
         g.command(gather.neutral_command(g.players))
     g.command(f"tellraw @a[team=p{n}] " + json.dumps(lang.text("aoe2mc.diplomacy.changed", g.player,

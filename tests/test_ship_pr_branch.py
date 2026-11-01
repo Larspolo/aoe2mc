@@ -8,7 +8,7 @@ import ship_pr  # noqa: E402
 def run(monkeypatch, argv, prs):
     asked, waited = [], []
     monkeypatch.setattr(ship_pr.dashboard, "api", lambda path, *a: asked.append(path) or prs)
-    monkeypatch.setattr(ship_pr, "ci", lambda number, sha, deadline: waited.append((number, sha)) or 0)
+    monkeypatch.setattr(ship_pr, "ci", lambda number, sha, deadline, pr=None: waited.append((number, sha)) or 0)
     monkeypatch.setattr(ship_pr, "git", lambda *a: type("R", (), {"stdout": "session-branch\n"})())
     return ship_pr.main(argv), asked, waited
 

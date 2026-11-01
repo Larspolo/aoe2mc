@@ -34,6 +34,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 final class Cheats implements Listener {
     private final JavaPlugin plugin;
     private static final Pattern TAUNT = Pattern.compile("^\\s*0*([1-9]\\d{0,2})(\\s|$)");   // "11", "11 haha"
+    private static final Pattern GIVE = Pattern.compile("give\\s+\\S+\\s+(?:aoe:)?(\\w+)(\\s+\\d+)?");
     private final Map<String, Integer> codes = new HashMap<>();
 
     Cheats(JavaPlugin plugin) {
@@ -86,7 +87,9 @@ final class Cheats implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onCommand(PlayerCommandPreprocessEvent ev) {
-        Integer n = codes.get(norm(ev.getMessage().substring(1)));     // "/robin hood": the Minecraft command way
+        String text = norm(ev.getMessage().substring(1));
+        Matcher g = GIVE.matcher(text);                               // "/give @s gold 100" -> the code "give gold" (#5153)
+        Integer n = codes.get(g.matches() ? "give " + g.group(1) : text);     // "/robin hood": the Minecraft command way
         if (n != null) {
             ev.setCancelled(true);
             score().getScore(ev.getPlayer().getName()).setScore(n);
