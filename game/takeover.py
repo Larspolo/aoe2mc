@@ -128,17 +128,34 @@ def player(r, p, t=0):
                                 if any(i in r.units and r.units[i].uuid in us for i in inside))}
 
 
-def state(r, t=None):
+ATTACK = 120                                                           # AoE2 seconds after the takeover (#5452)
+
+
+def bot(r, p, t, difficulty="standard"):
+    """The savegame.BOT fields of the bot that plays player p after a takeover at game time t (ms) (#5452): its clock
+    goes on from t, and its first attack comes ATTACK seconds after t, on the first enemy of the record's teams."""
+    import run  # run imports replay: import it late
+    s = t / 1000
+    return {"time": s, "charged": False, "attack": s + ATTACK, "foe": run.bot_foe(r.data["players"], p),
+            "difficulty": difficulty}
+
+
+def state(r, t=None, taken=1, difficulty="standard"):
     """The savegame.dump dict of the Replay r at game time t (ms; None: the time of its controls): the stock, the
     technologies, the population, the units and the done buildings of each player of the record, and the game time.
+    Each player but `taken` (the Minecraft player) gets the state of its bot (#5452); difficulty: the --ai-difficulty
+    setting (a comma list: one level per bot in seat order, bot.level_of).
     The same replay at the same time gives the same dict (sorted keys and lists)."""
     t = (getattr(r, "control", None) or {}).get("time", 0) if t is None else t
     ps = sorted(int(k) for k in r.data.get("players") or {} if int(k))
-    d = {"players": {str(p): player(r, p, t) for p in ps}, "game_time": round(t / 1000, 3)}
+    import bot as ai
+    seats = {p: ai.level_of(difficulty, k) for k, p in enumerate(q for q in ps if q != taken)}
+    d = {"players": {str(p): player(r, p, t) | ({"bot": bot(r, p, t, seats[p])} if p in seats else {}) for p in ps},
+         "game_time": round(t / 1000, 3)}
     return json.loads(json.dumps(d, sort_keys=True))                   # the JSON form: sorted keys, no tuples
 
 
-def write(game, r, saves, t=None):
+def write(game, r, saves, t=None, difficulty="standard"):
     """Save the replay of game at its time: a copy of the world after `save-all flush` (run.save) and state(r) next to
     it (savegame.write). Returns the save folder."""
     import run  # run imports replay: import it late
@@ -146,6 +163,6 @@ def write(game, r, saves, t=None):
     world = os.path.join(tempfile.mkdtemp(dir=os.path.dirname(copy)), os.path.basename(os.path.normpath(game.world)))
     os.rename(copy, world)                                             # the save takes the name of the world
     try:
-        return savegame.write(saves, world, state(r, t))
+        return savegame.write(saves, world, state(r, t, difficulty=difficulty))
     finally:
         shutil.rmtree(os.path.dirname(world), ignore_errors=True)

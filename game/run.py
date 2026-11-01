@@ -1486,8 +1486,8 @@ def main(argv=None, scenario=None):
                        camera=a.camera, live=a.live, delay=a.delay, stop=a.takeover is not None)
             if a.takeover is not None:               # the save of the replay state, then a game on it (#5450)
                 import takeover
-                state = savegame.read(takeover.write(game, r, savegame.folder(a.world)))
-                a.play, a.people = True, 1
+                state = savegame.read(takeover.write(game, r, savegame.folder(a.world), difficulty=a.ai_difficulty))
+                a.play, a.people, a.bot = True, 1, "all"   # a bot plays each other player of the record (#5452)
                 print("The replay reached its --from time: you play player 1 now.", file=sys.stderr)
             else:
                 print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
