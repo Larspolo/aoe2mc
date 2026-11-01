@@ -30,6 +30,7 @@ framework/docs/OPERATOR.md
 .claude/hooks/session-start.sh
 .claude/hooks/guard-main.sh
 .claude/hooks/guard-shell.sh
+.claude/hooks/guard-body.sh
 
 # The workflows (GitHub finds them in .github/workflows/) and the GitHub files
 .github/workflows/automerge.yml
@@ -68,6 +69,8 @@ framework/tools/merge_main.py
 framework/tools/cycle_start.py
 framework/tools/ship_pr.py
 framework/tools/merge_jsonl.py
+framework/tools/pr_ticket.py
+framework/tools/push_workflows.py
 
 # The tests of the tools
 framework/tests/conftest.py
@@ -137,6 +140,38 @@ framework/tests/test_usage.py
 framework/tests/test_usage_status_once.py
 framework/tests/test_usage_week.py
 framework/tests/test_new_repo.py
+framework/tests/test_claim_adopt_closed.py
+framework/tests/test_claim_closed.py
+framework/tests/test_claim_fixmain.py
+framework/tests/test_claim_refill_state.py
+framework/tests/test_cycle_start_spread.py
+framework/tests/test_full_dispatch_checks.py
+framework/tests/test_guard_foreign.py
+framework/tests/test_guard_shallow.py
+framework/tests/test_health_held.py
+framework/tests/test_health_lane_rework.py
+framework/tests/test_health_takeover_reports.py
+framework/tests/test_health_takeover_text.py
+framework/tests/test_labels_form.py
+framework/tests/test_merge_main_hand_commit.py
+framework/tests/test_new_repo_email.py
+framework/tests/test_new_repo_ruleset.py
+framework/tests/test_orphans.py
+framework/tests/test_orphans_decision_pr.py
+framework/tests/test_pacer_queued_brief.py
+framework/tests/test_pacer_stuck_ci.py
+framework/tests/test_pr_ticket_epic.py
+framework/tests/test_push_workflows.py
+framework/tests/test_report_handoff.py
+framework/tests/test_report_result.py
+framework/tests/test_session_hook.py
+framework/tests/test_ship_pr_hold.py
+framework/tests/test_ship_pr_merge.py
+framework/tests/test_ship_pr_part.py
+framework/tests/test_ship_pr_wait.py
+framework/tests/test_stuck_owner_pr.py
+framework/tests/test_unconflict_defs.py
+framework/tests/test_tokens_last_call.py
 
 # This list
 framework/files.txt
