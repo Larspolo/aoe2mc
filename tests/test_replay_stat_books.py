@@ -48,7 +48,7 @@ def test_a_long_book_of_8_players_appends_its_pages_below_the_rcon_limit():
     lines = {p: [f"Pop {'█' * replay.GRAPH_MINUTES} {99999 - p}"] * 4 for p in range(1, 9)}
     cmds = r.stat_book("Graphs", lines)
     assert len(cmds) > 1 and all(c.startswith("item modify entity @a hotbar.3 ") for c in cmds[1:])
-    assert '"set_written_book_pages",mode:"append"' in cmds[1]
+    assert 'type:"minecraft:set_written_book_pages",mode:"append"' in cmds[1]
     assert max(len(c.encode()) for c in cmds) <= replay.RCON_MAX
     assert len(pages(cmds)) == 8 and all(page(cmds, k) == lines[k + 1] for k in range(8))
 
