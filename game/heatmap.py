@@ -9,7 +9,14 @@ import aoe2mc
 
 def grid(events, owner, n, kind="walk", start=0, end=math.inf):
     """{player: int array n × n (x, y)}: one count per event of the player at its `tile`, time in [start, end) ms.
-    kind "walk": the move and order events (aoe2mc.UNIT_USE). owner: replay.owners() for events with only object IDs."""
+    kind "walk": the move and order events (aoe2mc.UNIT_USE). owner: replay.owners() for events with only object IDs.
+    kind "death": events is the dict of death_counts() (the live replay counts the deaths, the record has none, #5458)."""
+    if kind == "death":
+        out = {}
+        for (p, x, y), c in events.items():
+            if 0 <= x < n and 0 <= y < n:
+                out.setdefault(p, np.zeros((n, n), int))[x, y] += c
+        return out
     if kind != "walk":
         raise ValueError(f"unknown heat map kind: {kind}")
     out = {}
@@ -20,6 +27,18 @@ def grid(events, owner, n, kind="walk", start=0, end=math.inf):
         x, y = (int(v) for v in e["tile"][:2])
         if p and 0 <= x < n and 0 <= y < n:
             out.setdefault(p, np.zeros((n, n), int))[x, y] += 1
+    return out
+
+
+def death_counts(answer):
+    """{(player, x, y): deaths} of the answer of "aoe deathmarks heat T" ("Deaths: team x z n ..."): team pN -> player N;
+    other teams are not players."""
+    f = answer.split()[1:] if answer.startswith("Deaths:") else []
+    out = {}
+    for team, x, z, c in zip(*[iter(f)] * 4):
+        if team[:1] == "p" and team[1:].isdigit():
+            key = (int(team[1:]), int(x), int(z))
+            out[key] = out.get(key, 0) + int(c)
     return out
 
 
