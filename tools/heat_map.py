@@ -1,7 +1,7 @@
 """Write the walk heat map of the record of a converted world as a PNG (#5455): the target tiles of the moves and
 orders of each player in its color.
 
-Usage: python3 tools/heatmap.py WORLD OUT.png [--kind walk] [--from MM:SS] [--to MM:SS]
+Usage: python3 tools/heat_map.py WORLD OUT.png [--kind walk] [--from MM:SS] [--to MM:SS]
 """
 import argparse
 import json
