@@ -213,6 +213,7 @@ NOT_SAVED = (                                                          # the fie
     "haste_time",                                                      # train.haste: a tick timer
     "hasted",                                                          # train.haste: a load sends the values again
     "home",                                                            # bot.py: the town center of a bot
+    "hunt_highlight",                                                  # hunt_highlight.py: the client forgets the glow
     "hurried",                                                         # regen.military: again in its next pass
     "kings",                                                           # regicide.setup makes it again
     "left_full",                                                       # amounts.py: the full amounts, from aoe2mc.json again

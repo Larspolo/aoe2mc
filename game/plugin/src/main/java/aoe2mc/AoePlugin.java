@@ -160,6 +160,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
  *   aoe heatmap <tile> <n> <x,y,color,shade> ... [end]   the heat map of the record as a map item for the
  *                                              spectators at the replay end (#5457, Heatmap.java)
+ *   aoe huntglow <players> on|add <uuid> ... | off  the animals glow only for these players (#5509, HuntGlow.java)
  *   aoe hide <players> <uuid> ...              Player#hideEntity: the players do not see these entities, also a
  *                                              player that joins later (#1302: the enemy units out of sight in the
  *                                              view of one replay player). With team=T in the selector: only a
@@ -434,7 +435,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final MapTable mapTable = new MapTable();              // a click on the framed map (#2586)
     private final Viewer viewer = new Viewer(this);                 // the game mode switch of a replay viewer (#910)
     private final Follow camera = new Follow();                     // the follow camera of a replay (#738, #1660)
-    private final Camera cameraMode = new Camera();                 // the floor and speed of the camera mode
+    private final Camera cameraMode = new Camera();
+    private final HuntGlow huntGlow = new HuntGlow(this);           // the switch "Highlight huntable animals" (#5509)                 // the floor and speed of the camera mode
     private final Border border = new Border();
     private final Sight sight = new Sight(minimap);                 // the edge of the line of sight (#3330)
 
@@ -1470,6 +1472,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(mapTable, this);
         Bukkit.getPluginManager().registerEvents(viewer, this);
         Bukkit.getPluginManager().registerEvents(cameraMode, this);
+        Bukkit.getPluginManager().registerEvents(huntGlow, this);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -3730,6 +3733,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length >= 3 && args[0].equals("heatmap")) {         // #5457
             return Heatmap.command(sender, args);
+        }
+        if (args.length >= 3 && args[0].equals("huntglow") && args[2].matches("on|add|off")) {   // #5509
+            return huntGlow.command(sender, players(sender, args[1]), args);
         }
         if (args.length >= 3 && (args[0].equals("hide") || args[0].equals("show"))) {   // one command per second (#1302)
             boolean hide = args[0].equals("hide");
