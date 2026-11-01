@@ -20,8 +20,8 @@ agent-status|1d76db|The dashboard of the agent
 paused|b60205|On the status issue: the agent stops
 muted|d4c5f9|Muted by the owner: the agents skip it and the dashboard hides it
 after-release|d4c5f9|Held until the next release (tag v*): agents skip it, the After release workflow removes it
-rank|d4c5f9|After a release: waits until a deep run ranks the released tickets (P1 to P3) and the next release epic
-release|0e8a16|The epic of the next release "Release vX.Y.Z" (its GitHub milestone holds the scope): the Release workflow tags it
+rank|d4c5f9|After a release: waits until a deep run ranks the released tickets (P1 to P3)
+release|0e8a16|The epic "Release vX.Y.Z" (its milestone holds the scope): the Release workflow tags it
 hold|fbca04|On a PR: the Automerge workflow does not merge it
 automerge|0e8a16|On a PR: the Automerge workflow merges it when CI is green, on any branch
 conflict|b60205|On a PR: the Automerge workflow could not merge it
