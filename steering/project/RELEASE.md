@@ -64,10 +64,11 @@ decision follows it. The roadmap review checks that each held ticket fits a kind
    `P0` or `P1`, and the play-test check of the epic passes. The dashboard shows the closed issues of the milestone
    (section "Releases").
 2. The epic check (`queue.md`) closes the epic when its criteria are met (label `close`).
-3. `.github/workflows/release.yml` then tags main as `vX.Y.Z` when the milestone has no open issue and the last CI
-   run of main is green, closes the milestone, and starts the
-   workflows of the tag: the installers and the GitHub release (`installers.yml`), the example worlds (`worlds.yml`)
-   and the release of the held tickets (`after-release.yml`).
+3. `.github/workflows/release.yml` then tags `vX.Y.Z` when the milestone has no open issue: the newest commit of
+   main with a green CI run, from after the close (the head of main often has no finished CI run). It makes the
+   GitHub release with notes (the closed issues of the milestone), closes the milestone, and starts the workflows of
+   the tag: the installers (`installers.yml`), the example worlds (`worlds.yml`) and the release of the held tickets
+   (`after-release.yml`).
 4. `after-release.yml` moves `after-release` to `rank` on all held tickets. `release.yml` opens the epic and the
    milestone of the next release (vX.Y+1.0); the epic gets `rank`. A ticket with `rank` waits: no run takes it.
 5. A deep run (refill lock) ranks all `rank` tickets against each other (the `roadmap` skill, "Release cycle"): the

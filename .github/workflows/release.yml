@@ -3,7 +3,8 @@ name: Release
 # Makes the GitHub release of a closed release epic (owner, 2026-11-01; steering/project/RELEASE.md, "Release cycle").
 # A release epic has the labels `epic` and `release` and the title "Release vX.Y.Z"; the GitHub milestone "vX.Y.Z"
 # holds its scope (this job makes the milestone of each open release epic). When the epic closes as completed, the
-# milestone has no open issue and the last CI run of main is green, this job tags main as vX.Y.Z, closes the milestone
+# milestone has no open issue and main has a green CI run of a commit after the close, this job tags the newest such
+# commit as vX.Y.Z, makes the GitHub release with notes (the closed issues of the milestone), closes the milestone
 # and opens the next release epic and milestone (vX.Y+1.0; the epic gets `rank`: a deep run gives it its scope). A tag of GITHUB_TOKEN starts no workflow, so this job starts the workflows
 # of the tag by `workflow_dispatch`: installers.yml (the installers and the release), worlds.yml (the example worlds)
 # and after-release.yml (the held tickets come back with `rank`).
@@ -57,11 +58,26 @@ jobs:
             ms=$(gh api --paginate "repos/$R/milestones?state=all&per_page=100" --jq ".[] | select(.title == \"$tag\") | \"\(.number) \(.open_issues)\"")
             read -r msn left <<< "$ms"
             if [ "${left:-0}" -gt 0 ]; then echo "wait #$i ($tag): $left open issues in the milestone"; continue; fi
-            sha=$(gh api "repos/$R/commits/${BRANCH:-main}" --jq .sha)
-            ok=$(gh api "repos/$R/actions/workflows/ci.yml/runs?head_sha=$sha&status=completed&per_page=20" \
-                   --jq '[.workflow_runs[].conclusion] | any(. == "success")')
-            if [ "$ok" != "true" ]; then echo "wait #$i ($tag): no green CI run of $sha yet"; continue; fi
+            # The newest commit of main with a green CI run, not the head of main: the runs merge every few minutes, and
+            # the head often has no finished CI run. It must be from after the close, so that it has the work of the epic.
+            closed=$(gh api "repos/$R/issues/$i" --jq .closed_at)
+            read -r sha when <<< "$(gh api "repos/$R/actions/workflows/ci.yml/runs?branch=${BRANCH:-main}&status=success&per_page=1" \
+                                      --jq '.workflow_runs[0] | "\(.head_sha) \(.head_commit.timestamp)"')"
+            if [ -z "$sha" ] || [ "$sha" = null ] || [[ "$when" < "$closed" ]]; then
+              echo "wait #$i ($tag): no green CI run of a commit after the close ($closed) yet"; continue
+            fi
             gh api "repos/$R/git/refs" -f ref="refs/tags/$tag" -f sha="$sha" > /dev/null
+            # The release with its notes: installers.yml and worlds.yml then only attach their files.
+            {
+              echo "aoe2mc $tag. Download the installer of your system; the README section \"Install\" has the steps. The zips are the converted example worlds (Minecraft Java 26.3): unzip a world into the saves folder of Minecraft."
+              echo; echo "Release epic: #$i."
+              if [ -n "$msn" ]; then
+                echo; echo "## Changes (milestone $tag)"
+                gh api --paginate "repos/$R/issues?milestone=$msn&state=closed&per_page=100" \
+                  --jq '.[] | select(.pull_request | not) | select(.state_reason == "completed") | "- \(.title) (#\(.number))"'
+              fi
+            } > notes.md
+            gh release create "$tag" --verify-tag --title "aoe2mc $tag" --notes-file notes.md
             gh workflow run installers.yml --ref "$tag"
             gh workflow run worlds.yml --ref "$tag" -f tag="$tag"
             gh workflow run after-release.yml --ref "$tag"

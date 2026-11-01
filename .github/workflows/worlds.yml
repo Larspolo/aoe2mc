@@ -48,7 +48,8 @@ jobs:
             [[ "$TAG" == *-* ]] && pre=--prerelease   # v0.1.0-rc1: a pre-release
           fi
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release edit "$TAG" --notes "$notes"
+            # release.yml writes the notes of a v* release (the changes of its milestone): keep them
+            [[ "$TAG" == v* ]] || gh release edit "$TAG" --notes "$notes"
           else
             gh release create "$TAG" --target "$GITHUB_SHA" --title "$title" --notes "$notes" $pre
           fi
