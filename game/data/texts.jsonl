@@ -230,6 +230,7 @@
 {"name": "aoe2mc.run.chat_hint", "en_us": "Chat: a normal line goes to all, /tm TEXT to your allies, /msg NAME TEXT to one person."}
 {"name": "aoe2mc.run.campaign_complete", "en_us": "Campaign complete"}
 {"name": "aoe2mc.run.scenario_starts", "en_us": "Scenario %s starts. Join again."}
+{"name": "aoe2mc.run.starts_in", "en_us": "The game starts in %s"}
 {"name": "aoe2mc.lobby.you_play", "en_us": "You play %s."}
 {"name": "aoe2mc.savegame.saved", "en_us": "Saved the game: %s"}
 {"name": "aoe2mc.ratings.change", "en_us": "%s %s → %s"}

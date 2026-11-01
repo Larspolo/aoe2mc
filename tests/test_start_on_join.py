@@ -33,8 +33,9 @@ class Side:
 def join_after(game, names, now):
     """A sleep that lets one more person join on each call, and moves the clock."""
     def sleep(s):
-        now[0] += 10
-        game.joined = {*game.joined, names[len(game.joined)]}
+        now[0] += 10 if s == 0.5 else s                  # the countdown (1 s) lets no one join (#5506)
+        if s == 0.5:
+            game.joined = {*game.joined, names[len(game.joined)]}
     return sleep
 
 
@@ -44,9 +45,12 @@ def test_unfreeze_and_clock_start_after_the_last_join(people):
     sides = [Side(lambda: now[0]) for _ in range(people + 1)]       # the people and a bot
     sleep = join_after(game, ["Steve", "Alex"], now)
     run.start_on_join(game, sides, people, sleep=lambda s: (game.command("sleep"), sleep(s)))
-    assert game.sent == ["sleep"] * people + ["scoreboard players reset #wait aoe_trig", "tick unfreeze"]
+    titles = [c for c in game.sent if c.startswith("title")]
+    assert len(titles) == 10                                          # 5 to 1: the subtitle and the number
+    assert [c for c in game.sent if c.startswith("sleep")] == ["sleep"] * (people + 5)   # the waits and the countdown
+    assert game.sent[-2:] == ["scoreboard players reset #wait aoe_trig", "tick unfreeze"]
     assert len(game.joined) == people
-    assert all(h.t0 == now[0] == 10 * people for h in sides)    # the game clock is 0 at the last join
+    assert all(h.t0 == now[0] == 10 * people + 5 for h in sides)  # the game clock is 0 after the 5 s countdown
 
 
 def test_main_lets_play_wait(monkeypatch, tmp_path):
