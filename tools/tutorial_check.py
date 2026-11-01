@@ -308,6 +308,7 @@ class Driver:
 
     def do_camps(self):
         g, T = self.g, self.g.map.T
+        self.trees = self.trees or (self.nearest(g.map.trees, self.mid) if g.map.trees else None)   # wood passed at once
         if self.trees:
             self.build("LUMBER_CAMP", (int((self.trees[0] + 0.5) * T), int((self.trees[1] + 0.5) * T)))
         self.bush = self.nearest(g.map.bushes, self.mid) if g.map.bushes else None
