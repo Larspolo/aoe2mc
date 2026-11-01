@@ -31,6 +31,7 @@ Read it before a claim, a push, a PR, a merge conflict, red main or a check tick
 - The epic check: list the sub-issues of an epic with `gh api repos/OWNER/NAME/issues/E/sub_issues --jq '.[] | "\(.number) \(.state) \(.title)"'`, not with the MCP `issue_read` `get_sub_issues`: it returns the whole body of each child (126k characters for 11 children of #4831, 2026-10-31).
 - Add or remove one label with `gh issue edit N --add-label X` (`--remove-label X`) or REST POST `issues/N/labels`, never with a GitHub MCP issue update that sends a `labels` list: it replaces all labels. A run that set `needs-human` that way also removed `feature`, `size:M`, `P3` and `in-progress` of #4623, so `dashboard.py --next` sorted it last (#5253).
 - A "Depends on: #N" line counts only in the issue body (`dashboard.depends`, the orphan check and the pick): a comment with that line changes nothing. Edit the body (#5362).
+- A duplicate search with `gh api -X GET search/issues -f q='repo:OWNER/NAME ...'` fails with 422 when the query has no `is:issue` (or `is:pull-request`): write `q='repo:OWNER/NAME is:issue "words"'` (#5446).
 
 ## Shell and waits
 

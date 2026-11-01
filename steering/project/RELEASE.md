@@ -186,6 +186,8 @@ Bug reserve: 0.3
 | `replay:game-modes` | C | 4 | | |
 | `replay:scenario-triggers` | C | 5 | | |
 | `replay:inspect` | C | 4 | | |
+| `replay:takeover` | C | 6 | | |
+| `replay:heatmap` | C | 3 | | |
 | `replay-check-full` | B | 5 | A complex record (a team game of about 40 minutes with castles and large fights) replays from start to end with no error | #2277 |
 | `replay-check-follow` | B | 3 | The position tool (#813) shows no stray unit and less than 5 % stuck units on that record | #2278 |
 | `replay-check-speed` | B | 2 | The server keeps at least 18 ticks per second at speed 1 through the whole record | #2279 |
