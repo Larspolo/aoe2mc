@@ -218,58 +218,165 @@ class Driver:
             self.error = traceback.format_exc()
             print(self.error, flush=True)
 
+    def at(self, name):
+        """The index of the step name in tutorial.STEPS (a new step moves the later ones)."""
+        return next(i for i, r in enumerate(tutorial.STEPS) if r["name"] == name)
+
+    def inputs(self):
+        """{step name: the input function of the step}; a step of tutorial.STEPS without one stops the check."""
+        return {n[3:]: getattr(self, n) for n in dir(self) if n.startswith("do_")}
+
     def play(self):
-        g, (_, mid) = self.g, self.home()
+        g, (_, self.mid) = self.g, self.home()
         t = time.time() + 60
         while vars(g).get("tutorial_step") is None and time.time() < t:
             time.sleep(0.5)
         time.sleep(3)
-        g.command(f"tp {NAME} {mid[0] + 0.5} {g.map.y(*mid) + 20} {mid[1] + 16.5} facing {mid[0] + 0.5} {g.map.y(*mid)} {mid[1] + 0.5}")
-        time.sleep(4)
+        self.overview()
         self.shot("1_select.png")                                      # the boss bar of the first step
         self.villager = min(g.villagers)
-        while self.step() == 0 and time.time() < self.end:             # 1 select
+        self.trees = self.nearest(g.map.trees, self.mid) if g.map.trees else None   # also when a step passes alone
+        self.bush = self.site = None
+        inputs = self.inputs()
+        for i, row in enumerate(tutorial.STEPS):
+            if (do := inputs.get(row["name"])) is None:
+                self.error = f"no input for step {row['name']}"
+                self.note(self.error)
+                return
+            if self.step() > i:
+                continue
+            do(i)
+            if time.time() >= self.end or g.ended:
+                break
+        t = time.time() + 10
+        while self.step() < len(tutorial.STEPS) and time.time() < t:
+            time.sleep(0.2)
+        if self.step() >= len(tutorial.STEPS):
+            self.shot("end.png")                                       # the end title
+
+    def overview(self):
+        g, mid = self.g, self.mid
+        g.command(f"tp {NAME} {mid[0] + 0.5} {g.map.y(*mid) + 20} {mid[1] + 16.5} facing {mid[0] + 0.5} {g.map.y(*mid)} {mid[1] + 0.5}")
+        time.sleep(4)
+
+    def select(self, uuids):
+        """Select the units uuids with right clicks (a new selection)."""
+        self.c.key("Escape")                                           # an open menu takes the clicks
+        menu.close(self.g, NAME)
+        time.sleep(1.0)
+        self.g.choose(set())
+        for u in uuids:
+            for _ in range(3):
+                if u in self.g.selected or self.unit(u):
+                    break
+        self.note(f"selected {len(self.g.selected & set(uuids))} of {len(uuids)} units")
+
+    def militia(self):
+        return sorted(u for u, n in self.g.soldiers.items() if n == "MILITIA")
+
+    # --- the input of each step (do_<name of the step>)
+    def do_select(self, i):
+        while self.step() == i and time.time() < self.end:
             self.unit(self.villager)
-            self.wait(0, 5)
-        trees = self.gather_at(g.map.trees)                            # 2 wood
-        self.wait(1, 600)
-        site = self.build("HOUSE", mid)                                # 3 house
-        if self.wait(2, 600) and site:
+            self.wait(i, 5)
+
+    def do_camera(self, i):
+        """The "Camera" item (game/camera.py) in hotbar slot camera.SLOT: a right click on, walk, a right click off."""
+        import camera
+        mid, c = self.mid, self.c
+        for _ in range(3):
+            self.c.key("Escape")                                       # a menu of the step before takes the click
+            menu.close(self.g, NAME)
+            self.g.choose(set())
+            self.overview()
+            c.key(str(camera.SLOT + 1))
+            time.sleep(1.0)
+            c.click(c.size[0] // 2, c.size[1] // 2, button=3)
+            time.sleep(3.0)
+            self.shot(f"2_camera_{len(self.shots)}.png")
+            c.click(c.size[0] // 2, c.size[1] // 2, button=3)
+            time.sleep(2.0)
+            c.key("1")                                                 # the command stick again (hotbar slot 0)
+            time.sleep(1.0)
+            if self.wait(i, 10):
+                break
+        self.note(f"camera mode on and off: {self.step() > i}")
+        self.mid = mid
+        self.overview()
+
+    def do_wood(self, i):
+        self.trees = self.gather_at(self.g.map.trees) or self.trees
+        self.wait(i, 600)
+
+    def do_house(self, i):
+        g = self.g
+        self.site = site = self.build("HOUSE", self.mid)
+        if self.wait(i, 600) and site:
             x0, x1, z0, z1 = site["footprint"]
             cx, cz, y = (x0 + x1) / 2, (z0 + z1) / 2, g.map.y((x0 + x1) // 2, (z0 + z1) // 2) or 64
             g.command(f"tp {NAME} {cx:.1f} {y + 8} {cz + 14:.1f} facing {cx:.1f} {y + 2} {cz:.1f}")
             time.sleep(4)
-            self.shot("3_house.png")
-        self.train("TOWN_CENTER", "VILLAGER_MALE")                        # 4 villager
-        self.wait(3, 60)
-        T = g.map.T
-        if trees:
-            self.build("LUMBER_CAMP", (int((trees[0] + 0.5) * T), int((trees[1] + 0.5) * T)))   # 5 camps
-        bush = self.nearest(g.map.bushes, mid) if g.map.bushes else None
-        if bush:
-            self.build("MILL", (int((bush[0] + 0.5) * T), int((bush[1] + 0.5) * T)))
-        self.wait(4, 600)
-        if bush:
-            self.gather_at([bush])                                     # 6 food
-        self.wait(5, 900)
-        self.train("TOWN_CENTER", "FEUDAL_AGE")                        # 7 feudal
-        if self.wait(6, 900):
-            g.command(f"tp {NAME} {mid[0] + 0.5} {g.map.y(*mid) + 20} {mid[1] + 16.5} facing {mid[0] + 0.5} {g.map.y(*mid)} {mid[1] + 0.5}")
-            time.sleep(1.5)
-            self.shot("7_feudal.png")
-        self.build("BARRACKS", mid)                                    # 8 barracks
-        self.wait(7, 600)
-        self.train("BARRACKS", "MILITIA", 3)                           # 9 militia
-        self.wait(8, 600)
-        militia = sorted(u for u, n in g.soldiers.items() if n == "MILITIA")   # 10 camp
-        g.choose(set())
-        for u in militia:
-            for _ in range(3):
-                if u in g.selected or self.unit(u):
-                    break
-        self.note(f"selected {len(g.selected & set(militia))} of {len(militia)} militia")
+            self.shot("house.png")
+
+    def do_villager(self, i):
+        self.train("TOWN_CENTER", "VILLAGER_MALE")
+        self.wait(i, 60)
+
+    def do_camps(self, i):
+        g, T = self.g, self.g.map.T
+        if self.trees:
+            self.build("LUMBER_CAMP", (int((self.trees[0] + 0.5) * T), int((self.trees[1] + 0.5) * T)))
+        self.bush = self.nearest(g.map.bushes, self.mid) if g.map.bushes else None
+        if self.bush:
+            self.build("MILL", (int((self.bush[0] + 0.5) * T), int((self.bush[1] + 0.5) * T)))
+        self.wait(i, 600)
+
+    def do_food(self, i):
+        if self.bush:
+            self.gather_at([self.bush])
+        self.wait(i, 900)
+
+    def do_feudal(self, i):
+        self.train("TOWN_CENTER", "FEUDAL_AGE")
+        if self.wait(i, 900):
+            self.overview()
+            self.shot("feudal.png")
+
+    def do_barracks(self, i):
+        self.build("BARRACKS", self.mid)
+        self.wait(i, 600)
+
+    def do_militia(self, i):
+        self.train("BARRACKS", "MILITIA", 3)
+        self.wait(i, 600)
+
+    def do_raid(self, i):
+        """Select the Militia and right click on a unit of the raid (g.tutorial_raid) until none lives."""
+        g, t, shot = self.g, time.time() + 900, False
+        while self.step() == i and time.time() < min(t, self.end) and not g.ended:
+            raid = [u for u in vars(g).get("tutorial_raid", ()) if g.positions([u])]
+            if not raid:
+                time.sleep(1)
+                continue
+            militia = self.militia()
+            if not g.selected & set(militia):
+                self.select(militia)
+            if self.unit(raid[0]):
+                self.note(f"attack order on the raid unit {raid[0]}")
+            if not shot:
+                time.sleep(5)
+                self.shot("raid.png")
+                shot = True
+            t2 = time.time() + 20
+            while g.positions([raid[0]]) and time.time() < t2 and not g.ended:
+                time.sleep(0.5)
+
+    def do_camp(self, i):
+        g = self.g
+        militia = self.militia()
+        self.select(militia)
         shot = False
-        while self.step() == 9 and time.time() < self.end and not g.ended:
+        while self.step() == i and time.time() < self.end and not g.ended:
             camp = [u for u in vars(g).get("tutorial_camp", ()) if u in g.forts]
             if not camp:
                 break
@@ -284,16 +391,11 @@ class Driver:
                 time.sleep(20)
                 g.command(f"tp {NAME} {(x0 + x1) / 2:.1f} {y0 + 10} {z1 + 12:.1f} facing {(x0 + x1) / 2:.1f} {y0 + 1} {(z0 + z1) / 2:.1f}")
                 time.sleep(4)
-                self.shot("10_camp.png")
+                self.shot("camp.png")
                 shot = True
             t = time.time() + 40
             while camp[0] in g.forts and time.time() < t and not g.ended:
                 time.sleep(0.5)
-        t = time.time() + 10
-        while self.step() < len(tutorial.STEPS) and time.time() < t:
-            time.sleep(0.2)
-        if self.step() >= len(tutorial.STEPS):
-            self.shot("11_end.png")                                    # the end title
 
 
 def check(world, out, speed=4.0, minutes=30.0, version=None):
