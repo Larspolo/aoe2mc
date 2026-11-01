@@ -24,3 +24,6 @@ steamcommunity.com
 airef.github.io
 docs.google.com
 *.googleusercontent.com
+www.curseforge.com
+api.modrinth.com
+cdn.modrinth.com

@@ -31,6 +31,8 @@ second after the paste of the whole file (#4182, the proxy let all 22 hosts thro
 | `ageofempires.fandom.com` | Cloudflare 403 ("Just a moment..."). Use `tools/refimage.py` (MediaWiki API). |
 | `aoe2.heavengames.com` | HTTPS fails: the certificate does not match the host name. Use `http://` (301). |
 | `aok.heavengames.com`, `steamcommunity.com`, `papermc.io`, `repo.papermc.io`, `services.gradle.org`, `plugins.gradle.org` | Work (200). |
+| `www.curseforge.com` | Test of 2026-11-01: the proxy lets it through, but the site gives a Cloudflare 403 ("Just a moment..."), also to the headless Chromium of Playwright. For a Minecraft mod and its gallery, use the Modrinth API: `api.modrinth.com/v2/project/SLUG` has the key `gallery` (`url`, `title`, `description`); the images are on `cdn.modrinth.com`. |
+| `api.modrinth.com`, `cdn.modrinth.com` | Added on 2026-11-01 for the gallery of Reign of Nether; not tested before the paste of the file. |
 
 Find a game: POST JSON to `api.ageofempires.com/api/v2/AgeII/Leaderboard` (`{"region":"7","matchType":"3","consoleMatchType":15,"searchPlayer":"","page":1,"count":10}`, the field `rlUserId` is the profile ID), then to `api.ageofempires.com/api/GameStats/AgeII/GetMatchList` (`{"gamertag":"unknown user","playerNumber":0,"game":"age2","profileId":P,"sortColumn":"dateTime","sortDirection":"DESC","page":1,"recordCount":5,"matchType":"3"}`).
 
