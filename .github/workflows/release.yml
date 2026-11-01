@@ -71,7 +71,9 @@ jobs:
             closed=$(gh api "repos/$R/issues/$i" --jq .closed_at)
             read -r sha when <<< "$(gh api "repos/$R/actions/workflows/ci.yml/runs?branch=${BRANCH:-main}&status=success&per_page=1" \
                                       --jq '.workflow_runs[0] | "\(.head_sha) \(.head_commit.timestamp)"')"
-            if [ -z "$sha" ] || [ "$sha" = null ] || [[ "$when" < "$closed" ]]; then
+            # The head of main is also good: the epic closed after the last merge, and no new commit may come (#5576).
+            head=$(gh api "repos/$R/commits/${BRANCH:-main}" --jq .sha)
+            if [ -z "$sha" ] || [ "$sha" = null ] || { [[ "$when" < "$closed" ]] && [ "$sha" != "$head" ]; }; then
               echo "wait #$i ($tag): no green CI run of a commit after the close ($closed) yet"; continue
             fi
             gh api "repos/$R/git/refs" -f ref="refs/tags/$tag" -f sha="$sha" > /dev/null
