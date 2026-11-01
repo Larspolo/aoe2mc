@@ -255,6 +255,7 @@ NOT_SAVED = (                                                          # the fie
     "trade_sent",                                                      # scenario.trading: a load sends them again
     "tutorial",                                                        # run.py: from the saved settings
     "tutorial_camp",                                                   # tutorial.py: a load starts the tutorial again (#5163)
+    "tutorial_raid",                                                   # tutorial.py: a load starts the tutorial again (#5504)
     "tutorial_step",                                                   # tutorial.py: a load starts the tutorial again (#5161)
     "unit_aura_time",                                                  # regen.py: a tick timer of the monk aura (#4366)
     "unlock_speed",                                                    # run.py: from the saved settings
