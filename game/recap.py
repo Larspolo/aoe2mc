@@ -11,6 +11,7 @@ pages are in the book of each person, also after its defeat (cheats.ruin keeps i
     recap.give(g, won)        # cheats.over, after the titles
     recap.aged(g, name)       # train.research: the game time of an age
 """
+import json
 import os
 import sys
 
@@ -18,6 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import civs  # noqa: E402
 import fog  # noqa: E402
+import lang  # noqa: E402
 import score  # noqa: E402
 import train  # noqa: E402
 
@@ -78,7 +80,8 @@ def parts(g, won):
 
 
 def give(g, won):
-    """Each person of the game of g: the order items leave its inventory, and the recap book goes into SLOT."""
+    """Each person of the game of g: the order items leave its inventory, the recap book goes into SLOT, and a chat
+    line says what to do next (#5560: the titles alone did not)."""
     import scenario  # scenario imports gather: import it late
     if not all(hasattr(h, k) for h in fog.gathers(g) for k in STATE):  # a partial Gather of a test: no game
         return
@@ -91,3 +94,4 @@ def give(g, won):
             g.command(f"clear {who} minecraft:{item}")
         for cmd in scenario.written(who, SLOT, "Recap", pages):
             g.command(cmd)
+        g.command(f"tellraw {who} " + json.dumps(lang.text("aoe2mc.recap.next", color="yellow")))   # what next (#5560)
