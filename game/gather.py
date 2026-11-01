@@ -1437,7 +1437,7 @@ class Gather:
                 self.person = name                                     # group_in_hand, hold: the selection of name
                 if "aoe_box" in used:
                     self.wands.add(name)
-                if "aoe_use" in used and (n := self.group_in_hand(name)):
+                if {"aoe_use", "aoe_talk"} & set(used) and (n := self.group_in_hand(name)):   # also on a unit (#5571)
                     self.grouping[name] = n, "passed" in self.command(f"execute as {name} if predicate {SNEAK}")
                 elif "aoe_use" in used and diplomacy.in_hand(self, name):   # the Game menu item (#1588): no ray
                     out.remove(name)
