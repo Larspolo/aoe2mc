@@ -10,7 +10,7 @@ Bug reserve: 0.3
 
 Release focus: A
 
-## Release focus (owner, 2026-11-01)
+### Release focus (owner, 2026-11-01)
 
 The next release is a play test: a person plays a full game, and the agents improve what that person sees and does.
 Until the next release (a tag `v*`), the agents work only on:
@@ -30,6 +30,9 @@ row), and these kinds of work (the owner moved them first, #4175):
 - texts in other languages, achievements, statistics and analysis of a game (heat maps, graphs);
 - extra replay modes (take over a player), extra commands, a nicer UI of the installer program;
 - new systems for the agents (more accounts) and work for later Minecraft versions.
+
+Work that started goes on: a ticket with `in-progress` or an open PR gets no `after-release`. Let it finish and merge,
+so that its usage is not lost. Hold only the rest: its epic gets the label and no new sub-issue.
 
 `tools/release.py` prints the features that wait; `framework/tools/usage.py` gives them no refill run. The owner moves
 a feature into the focus with its milestone (a row `B` or `A`) or by removal of the label `after-release` from its

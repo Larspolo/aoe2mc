@@ -125,6 +125,17 @@ def total(result, m="C"):
     return 100 * done / (done + rest) if done + rest else 100.0
 
 
+def releases(result, ms):
+    """[(name, {goal name: (percent, tickets left)}, percent of all game goals, tickets left)] for the next release (the
+    milestone ms of the release focus) and for the full roadmap (C). Goal 4 is not a game goal (total())."""
+    out = []
+    for m, name in [(ms, f"Next release (focus {ms})"), ("C", "Full roadmap (C)")][:1 + (ms != "C")]:
+        goals = {GOALS.get(g, g): (r[m][0], r[m][2] + r[m][3] + r[m][4]) for g, r in sorted(result.items())
+                 if g != 4 and m in r}
+        out.append((name, goals, total(result, m), sum(left for _, left in goals.values())))
+    return out
+
+
 def load():
     """(features, share, rows, epics) of the files on disk and the epics on GitHub."""
     from dashboard import pages

@@ -60,7 +60,8 @@ For each issue of section `Triage` (no priority label):
 - If the size is L, split it (`queue.md`).
 - Release focus (`steering/project/RELEASE.md`): a `feature` ticket outside the focus (a milestone C feature or an
   extra of the list there, also an owner ticket) gets `after-release` and a one-line comment that names the rule.
-  The owner removes the label to bring it back. Bugs, play-test and user experience tickets stay.
+  The owner removes the label to bring it back. Bugs, play-test and user experience tickets stay, and so does a
+  ticket with `in-progress` or an open PR: let it finish and merge.
 
 ## 5. Pick and claim one ticket
 

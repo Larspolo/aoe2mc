@@ -70,7 +70,7 @@ new sub-issues, no `needs-human`. Still answer an owner comment on it (step 3).
 Release focus (owner, 2026-11-01, `steering/project/RELEASE.md`): before you make tickets for an open epic, check that its
 feature is inside the focus (its section "Release focus" tells how to find the features that wait). An epic outside it gets the
 label `after-release` and a one-line comment ("Waits for the release: release focus of `steering/project/RELEASE.md`"),
-and no new sub-issue. Also each new follow-up ticket of a held epic or of milestone C work gets `after-release`.
+and no new sub-issue. Do not hold a ticket with `in-progress` or an open PR: let it finish and merge. Also each new follow-up ticket of a held epic or of milestone C work gets `after-release`.
 When no source is left inside the focus, make tickets from the play test (`docs/PLAYTEST.md`, the comments of the
 play-test tickets, P9 of `steering/project/PRINCIPLES.md`) and stop; do not make work outside the focus.
 1. Split each `size:L` ticket N without open sub-issues (`ticket` skill), also when it is not a candidate yet. Lock it
