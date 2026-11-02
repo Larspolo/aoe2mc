@@ -1,7 +1,7 @@
 """Write the walk heat map of the record of a converted world as a PNG (#5455): the target tiles of the moves and
 orders of each player in its color.
 
-Usage: python3 tools/heat_map.py WORLD OUT.png [--kind walk] [--from MM:SS] [--to MM:SS]
+Usage: python3 tools/heat_map.py WORLD OUT.png [--kind walk|fight] [--from MM:SS] [--to MM:SS]
 """
 import argparse
 import json
@@ -22,7 +22,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("world")
     ap.add_argument("out")
-    ap.add_argument("--kind", default="walk", choices=["walk"])
+    ap.add_argument("--kind", default="walk", choices=["walk", "fight"])
     ap.add_argument("--from", dest="start", default="0:00")
     ap.add_argument("--to", dest="end")
     a = ap.parse_args(argv)
