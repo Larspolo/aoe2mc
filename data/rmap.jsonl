@@ -171,4 +171,6 @@
 {"name": "MARLIN1", "object": 450}
 {"name": "OYSTERS", "object": 2170}
 {"name": "ROMAN_RUINS", "object": 856}
+{"name": "KING", "object": 434}
+{"name": "MONUMENT", "object": 826}
 {"name": "TERRAIN_SHALLOWS", "terrain": 4}
