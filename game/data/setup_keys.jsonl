@@ -7,6 +7,7 @@
 {"name": "infinite", "type": "bool", "text": "A resource level where a cost does not lower the stock.", "issue": 2489}
 {"name": "level", "type": "str", "kind": true, "text": "A game mode with the resource level of this name when --resources is standard.", "issue": 2438}
 {"name": "loaded", "type": "str", "text": "What a game mode does in a loaded game: skip or start.", "issue": 2521}
+{"name": "lobby", "type": "str", "text": "The lobby type of a record (aoe2mc.json lobby type) that a takeover plays with this mode, ON_TOP flag or victory.", "issue": 5603}
 {"name": "module", "type": "str", "text": "The module of game/ with setup(g, mode) of a game mode.", "issue": 2521}
 {"name": "more", "type": "dict", "text": "The extra start units of a game mode: the number of each unit of train.jsonl.", "issue": 2459}
 {"name": "none", "type": "list", "text": "The resources that a game mode sets to 0 at the start (not with an infinite level).", "issue": 2686}
@@ -24,5 +25,6 @@
 {"name": "treaty", "type": "str", "text": "The treaty of a game mode: endless, no player can attack another.", "issue": 2406}
 {"name": "turbo", "type": "float", "kind": true, "text": "A speed setting: the factor of the work, gather, carry and build speed.", "issue": 2359}
 {"name": "units", "type": "list", "kind": true, "text": "A game mode with these start units of units.jsonl (an empty list: no change).", "issue": 2347}
+{"name": "victory", "type": "str", "kind": true, "text": "A lobby type that is the --victory of this name (VICTORIES of game/run.py), not a game mode.", "issue": 5603}
 {"name": "villagers", "type": "dict", "text": "The start villagers of a game mode at each resource.", "issue": 2408}
 {"name": "wonder_years", "type": "int", "kind": true, "text": "A game mode with a wonder victory after this number of years (0: at once).", "issue": 2406}
