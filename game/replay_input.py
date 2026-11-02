@@ -66,7 +66,7 @@ def takeover_text(players):
     extra = [{"text": f"[{name}] ", "color": color,
               "click_event": {"action": "run_command", "command": f"/trigger {OBJECTIVE} set {TAKEOVER + p}"}}
              for p, (name, color) in sorted(players.items())]
-    return json.dumps({"text": "Take over: ", "color": "gray", "extra": extra}, ensure_ascii=False, separators=(",", ":"))
+    return json.dumps({"text": "", "extra": [lang.text("aoe2mc.replay_input.takeover", color="gray"), *extra]}, ensure_ascii=False, separators=(",", ":"))
 
 
 def help_head():

@@ -24,7 +24,7 @@ def test_trigger_of_a_missing_player_changes_nothing():
 
 def test_chat_line_clicks_each_player():
     line = json.loads(replay_input.takeover_text(PLAYERS))
-    cmds = [x["click_event"]["command"] for x in line["extra"]]
+    cmds = [x["click_event"]["command"] for x in line["extra"] if "click_event" in x]
     assert cmds == [f"/trigger {replay_input.OBJECTIVE} set {replay_input.TAKEOVER + p}" for p in PLAYERS]
 
 
