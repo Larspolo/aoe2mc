@@ -487,6 +487,14 @@ class Side:
         fog.tick(self.g)                             # the fog of war of its team (#1631)
 
 
+def saved_attack(state, player, at):
+    """The game time (AoE2 seconds) of the first attack of the bot of player: the attack of a loaded save wins over at,
+    the time of the options (a takeover at 5:00 attacks at 7:00, takeover.ATTACK, #5626)."""
+    if at == math.inf:
+        return at
+    return (((state or {}).get("players", {}).get(str(player)) or {}).get("bot") or {}).get("attack", at)
+
+
 def bot_foe(players, player):
     """The foe of a bot of player (#1794, #3107): the first person who is not its ally (aoe2mc.json teams,
     gather.allied), else the first other player that is not its ally, else None: no enemy, no attack."""
@@ -872,6 +880,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
                                     difficulty=level, script=script, own=g if player == 1 else None).setup()]
         at = math.inf if attack == "never" else \
             replay.aoe2mc.game_time(attack) / 1000 * bots.LEVELS[level]["attack"]
+        at = saved_attack(state, player, at)
         print(f"A bot ({level}) plays player {player}: {len(g.bots[-1].g.villagers)} villagers "
               f"gather, its soldiers attack {'no player (no enemy)' if foe is None else f'player {foe}'} "
               f"{'never' if at == math.inf else 'at %d:%02d' % divmod(round(at), 60)}.", file=sys.stderr)
