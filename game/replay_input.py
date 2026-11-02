@@ -28,6 +28,8 @@ FIGHT = FIGHTS + 1                    # FIGHT + i: fight i of the list (the next
 MAX_FIGHTS = 10                       # fights in the list
 PLACE = FIGHT + MAX_FIGHTS            # PLACE + i: the place of fight i only, no time jump (the chat line, #2951)
 CAMERA = PLACE + MAX_FIGHTS           # the automatic camera on and off (#3369): --camera auto is the start state
+TAKEOVER = CAMERA + 1                 # TAKEOVER + p: the person takes over player p (#5601), p = 1 to MAX_PLAYERS
+MAX_PLAYERS = 8
 FIGHT_LEAD = 10000                    # ms of game time: a fight jump goes this much before the fight start (#2950)
 FIGHT_HEIGHT = 30                     # blocks above the ground of the fight place: the viewer looks down at it
 JUMPS = {JUMP: 60000, JUMP5: 300000, JUMP10: 600000, BACK: -60000, BACK5: -300000}   # BACK: a jump back (#979)
@@ -57,6 +59,14 @@ def help_text():
     extra = [{"text": f"[{name}] ", "click_event": {"action": "run_command", "command": f"/trigger {OBJECTIVE} set {n}"}}
              for n, name in actions().items()]
     return json.dumps({"text": "", "color": "aqua", "extra": extra}, ensure_ascii=False, separators=(",", ":"))
+
+
+def takeover_text(players):
+    """The chat line of the takeover (#5601): one click for each player of the record, in its color."""
+    extra = [{"text": f"[{name}] ", "color": color,
+              "click_event": {"action": "run_command", "command": f"/trigger {OBJECTIVE} set {TAKEOVER + p}"}}
+             for p, (name, color) in sorted(players.items())]
+    return json.dumps({"text": "", "extra": [lang.text("aoe2mc.replay_input.takeover", color="gray"), *extra]}, ensure_ascii=False, separators=(",", ":"))
 
 
 def help_head():
@@ -93,6 +103,9 @@ def apply(n, control):
         i = cams.index(control.get("camera")) if control.get("camera") in cams else -1
         control["camera"] = cams[(i + 1) % len(cams)]
         return camera_name(control)
+    if TAKEOVER < n <= TAKEOVER + MAX_PLAYERS and n - TAKEOVER in control.get("players", {}):
+        control["takeover"] = n - TAKEOVER                         # run.replay stops at the next poll (#5601)
+        return f"Take over player {n - TAKEOVER}"
     return None
 
 
@@ -161,6 +174,7 @@ class Input:
         self.game, self.every, self.join, self.clock = game, every, join, clock
         self.last, self.joined = -float("inf"), -float("inf")
         self.opened = set()                                        # players with the replay menu
+        self.offered = set()                                       # players with the chat line of the takeover
         if not hasattr(game, "menus"):
             game.menus = {}                                        # player -> handler of its open menu (game/menu.py)
 
@@ -200,6 +214,11 @@ class Input:
                 g.command(f"execute as @a[scores={{{USE}=1..}}] if items entity @s weapon.mainhand "
                           f"*[custom_data={{{OBJECTIVE}:{n}}}] run scoreboard players set @s {OBJECTIVE} {n}")
             g.command(f"scoreboard players set @a {USE} 0")
+        if control.get("players") and now == self.joined:          # the takeover line once for each player (#5601)
+            for player in (p.strip() for p in g.command("list").split(":", 1)[-1].split(",")):
+                if player and player not in self.offered:
+                    self.offered.add(player)
+                    g.command(f"tellraw {player} {takeover_text(control['players'])}")
         menu.clicks(g)                                             # a click in the menu sets the trigger score
         if not self.passed(f"@a[scores={{{OBJECTIVE}=1..}}]"):
             return
@@ -210,7 +229,8 @@ class Input:
                 for player in (p.strip() for p in g.command("list").split(":", 1)[-1].split(",")):
                     if player and re.search(rf" has {n}\b", g.command(f"scoreboard players get {player} {OBJECTIVE}")):
                         page(player)
-        for n in [*actions(), VIEW, CAMERA, *range(FIGHT, FIGHT + MAX_FIGHTS)]:
+        for n in [*actions(), VIEW, CAMERA, *range(FIGHT, FIGHT + MAX_FIGHTS),
+                  *range(TAKEOVER + 1, TAKEOVER + MAX_PLAYERS + 1)]:
             if self.passed(f"@a[scores={{{OBJECTIVE}={n}}}]") and (said := apply(n, control)):
                 g.command(f"title @a actionbar {json.dumps({'text': said}, ensure_ascii=False)}")
                 if n == VIEW:                                      # the chat line in the color of the player
@@ -232,6 +252,11 @@ class Input:
         cells = dict(zip(slots, (0, 1, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 15, 17))) | {CAMERA: 2}   # 2: the first free cell
         names = actions() | {VIEW: view_name(getattr(self, "control", {})), FIGHTS: "Fights",
                              CAMERA: camera_name(getattr(self, "control", {}))}
+        players = getattr(self, "control", {}).get("players", {})
+        takes = [TAKEOVER + p for p in sorted(players) if 0 < p <= MAX_PLAYERS]   # row 3: one item per player (#5601)
+        cells |= {n: 18 + i for i, n in enumerate(takes)}
+        icons |= dict.fromkeys(takes, "player_head")
+        names |= {TAKEOVER + p: f"Take over {name}" for p, (name, _) in players.items()}
 
         def choose(p, slot, shift):
             n = next((a for a, c in cells.items() if c == slot), None)
@@ -239,7 +264,7 @@ class Input:
                 self.game.command(f"scoreboard players set {p} {OBJECTIVE} {n}")
         self.opened.add(player)
         return menu.show(self.game, player, "Replay", [(cells[n], icons[n], names[n], f"/trigger {OBJECTIVE} set {n}")
-                                                        for n in [*slots, CAMERA]], choose)
+                                                        for n in [*slots, CAMERA, *takes]], choose)
 
     def open_fights(self, player):
         """The menu page of the large fights (#2949): one item per fight, a click sets the trigger FIGHT + i."""

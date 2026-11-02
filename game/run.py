@@ -1114,20 +1114,30 @@ def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=N
             guide.r = r
         made.append(r)
         return r
-    if stop:                                         # the first poll at the --from time ends the replay (#5450)
-        def poll(c, inner=poll):
-            if c.get("time", 0) >= start:
-                raise Reached
-            inner(c)
+    taken = []
+
+    def poll(c, inner=poll):                         # the first poll at the --from time ends the replay (#5450)
+        if c.get("takeover"):                        # the trigger of the takeover (#5601)
+            taken.append(c["takeover"])
+            raise Reached
+        if stop and c.get("time", 0) >= start:
+            raise Reached
+        inner(c)
     try:
         stats = replay.live(make, speed, start, restart, bar=True, poll=poll, **kw)
     except Reached:
-        return made[-1]
+        return Taken(made[-1], taken[0]) if taken else made[-1]
     finally:
         shutil.rmtree(saved, ignore_errors=True)
     print(f"{stats['events']} events, {stats['commands']} commands in {stats['busy']} s "
           f"({stats['rate']} commands per second, the timeline needs {stats['need']}), largest lag {stats['lag']} s")
     return stats
+
+
+class Taken(tuple):
+    """replay() after the trigger of the takeover (#5601): (the Replay, the player)."""
+    def __new__(cls, r, player):
+        return super().__new__(cls, (r, player))
 
 
 class Reached(Exception):
@@ -1564,6 +1574,9 @@ def main(argv=None, scenario=None):
         if a.replay:                                 # after the end the player can look around (#978)
             r = replay(game, a.world, a.speed, a.start, a.follow, view=a.view or None, replay_file=a.replay_file,
                        camera=a.camera, live=a.live, delay=a.delay, stop=a.takeover is not None)
+            if isinstance(r, Taken):                 # the trigger of the takeover: as --takeover P (#5601)
+                r, a.takeover = r
+                game.seats = (a.takeover,)           # play() puts the joined person on team pP
             if a.takeover is not None:               # the save of the replay state, then a game on it (#5450)
                 import takeover
                 state = savegame.read(takeover.write(game, r, savegame.folder(a.world), taken=a.takeover,

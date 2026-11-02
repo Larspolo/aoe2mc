@@ -22,3 +22,4 @@
 {"name": "scenario.chat", "note": "the text of the scenario"}
 {"name": "watch.Guide.answer", "note": "an owner replay tool"}
 {"name": "watch.say", "note": "an owner replay tool"}
+{"name": "replay_input.takeover_text", "note": "the names of the record players"}
