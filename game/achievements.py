@@ -5,7 +5,10 @@ Events (the key "event" of a line): "win" or "win <CIV>" (cheats.over, each play
 optional "before" in game seconds (recap.aged, train.research). An optional "civ" (a key of game/data/civs.jsonl) and
 "mode" (a game mode of game/data/setup.jsonl, gather.has_mode) limit a line to that civilization and mode (#5281). "win all" needs the wins of earlier games: not here.
 "count:train" with "units" and "need" (#5280): the player trained `need` units of these names in this game
-(train.tick, at each trained unit: the count changes only there)."""
+(train.tick, at each trained unit: the count changes only there).
+"research <TECH>" (train.research, #5629), "build <BUILDING>" (build.grow: a complete own building), "autoscout"
+(autoscout.start), "train <UNIT> at <BUILDING>" (train.tick) and "win ai <level>" (cheats.over: a win while a bot of
+that bots.LEVELS name lost)."""
 import json
 import os
 import sys
@@ -43,20 +46,25 @@ def event(g, h, name, seconds=None):
             grant(g, h.player, r["name"].lower())
 
 
-def won(g, h):
+def won(g, h, levels=()):
+    """The win of the player of h; levels: the difficulties of the bots that lost (#5629)."""
     event(g, h, "win")
     if hasattr(h, "data") and (civ := civs.real(h, h.player)):
         event(g, h, f"win {civ}")
+    for level in sorted(levels):
+        event(g, h, f"win ai {level}")
 
 
 def aged(g, name, seconds):
     event(g, g, f"age {name}", seconds)
 
 
-def trained(g, name):
-    """Count a unit name that g (a Gather) trained, and grant each "count:train" line whose units reach its need."""
+def trained(g, name, at=None):
+    """Grant the line "train <name> at <at>" (at: the building that trained it, #5629). Count a unit name that g (a Gather) trained, and grant each "count:train" line whose units reach its need."""
     counts = vars(g).setdefault("train_counts", {})
     counts[name] = counts.get(name, 0) + 1
+    if at:
+        event(g, g, f"train {name} at {at}")
     if getattr(g, "share", None) or not hasattr(g, "command"):
         return
     for r in ROWS:

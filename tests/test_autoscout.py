@@ -11,6 +11,7 @@ def setup(monkeypatch):
     server = FakeServer({"s-1": {"Pos": (1.5, 64.0, 1.5)}, "Steve": {}})
     g = gather.Gather(server, grid([[64] * 16 for _ in range(16)], objects)).setup()
     g.explored = {(x, y) for x in range(4) for y in range(4)}
+    g.achieved = {(1, "bon_voyage")}                                   # the achievement of #5629: not a move
     where = {"s-1": (1.5, 64.0, 1.5)}
     monkeypatch.setattr(g, "positions", lambda uuids: {u: where[u] for u in uuids if u in where})
     server.log.clear()
