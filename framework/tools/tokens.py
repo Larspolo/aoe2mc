@@ -15,8 +15,10 @@ that cost the most: a result stays in the context, so each later call reads it a
 The unit is "eq": input-token equivalents with the API price ratios (input 1, cache write 1.25 for 5 minutes and 2 for
 1 hour, cache read 0.1, output 5). The subscription quota is not public, but it follows the cost of the calls.
 A sink costs its tokens (about 4 characters each) written once to the cache, then read by each later call of its chain.
-Sink `base`: the system prompt, the tools, CLAUDE.md and LEARNINGS, which each call reads again; `repo` is the part
-in the repository (CLAUDE.md and its `@` files), the rest only the environment settings change (connectors, tools). Sink `output`: text,
+Sink `base`: the system prompt, the tools, CLAUDE.md and LEARNINGS, which each call reads again. The `Tokens:` line
+gives its 4 largest parts (`base_parts`, #5615): `tools` (the tool schemas: deny a tool in `.claude/settings.json`),
+`system`, `repo` (CLAUDE.md and its `@` files), `prompt`, `skills`, `agents`, `deferred`, `mcp`, `other`; an old
+transcript gives only `repo`. Sink `output`: text,
 thinking and tool input. The rest of the eq (not in the sinks): owner messages, hook text and the carried output.
 Field `cost`: the API list price of the calls in $, by the model of each call (`PRICES`). The eq weighs a cache read
 0.1, but Opus 5.5 pays 0.05 and Haiku 5.5 pays 5 times more above 100k prompt tokens: compare lanes by the cost.
@@ -389,7 +391,7 @@ def run_line(records):
             + ("" if not d["tickets_eq"] else " · tickets " + ", ".join(f"#{n} {m(x)}" for n, x in d["tickets_eq"].items())))
 
 
-def data(t, records, repo=None, checks=None, force=None, k=10):
+def data(t, records, repo=None, checks=None, force=None, k=10, parts=None):
     """All numbers of the run as one dict (`--json`): the fields of the Tokens: line, the top `k` sink groups (share of
     the eq), the calls of each phase and the most frequent calls, and run_data(). The run record of `report.py` holds it."""
     g = defaultdict(float)
@@ -398,6 +400,7 @@ def data(t, records, repo=None, checks=None, force=None, k=10):
     ph, lab, _ = calls(records)
     out = {key: round(t.get(key, 0), 4) for key in ("eq", "write", "read", "out", "peak", "base", "usd", "in")}
     return {**out, "calls": t["calls"], "repo": None if repo is None else round(repo),
+            "base_parts": {p: round(n) for p, n in (parts or {}).items()},
             "sinks": {s: round(x / t["eq"], 4) for s, x in sorted(g.items(), key=lambda kv: -kv[1])[:k]} if t["eq"] else {},
             "verify": {s: [round(m, 1), n] for s, (m, n) in (checks or {}).items()}, "force": force,
             "calls_phase": dict(ph.most_common()), "calls_top": dict(lab.most_common(k)), **run_data(records)}
@@ -478,9 +481,10 @@ def kind(lab):
     return lab if lab.startswith(("base", "output", "Skill", "mcp", "Agent")) else lab.split(" ", 1)[0]
 
 
-def line(t, k=5, repo=None, checks=None, force=None):
+def line(t, k=5, repo=None, checks=None, force=None, parts=None):
     """The `Tokens:` line of the run report (framework/tools/health.py reads it). checks: the verify() of the run (#1704).
-    force: the refused force pushes of the run (#3461)."""
+    force: the refused force pushes of the run (#3461). parts: the base_parts() of the run: the 4 largest replace the
+    `repo` estimate (#5615)."""
     g = defaultdict(float)
     for s, x in t["sinks"].items():
         g[kind(s)] += x
@@ -490,10 +494,47 @@ def line(t, k=5, repo=None, checks=None, force=None):
             f"out {m(t['out'])} · cost ${t.get('usd', 0):.2f}"
             + (f" (+{t['unpriced']:.0f} calls without a price)" if t.get("unpriced") else "")
             + f" · peak {t['peak'] / 1e3:.0f}k · base {t['base'] / 1e3:.0f}k"
-            + ("" if repo is None else f" (repo {repo / 1e3:.0f}k)")
+            + (f" ({', '.join(f'{p} {n / 1e3:.1f}k' for p, n in list(parts.items())[:4])})" if parts
+               else "" if repo is None else f" (repo {repo / 1e3:.0f}k)")
             + ("" if checks is None else " · " + verify_field(checks))
             + ("" if force is None else f" · force {force}") + " · sinks "
             + ", ".join(f"{s} {x / t['eq']:.0%}" for s, x in top))
+
+
+# The parts of the base (#5615): the attachment types of the first turn, else "other" (environment, date, mode).
+BASE_PARTS = {"instructions": "repo", "skill_listing": "skills", "agent_listing_delta": "agents",
+              "deferred_tools_delta": "deferred", "mcp_instructions_delta": "mcp"}
+
+
+def base_parts(records, base):
+    """{part: tokens} of the base of the first call (#5615): the system prompt (`system`), the tool schemas (`tools`),
+    the repository files (`repo`), the skill, agent, deferred tool and MCP lists, the first prompt (`prompt`) and the
+    other attachments. The transcript gives the text of each part (records `prompt_snapshot` and `attachment`), not
+    its tokens: the parts share the measured base by their characters. {} without a snapshot (an old transcript)."""
+    chars, snap = defaultdict(int), {}
+    for r in records:                               # the first turn writes the tools in a later snapshot
+        a = r.get("attachment") if r.get("type") == "attachment" else None
+        if isinstance(a, dict) and a.get("type") == "prompt_snapshot":
+            for k in ("systemPrompt", "cliPrefix", "tools"):
+                if snap.get(k) is None:
+                    snap[k] = a.get(k)
+    if not snap:
+        return {}
+    for r in records:
+        if r.get("type") == "assistant" and (r.get("message") or {}).get("usage"):
+            break
+        a = r.get("attachment") if r.get("type") == "attachment" else None
+        if isinstance(a, dict) and a.get("type") != "prompt_snapshot":
+            text = r.get("rendered")
+            n = sum(len(x.get("content") or "") for x in text) if isinstance(text, list) else len(json.dumps(a))
+            chars[BASE_PARTS.get(a.get("type"), "other")] += n
+        elif r.get("type") == "user" and a is None:
+            c = (r.get("message") or {}).get("content")
+            chars["prompt"] += len(c) if isinstance(c, str) else sum(len(b.get("text") or "") for b in c or [])
+    chars["system"] += sum(len(x) for x in snap.get("systemPrompt") or []) + len(snap.get("cliPrefix") or "")
+    chars["tools"] += sum(len(json.dumps(x)) for x in snap.get("tools") or [])
+    total = sum(chars.values())
+    return {k: base * n / total for k, n in sorted(chars.items(), key=lambda kv: -kv[1]) if n} if total else {}
 
 
 def repo_base(root="."):
@@ -596,15 +637,18 @@ def main(argv=None):
             print(f"#{n}: " + ",".join(f"{k}={m:.0f}" for k, m in p.items()))
         return 0
     force = sum(refused_pushes(c) for c in chains)
+    parts = base_parts(chains[0], t["base"])
     if a.json:
-        print(json.dumps(data(t, chains[0], repo_base(), dict(v), force)))
+        print(json.dumps(data(t, chains[0], repo_base(), dict(v), force, parts=parts)))
         return 0
-    print(line(t, repo=repo_base(), checks=dict(v), force=force))
+    print(line(t, repo=repo_base(), checks=dict(v), force=force, parts=parts))
     if a.verify:
         for s, (m, n) in sorted(v.items(), key=lambda kv: -kv[1][0]):
             print(f"  {m:6.1f} min  {n:3d}x  {s}")
     for s, x in sorted(t["sinks"].items(), key=lambda kv: -kv[1])[:a.top or 0]:
         print(f"  {x / t['eq']:5.1%}  {x / 1e3:8.0f}k  {s}")
+    for p, n in parts.items() if a.top else ():      # the parts of the base of each call (#5615)
+        print(f"  base  {n / t['base']:5.1%}  {n / 1e3:6.1f}k  {p}")
     return 0
 
 
