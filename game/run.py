@@ -852,9 +852,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         seats = scenario.bot_seats(data["players"], players)
     else:
         seats = bot_seats(data["players"], players, bot) if bot else []
-        if bot == "all" and 1 not in getattr(game, "seats", (1,)):   # --takeover P > 1: also the players below P (#5476)
-            seats = [(p, bot_foe(data["players"], p)) for p in sorted(int(p) for p in data["players"] if int(p) > 0)
-                     if p not in game.seats]
+        if bot == "all" and (taken := takeover_seats(data["players"], getattr(game, "seats", ()))) is not None:
+            seats = taken                            # --takeover P > 1: also the players below P (#5476)
     for k, (player, foe) in enumerate(seats):        # after the people, next to their Sides (#1794)
         import bot as bots
         level = bots.level_of(settings["ai_difficulty"], k)   # one level for each bot in seat order (#4020)
@@ -1385,6 +1384,14 @@ def data_mod_folder(world, dat):
                  "then give --data-mod DIR.")
     os.utime(folder)                                 # newer than the .dat: the next start uses the folder
     return folder
+
+
+def takeover_seats(players, people):
+    """The bot seats of --bots all after --takeover P > 1: each player of the record but the people's seats; None when
+    the people play player 1 (no seats, #5624): then bot_seats() gives the seats after the people."""
+    if 1 in (people or (1,)):
+        return None
+    return [(p, bot_foe(players, p)) for p in sorted(int(p) for p in players if int(p) > 0) if p not in people]
 
 
 def main(argv=None, scenario=None):
