@@ -75,6 +75,7 @@ import units  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import abilities  # noqa: E402
+import achievements  # noqa: E402
 import build  # noqa: E402
 import civs  # noqa: E402
 import demolish  # noqa: E402
@@ -1545,9 +1546,11 @@ def tick(g, work):
         if q[0]["progress"] >= 1 and q[0]["name"] in TECHS:
             research(g, q.pop(0), rect=rect)
         elif q[0]["progress"] >= 1 and (v := spawn(g, rect, q[0]["name"])):   # no room: it waits in the queue (#2470)
-            g.pop += weight(g, q.pop(0)["name"])
+            name = q.pop(0)["name"]
+            g.pop += weight(g, name)
             out.append(v)
             record.trained(g, v)                                       # its object ID (#2649)
+            achievements.trained(g, name)                              # the count achievements (#5280)
             trained_voice(g, rect, v)
     refresh(g)
     sidebar(g)

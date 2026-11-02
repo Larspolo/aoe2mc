@@ -10,7 +10,7 @@ In scope: the lines of `data/achievements.jsonl` (the advancement tab "Age of Em
   (AoE2 DE: "Advance to the Feudal Age in a Campaign Scenario"; here: in any game).
 - "Indian Victory" is out of scope: the Indians civilization is now split (no key in `game/data/civs.jsonl`).
 - The Return of Rome (`POMPEII_*`) victories are out of scope: aoe2mc has no Return of Rome civilizations.
-- Campaign, challenge and count achievements are out of scope for now: they need events that the game program
+- Campaign, challenge and count achievements are out of scope for now (but the counts of one unit type in one game, #5280): they need events that the game program
   does not track yet.
 
 | Steam key | Name | Description | Scope |
@@ -121,13 +121,13 @@ In scope: the lines of `data/achievements.jsonl` (the advancement tab "Age of Em
 | ACHIEVEMENT_CASTLE_CRUSHER | Castle Crusher | Destroy 50 Castles. | out |
 | ACHIEVEMENT_OUT_WITH_A_BANG | Out With a Bang | Kill an enemy King with a Petard or Demolition Ship. | out |
 | LITHUANIANS_VICTORY | Lithuanian Victory | Win a game playing as the Lithuanians. | in |
-| ACHIEVEMENT_KARAMBOLAGE | Karambolage | Spam the enemy with 500 Karambit Warriors in a single game. | out |
-| ACHIEVEMENT_ELEPHANTASTIC | Elephantastic | Train 40 War or Battle Elephants in a single game. | out |
-| ACHIEVEMENT_FIGHTING_FROM_AFAR | Fighting From Afar | Create 500 Longbowmen in a single match. | out |
+| ACHIEVEMENT_KARAMBOLAGE | Karambolage | Spam the enemy with 500 Karambit Warriors in a single game. | in |
+| ACHIEVEMENT_ELEPHANTASTIC | Elephantastic | Train 40 War or Battle Elephants in a single game. | in |
+| ACHIEVEMENT_FIGHTING_FROM_AFAR | Fighting From Afar | Create 500 Longbowmen in a single match. | in |
 | ACHIEVEMENT_90_KG | 90kg Over 300 Meters | Build 300 Trebuchets. | out |
-| ACHIEVEMENT_FRANKLY_MY_DEAR | Frankly My Dear... | Create 100 Throwing Axemen in a single match. | out |
+| ACHIEVEMENT_FRANKLY_MY_DEAR | Frankly My Dear... | Create 100 Throwing Axemen in a single match. | in |
 | ACHIEVEMENT_ANYONE_ORDER_PIZZA | Anyone Order a Pizza? | Train 1,000 Condottieri as a non-Italian civilization. | out |
-| ACHIEVEMENT_SUSHI_LOVER | Sushi Lover | Build 30 Japanese Fishing Ships. | out |
+| ACHIEVEMENT_SUSHI_LOVER | Sushi Lover | Build 30 Japanese Fishing Ships. | in |
 | ACHIEVEMENT_OUT_OF_THEIR_ELEMENT | Out of Their Element | Destroy a ship using a melee unit. | out |
 | ACHIEVEMENT_CASTLE_OF_DOUBT | Castle of Doubt | Lose an unfinished Castle that is at least 95% complete. | out |
 | ACHIEVEMENT_THE_WONDER | The Wonder, the Wonder, Noooooo... | Build a Wonder. | out |
@@ -193,7 +193,7 @@ In scope: the lines of `data/achievements.jsonl` (the advancement tab "Age of Em
 | ACHIEVEMENT_AGAINST_ALL | Against All | Defeat the Crusaders in the fifth Jan Zizka mission | out |
 | BOHEMIANS_VICTORY | Bohemian Victory | Win a game playing as the Bohemians. | in |
 | POLES_VICTORY | Polish Victory | Win a game playing as the Poles. | in |
-| ACHIEVEMENT_OOF_NICE | Rhapsody of the Bohemians | Train 10 Houfnices as the Bohemians. | out |
+| ACHIEVEMENT_OOF_NICE | Rhapsody of the Bohemians | Train 10 Houfnices as the Bohemians. | in |
 | ACHIEVEMENT_FAST_FOOD | Fast Food | Gather 500 food by constructing farms next to Folwarks as the Poles. | out |
 | ACHIEVEMENT_CAMPAIGN_HINDUSTANIS_COMPLETED | The Persian Tiger | Complete the Babur campaign. | out |
 | ACHIEVEMENT_NEVER_TRUST | Never Trust a Campaign AI | Ignore Kabul's offer to form a non-aggression pact in | out |
@@ -213,9 +213,9 @@ In scope: the lines of `data/achievements.jsonl` (the advancement tab "Age of Em
 | BENGALIS_VICTORY | Bengali Victory | Win a game playing as the Bengalis. | in |
 | DRAVIDIANS_VICTORY | Dravidian Victory | Win a game playing as the Dravidians. | in |
 | GURJARAS_VICTORY | Gurjara Victory | Win a game playing as the Gurjaras. | in |
-| ACHIEVEMENT_FACE_MY_RATHA | Face My Ratha | Train 10 Rathas as the Bengalis. | out |
+| ACHIEVEMENT_FACE_MY_RATHA | Face My Ratha | Train 10 Rathas as the Bengalis. | in |
 | ACHIEVEMENT_KING_OF_THE_SEAS | King of the Seas | Sink 10 enemy ships with Thirisadais as the Dravidians. | out |
-| ACHIEVEMENT_FORGED_IN_THE_HEAT_OF_BATTLE | Forged in the Heat of Battle | Train 10 Chakram Throwers as the Gurjaras. | out |
+| ACHIEVEMENT_FORGED_IN_THE_HEAT_OF_BATTLE | Forged in the Heat of Battle | Train 10 Chakram Throwers as the Gurjaras. | in |
 | ACHIEVEMENT_CAMPAIGN_SUMERIANS_COMPLETED | The God of War | Complete the Sargon campaign. | out |
 | ACHIEVEMENT_NOT_CUTTING_CORNERS | Not Cutting Corners | Subdue both Sippar and Borsippa in | out |
 | ACHIEVEMENT_EXPEDITED_DELIVERY | Expedited Delivery | Bring the Artifact to each city-state before 30 minutes have elapsed in | out |
@@ -332,7 +332,7 @@ In scope: the lines of `data/achievements.jsonl` (the advancement tab "Age of Em
 | ACHIEVEMENT_THE_TIGER_OF_JIANGDONG | The Tiger of Jiangdong | Defeat Dong Zhuo's Raiders in Sun Clan 1. | out |
 | ACHIEVEMENT_THE_LITTLE_CONQUEROR | The Little Conqueror | Defeat the White Tiger in Sun Clan 3. | out |
 | ACHIEVEMENT_I_AM_COMING_FOR_YOU | I Am Coming For You, Liu Biao | Capture all Castles in Sun Clan 4. | out |
-| ACHIEVEMENT_DRIVE_BY_BARRAGE | Drive-By Barrage | Build 20 War Chariots as the Shu. | out |
+| ACHIEVEMENT_DRIVE_BY_BARRAGE | Drive-By Barrage | Build 20 War Chariots as the Shu. | in |
 | ACHIEVEMENT_SHUING_ENEMIES | Shu'ing Enemies | Kill 50 units with White Feather Guards as the Shu. | out |
 | ACHIEVEMENT_TIME_FOR_A_RAISE | Time for a Raise | Fully promote 10 Tiger Cavalry as the Wei. | out |
 | ACHIEVEMENT_WEI_MARCH_ON_OUR_STOMACHS | Wei March on Our Stomachs | Generate 5000 food with Tuntian as the Wei. | out |
