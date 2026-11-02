@@ -197,7 +197,10 @@ PHASE_RULES = (("conflict", r"merge_main\.py|unconflict\.py|\bgit merge\b"),
                ("report", r"report\.py|tokens\.py|health\.py"),
                ("claim", r"claim\.py|cycle_start\.py|dashboard\.py|feedback\.py|usage\.py"),
                ("report", REPORT_FILE),
-               ("code", r"\bsed -i\b|\bcat >|\bpython3 - <<|\btee\b"))
+               ("code", r"\bsed -i\b|\bcat >|\btee\b"))
+# A script that writes a file is code, also in the text of a heredoc (HEREDOC removes it before PHASE_RULES): 89 of
+# 916 read calls of 50 runs were such edits, and `code` had 34 of 1064 minutes (#5616; the auto mode asks for Bash edits).
+WRITES = re.compile(r"""\bopen\([^()]*(?:\([^()]*\)[^()]*)*,\s*['"][wax]b?\+?['"]|\.write(?:_text|_bytes)?\(|\bsed -i\b""")
 BEAT = re.compile(r"\S*claim\.py\s+\d+\s+--beat\b[^;&|\n]*")   # a keep-alive: the rest of its command gives the phase
 ORDER = ("conflict", "verify", "ci", "code", "claim", "report", "read")   # a call with several tools: the first here
 # a claim: no option but --takeover, or --or with the next candidates (`claim.py N --or M K`)
@@ -211,7 +214,8 @@ def phase(name, inp):
         cmd = BEAT.sub("", HEREDOC.sub("", inp.get("command", "")))
         if check(cmd):
             return "verify"
-        return next((k for k, rx in PHASE_RULES if re.search(rx, cmd)), "read")
+        got = next((k for k, rx in PHASE_RULES if re.search(rx, cmd)), "read")
+        return "code" if got == "read" and WRITES.search(inp.get("command", "")) else got
     if name in ("Edit", "Write", "NotebookEdit", "MultiEdit"):
         return "report" if REPORT_NAME.search(os.path.basename(inp.get("file_path", ""))) else "code"
     if name.startswith("mcp__github__"):
