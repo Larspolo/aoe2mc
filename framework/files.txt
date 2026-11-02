@@ -101,6 +101,7 @@ framework/tests/test_dashboard_start_prs.py
 framework/tests/test_feedback.py
 framework/tests/test_feedback_gap.py
 framework/tests/test_feedback_quote.py
+framework/tests/test_framework_refs.py
 framework/tests/test_health.py
 framework/tests/test_health_compare.py
 framework/tests/test_health_conflicts.py
