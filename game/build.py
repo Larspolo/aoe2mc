@@ -681,6 +681,9 @@ def rise(g, site, work):
         site["done"] = True
         for p in [p for p in ring if p not in hit]:                    # the ring goes: the design, the water or air
             g.command("setblock {} {} {} ".format(*p) + site["under"].get(p, "minecraft:air"))
+        if site["player"] == g.player:
+            import achievements  # The Wonder, the Wonder, Noooooo... (#5629)
+            achievements.event(g, g, f"build {site['name']}")
         if site["name"] in MOVES and site["player"] == g.player:
             cart(g, site)
             return True

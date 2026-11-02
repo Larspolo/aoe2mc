@@ -18,6 +18,8 @@ def start(g, units):
     scouting = vars(g).setdefault("scouting", {})
     for u in units:
         scouting[u] = [None, None, set()]
+    import achievements  # Bon Voyage (#5629)
+    achievements.event(g, g, "autoscout")
     tick(g)
 
 

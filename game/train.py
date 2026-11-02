@@ -1295,6 +1295,7 @@ def research(g, entry, start=False, rect=None):
     g.techs.add(entry["name"])
     if not start:
         record.aged(g, entry["name"])                                  # Record Game (#2649)
+        achievements.event(g, g, f"research {entry['name']}")       # Prepare for Boar! (#5629)
         g.command(f"playsound {EVENT_SOUNDS['research']} master @a[team=p{g.player}] ~ ~ ~ 1 1")
     if gather.has_mode(g, "scenario"):                             # a trigger condition "Research Technology" (#2656)
         g.command(f"scoreboard players set #p{g.player}.{entry['name']} aoe_tech 1")
@@ -1550,7 +1551,7 @@ def tick(g, work):
             g.pop += weight(g, name)
             out.append(v)
             record.trained(g, v)                                       # its object ID (#2649)
-            achievements.trained(g, name)                              # the count achievements (#5280)
+            achievements.trained(g, name, home.get(rect))              # the count achievements (#5280)
             trained_voice(g, rect, v)
     refresh(g)
     sidebar(g)

@@ -71,3 +71,14 @@
 {"name": "FACE_MY_RATHA", "title": "Face My Ratha", "description": "Train 10 Rathas as the Bengalis.", "icon": "minecraft:iron_sword", "parent": "root", "event": "count:train", "units": ["RATHA", "ELITE_RATHA"], "need": 10, "civ": "BENGALIS"}
 {"name": "FORGED_IN_THE_HEAT_OF_BATTLE", "title": "Forged in the Heat of Battle", "description": "Train 10 Chakram Throwers as the Gurjaras.", "icon": "minecraft:iron_sword", "parent": "root", "event": "count:train", "units": ["CHAKRAM_THROWER", "ELITE_CHAKRAM_THROWER"], "need": 10, "civ": "GURJARAS"}
 {"name": "DRIVE_BY_BARRAGE", "title": "Drive-By Barrage", "description": "Build 20 War Chariots as the Shu.", "icon": "minecraft:iron_sword", "parent": "root", "event": "count:train", "units": ["WAR_CHARIOT"], "need": 20, "civ": "SHU"}
+{"name": "PREPARE_FOR_BOAR", "title": "Prepare for Boar!", "description": "Research Loom at the Town Center", "icon": "minecraft:leather_chestplate", "parent": "root", "event": "research LOOM"}
+{"name": "NOT_JUST_A_MILITIA", "title": "Not Just a Militia", "description": "Upgrade your Militia to Men-at-Arms", "icon": "minecraft:iron_sword", "parent": "root", "event": "research MAN_AT_ARMS_UPGRADE"}
+{"name": "THE_WONDER", "title": "The Wonder, the Wonder, Noooooo...", "description": "Build a Wonder.", "icon": "minecraft:gold_block", "parent": "root", "event": "build WONDER"}
+{"name": "BON_VOYAGE", "title": "Bon Voyage", "description": "Turn on Auto-Scout in any Game Mode", "icon": "minecraft:compass", "parent": "root", "event": "autoscout"}
+{"name": "DONJON_SERJEANT", "title": "Tour d'Italie", "description": "Construct a Donjon and use it to train a Serjeant.", "icon": "minecraft:iron_sword", "parent": "root", "event": "train SERJEANT at DONJON"}
+{"name": "EASIEST_AI", "title": "Rest in Peace", "description": "Beat an AI opponent on Easiest difficulty.", "icon": "minecraft:skeleton_skull", "parent": "root", "event": "win ai easiest"}
+{"name": "EASY_AI", "title": "Easy Going", "description": "Beat an AI opponent on Standard difficulty.", "icon": "minecraft:skeleton_skull", "parent": "root", "event": "win ai standard"}
+{"name": "MODERATE_AI", "title": "With Moderation", "description": "Beat an AI opponent on Moderate difficulty.", "icon": "minecraft:skeleton_skull", "parent": "root", "event": "win ai moderate"}
+{"name": "HARD_AI", "title": "Rough Ride", "description": "Beat an AI opponent on Hard difficulty.", "icon": "minecraft:skeleton_skull", "parent": "root", "event": "win ai hard"}
+{"name": "HARDEST_AI", "title": "Barbaric Manners", "description": "Beat an AI opponent on Hardest difficulty.", "icon": "minecraft:skeleton_skull", "parent": "root", "event": "win ai hardest"}
+{"name": "EXTREME_AI", "title": "Prominent Player", "description": "Beat an AI opponent on Extreme difficulty.", "icon": "minecraft:skeleton_skull", "parent": "root", "event": "win ai extreme"}

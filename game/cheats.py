@@ -122,9 +122,10 @@ def over(g, won):
     import recap  # the recap book and the end hotbar (#2660)
     recap.give(g, won)
     import achievements  # the AoE2 achievements of a win (#5279)
+    levels = {b.difficulty for b in getattr(g, "bots", ()) if hasattr(b, "difficulty") and not won(b.g.player)}
     for h in fog.gathers(g):
         if won(h.player):
-            achievements.won(g, h)
+            achievements.won(g, h, levels)                         # and "win ai <level>" (#5629)
 
 
 def destroy(g, n):
