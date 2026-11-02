@@ -61,6 +61,13 @@ def building(r, t):
     return out
 
 
+def explored(r, p):
+    """The explored tiles of player p inside the map (Replay.minimap_fog filters them the same way, #5602): the
+    savegame "explored" of the player, so that the minimap of the take-over shows them."""
+    n = r.data.get("map_size") or r.n // r.T
+    return {(x, y) for x, y in r.explored.get(p, ()) if 0 <= x < n and 0 <= y < n}
+
+
 def jobs(r, p, t, walkers):
     """The orders of the villagers of player p (savegame.orders form): a gatherer of the replay walks to its resource
     tile, a builder to its site, a unit in a garrison keeps its resource tile; the others are idle."""
@@ -120,6 +127,7 @@ def player(r, p, t=0):
                                      "tile": [math.floor(pos[0]) / T, math.floor(pos[2]) / T]}
                                     for u, (n, pos) in walkers.items()]),
             "villagers": jobs(r, p, t, walkers),
+            **({"explored": savegame.runs(tiles)} if (tiles := explored(r, p)) else {}),
             "farmers": [], "groups": {}, "ships": {},
             "stances": {u: s for u, i in sorted(ids.items()) if u in us and (s := r.stances.get(i, "aggressive"))
                         != "aggressive"},

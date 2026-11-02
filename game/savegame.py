@@ -389,8 +389,13 @@ def owners_again(g, rec):
 def explored(x):
     """The explored tiles of the minimap of the Gather x (fog.minimap, #2677) as sorted row runs [y, x0, x1] (both
     ends in the run): a large map has many tiles."""
+    return runs(vars(x).get("fog", {}).get("explored", ()))
+
+
+def runs(tiles):
+    """The tiles (x, y) as sorted row runs [y, x0, x1] (both ends in the run), the form of the save (#2677, #5602)."""
     out = []
-    for tx, ty in sorted(vars(x).get("fog", {}).get("explored", ()), key=lambda t: (t[1], t[0])):
+    for tx, ty in sorted(tiles, key=lambda t: (t[1], t[0])):
         if out and out[-1][0] == ty and out[-1][2] == tx - 1:
             out[-1][2] = tx
         else:
