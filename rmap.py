@@ -919,6 +919,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                      land_ids=ids)
     found += trees(terrain)
     found += ridges
+    if mode == "king-of-the-hill":                 # AoE2 DE puts the Monument of the mode at the map center (#5200)
+        found = hill(found, n)
     return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "layer": layer.tolist(),
             "objects": found, **({"mood": mood} if mood else {}),
             "players": {str(p): {"color": p - 1} | ({"team": teams[p - 1]} if teams else {}) for p in range(1, players + 1)},
@@ -1093,6 +1095,13 @@ def path(land, origin):
         if (grow == out).all():
             return out
         out = grow
+
+
+def hill(found, n):
+    """The objects with the Monument of King of the Hill at the center of an n × n map: the game moves the Monument of the
+    script there and adds one when the script has none (#5200)."""
+    rest = [o for o in found if not (o["name"] == "MONUMENT" and not o.get("player"))]
+    return rest + [{"name": "MONUMENT", "player": 0, "x": n / 2, "y": n / 2}]
 
 
 def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), layer=None, land_ids=None):
