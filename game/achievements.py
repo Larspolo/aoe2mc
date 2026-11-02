@@ -3,7 +3,9 @@ aoe2mc:<key> of data/achievements.jsonl (written by aoe2mc.advancement_files, #5
 player n. Minecraft shows the toast and the chat line (/advancement grant). A bot (share set) has no Minecraft player.
 Events (the key "event" of a line): "win" or "win <CIV>" (cheats.over, each player with won(n)); "age <TECH>" with an
 optional "before" in game seconds (recap.aged, train.research). An optional "civ" (a key of game/data/civs.jsonl) and
-"mode" (a game mode of game/data/setup.jsonl, gather.has_mode) limit a line to that civilization and mode (#5281). "win all" needs the wins of earlier games: not here."""
+"mode" (a game mode of game/data/setup.jsonl, gather.has_mode) limit a line to that civilization and mode (#5281). "win all" needs the wins of earlier games: not here.
+"count:train" with "units" and "need" (#5280): the player trained `need` units of these names in this game
+(train.tick, at each trained unit: the count changes only there)."""
 import json
 import os
 import sys
@@ -49,3 +51,15 @@ def won(g, h):
 
 def aged(g, name, seconds):
     event(g, g, f"age {name}", seconds)
+
+
+def trained(g, name):
+    """Count a unit name that g (a Gather) trained, and grant each "count:train" line whose units reach its need."""
+    counts = vars(g).setdefault("train_counts", {})
+    counts[name] = counts.get(name, 0) + 1
+    if getattr(g, "share", None) or not hasattr(g, "command"):
+        return
+    for r in ROWS:
+        if (r.get("event") == "count:train" and name in r["units"] and matches(g, g, r)
+                and sum(counts.get(u, 0) for u in r["units"]) >= r["need"]):
+            grant(g, g.player, r["name"].lower())
