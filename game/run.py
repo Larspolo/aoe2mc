@@ -1198,6 +1198,29 @@ def lobby_mode(world, default):
     return mode if mode in MODES else default
 
 
+def record_lobby(world):
+    """The settings of play() from the lobby of a record (aoe2mc.json "lobby", #5603): the mode, ON_TOP flag or victory of
+    its type (the "lobby" key of setup.jsonl), the population limit, "All Techs" and "Reveal Map"."""
+    try:
+        with open(os.path.join(world, "aoe2mc.json")) as f:
+            lobby = json.load(f).get("lobby") or {}
+    except (OSError, ValueError):
+        return {}
+    out = {}
+    for r in table.load("setup.jsonl"):
+        if r.get("lobby") == lobby.get("type"):
+            key, value = ("victory", r["victory"]) if "victory" in r else \
+                (r["name"].replace("-", "_"), True) if r["name"] in ON_TOP else ("mode", r["name"])
+            out[key] = value
+    if lobby.get("population"):
+        out["pop_limit"] = int(lobby["population"])
+    if lobby.get("all_techs"):
+        out["all_techs"] = True
+    if reveal := {"Explored": "explored", "All Visible": "all"}.get(lobby.get("reveal")):
+        out["reveal"] = reveal
+    return out
+
+
 def given(ap, argv):
     """The names (dest) of the options of ap that the command line argv gives: parse it with no defaults."""
     defaults = [(x, x.default) for x in ap._actions]
@@ -1582,6 +1605,11 @@ def main(argv=None, scenario=None):
                 state = savegame.read(takeover.write(game, r, savegame.folder(a.world), taken=a.takeover,
                                                      difficulty=a.ai_difficulty))
                 a.play, a.people, a.bot = True, 1, "all"   # a bot plays each other player of the record (#5452)
+                told = given(ap, argv)               # the rules of the record; a given option wins (#5603)
+                for k, v in record_lobby(a.world).items():
+                    if k not in told and not (k in [m.replace("-", "_") for m in ON_TOP] and "mode" in told):
+                        setattr(a, k, v)
+                game.settings = {k: getattr(a, k) for k in savegame.SETTINGS}
                 print(f"The replay reached its --from time: you play player {a.takeover} now.", file=sys.stderr)
             else:
                 print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
