@@ -68,6 +68,10 @@ def delete(g, player, rect):
     if (s := site(g, rect)) is not None:
         unfound(g, s)
     elif shown(g, rect):
+        start = next((o for o in g.data["objects"] if o["kind"] == "building" and o["name"] == "TOWN_CENTER"
+                      and o["player"] == g.player and "footprint" in o), None)
+        if start and list(start["footprint"]) == [x0, z0, x1, z1]:
+            g.homeless = True                                      # the achievement Homeless at a win (#5644)
         fall(g, rect)
     else:
         return False
@@ -90,9 +94,11 @@ def fall(g, rect):
 def unfound(g, s):
     """Remove the unfinished site s: the refund of AoE2, air in its box (the water under a dock or a fish trap comes
     back), free cells, and its builders stop."""
+    import achievements
     import build
     import combat
     import fleet
+    achievements.event(g, g, f"lose site {s['name']}", s["progress"])   # Castle of Doubt (#5644)
     if s["progress"] == 0:
         for r, v in s.get("paid", build.price(g, s["name"])).items():
             g.stock[r] += v
