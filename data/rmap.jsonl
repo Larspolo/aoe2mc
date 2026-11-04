@@ -60,6 +60,7 @@
 {"name": "TREE_ITALIAN_PINE", "forest": [88]}
 {"name": "TREE_OAK_AUTUMN", "forest": [104]}
 {"name": "TREE_OAK_AUTUMN_SNOW", "forest": [105]}
+{"name": "TREE_AUTUMN_SNOW", "forest": [105]}
 {"name": "TREE_DEAD", "forest": [106]}
 {"name": "TREE_BIRCH", "forest": [110]}
 {"name": "TREE_LUSH_BAMBOO_FOREST", "forest": [113]}
