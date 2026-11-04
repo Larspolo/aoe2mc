@@ -36,6 +36,8 @@ Units with `NoAI` that a controller moves cost much less. A controller must also
   tech trees in Minecraft. The nearest project to AoE2 gameplay. It shows that a full RTS needs a client mod.
   Sources: [modpackindex](https://www.modpackindex.com/mod/117424/reign-of-nether-boobcat-edition),
   [Modrinth (Better Edition)](https://modrinth.com/mod/reign-of-nether-better-edition).
+  Its setting "Hiding leaves" is not in aoe2mc: in the camera mode the player walks around a tree to see the units
+  under it, and selected units glow (owner decision A of #5511).
 - **MineFortress** (Fabric): a top-down camera and a village of "pawns" that the player commands.
   Source: [GitHub](https://github.com/NobleSkye/minefortress), [feed-the-mods](https://www.feed-the-mods.com/minefortress-rts-mod/).
 - **Villager Recruits** with an RTS map command addon (Forge): click-to-move, waypoints, attack orders,
