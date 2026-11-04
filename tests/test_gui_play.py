@@ -1,8 +1,6 @@
 """gui.py, tab "Play" (#1775): the argument list of game/run.py, and the start and stop of a child process. A small
 script stands in for the game program: the fast tests start no server."""
-import os
 import queue
-import shutil
 import subprocess
 import sys
 import textwrap
@@ -107,16 +105,12 @@ def test_stdin_is_a_pipe(tmp_path):
     assert q.get(timeout=20) == ("rc", 0)
 
 
-def test_the_window_has_the_play_tab():
+def test_the_window_has_the_play_tab(on_display):
     if subprocess.run([sys.executable, "-c", "import tkinter"], capture_output=True).returncode:
         pytest.skip("no tkinter")
     code = ("import gui; w = gui.window(); w.update(); "
             "print([w.nametowidget(t).winfo_class() for t in w.winfo_children()[0].winfo_children()[0].tabs()]); "
             "w.destroy()")
-    cmd = [sys.executable, "-c", code]
-    if not os.environ.get("DISPLAY"):
-        if not shutil.which("xvfb-run"):
-            pytest.skip("no display and no xvfb-run")
-        cmd = ["xvfb-run", "-a"] + cmd
+    cmd = on_display([sys.executable, "-c", code])
     r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=60)
     assert r.returncode == 0 and r.stdout.strip() == "['TFrame', 'TFrame', 'TFrame']", r.stderr

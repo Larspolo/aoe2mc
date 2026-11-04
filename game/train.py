@@ -955,6 +955,7 @@ def queue(g, player, cell, name="VILLAGER_MALE"):
              | ({"free": True} if free else {})
              | ({"doctrine": k} if k and name not in TECHS else {}))
     record.queued(g, name, rect)                                       # Record Game (#2649)
+    achievements.queued(g, q, build.ages(g))                           # Baby Boomer (#5642)
     return rect
 
 
@@ -1280,6 +1281,7 @@ def research(g, entry, start=False, rect=None):
     import gather
     if entry["name"] in civs.policies(g).get("effects", ()):       # Athenians: the new policy, not a technology (#2485)
         g.policy, g.switches = entry["name"], vars(g).get("switches", 0) + 1
+        achievements.event(g, g, "policy")                         # Political Animal (#5642)
         g.command(f"tellraw {entry['player']} " + json.dumps(lang.text(
             "aoe2mc.train.active", lang.name(entry["name"], "tech", ITEMS[entry["name"]][2]), color="green")))
         return
