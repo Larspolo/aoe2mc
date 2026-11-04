@@ -65,6 +65,8 @@ data/*.jsonl merge=union
 # The datapack text of each trigger type (tools/triggers.py MAP): runs change existing lines, so they merge by name.
 data/trigger_conditions.jsonl merge=jsonl
 data/trigger_effects.jsonl merge=jsonl
+# One JSON object per optional key of data/achievements.jsonl: its type, what it does, its issue (#5781).
+data/achievement_keys.jsonl merge=jsonl
 # The places of game data in the code (#1909): runs only delete lines or lower counts; tests/test_game_names_in_code.py
 # fails on two lines of one place and on a line that a merge put back.
 tests/data/game_names_in_code.txt merge=union

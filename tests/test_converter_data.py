@@ -8,9 +8,12 @@ import nbtlib
 import buildings
 import units
 
+# The optional keys of data/achievements.jsonl: one line each in data/achievement_keys.jsonl, not in this table (#5781).
+ACHIEVEMENT_KEYS = {json.loads(s)["name"] for s in open(os.path.join(units.DATA, "achievement_keys.jsonl"), encoding="utf-8")}
 KEYS = {"animals.jsonl": ({"keys", "behavior", "mob"}, {"tags", "note"}),
+        "achievement_keys.jsonl": ({"name", "type", "text", "issue"}, set()),
         "aoe2_langs.jsonl": ({"name", "code"}, set()),
-        "achievements.jsonl": ({"name", "title", "description", "icon", "parent", "event"}, {"age", "ages", "buildings", "before", "by", "civ", "gather", "killed", "least", "mode", "need", "part", "tiles", "units", "villagers"}),
+        "achievements.jsonl": ({"name", "title", "description", "icon", "parent", "event"}, ACHIEVEMENT_KEYS),
         "carriers.jsonl": ({"name", "garrison"}, set()),
         "tech_names.jsonl": ({"tech", "name"}, set()),
         "trigger_conditions.jsonl": ({"name", "text"}, set()),

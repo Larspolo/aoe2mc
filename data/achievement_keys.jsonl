@@ -1,0 +1,15 @@
+{"name": "age", "type": "int", "text": "The highest age index (0: the Dark Age, build.ages) of the amounts or kills that count (count:gather, count:kill).", "issue": 5643}
+{"name": "ages", "type": "int", "text": "The highest age index (build.ages) of a count:queue line.", "issue": 5642}
+{"name": "before", "type": "number", "text": "The value of the event is under it: game seconds (age), years left (destroy WONDER).", "issue": 5644}
+{"name": "buildings", "type": "list", "text": "The building names of a count:build line.", "issue": 5642}
+{"name": "by", "type": "list", "text": "The killer units (kill, count:kill) or the builder units (count:build): names, civs.GROUPS groups or groups joined by +.", "issue": 5640}
+{"name": "civ", "type": "str", "text": "Only for this civilization (a key of game/data/civs.jsonl).", "issue": 5281}
+{"name": "gather", "type": "str", "text": "What a count:gather line counts: a hunted animal, FOLWARK, a trickle technology or KESHIK.", "issue": 5643}
+{"name": "killed", "type": "list", "text": "The killed units of a kill or count:kill line: names, civs.GROUPS groups or groups joined by +.", "issue": 5640}
+{"name": "least", "type": "number", "text": "The value of the event is at least it: a part of 1 (lose site <BUILDING>).", "issue": 5644}
+{"name": "mode", "type": "str", "text": "Only in this game mode (game/data/setup.jsonl, gather.has_mode).", "issue": 5281}
+{"name": "need", "type": "int", "text": "The count that grants a count:<kind> line.", "issue": 5280}
+{"name": "part", "type": "float", "text": "The part of the tiles that an explore line needs explored.", "issue": 5646}
+{"name": "tiles", "type": "int", "text": "The least map size (tiles a side) of an explore line.", "issue": 5646}
+{"name": "units", "type": "list", "text": "The unit names of a count:train, count:queue or win only line.", "issue": 5280}
+{"name": "villagers", "type": "int", "text": "The player has that many live villagers at the event.", "issue": 5642}
