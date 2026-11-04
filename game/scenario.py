@@ -155,7 +155,7 @@ def tick(g):
     tech_states(g)
     actions(g)
     trading(g)
-    victory_timers(g)
+    xs(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
@@ -696,6 +696,7 @@ def setup(g, mode="scenario", start=True):
         if x.victory == "secondary-game-mode":                         # the modes decide the end (#3297): AoE2 DE
             x.victory = "king-of-the-hill" if "king-of-the-hill" in win.get("modes", ()) else "conquest"
         x.victory_value = win.get("years", win.get("score", getattr(x, "victory_value", None)))
+    script(g)
     if not start:
         for x in sides:
             x.pop_limit = g.players.get(str(x.player), {}).get("pop_limit", x.pop_limit)
@@ -713,6 +714,29 @@ def setup(g, mode="scenario", start=True):
     for x, p in rows.items():
         start_values(x, p)
     return g
+
+
+def script(g):
+    """Make the XS map script of the world (aoe2mc.json "xs_script": [name, text], #5662) as g.xs, or None. An include
+    names a file of the AoE2 profile folder: no loader, one warning line. A syntax error: one warning line, no script."""
+    import xs_host
+    import xs_run
+    g.xs = None
+    if not (found := g.data.get("xs_script")):
+        return
+    name, text = found
+    try:
+        g.xs = xs_run.Xs(text, host=xs_host.host(g), path=name,
+                         out=lambda t: [g.command(c) for c in chat("@a", str(t))])
+    except Exception as e:                                             # a parse error: the game goes on without it
+        print(f"XS script: error in {name}: {e}: not run", file=sys.stderr)
+
+
+def xs(g):
+    """Run main() and the due rules of the XS script (#5662) at the game seconds (recap.game_time)."""
+    if getattr(g, "xs", None) is not None:
+        import recap
+        g.xs.tick(recap.game_time(g))
 
 
 def start_values(x, p):
