@@ -429,6 +429,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final RelationColors relationColors = new RelationColors();   // the team colors of one client (#5510)
     private final TeamChat teamChat = new TeamChat();               // the team chat to the allies (#3553)
     private final Deaths deaths = new Deaths(this);
+    private final Kills kills = new Kills();                        // the killer of each kill (achievements, #5640)
     private final Alerts alerts = new Alerts(this, AoePlugin::side);   // "under attack" for the team of the target (#1231)
     private final Minimap minimap = new Minimap(this, this::hiddenFor);   // no dot for a hidden unit (#1567)
     private final Gates gates = new Gates();                           // the gates of the game program (#1325)
@@ -1765,6 +1766,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (before > 0 && victim.getHealth() <= 0) {
             kill(from, a, t);
             unitKill(from, victim, a);
+            kills.add(from, victim);
             if (from != null) {
                 abilities.forEach(ab -> ab.killed(from));           // a Jaguar Warrior gets stronger (#4467)
             }
@@ -2176,6 +2178,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (victim.getHealth() <= 0 && by != null && a != null) {
             kill(by, a, t);
             unitKill(by, victim, a);
+            kills.add(by, victim);
             abilities.forEach(ab -> ab.killed(by));                 // a Jaguar Warrior gets stronger (#4467)
         }
         nameLine(victim);
@@ -3379,6 +3382,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length == 2 && args[0].equals("cheats")) {
             return cheats.command(sender, args);
+        }
+        if (args.length == 1 && args[0].equals("kills")) {              // the new kills: game/achievements.py (#5640)
+            return kills.command(sender);
         }
         if ((args.length == 2 || args.length == 3 && args[1].equals("heat")) && args[0].equals("deathmarks")) {        // the marks of the live replay (#846)
             return deaths.command(sender, args);

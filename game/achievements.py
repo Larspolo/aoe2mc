@@ -8,9 +8,13 @@ optional "before" in game seconds (recap.aged, train.research). An optional "civ
 (train.tick, at each trained unit: the count changes only there).
 "research <TECH>" (train.research, #5629), "build <BUILDING>" (build.grow: a complete own building), "autoscout"
 (autoscout.start), "train <UNIT> at <BUILDING>" (train.tick) and "win ai <level>" (cheats.over: a win while a bot of
-that bots.LEVELS name lost)."""
+that bots.LEVELS name lost).
+"kill" with "killed" and "by" (#5640): the player killed a unit of "killed" with a unit of "by" (kills, once per tick: the
+kill log of the plugin, Kills.java). An item is a unit name, a group of civs.GROUPS, or groups joined by "+" (all of them)."""
+import functools
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -71,3 +75,51 @@ def trained(g, name, at=None):
         if (r.get("event") == "count:train" and name in r["units"] and matches(g, g, r)
                 and sum(counts.get(u, 0) for u in r["units"]) >= r["need"]):
             grant(g, g.player, r["name"].lower())
+
+
+@functools.lru_cache(maxsize=None)
+def type_names():
+    """{AoE2 unit ID: name}: the type tags aoe2mc.t<ID> of the kill log (units.make_entity)."""
+    import units
+    return {v: k for k, v in units.type_ids().items()}
+
+
+def unit_name(g, key):
+    """The AoE2 name of a unit of the kill log: t<ID> of its type tag, else the UUID of a building (g.fort_names)."""
+    if re.fullmatch(r"t\d+", key):
+        return type_names().get(int(key[1:]))
+    return getattr(g, "fort_names", {}).get(key)
+
+
+def member(name, items):
+    """True when unit name is one of items: a name, a group of civs.GROUPS, or groups joined by "+" (all of them)."""
+    import combat  # combat -> gather -> train -> this module
+    return name is not None and any(name == i or all(p in civs.GROUPS and civs.GROUPS[p](name, combat.stats(name))
+                                                     for p in i.split("+")) for i in items)
+
+
+def killed(h, name, by):
+    """Grant each "kill" line whose "killed" has the killed unit name and whose "by" has the killer to the player of h."""
+    if getattr(h, "share", None) or not hasattr(h, "command"):
+        return
+    for r in ROWS:
+        if r.get("event") == "kill" and member(name, r["killed"]) and member(by, r["by"]) and matches(h, h, r):
+            grant(h, h.player, r["name"].lower())
+
+
+def kills(g):
+    """Read the new kills of the plugin ("aoe kills": "Kills: p1 t42 p2 t331; ...", the killer and the killed unit,
+    Kills.java) and give each kill of an enemy unit to the side of its killer. Gather.run, once per tick; no command
+    when no line has the event "kill", or for a Gather with no player (a test of the loop). The bots read nothing: player 1
+    reads for all sides."""
+    if getattr(g, "share", None) or not getattr(g, "player", None) or not any(r.get("event") == "kill" for r in ROWS):
+        return
+    import build  # build -> gather -> train -> this module
+    import gather
+    sides = {o.player: o for o in build.sides(g)}
+    for kill in (g.command("aoe kills") or "").partition("Kills:")[2].split(";"):
+        f = kill.split()
+        a, b = (re.fullmatch(r"p(\d+)", x) for x in f[0:3:2]) if len(f) == 4 else (None, None)
+        h = a and sides.get(int(a[1]))
+        if h and b and not gather.allied(getattr(h, "players", {}), h.player, int(b[1])):
+            killed(h, unit_name(g, f[3]), unit_name(g, f[1]))

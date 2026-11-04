@@ -53,6 +53,7 @@ from aoe2mc import PASSABLE_OBJECTS, WOODS, object_footprint, object_mob, player
 from units import IDLE_JOB, TEAM_COLOR, VILLAGER_JOBS, animal, pretty  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import achievements  # noqa: E402
 import amounts  # noqa: E402
 import autoscout  # noqa: E402
 import battle_royale  # noqa: E402
@@ -2423,6 +2424,7 @@ class Gather:
             elif self.victory == "king-of-the-hill":                   # the monument in the center (#2360)
                 hill.tick(self, self.tick * NORMAL)
             score.tick(self)
+            achievements.kills(self)                                   # the kill achievements (#5640)
             spectator.tick(self)                                       # the sidebar of the spectators (#2900)
             if self.victory in ("time-limit", "score"):                # after the conquest: it wins before (#2356)
                 time_limit.tick(self, self.tick * NORMAL)
