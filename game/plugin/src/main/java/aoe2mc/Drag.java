@@ -31,12 +31,14 @@ import io.papermc.paper.event.player.PlayerArmSwingEvent;
  * while the player holds the command stick (also in the camera mode, Camera#reach).
  */
 final class Drag implements Listener {
-    private record Hold(int x, int z, long last) {}
+    private record Hold(int x, int z, long last, boolean held) {}
 
     static final NamespacedKey REACH = new NamespacedKey("aoe2mc", "drag_reach");
     static final double RANGE = 64;                                  // blocks: the camera floor is 24 blocks up (camera.UP)
     static final long GAP = 5;                                       // ticks without a swing: the button is up (the
                                                                      // client swings each 3 ticks or less, a real drag)
+    static final long FIRST = 20;                                    // ticks: the client sends the second swing up to
+                                                                     // 18 ticks after the press (real client, #5759)
     private final Map<UUID, Hold> holds = new HashMap<>();
     private final Map<UUID, Long> skips = new HashMap<>();           // a click on the air or a unit: not a drag
     private final Map<UUID, int[]> done = new HashMap<>();           // the corners of the last drag of each player
@@ -64,14 +66,14 @@ final class Drag implements Listener {
         }
         Hold h = holds.get(id);
         if (h != null) {
-            holds.put(id, new Hold(h.x(), h.z(), now));
+            holds.put(id, new Hold(h.x(), h.z(), now, true));
             return;
         }
         Block b = Border.ground(p);
         if (b == null) {
             return;
         }
-        holds.put(id, new Hold(b.getX(), b.getZ(), now));
+        holds.put(id, new Hold(b.getX(), b.getZ(), now, false));
         Team t = Bukkit.getScoreboardManager().getMainScoreboard().getEntryTeam(p.getName());
         Color c = Color.WHITE;
         if (t != null && t.hasColor() && t.color() != null) {
@@ -97,7 +99,7 @@ final class Drag implements Listener {
         for (var it = holds.entrySet().iterator(); it.hasNext();) {
             var e = it.next();
             Hold h = e.getValue();
-            if (now - h.last() <= GAP) {
+            if (now - h.last() <= (h.held() ? GAP : FIRST)) {
                 continue;
             }
             it.remove();

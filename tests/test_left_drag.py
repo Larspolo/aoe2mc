@@ -99,7 +99,7 @@ def test_a_real_left_drag_selects_the_box(tiny_world, tmp_path):
         client.shot(str(tmp_path / "drag.png"))
         client.xdo("mouseup", 1)
         time.sleep(1)
-        assert all("none is set" in c for c in scores)               # one drag, no click while the button is down
+        assert all("none is set" in c for c in scores), scores             # one drag, no click while the button is down
         assert "has 2" in game.command("scoreboard players get aoe2mc aoe_left")
         g.clicks()
         assert g.selected == {v.uuid}
