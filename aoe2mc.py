@@ -3358,6 +3358,7 @@ TICKED = COUNTED + (                                               # conditions 
     PLAYER_DEFEATED,
     RESEARCHED,
     RESEARCHING_TECH,
+    SCRIPT_CALL,                                                       # its score of aoe_xs (#5664)
     TECHNOLOGY_STATE,
     TRIGGER_ACTIVE,
     UNITS_GARRISONED,
@@ -5161,6 +5162,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == DECISION_TRIGGERED and (c.get("decision", -1) < 0 or c.get("option") not in (1, 2))
                     or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
+                    or c["type"] == SCRIPT_CALL and not (c.get("xs") or "").strip()   # no code (#5664)
                     or c["type"] == BUILDING_IS_TRADING and c.get("ref", -1) < 0
                     or c["type"] == VICTORY_TIMER and (c.get("player", -1) <= 0 or c.get("timer_type") not in (0, 1, 2)
                                                        or variable_range(c) is None)
@@ -5218,6 +5220,11 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             if test := brought_building(c, T):                         # a building: its tile and its score (#3782)
                 tests.append(test[c["inverted"]])
                 unless.append(test[not c["inverted"]])
+                continue
+            if c["type"] == SCRIPT_CALL:                               # the XS function: its score (#5664)
+                k = next(j for j, x in enumerate(t["conditions"]) if x is c)   # the index of xs_list
+                tests.append(f"if score #c{n}.{k} aoe_xs matches 1")
+                unless.append(f"unless score #c{n}.{k} aoe_xs matches 1")
                 continue
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
                 test = SCORE_TESTS[c["type"]](c)

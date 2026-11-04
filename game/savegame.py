@@ -281,6 +281,9 @@ NOT_SAVED = (                                                          # the fie
     "xs",                                                              # scenario.setup makes it again; its state: "xs" (#5665)
     "xs_at",                                                           # scenario.py effects(): the next check time
     "xs_calls",                                                        # scenario.py effects(): found again from aoe2mc.json "xs"
+    "xs_cond_at",                                                      # scenario.py conditions(): the next check time
+    "xs_cond_sent",                                                    # scenario.py conditions(): sent again after a load
+    "xs_conds",                                                        # scenario.py conditions(): found again from aoe2mc.json "xs"
     "xs_skip",                                                         # scenario.py effects(): the effects with a syntax error, found again
 )
 SKIP = ("session.lock",)                                               # the lock of the running server
