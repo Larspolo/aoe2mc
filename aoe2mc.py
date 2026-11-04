@@ -4321,8 +4321,8 @@ def xs_snippet(code, name):
     import xs_mc
     files, fn, holder, warnings = xs_mc.snippet(code, name)
     for w in warnings:
-        if (name, w) not in XS_WARNED:                                     # once per effect and line (#5792)
-            XS_WARNED.add((name, w))
+        if w not in XS_WARNED:                       # once per line: many calls share one code (#5792, #5809)
+            XS_WARNED.add(w)
             print(f"  {w}")
     return fn, holder, files
 
