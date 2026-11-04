@@ -71,6 +71,7 @@ def dye(info, p):
     return info.get("color") if info.get("color") in aoe2mc.DYE else aoe2mc.player_color(p)
 
 
+KINDS = ("walk", "fight", "death")   # the kinds of grid() (#5589)
 SHADES = 4                  # the 4 shades of a map color: the heat from low to high (#5457)
 
 

@@ -30,6 +30,8 @@ PLACE = FIGHT + MAX_FIGHTS            # PLACE + i: the place of fight i only, no
 CAMERA = PLACE + MAX_FIGHTS           # the automatic camera on and off (#3369): --camera auto is the start state
 TAKEOVER = CAMERA + 1                 # TAKEOVER + p: the person takes over player p (#5601), p = 1 to MAX_PLAYERS
 MAX_PLAYERS = 8
+HEAT = 1_000_000                      # HEAT × (k + 1) + FROM × 1000 + TO: the heat map of HEAT_KINDS[k] (#5589), FROM
+HEAT_KINDS = ("walk", "fight", "death")   # and TO in game minutes (TO 0: up to now); a trigger value is an int
 FIGHT_LEAD = 10000                    # ms of game time: a fight jump goes this much before the fight start (#2950)
 FIGHT_HEIGHT = 30                     # blocks above the ground of the fight place: the viewer looks down at it
 JUMPS = {JUMP: 60000, JUMP5: 300000, JUMP10: 600000, BACK: -60000, BACK5: -300000}   # BACK: a jump back (#979)
@@ -106,7 +108,24 @@ def apply(n, control):
     if TAKEOVER < n <= TAKEOVER + MAX_PLAYERS and n - TAKEOVER in control.get("players", {}):
         control["takeover"] = n - TAKEOVER                         # run.replay stops at the next poll (#5601)
         return f"Take over player {n - TAKEOVER}"
+    if HEAT <= n < HEAT * (len(HEAT_KINDS) + 1):                   # Replay.run sends the map item (#5589)
+        k, start, end = n // HEAT - 1, n % HEAT // 1000, n % 1000
+        control["heat"] = (HEAT_KINDS[k], start * 60000, end * 60000 if end else None)
+        return f"Heat map: {HEAT_KINDS[k]} {clock_text(start * 60000)}-" + (clock_text(end * 60000) if end else "now")
     return None
+
+
+def heat_value(kind, start=0, end=0):
+    """The trigger value of the heat map of `kind` from game minute `start` to `end` (0: up to now, #5589)."""
+    return HEAT * (HEAT_KINDS.index(kind) + 1) + start * 1000 + end
+
+
+def heat_text():
+    """The chat line of the heat maps (#5589): one click per kind for the whole game up to now, and the form of a range."""
+    extra = [{"text": f"[Heat: {k}] ", "click_event": {"action": "run_command", "command": f"/trigger {OBJECTIVE} set {heat_value(k)}"}}
+             for k in HEAT_KINDS]
+    tip = {"text": f"/trigger {OBJECTIVE} set K FROM TO (K 1 walk, 2 fight, 3 death; minutes, 3 digits each)", "color": "gray"}
+    return json.dumps({"text": "", "color": "gold", "extra": [*extra, tip]}, ensure_ascii=False, separators=(",", ":"))
 
 
 def camera_name(control):
@@ -193,7 +212,7 @@ class Input:
                 continue                                           # they need the plugin
             g.command(f"execute as @a unless items entity @s hotbar.{slot} *[custom_data={{{OBJECTIVE}:{n}}}] "
                       f"run item replace entity @s hotbar.{slot} with {item(n)}")
-        for line in (help_head(), help_text()):
+        for line in (help_head(), help_text()) + (heat_text(),) * (getattr(g, "kind", "") == "paper"):
             g.command(f"execute as @a unless score @s {USE} matches 0.. run tellraw @s {line}")
         g.command(f"scoreboard players add @a {USE} 0")
         g.command(f"scoreboard players enable @a {OBJECTIVE}")
@@ -238,6 +257,11 @@ class Input:
                     g.command(f"tellraw @a {json.dumps({'text': said, 'color': color}, ensure_ascii=False)}")
                     for player in sorted(self.opened & set(g.menus)):
                         self.open_menu(player)                     # its item names the new view
+        if self.passed(f"@a[scores={{{OBJECTIVE}={HEAT}..}}]"):          # the value has the range: read it (#5589)
+            for player in (p.strip() for p in g.command("list").split(":", 1)[-1].split(",")):
+                m = re.search(r" has (\d+)", g.command(f"scoreboard players get {player} {OBJECTIVE}") if player else "")
+                if m and (said := apply(int(m[1]), control)):
+                    g.command(f"title {player} actionbar {json.dumps({'text': said}, ensure_ascii=False)}")
         g.command(f"scoreboard players set @a {OBJECTIVE} 0")
         g.command(f"scoreboard players enable @a {OBJECTIVE}")
 
