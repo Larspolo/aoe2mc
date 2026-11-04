@@ -10,7 +10,11 @@ optional "before" in game seconds (recap.aged, train.research). An optional "civ
 (autoscout.start), "train <UNIT> at <BUILDING>" (train.tick) and "win ai <level>" (cheats.over: a win while a bot of
 that bots.LEVELS name lost).
 "kill" with "killed" and "by" (#5640): the player killed a unit of "killed" with a unit of "by" (kills, once per tick: the
-kill log of the plugin, Kills.java). An item is a unit name, a group of civs.GROUPS, or groups joined by "+" (all of them)."""
+kill log of the plugin, Kills.java). An item is a unit name, a group of civs.GROUPS, or groups joined by "+" (all of them).
+The state of a win (#5644): "win homeless" (demolish.delete of the first own TOWN_CENTER of the scenario), "win only"
+with "units" (the player trained units in this game, all of these names) and "win ally" (an allied player, gather.allied).
+"destroy WONDER" with "before" in years (wonder.tick: an enemy wonder fell with less years left) and "lose site <BUILDING>"
+with "least", a part of 1 (demolish.unfound: an own site of at least that progress went)."""
 import functools
 import json
 import os
@@ -41,11 +45,12 @@ def matches(g, h, r):
 
 
 def event(g, h, name, seconds=None):
-    """Grant each line whose event is `name` (and whose civ and mode match) to the player of Gather h (not a bot)."""
+    """Grant each line whose event is `name` (and whose civ and mode match) to the player of Gather h (not a bot).
+    seconds: a value that must be under the "before" and at least the "least" of the line."""
     if getattr(h, "share", None) or not hasattr(g, "command"):    # a bot, or a test double with no server
         return
     for r in ROWS:
-        if (r.get("event") == name and (seconds is None or seconds < r.get("before", float("inf")))
+        if (r.get("event") == name and (seconds is None or r.get("least", -1) <= seconds < r.get("before", float("inf")))
                 and matches(g, h, r)):
             grant(g, h.player, r["name"].lower())
 
@@ -57,6 +62,17 @@ def won(g, h, levels=()):
         event(g, h, f"win {civ}")
     for level in sorted(levels):
         event(g, h, f"win ai {level}")
+    if vars(h).get("homeless"):
+        event(g, h, "win homeless")
+    made = set(vars(h).get("train_counts", {}))
+    for r in ROWS:
+        if (r.get("event") == "win only" and made and made <= set(r["units"]) and not getattr(h, "share", None)
+                and hasattr(g, "command") and matches(g, h, r)):
+            grant(g, h.player, r["name"].lower())
+    import gather  # gather -> train -> this module
+    players = getattr(h, "players", None) or {}
+    if any(int(m) != h.player and gather.allied(players, h.player, int(m)) for m in players):
+        event(g, h, "win ally")
 
 
 def aged(g, name, seconds):
@@ -92,7 +108,11 @@ def unit_name(g, key):
 
 
 def member(name, items):
-    """True when unit name is one of items: a name, a group of civs.GROUPS, or groups joined by "+" (all of them)."""
+    """True when unit name is one of items: a name, a group of civs.GROUPS, or groups joined by "+" (all of them).
+The state of a win (#5644): "win homeless" (demolish.delete of the first own TOWN_CENTER of the scenario), "win only"
+with "units" (the player trained units in this game, all of these names) and "win ally" (an allied player, gather.allied).
+"destroy WONDER" with "before" in years (wonder.tick: an enemy wonder fell with less years left) and "lose site <BUILDING>"
+with "least", a part of 1 (demolish.unfound: an own site of at least that progress went)."""
     import combat  # combat -> gather -> train -> this module
     return name is not None and any(name == i or all(p in civs.GROUPS and civs.GROUPS[p](name, combat.stats(name))
                                                      for p in i.split("+")) for i in items)
