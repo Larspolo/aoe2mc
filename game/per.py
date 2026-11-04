@@ -198,8 +198,8 @@ def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0, 
                     isinstance(v := value(args[1][0], consts), int) and not -32768 <= v <= 32767:
                 raise ValueError(f"{file}:{line}: defconst must be (defconst NAME NUMBER|NAME|TEXT), "
                                  "a number from -32768 to 32767")   # airef defconst; a name or a text (#5098)
-            if (key := args[0][0].lower()) in consts:
-                raise ValueError(f"{file}:{line}: defconst {key} again")   # the game does not allow it
+            if (key := args[0][0].lower()) in consts and consts[key] != v:
+                raise ValueError(f"{file}:{line}: defconst {key} again")   # the game allows it only with the same value (#5797)
             consts[key] = v
         elif name in ("load", "load-random"):
             if name == "load":
