@@ -12,6 +12,10 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import aoe2mc  # noqa: E402
 
+POPULATION = {11: (lambda x: x.units, lambda x: x.soldiers),           # cAttributePopulation
+              37: (lambda x: x.units,),                                # cAttributeCivilianPopulation
+              40: (lambda x: x.soldiers,)}                             # cAttributeMilitaryPopulation
+
 
 def civ_id(name):
     """The AoE2 civilization ID of a civilization key: its index in the enum of AoE2ScenarioParser (the .dat order,
@@ -43,6 +47,9 @@ def host(g):
         warn("attribute", attribute)
 
     def attribute(player, a):
+        if int(a) in POPULATION:                                       # the units of the side, not a stock (#5807)
+            x = side(player)
+            return float(sum(len(f(x)) for f in POPULATION[int(a)])) if x else 0.0
         x, r = side(player), resource(a)
         return float(x.stock.get(r, 0)) if x and r else 0.0
 
