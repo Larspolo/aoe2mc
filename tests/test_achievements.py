@@ -10,6 +10,7 @@ FORM = {"name": str, "title": str, "description": str, "icon": str, "parent": st
 OPTIONAL = {"civ": str, "mode": str,   # limit a line to a civilization and a game mode (#5281)
             "units": list, "need": int,   # the event count:train (#5280)
             "killed": list, "by": list,   # the event kill (#5640)
+            "gather": str, "age": int,   # the event count:gather (#5643)
             "tiles": int, "part": float}   # the event explore (#5646)
 
 

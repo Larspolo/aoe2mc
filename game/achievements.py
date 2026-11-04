@@ -11,6 +11,10 @@ optional "before" in game seconds (recap.aged, train.research). An optional "civ
 that bots.LEVELS name lost).
 "kill" with "killed" and "by" (#5640): the player killed a unit of "killed" with a unit of "by" (kills, once per tick: the
 kill log of the plugin, Kills.java). An item is a unit name, a group of civs.GROUPS, or groups joined by "+" (all of them).
+"count:gather" with "gather" and "need" (#5643): the player gathered `need` of "gather" in this game (gathered): a hunted
+animal name (gather.Gather.hunt: one at its death, when it leaves its carcass for the player), "FOLWARK" (the food of
+build.folwark), a "trickle" technology (its food, feitoria.tick) or "KESHIK" (its gold, spoils.attacks). An optional
+"age" counts only the amounts of the ages up to it (0: the Dark Age, build.ages).
 "convert <UNIT>" (monk.take, #5646), "trade route" (trade.order: a land route to another market), "siege tower wall"
 (siege_tower.out next to an enemy wall), "challenge medal" and "challenge <MEDAL>" (challenge.tick), and "explore"
 with "tiles" and "part" (fog.minimap, no revealed map): the part of the tiles explored on a map of at least "tiles"
@@ -135,4 +139,20 @@ def explored(g, n, count):
         return
     for r in ROWS:
         if r.get("event") == "explore" and n >= r["tiles"] and count >= r["part"] * n * n and matches(g, g, r):
+            grant(g, g.player, r["name"].lower())
+
+
+def gathered(g, what, amount=1):
+    """Count amount of what that the player of g (a Gather) gathered, per age, and grant each "count:gather" line of
+    what whose count reaches its need. The counts go into the save (savegame, "gather_counts")."""
+    import build  # build -> gather -> train -> this module
+    counts = vars(g).setdefault("gather_counts", {})
+    key = f"{what} {build.ages(g)}"
+    counts[key] = counts.get(key, 0) + amount
+    if getattr(g, "share", None) or not hasattr(g, "command"):
+        return
+    for r in ROWS:
+        if (r.get("event") == "count:gather" and r["gather"] == what and matches(g, g, r)
+                and sum(v for k, v in counts.items() if k.rpartition(" ")[0] == what
+                        and int(k.rpartition(" ")[2]) <= r.get("age", 9)) >= r["need"] - 1e-9):
             grant(g, g.player, r["name"].lower())

@@ -94,3 +94,8 @@
 {"name": "BULL_MARKET", "title": "Bull Market", "description": "Create a Trade Route with another Market", "icon": "minecraft:emerald", "parent": "root", "event": "trade route"}
 {"name": "CHALLENGE_ACCEPTED", "title": "Challenge Accepted", "description": "Win any Medal in any Art of War Challenge", "icon": "minecraft:iron_ingot", "parent": "root", "event": "challenge medal"}
 {"name": "GOING_FOR_THE_GOLD", "title": "Going for the Gold", "description": "Win a Gold Medal in any Art of War Challenge", "icon": "minecraft:gold_ingot", "parent": "root", "event": "challenge gold"}
+{"name": "DARK_DINNER", "title": "Dark Dinner", "description": "Eat 2 Wild Boars in the Dark Age.", "icon": "minecraft:porkchop", "parent": "root", "event": "count:gather", "gather": "WILD_BOAR", "need": 2, "age": 0}
+{"name": "SHEEP_HOARDER", "title": "Sheep Hoarder", "description": "Gather 20 Sheep in a Random Map game.", "icon": "minecraft:white_wool", "parent": "root", "event": "count:gather", "gather": "SHEEP", "need": 20}
+{"name": "FAST_FOOD", "title": "Fast Food", "description": "Gather 500 food by constructing farms next to Folwarks as the Poles.", "icon": "minecraft:wheat", "parent": "root", "event": "count:gather", "gather": "FOLWARK", "need": 500, "civ": "POLES"}
+{"name": "WEI_MARCH_ON_OUR_STOMACHS", "title": "Wei March on Our Stomachs", "description": "Generate 5000 food with Tuntian as the Wei.", "icon": "minecraft:bread", "parent": "root", "event": "count:gather", "gather": "TUNTIAN", "need": 5000, "civ": "WEI"}
+{"name": "TOO_LAME_TO_TAME", "title": "Too Lame To Tame", "description": "Loot 500 gold with Keshiks.", "icon": "minecraft:gold_ingot", "parent": "root", "event": "count:gather", "gather": "KESHIK", "need": 500}
