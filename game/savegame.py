@@ -21,6 +21,8 @@ import os
 import shutil
 import time
 
+import achievements
+
 FILE = "savegame.json"
 FIELDS = ("stock", "spare", "seconds", "repeats", "pop")              # dicts and numbers of Gather, as they are
 PACKED = ("queues", "trained", "sites", "rally",                       # with tuples (a building rect, a cell): pack()
@@ -33,11 +35,7 @@ OPTIONAL = ("auto", "auto_by",                                         # the aut
             "challenge_enemy",                                         # the enemy fleet of Naval Battle (#3909)
             "free_trained",                                            # the free units of a castle: Cuman Mercenaries (#4330)
             "risers",                                                  # the units that rise where a Konnik died: train.fell (#4471)
-            "homeless",                                                # the start town center deleted: achievement Homeless (#5644)
-            "build_counts",                                            # achievements.built (#5642)
-            "gather_counts",                                           # achievements.gathered (#5643)
-            "train_counts",                                            # the count achievements: achievements.trained (#5280)
-            "kill_counts",                                             # the kill count achievements: achievements.killed (#5641)
+            *achievements.SAVED,                                       # the counts of the achievements: achievements.field (#5781)
             "limit_left", "policy", "rates", "relic_timer", "reseeds", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",

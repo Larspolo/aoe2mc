@@ -76,6 +76,12 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   `game/savegame.py`, not a new block in `load()` (#3484).
 - A new game mode (`--mode`) is one line in `game/data/setup.jsonl` (keys `"help"`, `"module"`, `"age"`, `"loaded"`,
   `"bots"`: `run.MODES`) and its module with `setup(g, mode)`, not a change of `play()` (#2521).
+- A new achievement is one line in `data/achievements.jsonl`; a new optional key of it is one line in
+  `data/achievement_keys.jsonl` (`"type"`, `"text"`, `"issue"`), not a key in a test table. A plain event is one
+  `achievements.event(g, h, "NAME")` at its place; a test of a line at a win or a kill is a function `@on("win", KIND)` or
+  `@on("kill", KIND)`; a new limit of a plain event is a function `@limit`; a new field of a Gather for the saved game
+  is `field("NAME")`. None of them changes `won`, `killed`, the module docstring of `game/achievements.py` or a line of
+  `game/savegame.py`: the event text goes into the docstring of its function (#5781: 3 of 5 conflicted PRs met there).
 - A new trigger effect of the converter is one line in `aoe2mc.EFFECTS` (its ID constant on its own line, both in
   alphabetical order), its handler `x_lines(e, c)` and the keys that it reads from the scenario effect one line
   in `aoe2mc.EFFECT_KEYS` (#2792), not a change of `trigger_files` (#2613) or `read_scenario`; a condition on a score
