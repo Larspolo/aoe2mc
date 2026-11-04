@@ -398,7 +398,7 @@ def grow(owner, lands, free, rng):
         box = owner[x0:c[0] + r + 1, y0:c[1] + r + 1]
         for x, y in zip(*np.nonzero(box >= 0)):
             o = int(box[x, y])
-            if zone[o] != zone[land["id"]] and max(abs(x0 + x - c[0]), abs(y0 + y - c[1])) <= max(avoid[o], avoid[land["id"]]):
+            if zone[o] != zone[land["id"]] and max(abs(x0 + x - c[0]), abs(y0 + y - c[1])) <= min(avoid[o], avoid[land["id"]]):
                 return False
         return True
     for land in lands:
