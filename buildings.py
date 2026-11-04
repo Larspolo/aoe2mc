@@ -1907,17 +1907,27 @@ def harbor_chain(c, w, st, col, T, ctx):
     """Harbor chain on the water. It runs from edge to edge of the tile, so pieces next to each other connect.
     The tile direction of each name (CHAIN_DIRECTION) is the line reading of the name with the axes of #116 (#3101)."""
     dx, dz = next(d for k, d in CHAIN_DIRECTION.items() if ctx["name"].endswith(k))
+    # The AoE2 chain hangs between two stone posts (#5745): a post at each end, the chain at y = 1 between them.
+    # The posts of pieces next to each other stand side by side, so a line of pieces still reads as one chain.
+    m = w // 2
     if dz == 0:
-        c.box(0, w, 0, 1, w // 2, w // 2 + 1, "iron_chain[axis=x]")
+        ends = [(0, m), (w - 1, m)]
+        c.box(1, w - 1, 1, 2, m, m + 1, "iron_chain[axis=x]")
     elif dx == 0:
-        c.box(w // 2, w // 2 + 1, 0, 1, 0, w, "iron_chain[axis=z]")
+        ends = [(m, 0), (m, w - 1)]
+        c.box(m, m + 1, 1, 2, 1, w - 1, "iron_chain[axis=z]")
     else:
+        zs = [i if dz > 0 else w - 1 - i for i in range(w)]
+        ends = [(0, zs[0]), (w - 1, zs[-1])]
         for i in range(w):                                                 # diagonal: a staircase of links
-            z = i if dz > 0 else w - 1 - i
-            c.set(i, 0, z, "iron_chain[axis=x]")
-            if i < w - 1:
-                c.set(i + 1, 0, z, "iron_chain[axis=z]")
-    c.set(w // 2, 0, w // 2, "barrel[facing=up]")                          # float in the middle
+            if 0 < i < w - 1:
+                c.set(i, 1, zs[i], "iron_chain[axis=x]")
+            if i < w - 1 and 0 < i + 1 < w - 1:
+                c.set(i + 1, 1, zs[i], "iron_chain[axis=z]")
+    for x, z in ends:
+        c.box(x, x + 1, 0, 2, z, z + 1, "stone_bricks")
+        c.set(x, 2, z, "stone_brick_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
+    c.set(m, 0, m, "barrel[facing=up]")                                    # float under the middle of the chain
 
 
 def flagship(c, w, st, col, T, ctx):
