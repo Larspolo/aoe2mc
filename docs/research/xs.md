@@ -48,7 +48,7 @@ timed rules. Scoreboards hold 32-bit integers, `scoreboard players operation` ha
 | `if`, `else` | `execute if score ... run function xs/b/<k>` (a sub-function per block) | — |
 | `while`, `for` | A sub-function that tests the condition, runs the body and calls itself | One tick runs at most the commands of the game rule of the command chain (default 65 536): a longer loop stops in that tick (A stops after 200 000 steps) |
 | `break`, `continue` | The flags `#brk` and `#cont`, tested after each statement of the loop body | — |
-| `switch` | One `execute if score ... matches N` line per `case`; a fall-through runs the next case functions until a `break` | — |
+| `switch` | One `execute if score ... matches N` line per `case` sets the number of the case; one sub-function per case. As A (`game/xs_run.py`): only the first case with the value (else `default`) runs, no fall-through to the next case | A computed `case` label: the game program only |
 | The operators `++ -- += -= ...` | `scoreboard players add` / `remove` / `operation` | — |
 | `include` | The file is in the AoE2 profile folder, not in the scenario | A and B: one warning line with the file name |
 | `rule`, `active`, `inactive` | `#on.R` is 1 or 0 at the start | — |
