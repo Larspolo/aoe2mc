@@ -892,9 +892,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
             free &= ~dilate(terrain == t, s)
         avoid = attrs.get("set_avoid_player_start_areas")      # None: not set; []: the default distance
         far = 0 if avoid is None else value(avoid[0], consts) if avoid else AVOID
-        for st in starts:                      # never in the start area of a player (its base_size square)
-            r = max(st["base_size"], far)
-            for c in square((st["x"], st["y"]), r, n):
+        for st in starts if avoid is not None else ():  # AoE2 default: no avoidance (#5738)
+            for c in square((st["x"], st["y"]), far, n):
                 free[c] = False
         clumps, total = scaled(attrs, consts, n, value(attrs["number_of_clumps"][0], consts)
                                if "number_of_clumps" in attrs else 1, tiles(attrs, consts, n, 1))
