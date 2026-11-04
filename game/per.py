@@ -323,6 +323,7 @@ def airef_id(value, kind):
 SN = {r["name"]: r["default"] for r in table.load("per_numbers.jsonl")}
 RESOURCES = {r["name"]: r for r in table.load("per_resources.jsonl")}   # airef ResourceType (up-resource-amount)
 SN_IDS = {r["id"]: r["name"] for r in table.load("per_numbers.jsonl")}   # a script can name a number by its id
+FACTS = {r["id"]: r["name"] for r in table.load("per_facts.jsonl")}   # airef FactId: defconst gives a number (#5808)
 # The airef ids of objects and technologies (two sets of numbers): the up-* commands with g: take an id (#4869).
 OBJECT_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("unit", "building")}
 TECH_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("tech", "age")}
@@ -1151,6 +1152,10 @@ class Script:
         else:
             (who, fact, param, goal), xs = args, None
             xs = self.sides(who)[0] if who != self.bot.g.player else [self.bot.g]
+        if isinstance(fact, int):                                     # (defconst game-time 0): the FactId
+            if fact not in FACTS:
+                return self.warn("fact", fact)
+            fact = FACTS[fact]
         got = [v for x in xs if (v := self.fact_value(fact, param, x)) is not None]
         if xs and not got:
             return self.warn("fact", fact)
