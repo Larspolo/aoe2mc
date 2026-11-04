@@ -37,6 +37,7 @@ OPTIONAL = ("auto", "auto_by",                                         # the aut
             "build_counts",                                            # achievements.built (#5642)
             "gather_counts",                                           # achievements.gathered (#5643)
             "train_counts",                                            # the count achievements: achievements.trained (#5280)
+            "kill_counts",                                             # the kill count achievements: achievements.killed (#5641)
             "limit_left", "policy", "rates", "relic_timer", "reseeds", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
@@ -277,6 +278,7 @@ NOT_SAVED = (                                                          # the fie
     "wonder",                                                          # defend_wonder.setup makes it again
     "wonder_at",                                                       # wonder.py: the next check time
     "work_on",                                                         # bot.py: a setup value (#3271)
+    "xs",                                                              # scenario.setup makes it again; its state: a later ticket
 )
 SKIP = ("session.lock",)                                               # the lock of the running server
 
