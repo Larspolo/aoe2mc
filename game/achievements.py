@@ -23,7 +23,10 @@ queue of the player has `need` of these units (train.queue). "policy": a policy 
 The state of a win (#5644): "win homeless" (demolish.delete of the first own TOWN_CENTER of the scenario), "win only"
 with "units" (the player trained units in this game, all of these names) and "win ally" (an allied player, gather.allied).
 "destroy WONDER" with "before" in years (wonder.tick: an enemy wonder fell with less years left) and "lose site <BUILDING>"
-with "least", a part of 1 (demolish.unfound: an own site of at least that progress went)."""
+with "least", a part of 1 (demolish.unfound: an own site of at least that progress went).
+"count:kill" with "by", "need" and an optional "killed" and "age" (#5641): the player killed `need` units (of "killed")
+with units of "by" in this game, only while in the ages up to "age". The counts per line: vars(h)["kill_counts"], kept
+in a saved game."""
 import functools
 import json
 import os
@@ -159,6 +162,17 @@ def killed(h, name, by):
     for r in ROWS:
         if r.get("event") == "kill" and member(name, r["killed"]) and member(by, r["by"]) and matches(h, h, r):
             grant(h, h.player, r["name"].lower())
+        elif (r.get("event") == "count:kill" and member(by, r["by"]) and ("killed" not in r or member(name, r["killed"]))
+              and matches(h, h, r) and ("age" not in r or ages(h) <= r["age"])):
+            counts = vars(h).setdefault("kill_counts", {})
+            counts[r["name"]] = counts.get(r["name"], 0) + 1
+            if counts[r["name"]] >= r["need"]:
+                grant(h, h.player, r["name"].lower())
+
+
+def ages(h):
+    import build  # build -> gather -> train -> this module
+    return build.ages(h)
 
 
 def kills(g):
@@ -166,7 +180,7 @@ def kills(g):
     Kills.java) and give each kill of an enemy unit to the side of its killer. Gather.run, once per tick; no command
     when no line has the event "kill", or for a Gather with no player (a test of the loop). The bots read nothing: player 1
     reads for all sides."""
-    if getattr(g, "share", None) or not getattr(g, "player", None) or not any(r.get("event") == "kill" for r in ROWS):
+    if getattr(g, "share", None) or not getattr(g, "player", None) or not any(r.get("event") in ("kill", "count:kill") for r in ROWS):
         return
     import build  # build -> gather -> train -> this module
     import gather
