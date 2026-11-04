@@ -17,6 +17,7 @@
 {"name": "replay_input.Input.__call__", "note": "the player names of the record"}
 {"name": "replay_input.fight_lines", "note": "the clock and the player names"}
 {"name": "replay_input.fight_players", "note": "the player names of the record"}
+{"name": "replay_input.heat_text", "note": "the click texts name the heat kinds and the trigger form"}
 {"name": "replay_input.help_text", "note": "the names of the record players"}
 {"name": "run.properties", "note": "the resource pack prompt: the client shows it before it has the lang file"}
 {"name": "scenario.chat", "note": "the text of the scenario"}
