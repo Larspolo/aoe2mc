@@ -238,7 +238,7 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
                 consts[words[i + 1]] = v
                 i += 3
             else:
-                i += 3 if v else 2                  # an unknown value word is no command (#5248)
+                i += 2 if v[:1] in ("#", "<", "") else 3   # a directive or section is no value (#5767); an unknown word is no command (#5248)
         elif w.startswith(("(", "rnd(")):
             text, i = group(words, i)
             out.append(str(calc(text, consts, rng)))     # one rnd() draw where it is written (#4306)
