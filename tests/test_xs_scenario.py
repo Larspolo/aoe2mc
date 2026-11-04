@@ -28,8 +28,8 @@ def world(tmp_path, xs=None, name=""):
 
 def test_the_world_keeps_the_xs_code_of_each_trigger(tmp_path):
     data, out, tid = world(tmp_path)
-    assert {"trigger": tid, "kind": "condition", "code": "bool c() { return (true); }"} in data["xs"]
-    assert {"trigger": tid, "kind": "effect", "code": "main();"} in data["xs"]
+    assert {"trigger": tid, "kind": "condition", "index": 0, "code": "bool c() { return (true); }"} in data["xs"]
+    assert {"trigger": tid, "kind": "effect", "index": 0, "code": "main();"} in data["xs"]
     assert "xs_script" not in data and "warning" not in out
 
 
