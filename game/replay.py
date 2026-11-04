@@ -3150,7 +3150,10 @@ class Replay:
                                  math.inf if end is None else end)
         dyes = {p: aoe2mc.MAP_DYES.get(heatmap.dye(info, p), 8) for p, info in
                 ((int(k), v) for k, v in self.data.get("players", {}).items())}
-        return heatmap.item_commands(grids, dyes, self.T, n, RCON_MAX)
+        label = kind                                                # the item name: "Heat map: fight 10:00-20:00" (#5671)
+        if start or end is not None:
+            label += f",{mmss(start)}-{'now' if end is None else mmss(end)}"
+        return heatmap.item_commands(grids, dyes, self.T, n, RCON_MAX, label)
 
     def deaths(self):
         """{(player, x, y): deaths} up to now: the counts of the plugin per tile (#5458)."""
