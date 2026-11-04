@@ -8,7 +8,8 @@ their civilizations, and the objects. A save folder (savegame.py: `world/` and `
 end of the game: the units that still live (the "soldiers" and "villagers" of each player), the buildings of the
 construction sites that are done, the fallen start buildings ("ruins") and the mines with no resource left. The
 entities of the world give the last position of each unit (its UUID). Tiles stay in the turned grid of aoe2mc.json, as
-the world shows them. Not yet: the terrain that a player changed in Minecraft (blocks), the resources of the players.
+the world shows them. The resources and the starting age of each player: the end of the game with a save, else those of
+aoe2mc.json. Not yet: the terrain that a player changed in Minecraft (blocks).
 """
 import argparse
 import contextlib
@@ -21,11 +22,15 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import build  # noqa: E402
 import savegame  # noqa: E402
 import scenarios  # noqa: E402
-from AoE2ScenarioParser.datasets.object_support import Civilization  # noqa: E402
+from AoE2ScenarioParser.datasets.object_support import Civilization, StartingAge  # noqa: E402
 
 import units as unitlib  # noqa: E402
+
+RESOURCES = ("food", "wood", "gold", "stone")
+AGES = (StartingAge.DARK_AGE, StartingAge.FEUDAL_AGE, StartingAge.CASTLE_AGE, StartingAge.IMPERIAL_AGE)
 
 
 def folders(path):
@@ -122,6 +127,18 @@ def export(path, out):
         civ = data["players"][str(p)].get("civ")
         if civ in Civilization.__members__:
             scn.player_manager.players[p].civilization = Civilization[civ]
+        pl, info = scn.player_manager.players[p], data["players"][str(p)]
+        if state and str(p) in state["players"]:           # the end of the game (#5673)
+            s = state["players"][str(p)]
+            for r in RESOURCES:
+                setattr(pl, r, int(s.get("stock", {}).get(r, 0)))
+            reached = sum(t in s.get("techs", ()) for t in build.AGE_TECHS)
+            pl.starting_age = AGES[min(reached, len(AGES) - 1)]
+        else:
+            for r, v in info.get("resources", {}).items():
+                setattr(pl, r, int(v))
+            if "age" in info:                               # "feudal" in aoe2mc.json, as the setup of the world
+                pl.starting_age = StartingAge[info["age"].upper().replace("-", "_") + "_AGE"]
     from AoE2ScenarioParser.datasets.players import PlayerId
     with contextlib.redirect_stdout(io.StringIO()):
         for o in objects(data, state, positions(world)):
