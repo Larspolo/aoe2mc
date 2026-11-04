@@ -27,9 +27,11 @@ RANGE = herd.RANGE
 def joinable(o):
     """True for a Gaia unit of the map that joins a player: not an animal, not unconvertible, not inside a holder."""
     import gather  # gather imports this module
+
+    import units
     n = o["name"]
     return (o["kind"] == "unit" and o.get("player") == 0 and bool(o.get("uuid")) and not o.get("unconvertible")
-            and o.get("holder") is None
+            and o.get("holder") is None and not units.is_bird(n)  # a bird stays Gaia as in AoE2 (#5698)
             and not herd.herdable(n) and not gather.hunt_food(n) and not gather.predator(n))
 
 
