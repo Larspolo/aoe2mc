@@ -168,9 +168,6 @@ TYPE_REACH = 16                                                    # blocks: a s
 REACH = 160    # blocks: the ray of a click (the pick functions): far views of the camera mode (camera.py), 10 chunks
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
 LEFT = "aoe_left"                     # score of a left click with the command stick (Paper plugin, #1788)
-RELEASE = 0.45   # seconds without a wand use: the player released the held right click (uses come each 0.2 s, #992)
-HOLD = 0.2       # seconds: a held right click sends its next command stick use in this time, so a use with no next use
-                 # is a click (on Paper the stick also draws the selection box, #1786)
 # Control groups (#779, owner choice #745): carrots on a stick with custom_data {aoe_group:N} in hotbar slots 4..8
 # (keys 5-9), with the model of a dye. A shift right click saves the selection as group N, a right click selects it.
 GROUPS = {n: (3 + n, dye) for n, dye in enumerate(("red_dye", "yellow_dye", "lime_dye", "light_blue_dye",
@@ -775,8 +772,7 @@ class Gather:
         self.sieged = set()                                            # the targets of attack orders
         self.ruins = set()                                             # footprints of fallen start buildings (ruins.py)
         self.wands, self.corners = set(), {}                           # players who clicked the wand, player -> corner 1
-        self.holds = {}                                                # player -> time of the last wand use of a drag
-        self.pending, self.looks = {}, {}                              # player -> (time, look) of a stick use (#1786)
+        self.looks = {}                                                # player -> the look of a click
         self.groups, self.grouping, self.calls = {}, {}, 0             # group -> units, player -> (group, shift)
         self.hints = {}                                                # target -> (hint text, time) (hints.py, #798)
         self.pointing = {}                                             # player -> text of its pointed target (#989)
@@ -1038,9 +1034,9 @@ class Gather:
     def box(self, name, cell):
         """A click of player name with the selection wand on the ground cell (#778, owner choice #745). The first click
         sets a corner, the second selects the own units whose feet are in the rectangle of the two corners, as the
-        selection box of AoE2: military units win over villagers, and an empty box clears the selection. Between the
-        clicks the Paper plugin draws the border of the box to the ground under the look (Border.java, #795). On Paper
-        the player holds the right click instead (owner choice A, #992): see drag."""
+        selection box of AoE2: military units win over villagers, and an empty box clears the selection (drag_end). Between
+        the clicks the Paper plugin draws the border of the box to the ground under the look (Border.java, #795). On
+        Paper the player holds the left click instead (#5759): see deselect."""
         if cell is None:
             return
         self.person = name
@@ -1048,7 +1044,7 @@ class Gather:
             self.corners[name], (x, z) = cell, cell
             self.command(f"particle minecraft:happy_villager {x + 0.5} {(self.map.y(x, z) or 0) + 0.5} {z + 0.5} "
                          f"0.3 0.3 0.3 0 12 force {name}")
-            text = lang.text("aoe2mc.gather.corner_paper" if self.paper else "aoe2mc.gather.corner")
+            text = lang.text("aoe2mc.gather.corner")
             self.command(f"title {name} actionbar " + json.dumps(text))
             if self.paper:                                             # the border follows the look (#795)
                 color = self.players.get(str(self.player), {}).get("color") or player_color(self.player)
@@ -1056,34 +1052,17 @@ class Gather:
             return
         if self.paper:
             self.command(f"aoe box-clear {name}")
-        (x0, x1), (z0, z1) = sorted((first[0], cell[0])), sorted((first[1], cell[1]))
+        self.drag_end(name, *first, *cell)
+
+    def drag_end(self, name, x0, z0, x1, z1):
+        """The selection box of name from cell (x0, z0) to cell (x1, z1): select the own units whose feet are in it,
+        as in AoE2. On Paper the plugin draws it with a held left click (Drag.java, #5759); vanilla: two clicks (box)."""
+        (x0, x1), (z0, z1) = sorted((x0, x1)), sorted((z0, z1))
         pos = {k: v.pos for k, v in self.villagers.items()} | self.positions(list(self.soldiers) + sorted(self.herd()))
         inside = {u for u, p in pos.items() if x0 <= p[0] < x1 + 1 and z0 <= p[2] < z1 + 1} - self.unpickable()
         pick = inside & self.soldiers.keys() or inside - self.flock or inside   # herdables come last (#1791)
         self.choose(pick, min(pick, default=None))
         self.command(f"title {name} actionbar " + json.dumps(lang.text("aoe2mc.gather.selected", len(pick))))
-
-    def drag(self, name, cell):
-        """A wand use on Paper: a held right click sends a use each 4 ticks, so the first use sets corner 1 and the next
-        ones only show that the player still holds the button. release ends the drag (#992)."""
-        if name not in self.holds:
-            self.box(name, cell)
-            if name not in self.corners:                               # no ground under the look: no drag
-                return
-        self.holds[name] = self.clock()
-
-    def release(self):
-        """End the drags with no wand use for RELEASE seconds: the cell under the look is corner 2, as the release of
-        the mouse in AoE2. A release on corner 1 cancels the box (a click with no drag)."""
-        for name in sorted(n for n, t in self.holds.items() if self.clock() - t > RELEASE):
-            del self.holds[name]
-            cell = (look := self.look(name)) and fleet.pick(self, *look)   # also on deep water (#2060)
-            if cell and cell != self.corners.get(name):
-                self.box(name, cell)
-                continue
-            self.corners.pop(name, None)
-            self.command(f"aoe box-clear {name}")
-            self.command(f"title {name} actionbar " + json.dumps(lang.text("aoe2mc.gather.box_cancelled")))
 
     def look(self, name):
         """(eye, direction) of player name, or None."""
@@ -1410,7 +1389,8 @@ class Gather:
         cheats.clicks(self)
         self.taunted = getattr(self, "taunted", []) + [n for _, n in cheats.taunts(self)]   # for AI scripts (#4827)
         self.command(f"execute as {self.who} unless items entity @s container.* minecraft:carrot_on_a_stick[!custom_data] "
-                     "run give @s minecraft:carrot_on_a_stick")       # not a group item
+                     "run give @s minecraft:carrot_on_a_stick[tool={rules:[],can_destroy_blocks_in_creative:false}]")
+        # not a group item; the tool component: a held left click breaks no block (#5759)
         if self.calls % GROUP_GIVE == 0:
             for name in filter(None, self.people()):                   # the groups of each person (#3490)
                 self.person = name
@@ -1421,15 +1401,14 @@ class Gather:
             goto.give(self)                                            # the "Go to" compass (#1830)
             camera.give(self)                                          # the camera mode (Paper)
         self.calls += 1
-        if not self.paper:                                             # Paper: hold right click with the stick (#1786)
+        if not self.paper:                                             # Paper: hold left click with the stick (#5759)
             self.command(f"execute as {self.who} unless items entity @s container.* minecraft:{WAND} "
                          f'run give @s minecraft:{WAND}[item_name="Selection box"]')
-        self.release()                                                 # the drags of the selection box (#992)
         if getattr(self, "paper", False):                               # a partial Gather of tests/test_menu.py
             self.deselect()
         objs = ("aoe_use", "aoe_talk", "aoe_box")
         if "passed" not in "".join(self.command(f"execute if entity {only(self.who, f'scores={{{o}=1..}}')}") for o in objs):
-            return self.short()
+            return []
         out = []
         for name in self.people():
             scores = {o: self.command(f"scoreboard players get {name} {o}") for o in objs} if name else {}
@@ -1450,52 +1429,25 @@ class Gather:
                 elif "aoe_use" in used and self.paper and camera.in_hand(self, name):   # the camera mode: no ray
                     out.remove(name)
                     camera.click(self, name, "passed" in self.command(f"execute as {name} if predicate {SNEAK}"))
-                elif "aoe_use" in used and self.paper and not (name in self.rallying or name in self.ordering or build.chosen(self, name)):
-                    out.remove(name)                                   # a click or a hold: short() or drag decides
-                    self.hold(name, int(re.search(r"has (\d+)", scores["aoe_use"])[1]))
                 for obj in objs:
                     self.command(f"scoreboard players reset {name} {obj}")
-        return out + self.short()
-
-    def hold(self, name, uses):
-        """A command stick use on Paper (#1786, owner feedback): the first use of a held right click is also a click,
-        so it waits for HOLD seconds, but corner 1 shows at once (#3268). A next use in that time (or two uses in one call) is a held right click: the cell
-        of the first use is corner 1 of the selection box, and the drag of #992 goes on until the release. A hold never
-        gives an order first: a held click on the ground would send the selected villagers to walk."""
-        if name in self.holds:
-            self.holds[name] = self.clock()
-            return
-        if name in self.pending or uses > 1:
-            look = self.pending.pop(name, (None, None))[1] or self.look(name)
-            if name in self.corners:                                   # corner 1 of the first use (#3268)
-                self.holds[name] = self.clock()
-            else:
-                self.drag(name, look and fleet.pick(self, *look))
-            return
-        self.pending[name] = self.clock(), (look := self.look(name))
-        if (cell := look and fleet.pick(self, *look)) and name not in self.corners:
-            self.box(name, cell)                                       # the box shows at once, no wait (#3268)
-
-    def short(self):
-        """The players whose stick use got no next use in HOLD seconds: a short click, with the look of the use.
-        Call it after the uses of this call: a next use that came since the last call makes a hold."""
-        due = sorted(n for n, (t, _) in self.pending.items() if self.clock() - t >= HOLD)
-        for n in due:
-            self.looks[n] = self.pending.pop(n)[1]
-            if self.corners.pop(n, None) is not None:                  # a click: no box (#3268)
-                self.command(f"aoe box-clear {n}")
-        return due
+        return out
 
     def deselect(self):
         """Paper: a left click with the command stick (the score LEFT of the plugin, AoePlugin.onLeftClick) clears the
         selection, as a click on empty ground in AoE2 (#1788); a click on an own unit selects it, and with a chosen
-        building it places the foundation (#4703). Vanilla has no event for it: the empty box (#992)."""
+        building it places the foundation (#4703). The score 2 is a held left click: the selection box of the plugin
+        (Drag.java, "aoe drag", #5759). Vanilla has no event for it: the empty box (#992)."""
         if "passed" not in self.command(f"execute if entity {only(self.who, f'scores={{{LEFT}=1..}}')}"):
             return
         for name in self.people():
-            if name and re.search(r"has [1-9]", self.command(f"scoreboard players get {name} {LEFT}")):
+            if name and (score := re.search(r"has ([1-9])", self.command(f"scoreboard players get {name} {LEFT}"))):
                 self.command(f"scoreboard players reset {name} {LEFT}")
                 self.person = name
+                if score[1] == "2":
+                    if len(c := re.findall(r"-?\d+", self.command(f"aoe drag {name}").split(":", 1)[-1])) == 4:
+                        self.drag_end(name, *map(int, c))
+                    continue
                 if self.left(name):                                    # select or place (#4703)
                     continue
                 self.choose(set())

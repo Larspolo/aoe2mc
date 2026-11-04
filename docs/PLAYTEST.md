@@ -69,7 +69,7 @@ Add `--cheats` to use the AoE2 cheat codes in the chat (for example `aegis`: fas
 Hold the carrot on a stick. The action bar at the bottom of the screen always shows the next possible step. The
 tutorial (section 3) teaches the same controls. Type /controls in the game to see this list.
 
-- Select: right click a unit. Hold right click and look across the ground: a selection box.
+- Select: left click a unit. Hold left click and look across the ground: a selection box. Right click: give orders.
 - Move: with a selection, right click the ground.
 - Gather: select villagers, then right click a tree, a fruit bush, a mine or a farm.
 - Build: select villagers, right click them for the build menu, select a building, then left click the ground.

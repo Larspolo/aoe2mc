@@ -19,7 +19,6 @@ TEXTS = {                                                          # the keys of
     "building": "aoe2mc.hints.building",
     "building-paper": "aoe2mc.hints.building_paper",
     "corner": "aoe2mc.hints.corner",
-    "drag": "aoe2mc.hints.drag",
     "follow": "aoe2mc.hints.follow",
     "guard": "aoe2mc.hints.guard",
     "military": "aoe2mc.hints.military",
@@ -43,8 +42,6 @@ def count(kind, n):
 def state(g, player=None):
     """The hint state of player (None: a player with no own state) and its text (a text component)."""
     from build import pretty
-    if player in getattr(g, "holds", {}):                          # Paper: a held right click (#992)
-        return "drag", hint("drag")
     if player in g.corners:
         return "corner", hint("corner")
     if (order := getattr(g, "ordering", {}).get(player)) in ORDERS:   # the pending menu item (#3355, #3357, #3358)

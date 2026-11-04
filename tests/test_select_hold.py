@@ -1,12 +1,11 @@
-"""game/gather.py: on Paper a held right click of the command stick draws the selection box, a short one clicks as
-before (#1786, owner feedback in a demo). The first use of a hold waits HOLD seconds: a hold never gives an order."""
-import json
+"""game/gather.py: on Paper the command stick draws no selection box with the right click: a right click gives its
+order at once, and a held left click draws the box (#5759, before #1786). Vanilla keeps the wand."""
 import math
 
 from test_lang_orders import plain_log
 from test_select_type import setup
 
-from game import gather, hints, lang
+from game import gather, hints
 
 
 def paper():
@@ -31,80 +30,6 @@ def use(server, g, uses=1):
     return g.clicks()
 
 
-def test_a_short_click_waits_one_use_period_and_keeps_its_look():
-    server, g, now = paper()
-    look(server, (5.5, 13.5), (5.5, 10.5), y=1)                        # the militia m-1
-    assert use(server, g) == [] and not g.selected and "Steve" in g.pending
-    now[0] = gather.HOLD / 2
-    assert g.clicks() == []                                            # no next use yet, but in the time
-    now[0] = gather.HOLD
-    look(server, (5.5, 13.5), (30.5, 30.5))                            # the look moved after the click
-    assert g.clicks() == ["Steve"] and not g.pending
-    g.click("Steve")
-    assert g.selected == {"m-1"} and not g.corners and not g.holds
-
-
-def test_a_held_click_draws_the_box_from_the_first_cell():
-    server, g, now = paper()
-    g.select("v-1")
-    look(server, (2.5, 2.5), (2.5, 8.5))
-    assert use(server, g) == [] and any(c.startswith("aoe box Steve 2 8 ") for c in plain_log(server.log))   # at once (#3268)
-    look(server, (2.5, 2.5), (10.5, 18.5))
-    now[0] = 0.2                                                       # the next use of the held button
-    assert use(server, g) == [] and g.holds == {"Steve": 0.2} and g.corners["Steve"] == (2, 8)
-    assert hints.state(g, "Steve")[0] == "drag"
-    for t in (0.4, 0.6):
-        now[0] = t
-        assert use(server, g) == [] and g.holds == {"Steve": t}
-    assert g.selected == {"v-1"}                                       # no click and no order during the hold
-    assert not any(c.startswith(("aoe moveto", "aoe attack")) for c in plain_log(server.log))
-    now[0] = 1.2
-    assert g.clicks() == [] and not g.holds and not g.corners
-    assert g.selected == {"m-1", "m-2", "m-3", "a-1"}                  # military units win, as Gather.box
-
-
-def test_two_uses_in_one_call_are_a_hold():
-    server, g, now = paper()
-    look(server, (2.5, 2.5), (2.5, 8.5))
-    assert use(server, g, uses=2) == [] and "Steve" in g.holds and not g.pending
-
-
-def test_a_hold_on_a_selected_villager_opens_no_menu():
-    server, g, now = paper()
-    g.select("v-1")
-    look(server, (12.5, 1.5), (12.5, 4.5))
-    use(server, g)
-    now[0] = 0.2
-    use(server, g)
-    assert "Steve" not in g.menus and "Steve" in g.holds
-
-
-def test_a_release_on_the_start_cell_cancels_the_box():
-    server, g, now = paper()
-    g.select("v-1")
-    look(server, (2.5, 2.5), (2.5, 8.5))
-    use(server, g)
-    now[0] = 0.2
-    use(server, g)
-    now[0] = 1.0
-    server.log.clear()
-    assert g.clicks() == [] and not g.holds and not g.corners and g.selected == {"v-1"}
-    assert 'title Steve actionbar ' + json.dumps(lang.text("aoe2mc.gather.box_cancelled")) in server.log
-
-
-def test_an_empty_box_clears_the_selection():
-    server, g, now = paper()
-    g.select("m-1")
-    look(server, (25.5, 25.5), (25.5, 30.5))
-    use(server, g)
-    look(server, (25.5, 25.5), (30.5, 35.5))
-    now[0] = 0.2
-    use(server, g)
-    now[0] = 1.0
-    g.clicks()
-    assert g.selected == set()
-
-
 def test_paper_gives_no_wand_and_vanilla_keeps_it():
     server, g, _ = paper()
     look(server, (2.5, 2.5), (2.5, 8.5))
@@ -127,4 +52,4 @@ def test_a_chosen_building_places_at_once(monkeypatch):
     server, g, now = paper()
     monkeypatch.setattr(gather.build, "chosen", lambda g, name: "HOUSE")
     look(server, (2.5, 2.5), (2.5, 8.5))
-    assert use(server, g) == ["Steve"] and not g.pending               # no box while a foundation waits
+    assert use(server, g) == ["Steve"] and not g.corners              # no box while a foundation waits

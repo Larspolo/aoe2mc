@@ -131,6 +131,14 @@ final class Camera implements Listener {
         return true;
     }
 
+    /** The reach of p in the mode: 0, but the normal reach while p holds the command stick (stick), so that the
+     *  client sends the swings of a held left click for the selection box (Drag.java, #5759). */
+    void reach(Player p, boolean stick) {
+        if (floors.containsKey(p.getUniqueId())) {
+            modifier(p, Attribute.BLOCK_INTERACTION_RANGE, REACH, stick ? 0 : -1);
+        }
+    }
+
     /** The normal walk speed and reach: also after a server stop in the mode (the walk speed is player data). */
     private static void reset(Player p) {
         p.setWalkSpeed(WALK);
