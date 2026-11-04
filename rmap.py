@@ -736,8 +736,11 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     for s in sections:
         if s not in SECTIONS:
             warn(f"<{s}> is not read yet")
-    for directive, file in includes:               # random_map.def gives the constants; XS scripts are not run
-        if directive not in ("#include_drs", "read"):  # a missing #include_drs file: no error in AoE2 DE (#5317)
+    xs = None                                      # #includeXS: a file of the AoE2 profile, the converter takes --xs (#5666)
+    for directive, file in includes:               # random_map.def gives the constants
+        if directive == "#includeXS" and xs is None:
+            xs = file
+        elif directive not in ("#include_drs", "read"):  # a missing #include_drs file: no error in AoE2 DE (#5317)
             warn(f"{directive} {file} is not read")
     scn = base_scenario(folder, name, warn) if name and "LAND_GENERATION" not in sections else None
     if scn:                                          # a real world map: the land, levels and starts of the scenario
@@ -922,7 +925,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     if mode == "king-of-the-hill":                 # AoE2 DE puts the Monument of the mode at the map center (#5200)
         found = hill(found, n)
     return {"size": n, "terrain": terrain.tolist(), "elevation": elevation.tolist(), "layer": layer.tolist(),
-            "objects": found, **({"mood": mood} if mood else {}),
+            "objects": found, **({"mood": mood} if mood else {}), **({"xs_name": xs.removesuffix(".xs")} if xs else {}),
             "players": {str(p): {"color": p - 1} | ({"team": teams[p - 1]} if teams else {}) for p in range(1, players + 1)},
             "lands": [{k: v for k, v in st.items() if k != "land"} for st in starts]}
 

@@ -140,6 +140,8 @@ def order(g, player, cell):
         if (legs := walk(g, u, rect, pos[u])) is not None:
             g.trade[u] = {"home": home, "market": rect, "to": rect, "cell": legs[-1], "legs": legs,
                           "rest": rest.get(u, 0.0)}
+            import achievements
+            achievements.event(g, g, "trade route")                # Bull Market (#5646)
     g.mark(player, {(rect[0], rect[2]), (rect[1] - 1, rect[3] - 1)})
     return rect
 

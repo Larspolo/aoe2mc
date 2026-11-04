@@ -302,5 +302,9 @@ def tick(g):
             lang.text(f"aoe2mc.challenge.medal_{m}" if complete and m else "aoe2mc.challenge.no_medal", color="yellow")))
         g.medal = m if complete else None
         keep(g.challenge, g.medal)
+        import achievements
+        if g.medal:                                                 # Challenge Accepted, Going for the Gold (#5646)
+            achievements.event(g, g, "challenge medal")
+            achievements.event(g, g, f"challenge {g.medal}")
         return cheats.over(g, lambda p: p == g.player and complete and m is not None)
     show(g, c, now if c["medal"] == "time" else lost(g))

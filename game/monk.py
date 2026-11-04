@@ -355,6 +355,8 @@ def take(g, uuid):
     g.command(f"aoe stop {uuid}")
     owners.give(g, uuid, new)                                      # the lists of all sides (#2993)
     g.command(f"tellraw @a[team=p{g.player}] " + json.dumps(lang.text("aoe2mc.monk.converts", units.pretty(name), color="gold")))
+    import achievements  # achievements imports combat lazily; keep the import order of train (#3502)
+    achievements.event(g, g, f"convert {name}")                    # Losing Your Religion (#5646)
     import train  # train imports this module (#3502)
     g.command(f"execute at {uuid} run playsound {train.EVENT_SOUNDS['convert']} master @a ~ ~ ~ 1 1")
 
