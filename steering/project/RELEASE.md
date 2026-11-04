@@ -129,6 +129,7 @@ decision follows it. The roadmap review checks that each held ticket fits a kind
 | `convert:rms-lobby` | A | 4 | | |
 | `convert:rms-zr` | A | 4 | | |
 | `convert:export` | A | 6 | | |
+| `convert:editor` | C | 5 | | |
 | `convert:resource-pack` | C | | | |
 | `convert:trigger-gaps` | C | | | |
 | `convert-check-maps` | B | 5 | A test set of 20 real maps (the ranked map pool, 3 campaigns, 2 old .scx scenarios) converts with no error, no unit in a block and no load error on a server | #2274 |
