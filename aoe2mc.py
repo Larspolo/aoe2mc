@@ -5811,7 +5811,8 @@ def lang_files(path=TEXTS):
     with open(path, encoding="utf-8") as f:
         rows = [json.loads(s) for s in f if s.strip()]
     if path == TEXTS:                                  # the step texts and goals of the game data (#5377)
-        rows += [{"name": f"aoe2mc.{m}{r['name']}", "en_us": r[k]} for m, k, t in (
+        rows += [{"name": f"aoe2mc.{m}{r['name']}", "en_us": r[k]} |    # "<key>_<code>": a translation (#5436)
+                 {c[len(k) + 1:]: v for c, v in r.items() if c.startswith(k + "_")} for m, k, t in (
             ("tutorial.", "text", "tutorial.jsonl"), ("tutorial.tip_", "tip", "tutorial.jsonl"),   # the tips (#5505)
             ("challenge.", "goal", "challenges.jsonl"))
             for r in map(json.loads, open(os.path.join(os.path.dirname(path), t), encoding="utf-8")) if r.get(k)]

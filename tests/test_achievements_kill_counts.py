@@ -8,7 +8,7 @@ import achievements  # noqa: E402
 import build  # noqa: E402
 
 ROWS = [{"name": "TREBS", "event": "count:kill", "by": ["TREBUCHET"], "need": 3},
-        {"name": "DARK_MILITIA", "event": "count:kill", "killed": ["villagers"], "by": ["MILITIA"], "need": 2, "ages": 0},
+        {"name": "DARK_MILITIA", "event": "count:kill", "killed": ["villagers"], "by": ["MILITIA"], "need": 2, "age": 0},
         {"name": "SHU_GUARDS", "event": "count:kill", "by": ["WHITE_FEATHER_GUARD"], "need": 1, "civ": "SHU"}]
 GRANT = "advancement grant @a[team=p1] only aoe2mc:"
 
