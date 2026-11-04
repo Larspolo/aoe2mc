@@ -59,21 +59,30 @@ def objects(data, state, pos):
     T, out = data["tile_size"], []
     live = alive(state) if state else None
     ruins, empty, done = set(), set(), []
+    seen, left = set(), set()                                          # trees, bushes and fish (#5672)
     for x in (state or {}).get("players", {}).values():
         ruins |= {tuple(r) for r in savegame.unpack(x.get("ruins", {"set": []}))}
         for tiles in savegame.unpack(x.get("map", {}).get("mines", {})).values():
             empty |= {tuple(t) for t, amount in tiles.items() if amount <= 0}
+        for key in ("bushes", "fish", "trees"):
+            if key in x.get("map", {}):
+                tiles = savegame.unpack(x["map"][key])
+                seen |= {tuple(t) for t in tiles}
+                left |= {tuple(t) for t, amount in tiles.items() if amount > 0}
         done += [s for s in savegame.unpack(x.get("sites", [])) if s.get("progress", 0) >= 1]
+    empty |= seen - left                                               # a cut tree, an empty bush or fish
     for o in data["objects"]:
         tile = tuple(o["tile"])
         if o["kind"] == "unit" and live is not None and o.get("uuid") and o["player"] and o["uuid"] not in live:
             continue                                                   # killed in the game
+        if o["kind"] == "unit" and state is not None and o.get("uuid") and not o["player"] and o["uuid"] not in pos:
+            continue                                                   # a hunted animal: no entity left (#5672)
         if o["kind"] == "building" and "footprint" in o:
             x0, z0, x1, z1 = o["footprint"]
             if (x0, x1, z0, z1) in ruins:
                 continue
         if o["kind"] == "other" and (int(tile[0]), int(tile[1])) in empty:
-            continue                                                   # a mined mine
+            continue                                                   # a mined mine, a cut tree or an empty food source
         if o.get("uuid") in pos:
             tile = tuple(v / T for v in pos[o["uuid"]])
         player = live.get(o.get("uuid"), o["player"]) if live else o["player"]   # a converted unit (monk)
