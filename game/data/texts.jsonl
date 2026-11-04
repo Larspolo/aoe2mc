@@ -1,283 +1,283 @@
-{"name": "aoe2mc.age_up", "en_us": "Player %s advances to the %s.", "de_de": "Spieler %s erreicht die %s."}
-{"name": "aoe2mc.build.cost", "en_us": "Not enough resources: a %s costs %s.", "de_de": "Nicht genug Rohstoffe: ein %s kostet %s."}
-{"name": "aoe2mc.build.flat", "en_us": "The %s must stand on flat ground.", "de_de": "%s muss auf ebenem Boden stehen."}
-{"name": "aoe2mc.build.gate_spot", "en_us": "A %s must go on 4 tiles of an own wall in a straight line, or on 3 diagonal tiles.", "de_de": "Ein %s muss auf 4 Feldern einer eigenen Mauer in gerader Linie stehen oder auf 3 diagonalen Feldern."}
-{"name": "aoe2mc.build.locked", "en_us": "%s: %s.", "de_de": "%s: %s."}
-{"name": "aoe2mc.build.menu_head", "en_us": "Build: ", "de_de": "Bauen: "}
-{"name": "aoe2mc.build.menu_line", "en_us": "/trigger aoe_build set %s: %s (%s)", "de_de": "/trigger aoe_build set %s: %s (%s)"}
-{"name": "aoe2mc.build.shore", "en_us": "A %s must stand on water next to the shore.", "de_de": "Ein %s muss auf dem Wasser neben dem Ufer stehen."}
-{"name": "aoe2mc.build.space", "en_us": "No space for the %s here.", "de_de": "Hier ist kein Platz für %s."}
-{"name": "aoe2mc.build.tiles_cost", "en_us": "Not enough resources: %s tiles of %s cost %s.", "de_de": "Nicht genug Rohstoffe: %s Felder %s kosten %s."}
-{"name": "aoe2mc.build.wall_end", "en_us": "%s: right click the end of the wall.", "de_de": "%s: Rechtsklick auf das Ende der Mauer."}
-{"name": "aoe2mc.build.water", "en_us": "A %s must stand on the water.", "de_de": "Ein %s muss auf dem Wasser stehen."}
-{"name": "aoe2mc.battle_royale.start", "en_us": "Battle Royale: the Corruption takes the map from its border to its center in %s. It destroys all units and buildings in it.", "de_de": "Battle Royale: Die Verderbnis nimmt die Karte in %s vom Rand bis zur Mitte ein. Sie zerstört alle Einheiten und Gebäude darin."}
-{"name": "aoe2mc.challenge.lost_bronze", "en_us": "%s units lost, bronze medal up to %s", "de_de": "%s Einheiten verloren, Bronzemedaille bis %s"}
-{"name": "aoe2mc.challenge.lost_gold", "en_us": "%s units lost, gold medal up to %s", "de_de": "%s Einheiten verloren, Goldmedaille bis %s"}
-{"name": "aoe2mc.challenge.lost_none", "en_us": "%s units lost, no medal", "de_de": "%s Einheiten verloren, keine Medaille"}
-{"name": "aoe2mc.challenge.lost_silver", "en_us": "%s units lost, silver medal up to %s", "de_de": "%s Einheiten verloren, Silbermedaille bis %s"}
-{"name": "aoe2mc.challenge.medal_bronze", "en_us": "Bronze medal", "de_de": "Bronzemedaille"}
-{"name": "aoe2mc.challenge.medal_gold", "en_us": "Gold medal", "de_de": "Goldmedaille"}
-{"name": "aoe2mc.challenge.medal_silver", "en_us": "Silver medal", "de_de": "Silbermedaille"}
-{"name": "aoe2mc.challenge.no_medal", "en_us": "No medal", "de_de": "Keine Medaille"}
-{"name": "aoe2mc.challenge.time_bronze", "en_us": "Bronze medal in %s", "de_de": "Bronzemedaille in %s"}
-{"name": "aoe2mc.challenge.time_gold", "en_us": "Gold medal in %s", "de_de": "Goldmedaille in %s"}
-{"name": "aoe2mc.challenge.time_silver", "en_us": "Silver medal in %s", "de_de": "Silbermedaille in %s"}
-{"name": "aoe2mc.conquest.allies_end", "en_us": "Only allies are left: the alliances end. The last player alive wins.", "de_de": "Nur Verbündete sind übrig: Die Bündnisse enden. Der letzte lebende Spieler gewinnt."}
-{"name": "aoe2mc.conquest.defeated", "en_us": "Player %s is defeated.", "de_de": "Spieler %s ist besiegt."}
-{"name": "aoe2mc.controls.head", "en_us": "Controls (hold the carrot on a stick; the action bar shows the next step):", "de_de": "Steuerung (halte die Karottenrute; die Aktionsleiste zeigt den nächsten Schritt):"}
-{"name": "aoe2mc.controls.select", "en_us": "Select: right click a unit. Hold right click and look across the ground: a selection box.", "de_de": "Auswählen: Rechtsklick auf eine Einheit. Rechtsklick halten und über den Boden schauen: ein Auswahlrahmen."}
-{"name": "aoe2mc.controls.move", "en_us": "Move: with a selection, right click the ground.", "de_de": "Bewegen: mit einer Auswahl Rechtsklick auf den Boden."}
-{"name": "aoe2mc.controls.gather", "en_us": "Gather: select villagers, then right click a tree, a fruit bush, a mine or a farm.", "de_de": "Sammeln: Dorfbewohner auswählen, dann Rechtsklick auf einen Baum, einen Beerenstrauch, eine Mine oder ein Feld."}
-{"name": "aoe2mc.controls.build", "en_us": "Build: select villagers, right click them for the build menu, select a building, then left click the ground. Shift + left click: place more. Right click: cancel.", "de_de": "Bauen: Dorfbewohner auswählen, Rechtsklick auf sie für das Baumenü, ein Gebäude wählen, dann Linksklick auf den Boden. Umschalt + Linksklick: mehr platzieren. Rechtsklick: abbrechen."}
-{"name": "aoe2mc.controls.train", "en_us": "Train: right click your own building (town center, barracks ...) and click a unit in its menu.", "de_de": "Ausbilden: Rechtsklick auf dein eigenes Gebäude (Dorfzentrum, Kaserne ...) und eine Einheit in seinem Menü anklicken."}
-{"name": "aoe2mc.controls.attack", "en_us": "Attack: select military units, then right click an enemy.", "de_de": "Angreifen: Militäreinheiten auswählen, dann Rechtsklick auf einen Feind."}
-{"name": "aoe2mc.controls.research", "en_us": "Research and age up: right click your own building and click a technology or the next age in its menu.", "de_de": "Erforschen und Zeitalter aufsteigen: Rechtsklick auf dein eigenes Gebäude und eine Technologie oder das nächste Zeitalter in seinem Menü anklicken."}
-{"name": "aoe2mc.controls.garrison", "en_us": "Garrison: select units, then right click your own building. Its menu lets them out. Town center menu: Ring Town Bell.", "de_de": "Stationieren: Einheiten auswählen, dann Rechtsklick auf dein eigenes Gebäude. Sein Menü lässt sie heraus. Menü des Dorfzentrums: Stadtglocke läuten."}
-{"name": "aoe2mc.controls.camera", "en_us": "Camera: right click with the spyglass Camera (hotbar key 2): you walk fast high above the map. Shift right click: the next speed. Right click again: you fly down.", "de_de": "Kamera: Rechtsklick mit dem Fernrohr Kamera (Hotbar-Taste 2): Du gehst schnell hoch über der Karte. Umschalt + Rechtsklick: die nächste Geschwindigkeit. Erneuter Rechtsklick: Du fliegst nach unten."}
-{"name": "aoe2mc.controls.goto", "en_us": "Go to: right click with the compass Go to (hotbar key 3): a menu of your town centers, your control groups and the next idle villager.", "de_de": "Gehe zu: Rechtsklick mit dem Kompass Gehe zu (Hotbar-Taste 3): ein Menü deiner Dorfzentren, deiner Steuergruppen und des nächsten untätigen Dorfbewohners."}
-{"name": "aoe2mc.controls.menu", "en_us": "Game menu: right click with the book Game menu (hotbar key 4): diplomacy and tribute, flare, save, pause and the tech tree.", "de_de": "Spielmenü: Rechtsklick mit dem Buch Spielmenü (Hotbar-Taste 4): Diplomatie und Tribut, Signal, Speichern, Pause und der Technologiebaum."}
-{"name": "aoe2mc.controls.groups", "en_us": "Control groups: select units, take a group item (hotbar keys 5 to 9) and Shift + right click to save the selection. Right click: select the group.", "de_de": "Steuergruppen: Einheiten auswählen, ein Gruppen-Item nehmen (Hotbar-Tasten 5 bis 9) und Umschalt + Rechtsklick, um die Auswahl zu speichern. Rechtsklick: die Gruppe auswählen."}
-{"name": "aoe2mc.defeat", "en_us": "Defeat", "de_de": "Niederlage"}
-{"name": "aoe2mc.flare.placed", "en_us": "%s: Flare at %s %s", "de_de": "%s: Signal bei %s %s"}
-{"name": "aoe2mc.follow.refuse_follow", "en_us": "Follow: click an own unit", "de_de": "Folgen: eine eigene Einheit anklicken"}
-{"name": "aoe2mc.follow.refuse_guard", "en_us": "Guard: click an own unit or building", "de_de": "Bewachen: eine eigene Einheit oder ein eigenes Gebäude anklicken"}
-{"name": "aoe2mc.gaia.joins", "en_us": "A %s joins you.", "de_de": "Ein %s schließt sich dir an."}
-{"name": "aoe2mc.garrison.all_back", "en_us": "All back to work", "de_de": "Alle zurück an die Arbeit"}
-{"name": "aoe2mc.garrison.bell_seek", "en_us": "The town bell rings: %s villagers seek shelter", "de_de": "Die Stadtglocke läutet: %s Dorfbewohner suchen Schutz"}
-{"name": "aoe2mc.garrison.no_villager", "en_us": "No villager is selected.", "de_de": "Kein Dorfbewohner ist ausgewählt."}
-{"name": "aoe2mc.garrison.no_villagers", "en_us": "You have no villagers.", "de_de": "Du hast keine Dorfbewohner."}
-{"name": "aoe2mc.garrison.out", "en_us": "%s units came out", "de_de": "%s Einheiten kamen heraus"}
-{"name": "aoe2mc.garrison.seek_shelter", "en_us": "%s villagers seek shelter", "de_de": "%s Dorfbewohner suchen Schutz"}
-{"name": "aoe2mc.gather.act_attack", "en_us": "attack", "de_de": "angreifen"}
-{"name": "aoe2mc.gather.act_build_menu", "en_us": "build menu", "de_de": "Baumenü"}
-{"name": "aoe2mc.gather.act_garrison", "en_us": "garrison", "de_de": "stationieren"}
-{"name": "aoe2mc.gather.act_gather", "en_us": "gather", "de_de": "sammeln"}
-{"name": "aoe2mc.gather.act_hunt", "en_us": "hunt", "de_de": "jagen"}
-{"name": "aoe2mc.gather.act_move", "en_us": "move", "de_de": "bewegen"}
-{"name": "aoe2mc.gather.act_select", "en_us": "select", "de_de": "auswählen"}
-{"name": "aoe2mc.gather.act_select_type", "en_us": "select all of the type", "de_de": "alle dieses Typs auswählen"}
-{"name": "aoe2mc.gather.act_trade", "en_us": "trade", "de_de": "handeln"}
-{"name": "aoe2mc.gather.act_train", "en_us": "train", "de_de": "ausbilden"}
-{"name": "aoe2mc.gather.attack_siege", "en_us": "Attack: %s (%s/%s)", "de_de": "Angriff: %s (%s/%s)"}
-{"name": "aoe2mc.gather.box_cancelled", "en_us": "Selection box: cancelled", "de_de": "Auswahlrahmen: abgebrochen"}
-{"name": "aoe2mc.gather.bush", "en_us": "Berry bush", "de_de": "Beerenstrauch"}
-{"name": "aoe2mc.gather.carcass", "en_us": "Carcass", "de_de": "Kadaver"}
-{"name": "aoe2mc.gather.corner", "en_us": "Selection box: click the other corner", "de_de": "Auswahlrahmen: die andere Ecke anklicken"}
-{"name": "aoe2mc.gather.corner_paper", "en_us": "Selection box: look at the other corner and release", "de_de": "Auswahlrahmen: auf die andere Ecke schauen und loslassen"}
-{"name": "aoe2mc.gather.enemy", "en_us": "Enemy %s", "de_de": "Feind %s"}
-{"name": "aoe2mc.gather.enemy_building", "en_us": "Enemy building", "de_de": "Feindliches Gebäude"}
-{"name": "aoe2mc.gather.farm", "en_us": "Farm", "de_de": "Feld"}
-{"name": "aoe2mc.gather.ground", "en_us": "Ground", "de_de": "Boden"}
-{"name": "aoe2mc.gather.group", "en_us": "Group %s: %s units", "de_de": "Gruppe %s: %s Einheiten"}
-{"name": "aoe2mc.gather.group_saved", "en_us": "Group %s: %s units saved", "de_de": "Gruppe %s: %s Einheiten gespeichert"}
-{"name": "aoe2mc.gather.mine", "en_us": "%s mine", "de_de": "%smine"}
-{"name": "aoe2mc.gather.paused", "en_us": "The game is paused.", "de_de": "Das Spiel ist pausiert."}
-{"name": "aoe2mc.gather.point", "en_us": "%s · Right click: %s", "de_de": "%s · Rechtsklick: %s"}
-{"name": "aoe2mc.gather.point_name", "en_us": "%s", "de_de": "%s"}
-{"name": "aoe2mc.gather.reseeds", "en_us": "Reseeds queued: %s", "de_de": "Neuaussaaten in Warteschlange: %s"}
-{"name": "aoe2mc.gather.selected", "en_us": "Selected: %s units", "de_de": "Ausgewählt: %s Einheiten"}
-{"name": "aoe2mc.gather.tree", "en_us": "Tree", "de_de": "Baum"}
-{"name": "aoe2mc.hints.attack_ground", "en_us": "Attack Ground: right click the ground", "de_de": "Boden angreifen: Rechtsklick auf den Boden"}
-{"name": "aoe2mc.hints.attack_move", "en_us": "Attack Move: right click the ground", "de_de": "Angriffsbewegung: Rechtsklick auf den Boden"}
-{"name": "aoe2mc.hints.building", "en_us": "Place the %s: right click the ground · Shift + right click: place more · Cancel: /trigger aoe_build set 0", "de_de": "%s platzieren: Rechtsklick auf den Boden · Umschalt + Rechtsklick: mehr platzieren · Abbrechen: /trigger aoe_build set 0"}
-{"name": "aoe2mc.hints.building_paper", "en_us": "%s: left click to place · Shift: place more · Right click: cancel", "de_de": "%s: Linksklick zum Platzieren · Umschalt: mehr platzieren · Rechtsklick: abbrechen"}
-{"name": "aoe2mc.hints.corner", "en_us": "Selection box: right click the other corner", "de_de": "Auswahlrahmen: Rechtsklick auf die andere Ecke"}
-{"name": "aoe2mc.hints.count_military", "en_us": "%s military unit", "de_de": "%s Militäreinheit"}
-{"name": "aoe2mc.hints.count_military_many", "en_us": "%s military units", "de_de": "%s Militäreinheiten"}
-{"name": "aoe2mc.hints.count_villager", "en_us": "%s villager", "de_de": "%s Dorfbewohner"}
-{"name": "aoe2mc.hints.count_villager_many", "en_us": "%s villagers", "de_de": "%s Dorfbewohner"}
-{"name": "aoe2mc.hints.deselect", "en_us": "Empty box: deselect", "de_de": "Leerer Rahmen: Auswahl aufheben"}
-{"name": "aoe2mc.hints.deselect_paper", "en_us": "Left click: deselect", "de_de": "Linksklick: Auswahl aufheben"}
-{"name": "aoe2mc.hints.drag", "en_us": "Selection box: hold right click, look at the other corner, release · Release here: cancel", "de_de": "Auswahlrahmen: Rechtsklick halten, auf die andere Ecke schauen, loslassen · Hier loslassen: abbrechen"}
-{"name": "aoe2mc.hints.follow", "en_us": "Follow: right click an own or allied unit", "de_de": "Folgen: Rechtsklick auf eine eigene oder verbündete Einheit"}
-{"name": "aoe2mc.hints.guard", "en_us": "Guard: right click an own or allied unit or building", "de_de": "Bewachen: Rechtsklick auf eine eigene oder verbündete Einheit oder ein Gebäude"}
-{"name": "aoe2mc.hints.military", "en_us": "%s · Right click: attack an enemy, stance menu · %s", "de_de": "%s · Rechtsklick: einen Feind angreifen, Haltungsmenü · %s"}
-{"name": "aoe2mc.hints.none", "en_us": "Left click: select a unit · Hold right click: selection box", "de_de": "Linksklick: eine Einheit auswählen · Rechtsklick halten: Auswahlrahmen"}
-{"name": "aoe2mc.hints.none_wand", "en_us": "Right click: select a unit · Wand: selection box", "de_de": "Rechtsklick: eine Einheit auswählen · Stab: Auswahlrahmen"}
-{"name": "aoe2mc.hints.patrol", "en_us": "Patrol: right click the ground", "de_de": "Patrouillieren: Rechtsklick auf den Boden"}
-{"name": "aoe2mc.hints.pointing", "en_us": "%s · %s", "de_de": "%s · %s"}
-{"name": "aoe2mc.hints.villagers", "en_us": "%s · Right click: gather, build, build menu · %s", "de_de": "%s · Rechtsklick: sammeln, bauen, Baumenü · %s"}
-{"name": "aoe2mc.monk.converts", "en_us": "A monk converts the %s.", "de_de": "Ein Mönch bekehrt %s."}
-{"name": "aoe2mc.monk.dies", "en_us": "The %s dies (Heresy).", "de_de": "%s stirbt (Häresie)."}
-{"name": "aoe2mc.pause.continued", "en_us": "Player %s continued the game.", "de_de": "Spieler %s hat das Spiel fortgesetzt."}
-{"name": "aoe2mc.pause.paused", "en_us": "Player %s paused the game.", "de_de": "Spieler %s hat das Spiel pausiert."}
-{"name": "aoe2mc.repair.no_resources", "en_us": "Not enough resources to repair the %s.", "de_de": "Nicht genug Rohstoffe, um %s zu reparieren."}
-{"name": "aoe2mc.siege_tower.out", "en_us": "%s units came out", "de_de": "%s Einheiten kamen heraus"}
-{"name": "aoe2mc.stance.auto_scout", "en_us": "Auto Scout", "de_de": "Automatisch erkunden"}
-{"name": "aoe2mc.stance.formation", "en_us": "Formation: %s", "de_de": "Formation: %s"}
-{"name": "aoe2mc.stance.no_ground", "en_us": "No unit can attack the ground", "de_de": "Keine Einheit kann den Boden angreifen"}
-{"name": "aoe2mc.stance.unpack", "en_us": "Unpack the Trebuchet first", "de_de": "Zuerst das Trebuchet aufbauen"}
-{"name": "aoe2mc.transport.out", "en_us": "%s units came out", "de_de": "%s Einheiten kamen heraus"}
-{"name": "aoe2mc.diplomacy.ally", "en_us": "Ally", "de_de": "Verbündeter"}
-{"name": "aoe2mc.diplomacy.changed", "en_us": "Player %s changed its stance to you: %s.", "de_de": "Spieler %s hat seine Haltung dir gegenüber geändert: %s."}
-{"name": "aoe2mc.diplomacy.enemy", "en_us": "Enemy", "de_de": "Feind"}
-{"name": "aoe2mc.diplomacy.neutral", "en_us": "Neutral", "de_de": "Neutral"}
-{"name": "aoe2mc.diplomacy.speed", "en_us": "Player %s set the game speed to %s.", "de_de": "Spieler %s hat die Spielgeschwindigkeit auf %s gesetzt."}
-{"name": "aoe2mc.diplomacy.tribute", "en_us": "Player %s sent %s %s to player %s.", "de_de": "Spieler %s hat %s %s an Spieler %s gesendet."}
-{"name": "aoe2mc.hill.holds", "en_us": "Player %s holds the monument.", "de_de": "Spieler %s hält das Monument."}
-{"name": "aoe2mc.relic_victory.all", "en_us": "Player %s holds all relics.", "de_de": "Spieler %s hält alle Reliquien."}
-{"name": "aoe2mc.relic_victory.lost", "en_us": "Player %s lost a relic.", "de_de": "Spieler %s hat eine Reliquie verloren."}
-{"name": "aoe2mc.replay.army_end", "en_us": ", army at the end: %s", "de_de": ", Armee am Ende: %s"}
-{"name": "aoe2mc.replay.army_lost", "en_us": ", lost: %s", "de_de": ", verloren: %s"}
-{"name": "aoe2mc.replay.carries", "en_us": " | carries %s %s", "de_de": " | trägt %s %s"}
-{"name": "aoe2mc.replay.flare", "en_us": "Flare", "de_de": "Signal"}
-{"name": "aoe2mc.replay.game_ends", "en_us": "The game ends", "de_de": "Das Spiel endet"}
-{"name": "aoe2mc.replay.game_time", "en_us": "Game time %s", "de_de": "Spielzeit %s"}
-{"name": "aoe2mc.replay.garrison", "en_us": " · garrison %s", "de_de": " · stationiert %s"}
-{"name": "aoe2mc.replay.hill_won", "en_us": "%s held the monument: King of the Hill victory at %s.", "de_de": "%s hielt das Monument: Sieg (König des Hügels) um %s."}
-{"name": "aoe2mc.replay.inspect", "en_us": "%s (%s): %s/%s | %s%s | %s atk %s/%s arm%s", "de_de": "%s (%s): %s/%s | %s%s | %s Angr. %s/%s Rüst.%s"}
-{"name": "aoe2mc.replay.join_help", "en_us": "Double-tap Shift: spectator view (fly through blocks). Right click the hotbar items: replay control.", "de_de": "Zweimal Umschalt drücken: Zuschaueransicht (durch Blöcke fliegen). Rechtsklick auf die Hotbar-Items: Steuerung der Wiederholung."}
-{"name": "aoe2mc.replay.king_died", "en_us": ": the King died at %s. Regicide: the player is out.", "de_de": ": der König starb um %s. Königsmord: der Spieler ist raus."}
-{"name": "aoe2mc.replay.king_killed", "en_us": "King killed at %s", "de_de": "König getötet um %s"}
-{"name": "aoe2mc.replay.live_jump", "en_us": "Live replay: the jump stops at the delay behind the game.", "de_de": "Live-Wiederholung: der Sprung hält an der Verzögerung hinter dem Spiel."}
-{"name": "aoe2mc.replay.monument_holds", "en_us": " holds the monument at %s.", "de_de": " hält das Monument um %s."}
-{"name": "aoe2mc.replay.monument_year", "en_us": "%s: monument, %s year left", "de_de": "%s: Monument, noch %s Jahr"}
-{"name": "aoe2mc.replay.monument_years", "en_us": "%s: monument, %s years left", "de_de": "%s: Monument, noch %s Jahre"}
-{"name": "aoe2mc.replay.no_camera", "en_us": "This record has no camera of its player.", "de_de": "Diese Aufnahme hat keine Kamera ihres Spielers."}
-{"name": "aoe2mc.replay.out", "en_us": "%s is out", "de_de": "%s ist raus"}
-{"name": "aoe2mc.replay.players", "en_us": "Players", "de_de": "Spieler"}
-{"name": "aoe2mc.replay.range", "en_us": " r%s", "de_de": " R%s"}
-{"name": "aoe2mc.replay.relic_won", "en_us": " takes the relic to a monastery and wins.", "de_de": " bringt die Reliquie in ein Kloster und gewinnt."}
-{"name": "aoe2mc.replay.replay_ended", "en_us": "Replay ended", "de_de": "Wiederholung beendet"}
-{"name": "aoe2mc.replay.research", "en_us": " researches %s", "de_de": " erforscht %s"}
-{"name": "aoe2mc.replay.resigns", "en_us": "%s resigns", "de_de": "%s gibt auf"}
-{"name": "aoe2mc.replay.restart_jump", "en_us": "The server restarts for the jump back: join it again.", "de_de": "Der Server startet für den Sprung zurück neu: tritt ihm erneut bei."}
-{"name": "aoe2mc.replay.sum_economy", "en_us": ": villagers trained %s, gathered %s, idle villager time %s, idle TC time %s", "de_de": ": Dorfbewohner ausgebildet %s, gesammelt %s, Leerlauf Dorfbewohner %s, Leerlauf DZ %s"}
-{"name": "aoe2mc.replay.sum_hill_holds", "en_us": ": holds the monument (King of the Hill)", "de_de": ": hält das Monument (König des Hügels)"}
-{"name": "aoe2mc.replay.sum_hill_won", "en_us": ": monument won %s (King of the Hill)", "de_de": ": Monument gewonnen %s (König des Hügels)"}
-{"name": "aoe2mc.replay.sum_military", "en_us": ": military units trained %s, units lost %s, buildings lost %s, APM %s%s", "de_de": ": Militäreinheiten ausgebildet %s, Einheiten verloren %s, Gebäude verloren %s, APM %s%s"}
-{"name": "aoe2mc.replay.sum_regicide", "en_us": ": King killed %s (Regicide)", "de_de": ": König getötet %s (Königsmord)"}
-{"name": "aoe2mc.replay.sum_relic", "en_us": ": wins, relic in a monastery %s (Capture the Relic)", "de_de": ": gewinnt, Reliquie in einem Kloster %s (Reliquien erobern)"}
-{"name": "aoe2mc.replay.sum_society", "en_us": ": %stribute sent %s, received %s, villager high %s (est.)", "de_de": ": %sTribut gesendet %s, erhalten %s, Dorfbewohner Höchststand %s (geschätzt)"}
-{"name": "aoe2mc.replay.sum_sudden_death", "en_us": ": town center lost %s (Sudden Death)", "de_de": ": Dorfzentrum verloren %s (Plötzlicher Tod)"}
-{"name": "aoe2mc.replay.sum_techs", "en_us": ": %s, technologies %s", "de_de": ": %s, Technologien %s"}
-{"name": "aoe2mc.replay.sum_wonder", "en_us": ": wonder timer from %s, ends %s (%s)", "de_de": ": Weltwunder-Timer ab %s, endet %s (%s)"}
-{"name": "aoe2mc.replay.summary", "en_us": "Summary (est.)", "de_de": "Zusammenfassung (geschätzt)"}
-{"name": "aoe2mc.replay.tl_castle", "en_us": "Castle", "de_de": "Burg"}
-{"name": "aoe2mc.replay.tl_king", "en_us": "King killed", "de_de": "König getötet"}
-{"name": "aoe2mc.replay.tl_military", "en_us": "1st military: %s", "de_de": "1. Militär: %s"}
-{"name": "aoe2mc.replay.tl_relic", "en_us": "Relic", "de_de": "Reliquie"}
-{"name": "aoe2mc.replay.tl_resigns", "en_us": "Resigns", "de_de": "Gibt auf"}
-{"name": "aoe2mc.replay.town_fell", "en_us": ": the town center fell at %s. Sudden Death: the player is out.", "de_de": ": das Dorfzentrum fiel um %s. Plötzlicher Tod: der Spieler ist raus."}
-{"name": "aoe2mc.replay.town_lost", "en_us": "Town center lost at %s", "de_de": "Dorfzentrum verloren um %s"}
-{"name": "aoe2mc.replay.wonder_built", "en_us": " built a wonder at %s.", "de_de": " baute ein Weltwunder um %s."}
-{"name": "aoe2mc.replay.eco_build", "en_us": "build %s", "de_de": "bauen %s"}
-{"name": "aoe2mc.replay.eco_food", "en_us": "food %s", "de_de": "Nahrung %s"}
-{"name": "aoe2mc.replay.eco_gold", "en_us": "gold %s", "de_de": "Gold %s"}
-{"name": "aoe2mc.replay.eco_idle", "en_us": "idle %s", "de_de": "untätig %s"}
-{"name": "aoe2mc.replay.eco_stone", "en_us": "stone %s", "de_de": "Stein %s"}
-{"name": "aoe2mc.replay.eco_wood", "en_us": "wood %s", "de_de": "Holz %s"}
-{"name": "aoe2mc.replay.soc_castle", "en_us": "castles %s, ", "de_de": "Burgen %s, "}
-{"name": "aoe2mc.replay.soc_market", "en_us": "bought %s, sold %s, ", "de_de": "gekauft %s, verkauft %s, "}
-{"name": "aoe2mc.replay.soc_relics", "en_us": "relics %s, ", "de_de": "Reliquien %s, "}
-{"name": "aoe2mc.replay.soc_wonder", "en_us": "wonders %s, ", "de_de": "Weltwunder %s, "}
-{"name": "aoe2mc.replay.spent", "en_us": "Spent:", "de_de": "Ausgegeben:"}
-{"name": "aoe2mc.replay.spent_buildings", "en_us": "Build %s", "de_de": "Bau %s"}
-{"name": "aoe2mc.replay.spent_economy", "en_us": "Eco %s", "de_de": "Wirt %s"}
-{"name": "aoe2mc.replay.spent_military", "en_us": "Mil %s", "de_de": "Mil %s"}
-{"name": "aoe2mc.replay.spent_technologies", "en_us": "Tech %s", "de_de": "Tech %s"}
-{"name": "aoe2mc.replay.task_building", "en_us": "building", "de_de": "baut"}
-{"name": "aoe2mc.replay.task_following", "en_us": "following", "de_de": "folgt"}
-{"name": "aoe2mc.replay.task_food", "en_us": "gathering food", "de_de": "sammelt Nahrung"}
-{"name": "aoe2mc.replay.task_garrisoned", "en_us": "garrisoned", "de_de": "stationiert"}
-{"name": "aoe2mc.replay.task_gold", "en_us": "gathering gold", "de_de": "sammelt Gold"}
-{"name": "aoe2mc.replay.task_guarding", "en_us": "guarding", "de_de": "bewacht"}
-{"name": "aoe2mc.replay.task_idle", "en_us": "idle", "de_de": "untätig"}
-{"name": "aoe2mc.replay.task_patrolling", "en_us": "patrolling", "de_de": "patrouilliert"}
-{"name": "aoe2mc.replay.task_resources", "en_us": "gathering resources", "de_de": "sammelt Rohstoffe"}
-{"name": "aoe2mc.replay.task_stone", "en_us": "gathering stone", "de_de": "sammelt Stein"}
-{"name": "aoe2mc.replay.task_walking", "en_us": "walking", "de_de": "geht"}
-{"name": "aoe2mc.replay.task_wood", "en_us": "gathering wood", "de_de": "sammelt Holz"}
-{"name": "aoe2mc.replay.up_counts", "en_us": "economy %s · University %s", "de_de": "Wirtschaft %s · Universität %s"}
-{"name": "aoe2mc.replay.army", "en_us": "Army: %s", "de_de": "Armee: %s"}
-{"name": "aoe2mc.replay.build_order", "en_us": "Build order:", "de_de": "Bauabfolge:"}
-{"name": "aoe2mc.replay.building_garrison", "en_us": " · garrison %s", "de_de": " · stationiert %s"}
-{"name": "aoe2mc.replay.building_hp", "en_us": "%s (%s): %s/%s", "de_de": "%s (%s): %s/%s"}
-{"name": "aoe2mc.replay.graph_mil", "en_us": "Mil %s %s", "de_de": "Mil %s %s"}
-{"name": "aoe2mc.replay.graph_pop", "en_us": "Pop %s %s", "de_de": "Bev %s %s"}
-{"name": "aoe2mc.replay.graph_res", "en_us": "Res %s %s", "de_de": "Roh %s %s"}
-{"name": "aoe2mc.replay.graph_vil", "en_us": "Vil %s %s", "de_de": "Dorf %s %s"}
-{"name": "aoe2mc.replay.tier_archer", "en_us": "Archer %s/%s", "de_de": "Bogenschützen %s/%s"}
-{"name": "aoe2mc.replay.tier_archer_armor", "en_us": "Archer armor %s/%s", "de_de": "Bogenschützenrüstung %s/%s"}
-{"name": "aoe2mc.replay.tier_carry", "en_us": "Carry %s/%s", "de_de": "Tragen %s/%s"}
-{"name": "aoe2mc.replay.tier_cavalry_armor", "en_us": "Cavalry armor %s/%s", "de_de": "Kavallerierüstung %s/%s"}
-{"name": "aoe2mc.replay.tier_farm", "en_us": "Farm %s/%s", "de_de": "Feld %s/%s"}
-{"name": "aoe2mc.replay.tier_gold", "en_us": "Gold %s/%s", "de_de": "Gold %s/%s"}
-{"name": "aoe2mc.replay.tier_infantry_armor", "en_us": "Infantry armor %s/%s", "de_de": "Infanterierüstung %s/%s"}
-{"name": "aoe2mc.replay.tier_loom", "en_us": "Loom %s/%s", "de_de": "Webstuhl %s/%s"}
-{"name": "aoe2mc.replay.tier_melee", "en_us": "Melee %s/%s", "de_de": "Nahkampf %s/%s"}
-{"name": "aoe2mc.replay.tier_stone", "en_us": "Stone %s/%s", "de_de": "Stein %s/%s"}
-{"name": "aoe2mc.replay.tier_wood", "en_us": "Wood %s/%s", "de_de": "Holz %s/%s"}
-{"name": "aoe2mc.replay.lost", "en_us": "Lost: %s", "de_de": "Verloren: %s"}
-{"name": "aoe2mc.replay.share_buildings", "en_us": "Buildings %s (%s)", "de_de": "Gebäude %s (%s)"}
-{"name": "aoe2mc.replay.share_economy", "en_us": "Economy %s (%s)", "de_de": "Wirtschaft %s (%s)"}
-{"name": "aoe2mc.replay.share_military", "en_us": "Military %s (%s)", "de_de": "Militär %s (%s)"}
-{"name": "aoe2mc.replay.share_technologies", "en_us": "Technologies %s (%s)", "de_de": "Technologien %s (%s)"}
-{"name": "aoe2mc.replay.share_total", "en_us": "Total %s", "de_de": "Gesamt %s"}
-{"name": "aoe2mc.replay.training", "en_us": "Training: %s", "de_de": "Ausbildung: %s"}
-{"name": "aoe2mc.replay.university", "en_us": "University:", "de_de": "Universität:"}
-{"name": "aoe2mc.replay_input.fights", "en_us": "Large fights:", "de_de": "Große Kämpfe:"}
-{"name": "aoe2mc.replay_input.help", "en_us": "Replay: right click the items in your hotbar, or click: ", "de_de": "Wiederholung: Rechtsklick auf die Items in deiner Hotbar, oder klicke: "}
-{"name": "aoe2mc.replay_input.units", "en_us": " (%s units)", "de_de": " (%s Einheiten)"}
-{"name": "aoe2mc.replay_input.vs", "en_us": " vs ", "de_de": " gegen "}
-{"name": "aoe2mc.resource.food", "en_us": "food", "de_de": "Nahrung"}
-{"name": "aoe2mc.resource.gold", "en_us": "gold", "de_de": "Gold"}
-{"name": "aoe2mc.resource.stone", "en_us": "stone", "de_de": "Stein"}
-{"name": "aoe2mc.resource.wood", "en_us": "wood", "de_de": "Holz"}
-{"name": "aoe2mc.treaty.ended", "en_us": "The treaty ended: players can attack now.", "de_de": "Der Vertrag ist beendet: Spieler können jetzt angreifen."}
-{"name": "aoe2mc.treaty.refuse", "en_us": "Treaty: you cannot attack before %s.", "de_de": "Vertrag: Du kannst nicht vor %s angreifen."}
-{"name": "aoe2mc.treaty.refuse_endless", "en_us": "Treaty: you cannot attack in this game.", "de_de": "Vertrag: Du kannst in diesem Spiel nicht angreifen."}
-{"name": "aoe2mc.treaty.start", "en_us": "Treaty: no player can attack another player before %s.", "de_de": "Vertrag: Kein Spieler kann vor %s einen anderen Spieler angreifen."}
-{"name": "aoe2mc.treaty.start_endless", "en_us": "Treaty: no player can attack another player in this game.", "de_de": "Vertrag: Kein Spieler kann in diesem Spiel einen anderen Spieler angreifen."}
-{"name": "aoe2mc.tutorial.complete", "en_us": "The tutorial is complete. Next: play a game against the bot: python3 game/run.py OUTWorld --play --bot", "de_de": "Das Tutorial ist abgeschlossen. Als Nächstes: Spiele ein Spiel gegen den Bot: python3 game/run.py OUTWorld --play --bot"}
-{"name": "aoe2mc.tutorial.complete_title", "en_us": "Tutorial complete", "de_de": "Tutorial abgeschlossen"}
-{"name": "aoe2mc.tutorial.step_done", "en_us": "Step done", "de_de": "Schritt erledigt"}
-{"name": "aoe2mc.tutorial.step_of", "en_us": "Step %s/%s: %s", "de_de": "Schritt %s/%s: %s"}
-{"name": "aoe2mc.victory", "en_us": "Victory", "de_de": "Sieg"}
-{"name": "aoe2mc.run.chat_hint", "en_us": "Chat: a normal line goes to all, /tm TEXT to your allies, /msg NAME TEXT to one person.", "de_de": "Chat: Eine normale Zeile geht an alle, /tm TEXT an deine Verbündeten, /msg NAME TEXT an eine Person."}
-{"name": "aoe2mc.run.welcome_goal", "en_us": "Goal: win the game. Victory setting: %s.", "de_de": "Ziel: Gewinne das Spiel. Siegbedingung: %s."}
-{"name": "aoe2mc.run.welcome_first", "en_us": "First step: hold the command stick and right click one of your villagers.", "de_de": "Erster Schritt: Halte den Befehlsstab und mache einen Rechtsklick auf einen deiner Dorfbewohner."}
-{"name": "aoe2mc.run.welcome_controls", "en_us": "All controls: /controls", "de_de": "Alle Steuerelemente: /controls"}
-{"name": "aoe2mc.run.campaign_complete", "en_us": "Campaign complete", "de_de": "Kampagne abgeschlossen"}
-{"name": "aoe2mc.run.scenario_starts", "en_us": "Scenario %s starts. Join again.", "de_de": "Szenario %s startet. Tritt erneut bei."}
-{"name": "aoe2mc.run.starts_in", "en_us": "The game starts in %s", "de_de": "Das Spiel startet in %s"}
-{"name": "aoe2mc.lobby.you_play", "en_us": "You play %s.", "de_de": "Du spielst %s."}
-{"name": "aoe2mc.savegame.saved", "en_us": "Saved the game: %s", "de_de": "Spiel gespeichert: %s"}
-{"name": "aoe2mc.ratings.change", "en_us": "%s %s → %s", "de_de": "%s %s → %s"}
-{"name": "aoe2mc.ratings.team", "en_us": "Team %s (mean rating %s): %s", "de_de": "Team %s (mittlere Wertung %s): %s"}
-{"name": "aoe2mc.bot.no_flare", "en_us": "I see no flare.", "de_de": "Ich sehe kein Signal."}
-{"name": "aoe2mc.bot.cannot_build", "en_us": "I cannot build a %s there now.", "de_de": "Ich kann dort jetzt kein %s bauen."}
-{"name": "aoe2mc.bot.no_wall_resources", "en_us": "I have not enough resources for a wall.", "de_de": "Ich habe nicht genug Rohstoffe für eine Mauer."}
-{"name": "aoe2mc.bot.flare_two", "en_us": "Flare two places for the wall.", "de_de": "Setze zwei Signale für die Mauer."}
-{"name": "aoe2mc.bot.no_water", "en_us": "I have no water near my town: I cannot build a navy.", "de_de": "Ich habe kein Wasser nahe meiner Stadt: Ich kann keine Flotte bauen."}
-{"name": "aoe2mc.bot.onager_no_trees", "en_us": "My onagers cannot cut trees.", "de_de": "Meine Onager können keine Bäume fällen."}
-{"name": "aoe2mc.bot.no_onager", "en_us": "I have no onager.", "de_de": "Ich habe keinen Onager."}
-{"name": "aoe2mc.bot.cannot_train", "en_us": "I cannot train that unit: I have no building for it.", "de_de": "Ich kann diese Einheit nicht ausbilden: Ich habe kein Gebäude dafür."}
-{"name": "aoe2mc.bot.no_market", "en_us": "I have no market: I cannot send tribute.", "de_de": "Ich habe keinen Markt: Ich kann keinen Tribut senden."}
-{"name": "aoe2mc.wonder.built", "en_us": "Player %s built a wonder.", "de_de": "Spieler %s hat ein Weltwunder gebaut."}
-{"name": "aoe2mc.wonder.destroyed", "en_us": "The wonder of player %s is destroyed.", "de_de": "Das Weltwunder von Spieler %s ist zerstört."}
-{"name": "aoe2mc.cheat.aegis_off", "en_us": "Aegis off", "de_de": "Aegis aus"}
-{"name": "aoe2mc.cheat.aegis_on", "en_us": "Aegis on", "de_de": "Aegis an"}
-{"name": "aoe2mc.cheat.beyond", "en_us": "Technologies: up to 256 researches", "de_de": "Technologien: bis zu 256 Forschungen"}
-{"name": "aoe2mc.cheat.cpu", "en_us": "Population limit: %s", "de_de": "Bevölkerungslimit: %s"}
-{"name": "aoe2mc.cheat.fog_off", "en_us": "Fog of war: off", "de_de": "Nebel des Krieges: aus"}
-{"name": "aoe2mc.cheat.fog_on", "en_us": "Fog of war: on", "de_de": "Nebel des Krieges: an"}
-{"name": "aoe2mc.cheat.free_techs", "en_us": "Technologies are free", "de_de": "Technologien sind kostenlos"}
-{"name": "aoe2mc.cheat.marco", "en_us": "polo", "de_de": "polo"}
-{"name": "aoe2mc.cheat.sharing", "en_us": "Sharing is caring: your income goes to your allies", "de_de": "Teilen ist fürsorglich: Dein Einkommen geht an deine Verbündeten"}
-{"name": "aoe2mc.cheat.wonders", "en_us": "You control nature: %s animals", "de_de": "Du kontrollierst die Natur: %s Tiere"}
-{"name": "aoe2mc.replay.now", "en_us": " now", "de_de": " jetzt"}
-{"name": "aoe2mc.replay.team", "en_us": "Team %s · ", "de_de": "Team %s · "}
-{"name": "aoe2mc.replay_input.fight", "en_us": "Fight: ", "de_de": "Kampf: "}
-{"name": "aoe2mc.train.active", "en_us": "%s is active.", "de_de": "%s ist aktiv."}
-{"name": "aoe2mc.train.rally", "en_us": "Right click the ground for the rally point.", "de_de": "Rechtsklick auf den Boden für den Sammelpunkt."}
-{"name": "aoe2mc.train.researched", "en_us": "%s is researched.", "de_de": "%s ist erforscht."}
-{"name": "aoe2mc.replay_input.fight_units", "en_us": ", %s units", "de_de": ", %s Einheiten"}
-{"name": "aoe2mc.camera.fov", "en_us": "The fast camera makes the held item swing. To keep it still, set Options > Accessibility Settings > View Bobbing to OFF. The camera also makes the view wider, which shows more of the map. To keep the normal view, set Options > Accessibility Settings > FOV Effects to 0 %.", "de_de": "Die schnelle Kamera lässt das gehaltene Item schwingen. Damit es ruhig bleibt, setze Optionen > Barrierefreiheit > Sichtwippen auf AUS. Die Kamera macht die Sicht auch breiter und zeigt so mehr von der Karte. Für die normale Sicht setze Optionen > Barrierefreiheit > Sichtfeldeffekte auf 0 %."}
-{"name": "aoe2mc.camera.off", "en_us": "Camera: off", "de_de": "Kamera: aus"}
-{"name": "aoe2mc.camera.on", "en_us": "Camera: on, speed x%s. Shift right click: next speed.", "de_de": "Kamera: an, Geschwindigkeit x%s. Umschalt + Rechtsklick: nächste Geschwindigkeit."}
-{"name": "aoe2mc.camera.speed", "en_us": "Camera speed: x%s", "de_de": "Kamerageschwindigkeit: x%s"}
-{"name": "aoe2mc.recap.next", "en_us": "The game is over. Right click the Recap book in your hand to see the results. Stop the game program with Ctrl-C in its console.", "de_de": "Das Spiel ist vorbei. Rechtsklick auf das Rückblick-Buch in deiner Hand zeigt die Ergebnisse. Beende das Spielprogramm mit Strg-C in seiner Konsole."}
-{"name": "aoe2mc.lobby.ready", "en_us": "%s / %s ready", "de_de": "%s / %s bereit"}
-{"name": "aoe2mc.run.wait_ready", "en_us": "Open \"Choose your player\" and click \"Ready\"", "de_de": "Öffne „Choose your player“ und klicke „Ready“"}
-{"name": "aoe2mc.replay_input.takeover", "en_us": "Take over: ", "de_de": "Übernehmen: "}
+{"name": "aoe2mc.age_up", "en_us": "Player %s advances to the %s.", "de_de": "Spieler %s erreicht die %s.", "es_es": "El jugador %s avanza a la %s.", "it_it": "Il giocatore %s avanza all'%s."}
+{"name": "aoe2mc.build.cost", "en_us": "Not enough resources: a %s costs %s.", "de_de": "Nicht genug Rohstoffe: ein %s kostet %s.", "es_es": "Recursos insuficientes: un %s cuesta %s.", "it_it": "Risorse insufficienti: un %s costa %s."}
+{"name": "aoe2mc.build.flat", "en_us": "The %s must stand on flat ground.", "de_de": "%s muss auf ebenem Boden stehen.", "es_es": "El %s debe estar sobre terreno llano.", "it_it": "Il %s deve stare su terreno piano."}
+{"name": "aoe2mc.build.gate_spot", "en_us": "A %s must go on 4 tiles of an own wall in a straight line, or on 3 diagonal tiles.", "de_de": "Ein %s muss auf 4 Feldern einer eigenen Mauer in gerader Linie stehen oder auf 3 diagonalen Feldern.", "es_es": "Un %s debe ir sobre 4 casillas de un muro propio en línea recta, o sobre 3 casillas diagonales.", "it_it": "Un %s deve stare su 4 caselle di un proprio muro in linea retta, o su 3 caselle diagonali."}
+{"name": "aoe2mc.build.locked", "en_us": "%s: %s.", "de_de": "%s: %s.", "es_es": "%s: %s.", "it_it": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "en_us": "Build: ", "de_de": "Bauen: ", "es_es": "Construir: ", "it_it": "Costruisci: "}
+{"name": "aoe2mc.build.menu_line", "en_us": "/trigger aoe_build set %s: %s (%s)", "de_de": "/trigger aoe_build set %s: %s (%s)", "es_es": "/trigger aoe_build set %s: %s (%s)", "it_it": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "en_us": "A %s must stand on water next to the shore.", "de_de": "Ein %s muss auf dem Wasser neben dem Ufer stehen.", "es_es": "Un %s debe estar en el agua junto a la costa.", "it_it": "Un %s deve stare in acqua vicino alla riva."}
+{"name": "aoe2mc.build.space", "en_us": "No space for the %s here.", "de_de": "Hier ist kein Platz für %s.", "es_es": "No hay espacio para el %s aquí.", "it_it": "Non c'è spazio per il %s qui."}
+{"name": "aoe2mc.build.tiles_cost", "en_us": "Not enough resources: %s tiles of %s cost %s.", "de_de": "Nicht genug Rohstoffe: %s Felder %s kosten %s.", "es_es": "Recursos insuficientes: %s casillas de %s cuestan %s.", "it_it": "Risorse insufficienti: %s caselle di %s costano %s."}
+{"name": "aoe2mc.build.wall_end", "en_us": "%s: right click the end of the wall.", "de_de": "%s: Rechtsklick auf das Ende der Mauer.", "es_es": "%s: clic derecho en el extremo del muro.", "it_it": "%s: clic destro sull'estremità del muro."}
+{"name": "aoe2mc.build.water", "en_us": "A %s must stand on the water.", "de_de": "Ein %s muss auf dem Wasser stehen.", "es_es": "Un %s debe estar sobre el agua.", "it_it": "Un %s deve stare sull'acqua."}
+{"name": "aoe2mc.battle_royale.start", "en_us": "Battle Royale: the Corruption takes the map from its border to its center in %s. It destroys all units and buildings in it.", "de_de": "Battle Royale: Die Verderbnis nimmt die Karte in %s vom Rand bis zur Mitte ein. Sie zerstört alle Einheiten und Gebäude darin.", "es_es": "Battle Royale: la Corrupción toma el mapa desde el borde hasta el centro en %s. Destruye todas las unidades y edificios que alcanza.", "it_it": "Battle Royale: la Corruzione prende la mappa dal bordo al centro in %s. Distrugge tutte le unità e gli edifici che raggiunge."}
+{"name": "aoe2mc.challenge.lost_bronze", "en_us": "%s units lost, bronze medal up to %s", "de_de": "%s Einheiten verloren, Bronzemedaille bis %s", "es_es": "%s unidades perdidas, medalla de bronce hasta %s", "it_it": "%s unità perse, medaglia di bronzo fino a %s"}
+{"name": "aoe2mc.challenge.lost_gold", "en_us": "%s units lost, gold medal up to %s", "de_de": "%s Einheiten verloren, Goldmedaille bis %s", "es_es": "%s unidades perdidas, medalla de oro hasta %s", "it_it": "%s unità perse, medaglia d'oro fino a %s"}
+{"name": "aoe2mc.challenge.lost_none", "en_us": "%s units lost, no medal", "de_de": "%s Einheiten verloren, keine Medaille", "es_es": "%s unidades perdidas, sin medalla", "it_it": "%s unità perse, nessuna medaglia"}
+{"name": "aoe2mc.challenge.lost_silver", "en_us": "%s units lost, silver medal up to %s", "de_de": "%s Einheiten verloren, Silbermedaille bis %s", "es_es": "%s unidades perdidas, medalla de plata hasta %s", "it_it": "%s unità perse, medaglia d'argento fino a %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "en_us": "Bronze medal", "de_de": "Bronzemedaille", "es_es": "Medalla de bronce", "it_it": "Medaglia di bronzo"}
+{"name": "aoe2mc.challenge.medal_gold", "en_us": "Gold medal", "de_de": "Goldmedaille", "es_es": "Medalla de oro", "it_it": "Medaglia d'oro"}
+{"name": "aoe2mc.challenge.medal_silver", "en_us": "Silver medal", "de_de": "Silbermedaille", "es_es": "Medalla de plata", "it_it": "Medaglia d'argento"}
+{"name": "aoe2mc.challenge.no_medal", "en_us": "No medal", "de_de": "Keine Medaille", "es_es": "Sin medalla", "it_it": "Nessuna medaglia"}
+{"name": "aoe2mc.challenge.time_bronze", "en_us": "Bronze medal in %s", "de_de": "Bronzemedaille in %s", "es_es": "Medalla de bronce en %s", "it_it": "Medaglia di bronzo in %s"}
+{"name": "aoe2mc.challenge.time_gold", "en_us": "Gold medal in %s", "de_de": "Goldmedaille in %s", "es_es": "Medalla de oro en %s", "it_it": "Medaglia d'oro in %s"}
+{"name": "aoe2mc.challenge.time_silver", "en_us": "Silver medal in %s", "de_de": "Silbermedaille in %s", "es_es": "Medalla de plata en %s", "it_it": "Medaglia d'argento in %s"}
+{"name": "aoe2mc.conquest.allies_end", "en_us": "Only allies are left: the alliances end. The last player alive wins.", "de_de": "Nur Verbündete sind übrig: Die Bündnisse enden. Der letzte lebende Spieler gewinnt.", "es_es": "Solo quedan aliados: las alianzas terminan. Gana el último jugador con vida.", "it_it": "Restano solo alleati: le alleanze finiscono. Vince l'ultimo giocatore in vita."}
+{"name": "aoe2mc.conquest.defeated", "en_us": "Player %s is defeated.", "de_de": "Spieler %s ist besiegt.", "es_es": "El jugador %s ha sido derrotado.", "it_it": "Il giocatore %s è sconfitto."}
+{"name": "aoe2mc.controls.head", "en_us": "Controls (hold the carrot on a stick; the action bar shows the next step):", "de_de": "Steuerung (halte die Karottenrute; die Aktionsleiste zeigt den nächsten Schritt):", "es_es": "Controles (sostén la caña con zanahoria; la barra de acción muestra el siguiente paso):", "it_it": "Comandi (tieni la canna con carota; la barra delle azioni mostra il prossimo passo):"}
+{"name": "aoe2mc.controls.select", "en_us": "Select: right click a unit. Hold right click and look across the ground: a selection box.", "de_de": "Auswählen: Rechtsklick auf eine Einheit. Rechtsklick halten und über den Boden schauen: ein Auswahlrahmen.", "es_es": "Seleccionar: clic derecho en una unidad. Mantén el clic derecho y mira por el suelo: un recuadro de selección.", "it_it": "Seleziona: clic destro su un'unità. Tieni premuto il clic destro e guarda sul terreno: un riquadro di selezione."}
+{"name": "aoe2mc.controls.move", "en_us": "Move: with a selection, right click the ground.", "de_de": "Bewegen: mit einer Auswahl Rechtsklick auf den Boden.", "es_es": "Mover: con una selección, clic derecho en el suelo.", "it_it": "Muovi: con una selezione, clic destro sul terreno."}
+{"name": "aoe2mc.controls.gather", "en_us": "Gather: select villagers, then right click a tree, a fruit bush, a mine or a farm.", "de_de": "Sammeln: Dorfbewohner auswählen, dann Rechtsklick auf einen Baum, einen Beerenstrauch, eine Mine oder ein Feld.", "es_es": "Recolectar: selecciona aldeanos y haz clic derecho en un árbol, un arbusto de bayas, una mina o una granja.", "it_it": "Raccogli: seleziona i paesani, poi clic destro su un albero, un cespuglio di bacche, una miniera o una fattoria."}
+{"name": "aoe2mc.controls.build", "en_us": "Build: select villagers, right click them for the build menu, select a building, then left click the ground. Shift + left click: place more. Right click: cancel.", "de_de": "Bauen: Dorfbewohner auswählen, Rechtsklick auf sie für das Baumenü, ein Gebäude wählen, dann Linksklick auf den Boden. Umschalt + Linksklick: mehr platzieren. Rechtsklick: abbrechen.", "es_es": "Construir: selecciona aldeanos, haz clic derecho en ellos para el menú de construcción, elige un edificio y haz clic izquierdo en el suelo. Mayús + clic izquierdo: colocar más. Clic derecho: cancelar.", "it_it": "Costruisci: seleziona i paesani, clic destro su di loro per il menu di costruzione, scegli un edificio, poi clic sinistro sul terreno. Maiusc + clic sinistro: piazzane altri. Clic destro: annulla."}
+{"name": "aoe2mc.controls.train", "en_us": "Train: right click your own building (town center, barracks ...) and click a unit in its menu.", "de_de": "Ausbilden: Rechtsklick auf dein eigenes Gebäude (Dorfzentrum, Kaserne ...) und eine Einheit in seinem Menü anklicken.", "es_es": "Entrenar: clic derecho en tu edificio (centro urbano, cuartel...) y haz clic en una unidad de su menú.", "it_it": "Addestra: clic destro su un tuo edificio (centro città, caserma...) e clicca un'unità nel suo menu."}
+{"name": "aoe2mc.controls.attack", "en_us": "Attack: select military units, then right click an enemy.", "de_de": "Angreifen: Militäreinheiten auswählen, dann Rechtsklick auf einen Feind.", "es_es": "Atacar: selecciona unidades militares y haz clic derecho en un enemigo.", "it_it": "Attacca: seleziona unità militari, poi clic destro su un nemico."}
+{"name": "aoe2mc.controls.research", "en_us": "Research and age up: right click your own building and click a technology or the next age in its menu.", "de_de": "Erforschen und Zeitalter aufsteigen: Rechtsklick auf dein eigenes Gebäude und eine Technologie oder das nächste Zeitalter in seinem Menü anklicken.", "es_es": "Investigar y avanzar de edad: clic derecho en tu edificio y haz clic en una tecnología o en la siguiente edad de su menú.", "it_it": "Ricerca e avanzamento d'età: clic destro su un tuo edificio e clicca una tecnologia o l'età successiva nel suo menu."}
+{"name": "aoe2mc.controls.garrison", "en_us": "Garrison: select units, then right click your own building. Its menu lets them out. Town center menu: Ring Town Bell.", "de_de": "Stationieren: Einheiten auswählen, dann Rechtsklick auf dein eigenes Gebäude. Sein Menü lässt sie heraus. Menü des Dorfzentrums: Stadtglocke läuten.", "es_es": "Guarnecer: selecciona unidades y haz clic derecho en tu edificio. Su menú las deja salir. Menú del centro urbano: Tocar la campana.", "it_it": "Presidia: seleziona le unità, poi clic destro su un tuo edificio. Il suo menu le fa uscire. Menu del centro città: Suona la campana."}
+{"name": "aoe2mc.controls.camera", "en_us": "Camera: right click with the spyglass Camera (hotbar key 2): you walk fast high above the map. Shift right click: the next speed. Right click again: you fly down.", "de_de": "Kamera: Rechtsklick mit dem Fernrohr Kamera (Hotbar-Taste 2): Du gehst schnell hoch über der Karte. Umschalt + Rechtsklick: die nächste Geschwindigkeit. Erneuter Rechtsklick: Du fliegst nach unten.", "es_es": "Cámara: clic derecho con el catalejo Cámara (tecla 2): vuelas rápido sobre el mapa. Mayús + clic derecho: siguiente velocidad. Otro clic derecho: bajas.", "it_it": "Telecamera: clic destro con il cannocchiale Telecamera (tasto 2): voli veloce sopra la mappa. Maiusc + clic destro: velocità successiva. Di nuovo clic destro: scendi."}
+{"name": "aoe2mc.controls.goto", "en_us": "Go to: right click with the compass Go to (hotbar key 3): a menu of your town centers, your control groups and the next idle villager.", "de_de": "Gehe zu: Rechtsklick mit dem Kompass Gehe zu (Hotbar-Taste 3): ein Menü deiner Dorfzentren, deiner Steuergruppen und des nächsten untätigen Dorfbewohners.", "es_es": "Ir a: clic derecho con la brújula Ir a (tecla 3): un menú de tus centros urbanos, tus grupos de control y el siguiente aldeano inactivo.", "it_it": "Vai a: clic destro con la bussola Vai a (tasto 3): un menu dei tuoi centri città, dei tuoi gruppi e del prossimo paesano inattivo."}
+{"name": "aoe2mc.controls.menu", "en_us": "Game menu: right click with the book Game menu (hotbar key 4): diplomacy and tribute, flare, save, pause and the tech tree.", "de_de": "Spielmenü: Rechtsklick mit dem Buch Spielmenü (Hotbar-Taste 4): Diplomatie und Tribut, Signal, Speichern, Pause und der Technologiebaum.", "es_es": "Menú de juego: clic derecho con el libro Menú de juego (tecla 4): diplomacia y tributo, bengala, guardar, pausa y árbol tecnológico.", "it_it": "Menu di gioco: clic destro con il libro Menu di gioco (tasto 4): diplomazia e tributi, segnale, salva, pausa e albero tecnologico."}
+{"name": "aoe2mc.controls.groups", "en_us": "Control groups: select units, take a group item (hotbar keys 5 to 9) and Shift + right click to save the selection. Right click: select the group.", "de_de": "Steuergruppen: Einheiten auswählen, ein Gruppen-Item nehmen (Hotbar-Tasten 5 bis 9) und Umschalt + Rechtsklick, um die Auswahl zu speichern. Rechtsklick: die Gruppe auswählen.", "es_es": "Grupos de control: selecciona unidades, toma un objeto de grupo (teclas 5 a 9) y Mayús + clic derecho para guardar la selección. Clic derecho: seleccionar el grupo.", "it_it": "Gruppi: seleziona le unità, prendi un oggetto gruppo (tasti da 5 a 9) e Maiusc + clic destro per salvare la selezione. Clic destro: seleziona il gruppo."}
+{"name": "aoe2mc.defeat", "en_us": "Defeat", "de_de": "Niederlage", "es_es": "Derrota", "it_it": "Sconfitta"}
+{"name": "aoe2mc.flare.placed", "en_us": "%s: Flare at %s %s", "de_de": "%s: Signal bei %s %s", "es_es": "%s: Bengala en %s %s", "it_it": "%s: Segnale a %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "en_us": "Follow: click an own unit", "de_de": "Folgen: eine eigene Einheit anklicken", "es_es": "Seguir: haz clic en una unidad propia", "it_it": "Segui: clicca un'unità propria"}
+{"name": "aoe2mc.follow.refuse_guard", "en_us": "Guard: click an own unit or building", "de_de": "Bewachen: eine eigene Einheit oder ein eigenes Gebäude anklicken", "es_es": "Proteger: haz clic en una unidad o edificio propio", "it_it": "Proteggi: clicca un'unità o un edificio proprio"}
+{"name": "aoe2mc.gaia.joins", "en_us": "A %s joins you.", "de_de": "Ein %s schließt sich dir an.", "es_es": "Un %s se une a ti.", "it_it": "Un %s si unisce a te."}
+{"name": "aoe2mc.garrison.all_back", "en_us": "All back to work", "de_de": "Alle zurück an die Arbeit", "es_es": "Todos de vuelta al trabajo", "it_it": "Tutti al lavoro"}
+{"name": "aoe2mc.garrison.bell_seek", "en_us": "The town bell rings: %s villagers seek shelter", "de_de": "Die Stadtglocke läutet: %s Dorfbewohner suchen Schutz", "es_es": "Suena la campana: %s aldeanos buscan refugio", "it_it": "Suona la campana: %s paesani cercano riparo"}
+{"name": "aoe2mc.garrison.no_villager", "en_us": "No villager is selected.", "de_de": "Kein Dorfbewohner ist ausgewählt.", "es_es": "No hay ningún aldeano seleccionado.", "it_it": "Nessun paesano selezionato."}
+{"name": "aoe2mc.garrison.no_villagers", "en_us": "You have no villagers.", "de_de": "Du hast keine Dorfbewohner.", "es_es": "No tienes aldeanos.", "it_it": "Non hai paesani."}
+{"name": "aoe2mc.garrison.out", "en_us": "%s units came out", "de_de": "%s Einheiten kamen heraus", "es_es": "Salieron %s unidades", "it_it": "Sono uscite %s unità"}
+{"name": "aoe2mc.garrison.seek_shelter", "en_us": "%s villagers seek shelter", "de_de": "%s Dorfbewohner suchen Schutz", "es_es": "%s aldeanos buscan refugio", "it_it": "%s paesani cercano riparo"}
+{"name": "aoe2mc.gather.act_attack", "en_us": "attack", "de_de": "angreifen", "es_es": "atacar", "it_it": "attacca"}
+{"name": "aoe2mc.gather.act_build_menu", "en_us": "build menu", "de_de": "Baumenü", "es_es": "menú de construcción", "it_it": "menu di costruzione"}
+{"name": "aoe2mc.gather.act_garrison", "en_us": "garrison", "de_de": "stationieren", "es_es": "guarnecer", "it_it": "presidia"}
+{"name": "aoe2mc.gather.act_gather", "en_us": "gather", "de_de": "sammeln", "es_es": "recolectar", "it_it": "raccogli"}
+{"name": "aoe2mc.gather.act_hunt", "en_us": "hunt", "de_de": "jagen", "es_es": "cazar", "it_it": "caccia"}
+{"name": "aoe2mc.gather.act_move", "en_us": "move", "de_de": "bewegen", "es_es": "mover", "it_it": "muovi"}
+{"name": "aoe2mc.gather.act_select", "en_us": "select", "de_de": "auswählen", "es_es": "seleccionar", "it_it": "seleziona"}
+{"name": "aoe2mc.gather.act_select_type", "en_us": "select all of the type", "de_de": "alle dieses Typs auswählen", "es_es": "seleccionar todos del tipo", "it_it": "seleziona tutti del tipo"}
+{"name": "aoe2mc.gather.act_trade", "en_us": "trade", "de_de": "handeln", "es_es": "comerciar", "it_it": "commercia"}
+{"name": "aoe2mc.gather.act_train", "en_us": "train", "de_de": "ausbilden", "es_es": "entrenar", "it_it": "addestra"}
+{"name": "aoe2mc.gather.attack_siege", "en_us": "Attack: %s (%s/%s)", "de_de": "Angriff: %s (%s/%s)", "es_es": "Ataque: %s (%s/%s)", "it_it": "Attacco: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "en_us": "Selection box: cancelled", "de_de": "Auswahlrahmen: abgebrochen", "es_es": "Recuadro de selección: cancelado", "it_it": "Riquadro di selezione: annullato"}
+{"name": "aoe2mc.gather.bush", "en_us": "Berry bush", "de_de": "Beerenstrauch", "es_es": "Arbusto de bayas", "it_it": "Cespuglio di bacche"}
+{"name": "aoe2mc.gather.carcass", "en_us": "Carcass", "de_de": "Kadaver", "es_es": "Cadáver", "it_it": "Carcassa"}
+{"name": "aoe2mc.gather.corner", "en_us": "Selection box: click the other corner", "de_de": "Auswahlrahmen: die andere Ecke anklicken", "es_es": "Recuadro de selección: haz clic en la otra esquina", "it_it": "Riquadro di selezione: clicca l'altro angolo"}
+{"name": "aoe2mc.gather.corner_paper", "en_us": "Selection box: look at the other corner and release", "de_de": "Auswahlrahmen: auf die andere Ecke schauen und loslassen", "es_es": "Recuadro de selección: mira la otra esquina y suelta", "it_it": "Riquadro di selezione: guarda l'altro angolo e rilascia"}
+{"name": "aoe2mc.gather.enemy", "en_us": "Enemy %s", "de_de": "Feind %s", "es_es": "%s enemigo", "it_it": "%s nemico"}
+{"name": "aoe2mc.gather.enemy_building", "en_us": "Enemy building", "de_de": "Feindliches Gebäude", "es_es": "Edificio enemigo", "it_it": "Edificio nemico"}
+{"name": "aoe2mc.gather.farm", "en_us": "Farm", "de_de": "Feld", "es_es": "Granja", "it_it": "Fattoria"}
+{"name": "aoe2mc.gather.ground", "en_us": "Ground", "de_de": "Boden", "es_es": "Suelo", "it_it": "Terreno"}
+{"name": "aoe2mc.gather.group", "en_us": "Group %s: %s units", "de_de": "Gruppe %s: %s Einheiten", "es_es": "Grupo %s: %s unidades", "it_it": "Gruppo %s: %s unità"}
+{"name": "aoe2mc.gather.group_saved", "en_us": "Group %s: %s units saved", "de_de": "Gruppe %s: %s Einheiten gespeichert", "es_es": "Grupo %s: %s unidades guardadas", "it_it": "Gruppo %s: %s unità salvate"}
+{"name": "aoe2mc.gather.mine", "en_us": "%s mine", "de_de": "%smine", "es_es": "Mina de %s", "it_it": "Miniera di %s"}
+{"name": "aoe2mc.gather.paused", "en_us": "The game is paused.", "de_de": "Das Spiel ist pausiert.", "es_es": "El juego está en pausa.", "it_it": "Il gioco è in pausa."}
+{"name": "aoe2mc.gather.point", "en_us": "%s · Right click: %s", "de_de": "%s · Rechtsklick: %s", "es_es": "%s · Clic derecho: %s", "it_it": "%s · Clic destro: %s"}
+{"name": "aoe2mc.gather.point_name", "en_us": "%s", "de_de": "%s", "es_es": "%s", "it_it": "%s"}
+{"name": "aoe2mc.gather.reseeds", "en_us": "Reseeds queued: %s", "de_de": "Neuaussaaten in Warteschlange: %s", "es_es": "Resiembras en cola: %s", "it_it": "Risemine in coda: %s"}
+{"name": "aoe2mc.gather.selected", "en_us": "Selected: %s units", "de_de": "Ausgewählt: %s Einheiten", "es_es": "Seleccionadas: %s unidades", "it_it": "Selezionate: %s unità"}
+{"name": "aoe2mc.gather.tree", "en_us": "Tree", "de_de": "Baum", "es_es": "Árbol", "it_it": "Albero"}
+{"name": "aoe2mc.hints.attack_ground", "en_us": "Attack Ground: right click the ground", "de_de": "Boden angreifen: Rechtsklick auf den Boden", "es_es": "Atacar terreno: clic derecho en el suelo", "it_it": "Attacca terreno: clic destro sul terreno"}
+{"name": "aoe2mc.hints.attack_move", "en_us": "Attack Move: right click the ground", "de_de": "Angriffsbewegung: Rechtsklick auf den Boden", "es_es": "Ataque en movimiento: clic derecho en el suelo", "it_it": "Attacco in movimento: clic destro sul terreno"}
+{"name": "aoe2mc.hints.building", "en_us": "Place the %s: right click the ground · Shift + right click: place more · Cancel: /trigger aoe_build set 0", "de_de": "%s platzieren: Rechtsklick auf den Boden · Umschalt + Rechtsklick: mehr platzieren · Abbrechen: /trigger aoe_build set 0", "es_es": "Coloca el %s: clic derecho en el suelo · Mayús + clic derecho: colocar más · Cancelar: /trigger aoe_build set 0", "it_it": "Piazza il %s: clic destro sul terreno · Maiusc + clic destro: piazzane altri · Annulla: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "en_us": "%s: left click to place · Shift: place more · Right click: cancel", "de_de": "%s: Linksklick zum Platzieren · Umschalt: mehr platzieren · Rechtsklick: abbrechen", "es_es": "%s: clic izquierdo para colocar · Mayús: colocar más · Clic derecho: cancelar", "it_it": "%s: clic sinistro per piazzare · Maiusc: piazzane altri · Clic destro: annulla"}
+{"name": "aoe2mc.hints.corner", "en_us": "Selection box: right click the other corner", "de_de": "Auswahlrahmen: Rechtsklick auf die andere Ecke", "es_es": "Recuadro de selección: clic derecho en la otra esquina", "it_it": "Riquadro di selezione: clic destro sull'altro angolo"}
+{"name": "aoe2mc.hints.count_military", "en_us": "%s military unit", "de_de": "%s Militäreinheit", "es_es": "%s unidad militar", "it_it": "%s unità militare"}
+{"name": "aoe2mc.hints.count_military_many", "en_us": "%s military units", "de_de": "%s Militäreinheiten", "es_es": "%s unidades militares", "it_it": "%s unità militari"}
+{"name": "aoe2mc.hints.count_villager", "en_us": "%s villager", "de_de": "%s Dorfbewohner", "es_es": "%s aldeano", "it_it": "%s paesano"}
+{"name": "aoe2mc.hints.count_villager_many", "en_us": "%s villagers", "de_de": "%s Dorfbewohner", "es_es": "%s aldeanos", "it_it": "%s paesani"}
+{"name": "aoe2mc.hints.deselect", "en_us": "Empty box: deselect", "de_de": "Leerer Rahmen: Auswahl aufheben", "es_es": "Recuadro vacío: deseleccionar", "it_it": "Riquadro vuoto: deseleziona"}
+{"name": "aoe2mc.hints.deselect_paper", "en_us": "Left click: deselect", "de_de": "Linksklick: Auswahl aufheben", "es_es": "Clic izquierdo: deseleccionar", "it_it": "Clic sinistro: deseleziona"}
+{"name": "aoe2mc.hints.drag", "en_us": "Selection box: hold right click, look at the other corner, release · Release here: cancel", "de_de": "Auswahlrahmen: Rechtsklick halten, auf die andere Ecke schauen, loslassen · Hier loslassen: abbrechen", "es_es": "Recuadro de selección: mantén el clic derecho, mira la otra esquina, suelta · Soltar aquí: cancelar", "it_it": "Riquadro di selezione: tieni premuto il clic destro, guarda l'altro angolo, rilascia · Rilascia qui: annulla"}
+{"name": "aoe2mc.hints.follow", "en_us": "Follow: right click an own or allied unit", "de_de": "Folgen: Rechtsklick auf eine eigene oder verbündete Einheit", "es_es": "Seguir: clic derecho en una unidad propia o aliada", "it_it": "Segui: clic destro su un'unità propria o alleata"}
+{"name": "aoe2mc.hints.guard", "en_us": "Guard: right click an own or allied unit or building", "de_de": "Bewachen: Rechtsklick auf eine eigene oder verbündete Einheit oder ein Gebäude", "es_es": "Proteger: clic derecho en una unidad o edificio propio o aliado", "it_it": "Proteggi: clic destro su un'unità o un edificio proprio o alleato"}
+{"name": "aoe2mc.hints.military", "en_us": "%s · Right click: attack an enemy, stance menu · %s", "de_de": "%s · Rechtsklick: einen Feind angreifen, Haltungsmenü · %s", "es_es": "%s · Clic derecho: atacar a un enemigo, menú de postura · %s", "it_it": "%s · Clic destro: attacca un nemico, menu di assetto · %s"}
+{"name": "aoe2mc.hints.none", "en_us": "Left click: select a unit · Hold right click: selection box", "de_de": "Linksklick: eine Einheit auswählen · Rechtsklick halten: Auswahlrahmen", "es_es": "Clic izquierdo: seleccionar una unidad · Mantén clic derecho: recuadro de selección", "it_it": "Clic sinistro: seleziona un'unità · Tieni clic destro: riquadro di selezione"}
+{"name": "aoe2mc.hints.none_wand", "en_us": "Right click: select a unit · Wand: selection box", "de_de": "Rechtsklick: eine Einheit auswählen · Stab: Auswahlrahmen", "es_es": "Clic derecho: seleccionar una unidad · Varita: recuadro de selección", "it_it": "Clic destro: seleziona un'unità · Bacchetta: riquadro di selezione"}
+{"name": "aoe2mc.hints.patrol", "en_us": "Patrol: right click the ground", "de_de": "Patrouillieren: Rechtsklick auf den Boden", "es_es": "Patrullar: clic derecho en el suelo", "it_it": "Pattuglia: clic destro sul terreno"}
+{"name": "aoe2mc.hints.pointing", "en_us": "%s · %s", "de_de": "%s · %s", "es_es": "%s · %s", "it_it": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "en_us": "%s · Right click: gather, build, build menu · %s", "de_de": "%s · Rechtsklick: sammeln, bauen, Baumenü · %s", "es_es": "%s · Clic derecho: recolectar, construir, menú de construcción · %s", "it_it": "%s · Clic destro: raccogli, costruisci, menu di costruzione · %s"}
+{"name": "aoe2mc.monk.converts", "en_us": "A monk converts the %s.", "de_de": "Ein Mönch bekehrt %s.", "es_es": "Un monje convierte al %s.", "it_it": "Un monaco converte il %s."}
+{"name": "aoe2mc.monk.dies", "en_us": "The %s dies (Heresy).", "de_de": "%s stirbt (Häresie).", "es_es": "El %s muere (Herejía).", "it_it": "Il %s muore (Eresia)."}
+{"name": "aoe2mc.pause.continued", "en_us": "Player %s continued the game.", "de_de": "Spieler %s hat das Spiel fortgesetzt.", "es_es": "El jugador %s reanudó el juego.", "it_it": "Il giocatore %s ha ripreso il gioco."}
+{"name": "aoe2mc.pause.paused", "en_us": "Player %s paused the game.", "de_de": "Spieler %s hat das Spiel pausiert.", "es_es": "El jugador %s pausó el juego.", "it_it": "Il giocatore %s ha messo in pausa il gioco."}
+{"name": "aoe2mc.repair.no_resources", "en_us": "Not enough resources to repair the %s.", "de_de": "Nicht genug Rohstoffe, um %s zu reparieren.", "es_es": "Recursos insuficientes para reparar el %s.", "it_it": "Risorse insufficienti per riparare il %s."}
+{"name": "aoe2mc.siege_tower.out", "en_us": "%s units came out", "de_de": "%s Einheiten kamen heraus", "es_es": "Salieron %s unidades", "it_it": "Sono uscite %s unità"}
+{"name": "aoe2mc.stance.auto_scout", "en_us": "Auto Scout", "de_de": "Automatisch erkunden", "es_es": "Exploración automática", "it_it": "Esplorazione automatica"}
+{"name": "aoe2mc.stance.formation", "en_us": "Formation: %s", "de_de": "Formation: %s", "es_es": "Formación: %s", "it_it": "Formazione: %s"}
+{"name": "aoe2mc.stance.no_ground", "en_us": "No unit can attack the ground", "de_de": "Keine Einheit kann den Boden angreifen", "es_es": "Ninguna unidad puede atacar el terreno", "it_it": "Nessuna unità può attaccare il terreno"}
+{"name": "aoe2mc.stance.unpack", "en_us": "Unpack the Trebuchet first", "de_de": "Zuerst das Trebuchet aufbauen", "es_es": "Primero despliega el trebuchet", "it_it": "Prima schiera il trabucco"}
+{"name": "aoe2mc.transport.out", "en_us": "%s units came out", "de_de": "%s Einheiten kamen heraus", "es_es": "Salieron %s unidades", "it_it": "Sono uscite %s unità"}
+{"name": "aoe2mc.diplomacy.ally", "en_us": "Ally", "de_de": "Verbündeter", "es_es": "Aliado", "it_it": "Alleato"}
+{"name": "aoe2mc.diplomacy.changed", "en_us": "Player %s changed its stance to you: %s.", "de_de": "Spieler %s hat seine Haltung dir gegenüber geändert: %s.", "es_es": "El jugador %s cambió su postura hacia ti: %s.", "it_it": "Il giocatore %s ha cambiato il suo atteggiamento verso di te: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "en_us": "Enemy", "de_de": "Feind", "es_es": "Enemigo", "it_it": "Nemico"}
+{"name": "aoe2mc.diplomacy.neutral", "en_us": "Neutral", "de_de": "Neutral", "es_es": "Neutral", "it_it": "Neutrale"}
+{"name": "aoe2mc.diplomacy.speed", "en_us": "Player %s set the game speed to %s.", "de_de": "Spieler %s hat die Spielgeschwindigkeit auf %s gesetzt.", "es_es": "El jugador %s fijó la velocidad del juego en %s.", "it_it": "Il giocatore %s ha impostato la velocità di gioco a %s."}
+{"name": "aoe2mc.diplomacy.tribute", "en_us": "Player %s sent %s %s to player %s.", "de_de": "Spieler %s hat %s %s an Spieler %s gesendet.", "es_es": "El jugador %s envió %s de %s al jugador %s.", "it_it": "Il giocatore %s ha inviato %s di %s al giocatore %s."}
+{"name": "aoe2mc.hill.holds", "en_us": "Player %s holds the monument.", "de_de": "Spieler %s hält das Monument.", "es_es": "El jugador %s controla el monumento.", "it_it": "Il giocatore %s controlla il monumento."}
+{"name": "aoe2mc.relic_victory.all", "en_us": "Player %s holds all relics.", "de_de": "Spieler %s hält alle Reliquien.", "es_es": "El jugador %s tiene todas las reliquias.", "it_it": "Il giocatore %s possiede tutte le reliquie."}
+{"name": "aoe2mc.relic_victory.lost", "en_us": "Player %s lost a relic.", "de_de": "Spieler %s hat eine Reliquie verloren.", "es_es": "El jugador %s perdió una reliquia.", "it_it": "Il giocatore %s ha perso una reliquia."}
+{"name": "aoe2mc.replay.army_end", "en_us": ", army at the end: %s", "de_de": ", Armee am Ende: %s", "es_es": ", ejército al final: %s", "it_it": ", esercito alla fine: %s"}
+{"name": "aoe2mc.replay.army_lost", "en_us": ", lost: %s", "de_de": ", verloren: %s", "es_es": ", perdido: %s", "it_it": ", perso: %s"}
+{"name": "aoe2mc.replay.carries", "en_us": " | carries %s %s", "de_de": " | trägt %s %s", "es_es": " | lleva %s %s", "it_it": " | trasporta %s %s"}
+{"name": "aoe2mc.replay.flare", "en_us": "Flare", "de_de": "Signal", "es_es": "Bengala", "it_it": "Segnale"}
+{"name": "aoe2mc.replay.game_ends", "en_us": "The game ends", "de_de": "Das Spiel endet", "es_es": "El juego termina", "it_it": "Il gioco finisce"}
+{"name": "aoe2mc.replay.game_time", "en_us": "Game time %s", "de_de": "Spielzeit %s", "es_es": "Tiempo de juego %s", "it_it": "Tempo di gioco %s"}
+{"name": "aoe2mc.replay.garrison", "en_us": " · garrison %s", "de_de": " · stationiert %s", "es_es": " · guarnición %s", "it_it": " · presidio %s"}
+{"name": "aoe2mc.replay.hill_won", "en_us": "%s held the monument: King of the Hill victory at %s.", "de_de": "%s hielt das Monument: Sieg (König des Hügels) um %s.", "es_es": "%s controló el monumento: victoria Rey de la Colina en %s.", "it_it": "%s ha controllato il monumento: vittoria Re della Collina a %s."}
+{"name": "aoe2mc.replay.inspect", "en_us": "%s (%s): %s/%s | %s%s | %s atk %s/%s arm%s", "de_de": "%s (%s): %s/%s | %s%s | %s Angr. %s/%s Rüst.%s", "es_es": "%s (%s): %s/%s | %s%s | %s atq %s/%s arm%s", "it_it": "%s (%s): %s/%s | %s%s | %s att %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "en_us": "Double-tap Shift: spectator view (fly through blocks). Right click the hotbar items: replay control.", "de_de": "Zweimal Umschalt drücken: Zuschaueransicht (durch Blöcke fliegen). Rechtsklick auf die Hotbar-Items: Steuerung der Wiederholung.", "es_es": "Doble toque de Mayús: vista de espectador (vuela a través de bloques). Clic derecho en los objetos de la barra: control de la repetición.", "it_it": "Doppio tocco di Maiusc: vista spettatore (voli attraverso i blocchi). Clic destro sugli oggetti della barra: controllo del replay."}
+{"name": "aoe2mc.replay.king_died", "en_us": ": the King died at %s. Regicide: the player is out.", "de_de": ": der König starb um %s. Königsmord: der Spieler ist raus.", "es_es": ": el Rey murió en %s. Regicidio: el jugador queda fuera.", "it_it": ": il Re è morto a %s. Regicidio: il giocatore è fuori."}
+{"name": "aoe2mc.replay.king_killed", "en_us": "King killed at %s", "de_de": "König getötet um %s", "es_es": "Rey muerto en %s", "it_it": "Re ucciso a %s"}
+{"name": "aoe2mc.replay.live_jump", "en_us": "Live replay: the jump stops at the delay behind the game.", "de_de": "Live-Wiederholung: der Sprung hält an der Verzögerung hinter dem Spiel.", "es_es": "Repetición en vivo: el salto se detiene a la distancia de retraso del juego.", "it_it": "Replay dal vivo: il salto si ferma al ritardo dietro il gioco."}
+{"name": "aoe2mc.replay.monument_holds", "en_us": " holds the monument at %s.", "de_de": " hält das Monument um %s.", "es_es": " controla el monumento en %s.", "it_it": " controlla il monumento a %s."}
+{"name": "aoe2mc.replay.monument_year", "en_us": "%s: monument, %s year left", "de_de": "%s: Monument, noch %s Jahr", "es_es": "%s: monumento, queda %s año", "it_it": "%s: monumento, manca %s anno"}
+{"name": "aoe2mc.replay.monument_years", "en_us": "%s: monument, %s years left", "de_de": "%s: Monument, noch %s Jahre", "es_es": "%s: monumento, quedan %s años", "it_it": "%s: monumento, mancano %s anni"}
+{"name": "aoe2mc.replay.no_camera", "en_us": "This record has no camera of its player.", "de_de": "Diese Aufnahme hat keine Kamera ihres Spielers.", "es_es": "Esta grabación no tiene cámara de su jugador.", "it_it": "Questa registrazione non ha la telecamera del suo giocatore."}
+{"name": "aoe2mc.replay.out", "en_us": "%s is out", "de_de": "%s ist raus", "es_es": "%s queda fuera", "it_it": "%s è fuori"}
+{"name": "aoe2mc.replay.players", "en_us": "Players", "de_de": "Spieler", "es_es": "Jugadores", "it_it": "Giocatori"}
+{"name": "aoe2mc.replay.range", "en_us": " r%s", "de_de": " R%s", "es_es": " r%s", "it_it": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "en_us": " takes the relic to a monastery and wins.", "de_de": " bringt die Reliquie in ein Kloster und gewinnt.", "es_es": " lleva la reliquia a un monasterio y gana.", "it_it": " porta la reliquia in un monastero e vince."}
+{"name": "aoe2mc.replay.replay_ended", "en_us": "Replay ended", "de_de": "Wiederholung beendet", "es_es": "Repetición terminada", "it_it": "Replay terminato"}
+{"name": "aoe2mc.replay.research", "en_us": " researches %s", "de_de": " erforscht %s", "es_es": " investiga %s", "it_it": " ricerca %s"}
+{"name": "aoe2mc.replay.resigns", "en_us": "%s resigns", "de_de": "%s gibt auf", "es_es": "%s se rinde", "it_it": "%s si arrende"}
+{"name": "aoe2mc.replay.restart_jump", "en_us": "The server restarts for the jump back: join it again.", "de_de": "Der Server startet für den Sprung zurück neu: tritt ihm erneut bei.", "es_es": "El servidor se reinicia para el salto atrás: vuelve a entrar.", "it_it": "Il server si riavvia per il salto indietro: rientra."}
+{"name": "aoe2mc.replay.sum_economy", "en_us": ": villagers trained %s, gathered %s, idle villager time %s, idle TC time %s", "de_de": ": Dorfbewohner ausgebildet %s, gesammelt %s, Leerlauf Dorfbewohner %s, Leerlauf DZ %s", "es_es": ": aldeanos entrenados %s, recolectado %s, tiempo de aldeanos inactivos %s, tiempo de CU inactivo %s", "it_it": ": paesani addestrati %s, raccolto %s, tempo paesani inattivi %s, tempo CC inattivo %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "en_us": ": holds the monument (King of the Hill)", "de_de": ": hält das Monument (König des Hügels)", "es_es": ": controla el monumento (Rey de la Colina)", "it_it": ": controlla il monumento (Re della Collina)"}
+{"name": "aoe2mc.replay.sum_hill_won", "en_us": ": monument won %s (King of the Hill)", "de_de": ": Monument gewonnen %s (König des Hügels)", "es_es": ": monumento ganado %s (Rey de la Colina)", "it_it": ": monumento vinto %s (Re della Collina)"}
+{"name": "aoe2mc.replay.sum_military", "en_us": ": military units trained %s, units lost %s, buildings lost %s, APM %s%s", "de_de": ": Militäreinheiten ausgebildet %s, Einheiten verloren %s, Gebäude verloren %s, APM %s%s", "es_es": ": unidades militares entrenadas %s, unidades perdidas %s, edificios perdidos %s, APM %s%s", "it_it": ": unità militari addestrate %s, unità perse %s, edifici persi %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "en_us": ": King killed %s (Regicide)", "de_de": ": König getötet %s (Königsmord)", "es_es": ": Rey muerto %s (Regicidio)", "it_it": ": Re ucciso %s (Regicidio)"}
+{"name": "aoe2mc.replay.sum_relic", "en_us": ": wins, relic in a monastery %s (Capture the Relic)", "de_de": ": gewinnt, Reliquie in einem Kloster %s (Reliquien erobern)", "es_es": ": gana, reliquia en un monasterio %s (Captura la reliquia)", "it_it": ": vince, reliquia in un monastero %s (Cattura la reliquia)"}
+{"name": "aoe2mc.replay.sum_society", "en_us": ": %stribute sent %s, received %s, villager high %s (est.)", "de_de": ": %sTribut gesendet %s, erhalten %s, Dorfbewohner Höchststand %s (geschätzt)", "es_es": ": %stributo enviado %s, recibido %s, máximo de aldeanos %s (est.)", "it_it": ": %stributi inviati %s, ricevuti %s, picco paesani %s (stima)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "en_us": ": town center lost %s (Sudden Death)", "de_de": ": Dorfzentrum verloren %s (Plötzlicher Tod)", "es_es": ": centro urbano perdido %s (Muerte súbita)", "it_it": ": centro città perso %s (Morte improvvisa)"}
+{"name": "aoe2mc.replay.sum_techs", "en_us": ": %s, technologies %s", "de_de": ": %s, Technologien %s", "es_es": ": %s, tecnologías %s", "it_it": ": %s, tecnologie %s"}
+{"name": "aoe2mc.replay.sum_wonder", "en_us": ": wonder timer from %s, ends %s (%s)", "de_de": ": Weltwunder-Timer ab %s, endet %s (%s)", "es_es": ": temporizador de maravilla desde %s, termina %s (%s)", "it_it": ": timer della meraviglia da %s, finisce %s (%s)"}
+{"name": "aoe2mc.replay.summary", "en_us": "Summary (est.)", "de_de": "Zusammenfassung (geschätzt)", "es_es": "Resumen (est.)", "it_it": "Riepilogo (stima)"}
+{"name": "aoe2mc.replay.tl_castle", "en_us": "Castle", "de_de": "Burg", "es_es": "Castillo", "it_it": "Castello"}
+{"name": "aoe2mc.replay.tl_king", "en_us": "King killed", "de_de": "König getötet", "es_es": "Rey muerto", "it_it": "Re ucciso"}
+{"name": "aoe2mc.replay.tl_military", "en_us": "1st military: %s", "de_de": "1. Militär: %s", "es_es": "1.ª unidad militar: %s", "it_it": "1ª unità militare: %s"}
+{"name": "aoe2mc.replay.tl_relic", "en_us": "Relic", "de_de": "Reliquie", "es_es": "Reliquia", "it_it": "Reliquia"}
+{"name": "aoe2mc.replay.tl_resigns", "en_us": "Resigns", "de_de": "Gibt auf", "es_es": "Se rinde", "it_it": "Si arrende"}
+{"name": "aoe2mc.replay.town_fell", "en_us": ": the town center fell at %s. Sudden Death: the player is out.", "de_de": ": das Dorfzentrum fiel um %s. Plötzlicher Tod: der Spieler ist raus.", "es_es": ": el centro urbano cayó en %s. Muerte súbita: el jugador queda fuera.", "it_it": ": il centro città è caduto a %s. Morte improvvisa: il giocatore è fuori."}
+{"name": "aoe2mc.replay.town_lost", "en_us": "Town center lost at %s", "de_de": "Dorfzentrum verloren um %s", "es_es": "Centro urbano perdido en %s", "it_it": "Centro città perso a %s"}
+{"name": "aoe2mc.replay.wonder_built", "en_us": " built a wonder at %s.", "de_de": " baute ein Weltwunder um %s.", "es_es": " construyó una maravilla en %s.", "it_it": " ha costruito una meraviglia a %s."}
+{"name": "aoe2mc.replay.eco_build", "en_us": "build %s", "de_de": "bauen %s", "es_es": "construir %s", "it_it": "costruzione %s"}
+{"name": "aoe2mc.replay.eco_food", "en_us": "food %s", "de_de": "Nahrung %s", "es_es": "comida %s", "it_it": "cibo %s"}
+{"name": "aoe2mc.replay.eco_gold", "en_us": "gold %s", "de_de": "Gold %s", "es_es": "oro %s", "it_it": "oro %s"}
+{"name": "aoe2mc.replay.eco_idle", "en_us": "idle %s", "de_de": "untätig %s", "es_es": "inactivo %s", "it_it": "inattivo %s"}
+{"name": "aoe2mc.replay.eco_stone", "en_us": "stone %s", "de_de": "Stein %s", "es_es": "piedra %s", "it_it": "pietra %s"}
+{"name": "aoe2mc.replay.eco_wood", "en_us": "wood %s", "de_de": "Holz %s", "es_es": "madera %s", "it_it": "legno %s"}
+{"name": "aoe2mc.replay.soc_castle", "en_us": "castles %s, ", "de_de": "Burgen %s, ", "es_es": "castillos %s, ", "it_it": "castelli %s, "}
+{"name": "aoe2mc.replay.soc_market", "en_us": "bought %s, sold %s, ", "de_de": "gekauft %s, verkauft %s, ", "es_es": "comprado %s, vendido %s, ", "it_it": "comprato %s, venduto %s, "}
+{"name": "aoe2mc.replay.soc_relics", "en_us": "relics %s, ", "de_de": "Reliquien %s, ", "es_es": "reliquias %s, ", "it_it": "reliquie %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "en_us": "wonders %s, ", "de_de": "Weltwunder %s, ", "es_es": "maravillas %s, ", "it_it": "meraviglie %s, "}
+{"name": "aoe2mc.replay.spent", "en_us": "Spent:", "de_de": "Ausgegeben:", "es_es": "Gastado:", "it_it": "Speso:"}
+{"name": "aoe2mc.replay.spent_buildings", "en_us": "Build %s", "de_de": "Bau %s", "es_es": "Construcción %s", "it_it": "Costruzioni %s"}
+{"name": "aoe2mc.replay.spent_economy", "en_us": "Eco %s", "de_de": "Wirt %s", "es_es": "Eco %s", "it_it": "Eco %s"}
+{"name": "aoe2mc.replay.spent_military", "en_us": "Mil %s", "de_de": "Mil %s", "es_es": "Mil %s", "it_it": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "en_us": "Tech %s", "de_de": "Tech %s", "es_es": "Tec %s", "it_it": "Tec %s"}
+{"name": "aoe2mc.replay.task_building", "en_us": "building", "de_de": "baut", "es_es": "construyendo", "it_it": "costruisce"}
+{"name": "aoe2mc.replay.task_following", "en_us": "following", "de_de": "folgt", "es_es": "siguiendo", "it_it": "segue"}
+{"name": "aoe2mc.replay.task_food", "en_us": "gathering food", "de_de": "sammelt Nahrung", "es_es": "recolectando comida", "it_it": "raccoglie cibo"}
+{"name": "aoe2mc.replay.task_garrisoned", "en_us": "garrisoned", "de_de": "stationiert", "es_es": "guarnecido", "it_it": "presidia"}
+{"name": "aoe2mc.replay.task_gold", "en_us": "gathering gold", "de_de": "sammelt Gold", "es_es": "recolectando oro", "it_it": "raccoglie oro"}
+{"name": "aoe2mc.replay.task_guarding", "en_us": "guarding", "de_de": "bewacht", "es_es": "protegiendo", "it_it": "protegge"}
+{"name": "aoe2mc.replay.task_idle", "en_us": "idle", "de_de": "untätig", "es_es": "inactivo", "it_it": "inattivo"}
+{"name": "aoe2mc.replay.task_patrolling", "en_us": "patrolling", "de_de": "patrouilliert", "es_es": "patrullando", "it_it": "pattuglia"}
+{"name": "aoe2mc.replay.task_resources", "en_us": "gathering resources", "de_de": "sammelt Rohstoffe", "es_es": "recolectando recursos", "it_it": "raccoglie risorse"}
+{"name": "aoe2mc.replay.task_stone", "en_us": "gathering stone", "de_de": "sammelt Stein", "es_es": "recolectando piedra", "it_it": "raccoglie pietra"}
+{"name": "aoe2mc.replay.task_walking", "en_us": "walking", "de_de": "geht", "es_es": "caminando", "it_it": "cammina"}
+{"name": "aoe2mc.replay.task_wood", "en_us": "gathering wood", "de_de": "sammelt Holz", "es_es": "recolectando madera", "it_it": "raccoglie legno"}
+{"name": "aoe2mc.replay.up_counts", "en_us": "economy %s · University %s", "de_de": "Wirtschaft %s · Universität %s", "es_es": "economía %s · Universidad %s", "it_it": "economia %s · Università %s"}
+{"name": "aoe2mc.replay.army", "en_us": "Army: %s", "de_de": "Armee: %s", "es_es": "Ejército: %s", "it_it": "Esercito: %s"}
+{"name": "aoe2mc.replay.build_order", "en_us": "Build order:", "de_de": "Bauabfolge:", "es_es": "Orden de construcción:", "it_it": "Ordine di costruzione:"}
+{"name": "aoe2mc.replay.building_garrison", "en_us": " · garrison %s", "de_de": " · stationiert %s", "es_es": " · guarnición %s", "it_it": " · presidio %s"}
+{"name": "aoe2mc.replay.building_hp", "en_us": "%s (%s): %s/%s", "de_de": "%s (%s): %s/%s", "es_es": "%s (%s): %s/%s", "it_it": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.graph_mil", "en_us": "Mil %s %s", "de_de": "Mil %s %s", "es_es": "Mil %s %s", "it_it": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "en_us": "Pop %s %s", "de_de": "Bev %s %s", "es_es": "Pob %s %s", "it_it": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "en_us": "Res %s %s", "de_de": "Roh %s %s", "es_es": "Rec %s %s", "it_it": "Ris %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "en_us": "Vil %s %s", "de_de": "Dorf %s %s", "es_es": "Ald %s %s", "it_it": "Pae %s %s"}
+{"name": "aoe2mc.replay.tier_archer", "en_us": "Archer %s/%s", "de_de": "Bogenschützen %s/%s", "es_es": "Arquero %s/%s", "it_it": "Arciere %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "en_us": "Archer armor %s/%s", "de_de": "Bogenschützenrüstung %s/%s", "es_es": "Armadura de arqueros %s/%s", "it_it": "Armatura arcieri %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "en_us": "Carry %s/%s", "de_de": "Tragen %s/%s", "es_es": "Carga %s/%s", "it_it": "Carico %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "en_us": "Cavalry armor %s/%s", "de_de": "Kavallerierüstung %s/%s", "es_es": "Armadura de caballería %s/%s", "it_it": "Armatura cavalleria %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "en_us": "Farm %s/%s", "de_de": "Feld %s/%s", "es_es": "Granja %s/%s", "it_it": "Fattoria %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "en_us": "Gold %s/%s", "de_de": "Gold %s/%s", "es_es": "Oro %s/%s", "it_it": "Oro %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "en_us": "Infantry armor %s/%s", "de_de": "Infanterierüstung %s/%s", "es_es": "Armadura de infantería %s/%s", "it_it": "Armatura fanteria %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "en_us": "Loom %s/%s", "de_de": "Webstuhl %s/%s", "es_es": "Telar %s/%s", "it_it": "Telaio %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "en_us": "Melee %s/%s", "de_de": "Nahkampf %s/%s", "es_es": "Cuerpo a cuerpo %s/%s", "it_it": "Mischia %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "en_us": "Stone %s/%s", "de_de": "Stein %s/%s", "es_es": "Piedra %s/%s", "it_it": "Pietra %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "en_us": "Wood %s/%s", "de_de": "Holz %s/%s", "es_es": "Madera %s/%s", "it_it": "Legno %s/%s"}
+{"name": "aoe2mc.replay.lost", "en_us": "Lost: %s", "de_de": "Verloren: %s", "es_es": "Perdido: %s", "it_it": "Perso: %s"}
+{"name": "aoe2mc.replay.share_buildings", "en_us": "Buildings %s (%s)", "de_de": "Gebäude %s (%s)", "es_es": "Edificios %s (%s)", "it_it": "Edifici %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "en_us": "Economy %s (%s)", "de_de": "Wirtschaft %s (%s)", "es_es": "Economía %s (%s)", "it_it": "Economia %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "en_us": "Military %s (%s)", "de_de": "Militär %s (%s)", "es_es": "Militar %s (%s)", "it_it": "Militare %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "en_us": "Technologies %s (%s)", "de_de": "Technologien %s (%s)", "es_es": "Tecnologías %s (%s)", "it_it": "Tecnologie %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "en_us": "Total %s", "de_de": "Gesamt %s", "es_es": "Total %s", "it_it": "Totale %s"}
+{"name": "aoe2mc.replay.training", "en_us": "Training: %s", "de_de": "Ausbildung: %s", "es_es": "Entrenando: %s", "it_it": "In addestramento: %s"}
+{"name": "aoe2mc.replay.university", "en_us": "University:", "de_de": "Universität:", "es_es": "Universidad:", "it_it": "Università:"}
+{"name": "aoe2mc.replay_input.fights", "en_us": "Large fights:", "de_de": "Große Kämpfe:", "es_es": "Grandes batallas:", "it_it": "Grandi battaglie:"}
+{"name": "aoe2mc.replay_input.help", "en_us": "Replay: right click the items in your hotbar, or click: ", "de_de": "Wiederholung: Rechtsklick auf die Items in deiner Hotbar, oder klicke: ", "es_es": "Repetición: clic derecho en los objetos de tu barra, o haz clic: ", "it_it": "Replay: clic destro sugli oggetti della barra, o clicca: "}
+{"name": "aoe2mc.replay_input.units", "en_us": " (%s units)", "de_de": " (%s Einheiten)", "es_es": " (%s unidades)", "it_it": " (%s unità)"}
+{"name": "aoe2mc.replay_input.vs", "en_us": " vs ", "de_de": " gegen ", "es_es": " vs ", "it_it": " vs "}
+{"name": "aoe2mc.resource.food", "en_us": "food", "de_de": "Nahrung", "es_es": "comida", "it_it": "cibo"}
+{"name": "aoe2mc.resource.gold", "en_us": "gold", "de_de": "Gold", "es_es": "oro", "it_it": "oro"}
+{"name": "aoe2mc.resource.stone", "en_us": "stone", "de_de": "Stein", "es_es": "piedra", "it_it": "pietra"}
+{"name": "aoe2mc.resource.wood", "en_us": "wood", "de_de": "Holz", "es_es": "madera", "it_it": "legno"}
+{"name": "aoe2mc.treaty.ended", "en_us": "The treaty ended: players can attack now.", "de_de": "Der Vertrag ist beendet: Spieler können jetzt angreifen.", "es_es": "El tratado terminó: los jugadores ya pueden atacar.", "it_it": "Il trattato è finito: ora i giocatori possono attaccare."}
+{"name": "aoe2mc.treaty.refuse", "en_us": "Treaty: you cannot attack before %s.", "de_de": "Vertrag: Du kannst nicht vor %s angreifen.", "es_es": "Tratado: no puedes atacar antes de %s.", "it_it": "Trattato: non puoi attaccare prima di %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "en_us": "Treaty: you cannot attack in this game.", "de_de": "Vertrag: Du kannst in diesem Spiel nicht angreifen.", "es_es": "Tratado: no puedes atacar en esta partida.", "it_it": "Trattato: non puoi attaccare in questa partita."}
+{"name": "aoe2mc.treaty.start", "en_us": "Treaty: no player can attack another player before %s.", "de_de": "Vertrag: Kein Spieler kann vor %s einen anderen Spieler angreifen.", "es_es": "Tratado: ningún jugador puede atacar a otro antes de %s.", "it_it": "Trattato: nessun giocatore può attaccare un altro prima di %s."}
+{"name": "aoe2mc.treaty.start_endless", "en_us": "Treaty: no player can attack another player in this game.", "de_de": "Vertrag: Kein Spieler kann in diesem Spiel einen anderen Spieler angreifen.", "es_es": "Tratado: ningún jugador puede atacar a otro en esta partida.", "it_it": "Trattato: nessun giocatore può attaccare un altro in questa partita."}
+{"name": "aoe2mc.tutorial.complete", "en_us": "The tutorial is complete. Next: play a game against the bot: python3 game/run.py OUTWorld --play --bot", "de_de": "Das Tutorial ist abgeschlossen. Als Nächstes: Spiele ein Spiel gegen den Bot: python3 game/run.py OUTWorld --play --bot", "es_es": "El tutorial está completo. Siguiente: juega una partida contra el bot: python3 game/run.py OUTWorld --play --bot", "it_it": "Il tutorial è completo. Prossimo passo: gioca una partita contro il bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "en_us": "Tutorial complete", "de_de": "Tutorial abgeschlossen", "es_es": "Tutorial completo", "it_it": "Tutorial completato"}
+{"name": "aoe2mc.tutorial.step_done", "en_us": "Step done", "de_de": "Schritt erledigt", "es_es": "Paso hecho", "it_it": "Passo completato"}
+{"name": "aoe2mc.tutorial.step_of", "en_us": "Step %s/%s: %s", "de_de": "Schritt %s/%s: %s", "es_es": "Paso %s/%s: %s", "it_it": "Passo %s/%s: %s"}
+{"name": "aoe2mc.victory", "en_us": "Victory", "de_de": "Sieg", "es_es": "Victoria", "it_it": "Vittoria"}
+{"name": "aoe2mc.run.chat_hint", "en_us": "Chat: a normal line goes to all, /tm TEXT to your allies, /msg NAME TEXT to one person.", "de_de": "Chat: Eine normale Zeile geht an alle, /tm TEXT an deine Verbündeten, /msg NAME TEXT an eine Person.", "es_es": "Chat: una línea normal va a todos, /tm TEXTO a tus aliados, /msg NOMBRE TEXTO a una persona.", "it_it": "Chat: una riga normale va a tutti, /tm TESTO ai tuoi alleati, /msg NOME TESTO a una persona."}
+{"name": "aoe2mc.run.welcome_goal", "en_us": "Goal: win the game. Victory setting: %s.", "de_de": "Ziel: Gewinne das Spiel. Siegbedingung: %s.", "es_es": "Objetivo: gana la partida. Condición de victoria: %s.", "it_it": "Obiettivo: vinci la partita. Condizione di vittoria: %s."}
+{"name": "aoe2mc.run.welcome_first", "en_us": "First step: hold the command stick and right click one of your villagers.", "de_de": "Erster Schritt: Halte den Befehlsstab und mache einen Rechtsklick auf einen deiner Dorfbewohner.", "es_es": "Primer paso: sostén el bastón de mando y haz clic derecho en uno de tus aldeanos.", "it_it": "Primo passo: tieni il bastone di comando e clic destro su uno dei tuoi paesani."}
+{"name": "aoe2mc.run.welcome_controls", "en_us": "All controls: /controls", "de_de": "Alle Steuerelemente: /controls", "es_es": "Todos los controles: /controls", "it_it": "Tutti i comandi: /controls"}
+{"name": "aoe2mc.run.campaign_complete", "en_us": "Campaign complete", "de_de": "Kampagne abgeschlossen", "es_es": "Campaña completa", "it_it": "Campagna completata"}
+{"name": "aoe2mc.run.scenario_starts", "en_us": "Scenario %s starts. Join again.", "de_de": "Szenario %s startet. Tritt erneut bei.", "es_es": "Empieza el escenario %s. Vuelve a entrar.", "it_it": "Inizia lo scenario %s. Rientra."}
+{"name": "aoe2mc.run.starts_in", "en_us": "The game starts in %s", "de_de": "Das Spiel startet in %s", "es_es": "La partida empieza en %s", "it_it": "La partita inizia tra %s"}
+{"name": "aoe2mc.lobby.you_play", "en_us": "You play %s.", "de_de": "Du spielst %s.", "es_es": "Juegas con %s.", "it_it": "Giochi con %s."}
+{"name": "aoe2mc.savegame.saved", "en_us": "Saved the game: %s", "de_de": "Spiel gespeichert: %s", "es_es": "Partida guardada: %s", "it_it": "Partita salvata: %s"}
+{"name": "aoe2mc.ratings.change", "en_us": "%s %s → %s", "de_de": "%s %s → %s", "es_es": "%s %s → %s", "it_it": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "en_us": "Team %s (mean rating %s): %s", "de_de": "Team %s (mittlere Wertung %s): %s", "es_es": "Equipo %s (puntuación media %s): %s", "it_it": "Squadra %s (punteggio medio %s): %s"}
+{"name": "aoe2mc.bot.no_flare", "en_us": "I see no flare.", "de_de": "Ich sehe kein Signal.", "es_es": "No veo ninguna bengala.", "it_it": "Non vedo nessun segnale."}
+{"name": "aoe2mc.bot.cannot_build", "en_us": "I cannot build a %s there now.", "de_de": "Ich kann dort jetzt kein %s bauen.", "es_es": "Ahora no puedo construir un %s ahí.", "it_it": "Ora non posso costruire un %s lì."}
+{"name": "aoe2mc.bot.no_wall_resources", "en_us": "I have not enough resources for a wall.", "de_de": "Ich habe nicht genug Rohstoffe für eine Mauer.", "es_es": "No tengo recursos suficientes para un muro.", "it_it": "Non ho risorse sufficienti per un muro."}
+{"name": "aoe2mc.bot.flare_two", "en_us": "Flare two places for the wall.", "de_de": "Setze zwei Signale für die Mauer.", "es_es": "Marca dos lugares con bengala para el muro.", "it_it": "Segnala due punti per il muro."}
+{"name": "aoe2mc.bot.no_water", "en_us": "I have no water near my town: I cannot build a navy.", "de_de": "Ich habe kein Wasser nahe meiner Stadt: Ich kann keine Flotte bauen.", "es_es": "No hay agua cerca de mi ciudad: no puedo construir una flota.", "it_it": "Non c'è acqua vicino alla mia città: non posso costruire una flotta."}
+{"name": "aoe2mc.bot.onager_no_trees", "en_us": "My onagers cannot cut trees.", "de_de": "Meine Onager können keine Bäume fällen.", "es_es": "Mis onagros no pueden talar árboles.", "it_it": "I miei onagri non possono abbattere alberi."}
+{"name": "aoe2mc.bot.no_onager", "en_us": "I have no onager.", "de_de": "Ich habe keinen Onager.", "es_es": "No tengo ningún onagro.", "it_it": "Non ho nessun onagro."}
+{"name": "aoe2mc.bot.cannot_train", "en_us": "I cannot train that unit: I have no building for it.", "de_de": "Ich kann diese Einheit nicht ausbilden: Ich habe kein Gebäude dafür.", "es_es": "No puedo entrenar esa unidad: no tengo edificio para ella.", "it_it": "Non posso addestrare quell'unità: non ho un edificio per essa."}
+{"name": "aoe2mc.bot.no_market", "en_us": "I have no market: I cannot send tribute.", "de_de": "Ich habe keinen Markt: Ich kann keinen Tribut senden.", "es_es": "No tengo mercado: no puedo enviar tributo.", "it_it": "Non ho un mercato: non posso inviare tributi."}
+{"name": "aoe2mc.wonder.built", "en_us": "Player %s built a wonder.", "de_de": "Spieler %s hat ein Weltwunder gebaut.", "es_es": "El jugador %s construyó una maravilla.", "it_it": "Il giocatore %s ha costruito una meraviglia."}
+{"name": "aoe2mc.wonder.destroyed", "en_us": "The wonder of player %s is destroyed.", "de_de": "Das Weltwunder von Spieler %s ist zerstört.", "es_es": "La maravilla del jugador %s fue destruida.", "it_it": "La meraviglia del giocatore %s è stata distrutta."}
+{"name": "aoe2mc.cheat.aegis_off", "en_us": "Aegis off", "de_de": "Aegis aus", "es_es": "Égida desactivada", "it_it": "Egida disattivata"}
+{"name": "aoe2mc.cheat.aegis_on", "en_us": "Aegis on", "de_de": "Aegis an", "es_es": "Égida activada", "it_it": "Egida attivata"}
+{"name": "aoe2mc.cheat.beyond", "en_us": "Technologies: up to 256 researches", "de_de": "Technologien: bis zu 256 Forschungen", "es_es": "Tecnologías: hasta 256 investigaciones", "it_it": "Tecnologie: fino a 256 ricerche"}
+{"name": "aoe2mc.cheat.cpu", "en_us": "Population limit: %s", "de_de": "Bevölkerungslimit: %s", "es_es": "Límite de población: %s", "it_it": "Limite di popolazione: %s"}
+{"name": "aoe2mc.cheat.fog_off", "en_us": "Fog of war: off", "de_de": "Nebel des Krieges: aus", "es_es": "Niebla de guerra: desactivada", "it_it": "Nebbia di guerra: disattivata"}
+{"name": "aoe2mc.cheat.fog_on", "en_us": "Fog of war: on", "de_de": "Nebel des Krieges: an", "es_es": "Niebla de guerra: activada", "it_it": "Nebbia di guerra: attivata"}
+{"name": "aoe2mc.cheat.free_techs", "en_us": "Technologies are free", "de_de": "Technologien sind kostenlos", "es_es": "Las tecnologías son gratis", "it_it": "Le tecnologie sono gratis"}
+{"name": "aoe2mc.cheat.marco", "en_us": "polo", "de_de": "polo", "es_es": "polo", "it_it": "polo"}
+{"name": "aoe2mc.cheat.sharing", "en_us": "Sharing is caring: your income goes to your allies", "de_de": "Teilen ist fürsorglich: Dein Einkommen geht an deine Verbündeten", "es_es": "Compartir es vivir: tus ingresos van a tus aliados", "it_it": "Condividere è bello: le tue entrate vanno ai tuoi alleati"}
+{"name": "aoe2mc.cheat.wonders", "en_us": "You control nature: %s animals", "de_de": "Du kontrollierst die Natur: %s Tiere", "es_es": "Controlas la naturaleza: %s animales", "it_it": "Controlli la natura: %s animali"}
+{"name": "aoe2mc.replay.now", "en_us": " now", "de_de": " jetzt", "es_es": " ahora", "it_it": " ora"}
+{"name": "aoe2mc.replay.team", "en_us": "Team %s · ", "de_de": "Team %s · ", "es_es": "Equipo %s · ", "it_it": "Squadra %s · "}
+{"name": "aoe2mc.replay_input.fight", "en_us": "Fight: ", "de_de": "Kampf: ", "es_es": "Combate: ", "it_it": "Battaglia: "}
+{"name": "aoe2mc.train.active", "en_us": "%s is active.", "de_de": "%s ist aktiv.", "es_es": "%s está activo.", "it_it": "%s è attivo."}
+{"name": "aoe2mc.train.rally", "en_us": "Right click the ground for the rally point.", "de_de": "Rechtsklick auf den Boden für den Sammelpunkt.", "es_es": "Haz clic derecho en el suelo para el punto de reunión.", "it_it": "Clic destro sul terreno per il punto di raccolta."}
+{"name": "aoe2mc.train.researched", "en_us": "%s is researched.", "de_de": "%s ist erforscht.", "es_es": "%s está investigado.", "it_it": "%s è ricercato."}
+{"name": "aoe2mc.replay_input.fight_units", "en_us": ", %s units", "de_de": ", %s Einheiten", "es_es": ", %s unidades", "it_it": ", %s unità"}
+{"name": "aoe2mc.camera.fov", "en_us": "The fast camera makes the held item swing. To keep it still, set Options > Accessibility Settings > View Bobbing to OFF. The camera also makes the view wider, which shows more of the map. To keep the normal view, set Options > Accessibility Settings > FOV Effects to 0 %.", "de_de": "Die schnelle Kamera lässt das gehaltene Item schwingen. Damit es ruhig bleibt, setze Optionen > Barrierefreiheit > Sichtwippen auf AUS. Die Kamera macht die Sicht auch breiter und zeigt so mehr von der Karte. Für die normale Sicht setze Optionen > Barrierefreiheit > Sichtfeldeffekte auf 0 %.", "es_es": "La cámara rápida hace que el objeto en la mano se balancee. Para mantenerlo quieto, pon Opciones > Accesibilidad > Balanceo de vista en NO. La cámara también amplía la vista, que muestra más del mapa. Para mantener la vista normal, pon Opciones > Accesibilidad > Efectos de campo de visión en 0 %.", "it_it": "La telecamera veloce fa oscillare l'oggetto in mano. Per tenerlo fermo, imposta Opzioni > Accessibilità > Ondeggiamento visuale su NO. La telecamera allarga anche la vista, che mostra più mappa. Per tenere la vista normale, imposta Opzioni > Accessibilità > Effetti campo visivo su 0 %."}
+{"name": "aoe2mc.camera.off", "en_us": "Camera: off", "de_de": "Kamera: aus", "es_es": "Cámara: desactivada", "it_it": "Telecamera: disattivata"}
+{"name": "aoe2mc.camera.on", "en_us": "Camera: on, speed x%s. Shift right click: next speed.", "de_de": "Kamera: an, Geschwindigkeit x%s. Umschalt + Rechtsklick: nächste Geschwindigkeit.", "es_es": "Cámara: activada, velocidad x%s. Mayús + clic derecho: siguiente velocidad.", "it_it": "Telecamera: attivata, velocità x%s. Maiusc + clic destro: velocità successiva."}
+{"name": "aoe2mc.camera.speed", "en_us": "Camera speed: x%s", "de_de": "Kamerageschwindigkeit: x%s", "es_es": "Velocidad de cámara: x%s", "it_it": "Velocità telecamera: x%s"}
+{"name": "aoe2mc.recap.next", "en_us": "The game is over. Right click the Recap book in your hand to see the results. Stop the game program with Ctrl-C in its console.", "de_de": "Das Spiel ist vorbei. Rechtsklick auf das Rückblick-Buch in deiner Hand zeigt die Ergebnisse. Beende das Spielprogramm mit Strg-C in seiner Konsole.", "es_es": "La partida ha terminado. Haz clic derecho con el libro Resumen en la mano para ver los resultados. Detén el programa de juego con Ctrl-C en su consola.", "it_it": "La partita è finita. Clic destro con il libro Riepilogo in mano per vedere i risultati. Ferma il programma di gioco con Ctrl-C nella sua console."}
+{"name": "aoe2mc.lobby.ready", "en_us": "%s / %s ready", "de_de": "%s / %s bereit", "es_es": "%s / %s listos", "it_it": "%s / %s pronti"}
+{"name": "aoe2mc.run.wait_ready", "en_us": "Open \"Choose your player\" and click \"Ready\"", "de_de": "Öffne „Choose your player“ und klicke „Ready“", "es_es": "Abre \"Elige tu jugador\" y haz clic en \"Listo\"", "it_it": "Apri \"Scegli il tuo giocatore\" e clicca \"Pronto\""}
+{"name": "aoe2mc.replay_input.takeover", "en_us": "Take over: ", "de_de": "Übernehmen: ", "es_es": "Tomar el control: ", "it_it": "Prendi il controllo: "}
