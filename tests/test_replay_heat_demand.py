@@ -10,7 +10,7 @@ from test_replay import Fake, data  # noqa: E402
 
 
 def tiles(cmds):
-    return {tuple(int(v) for v in t.split(",")[:2]) for c in cmds for t in c.split()[4:] if t != "end"}
+    return {tuple(int(v) for v in t.split(",")[:2]) for c in cmds for t in c.split()[4:] if not t.startswith("end")}
 
 
 def moves():
@@ -60,5 +60,5 @@ def test_death_range_subtracts_the_start_counts():
 def test_the_end_gives_the_three_kinds():
     r = replay.Replay(Deaths(["Deaths: p2 4 4 1"]), data(moves()), ai=True)
     cmds = r.end_heat_commands()
-    assert sum(c.endswith(" end") for c in cmds) == len(heatmap.KINDS)
+    assert sum(c.split()[-1].startswith("end=") for c in cmds) == len(heatmap.KINDS)
     assert tiles(cmds) == {(2, 3), (5, 6), (7, 7), (4, 4)}
