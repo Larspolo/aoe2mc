@@ -11,7 +11,8 @@ OPTIONAL = {"civ": str, "mode": str,   # limit a line to a civilization and a ga
             "units": list, "need": int,   # the event count:train (#5280)
             "killed": list, "by": list,   # the event kill (#5640)
             "gather": str, "age": int,   # the event count:gather (#5643)
-            "buildings": list, "ages": int, "villagers": int}   # count:build, count:queue, a research (#5642)
+            "buildings": list, "ages": int, "villagers": int,   # count:build, count:queue, a research (#5642)
+            "before": (int, float), "least": (int, float)}   # the limits of a value of an event (#5644)
 
 
 def test_each_line_has_the_form_and_a_known_parent():
