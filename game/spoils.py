@@ -19,6 +19,7 @@ AoE2 keeps the fractions of a part (g.spare, as the drop-off bonus): the next pa
 """
 import re
 
+import achievements
 import build
 import civs
 import combat
@@ -93,7 +94,10 @@ def attacks(g):
     m = re.search(r"has (\d+)", g.command(f"scoreboard players get p{g.player} {GOLD}") or "")
     if n := int(m.group(1)) if m else 0:
         g.command(f"scoreboard players remove p{g.player} {GOLD} {n}")
-        gain(g, {"gold": n / PART / 20 * combat.NORMAL / 60}, civs.value("attack_gold", civs.civ(g), 1))
+        gold = n / PART / 20 * combat.NORMAL / 60 * civs.value("attack_gold", civs.civ(g), 1)
+        gain(g, {"gold": gold}, 1)
+        units = [u for u in g.soldiers.values() if u in combat.ATTACK_GOLD]   # the team score: the Keshik part by count
+        achievements.gathered(g, "KESHIK", gold * sum("KESHIK" in u for u in units) / len(units))
 
 
 def loot(g, uuid):
