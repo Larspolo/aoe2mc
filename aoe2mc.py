@@ -5919,13 +5919,14 @@ def advancement_files(rows=None):
 
 
 def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=(), T=4,
-                   trigger_stats=None, fog=None, mood=True, replay=False):
+                   trigger_stats=None, fog=None, mood=True, replay=False, xs_script=None):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
     (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows.
     Ambience (#219): particles and sounds near the players by biome; "full" also writes the custom biomes, "off"
     writes no pack (and so no teams). Teams: `team_lines`. Timer and area triggers: `trigger_files`.
     fog: (start, end) blocks of the fog of a fog mood (FOG, #1626), a timeline of the overworld clock.
     mood: the "Change Color Mood" effects of the triggers change the time of day (--mood on, #1876).
+    xs_script: [name, text] of the XS map script (#5122): xs_mc compiles its main() to functions (#5689).
     Returns (work sounds, ambience lines)."""
     root = os.path.join(out, "datapacks", "aoe2mc")
     if ambience == "off":           # the world as before #188: no pack
@@ -5980,6 +5981,21 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
         "data/aoe2mc/function/pulse.mcfunction": "\n".join(lines + team_pulse + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
     }
     files.update(trigger_fns)
+    if xs_script:                                   # the datapack form of the XS script (#5689)
+        import xs
+        import xs_mc
+        try:
+            fns, _, xs_load, warnings = xs_mc.compile(xs.parse(xs_script[1], xs_script[0]), xs_script[1])
+        except xs.XsError as e:
+            fns, xs_load, warnings = {}, [], [f"XS script: {e}: no datapack form, the game program runs it (game/run.py)"]
+        for w in warnings:
+            print(f"  {w}")
+        if fns:
+            files.update(fns)
+            tag = "data/minecraft/tags/function/tick.json"
+            files[tag] = {"values": [*files.get(tag, {}).get("values", []), "aoe2mc:xs/tick"]}
+            files["data/aoe2mc/function/xs/tick.mcfunction"] = xs_mc.TICK + "\n"
+            files["data/aoe2mc/function/load.mcfunction"] = "\n".join(xs_load) + "\n" + files["data/aoe2mc/function/load.mcfunction"]
     files.update(advancement_files())
     for name, chance in CHANCE.items():
         files[f"data/aoe2mc/predicate/{name}.json"] = {"type": "minecraft:random_chance", "chance": chance}
@@ -6592,7 +6608,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
-                            mood == "on", replay=record)
+                            mood == "on", replay=record, xs_script=texts.get("xs_script"))
     if resource_pack:
         print(f"  resource pack (resourcepacks/resources.zip): {len(write_resourcepack(out)) - 1} textures")
     k = sum(bool(re.search(r"/trigger/\d+\.mcfunction$", f))     # not the roll and timer functions (#2791)

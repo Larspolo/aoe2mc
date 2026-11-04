@@ -1895,13 +1895,17 @@ def mole(c, w, st, col, T, ctx, built=True):
         c.set(w // 2, 1, w // 2, "barrel[facing=up]")
 
 
-CHAIN_DIRECTION = {"NORTHWEST_TO_SOUTHEAST": (1, 0), "SOUTHWEST_TO_NORTHEAST": (0, 1),
-                   "WEST_TO_EAST": (1, -1), "NORTH_TO_SOUTH": (1, 1)}
+CHAIN_DIRECTION = {                                                     # decision A of #3101: the names read as lines
+    "NORTH_TO_SOUTH": (1, -1),
+    "NORTHWEST_TO_SOUTHEAST": (0, 1),                                  # AoE2 DE CHAIN 1397: 0.5 x 1.0 tiles
+    "SOUTHWEST_TO_NORTHEAST": (1, 0),                                  # AoE2 DE CHAIN 1396: 1.0 x 0.5 tiles
+    "WEST_TO_EAST": (1, 1),
+}
 
 
 def harbor_chain(c, w, st, col, T, ctx):
     """Harbor chain on the water. It runs from edge to edge of the tile, so pieces next to each other connect.
-    AoE2 screen directions: map x runs to the south-east and map y to the south-west on the screen."""
+    The tile direction of each name (CHAIN_DIRECTION) is the line reading of the name with the axes of #116 (#3101)."""
     dx, dz = next(d for k, d in CHAIN_DIRECTION.items() if ctx["name"].endswith(k))
     if dz == 0:
         c.box(0, w, 0, 1, w // 2, w // 2 + 1, "iron_chain[axis=x]")
