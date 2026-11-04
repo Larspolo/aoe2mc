@@ -30,7 +30,10 @@ def test_chat_line_clicks_each_player():
 
 class FakeGame:
     def __init__(self, world, version, server=None):
-        self.world, self.port, self.kind = world, 0, "paper"
+        self.world, self.port, self.kind, self.joined = world, 0, "paper", frozenset()
+
+    def command(self, cmd):
+        pass
 
     def start(self):
         pass
