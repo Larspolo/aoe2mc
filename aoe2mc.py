@@ -5985,17 +5985,17 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
         import xs
         import xs_mc
         try:
-            fns, _, xs_load, warnings = xs_mc.compile(xs.parse(xs_script[1], xs_script[0]), xs_script[1],
+            fns, xs_tick, xs_load, warnings = xs_mc.compile(xs.parse(xs_script[1], xs_script[0]), xs_script[1],
                                                     {n: p.get("civ") for n, p in (players or {}).items()})
         except xs.XsError as e:
-            fns, xs_load, warnings = {}, [], [f"XS script: {e}: no datapack form, the game program runs it (game/run.py)"]
+            fns, xs_tick, xs_load, warnings = {}, [], [], [f"XS script: {e}: no datapack form, the game program runs it (game/run.py)"]
         for w in warnings:
             print(f"  {w}")
         if fns:
             files.update(fns)
             tag = "data/minecraft/tags/function/tick.json"
             files[tag] = {"values": [*files.get(tag, {}).get("values", []), "aoe2mc:xs/tick"]}
-            files["data/aoe2mc/function/xs/tick.mcfunction"] = xs_mc.TICK + "\n"
+            files["data/aoe2mc/function/xs/tick.mcfunction"] = "\n".join(xs_tick) + "\n"
             files["data/aoe2mc/function/load.mcfunction"] = "\n".join(xs_load) + "\n" + files["data/aoe2mc/function/load.mcfunction"]
     files.update(advancement_files())
     for name, chance in CHANCE.items():
