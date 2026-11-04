@@ -38,6 +38,8 @@ import os
 import re
 import sys
 
+import numpy as np
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import ai  # noqa: E402
 import autoscout  # noqa: E402
@@ -997,7 +999,11 @@ class Bot:
         if not (res := NEAR.get(name)) or not (full := [t for t, k in self.sources(res).items() if k > 0]):
             return False
         T, drops = g.map.T, [c for d in g.map.drops.get(res, ()) for c in d]
-        return all(math.dist(((t[0] + 0.5) * T, (t[1] + 0.5) * T), c) > FAR * T for t in full for c in drops)
+        if not drops:
+            return True
+        # one array operation: the pairs in Python took 0.1 s per bot step and slowed the game loop (#5736)
+        a, b = (np.asarray(full, float) + 0.5) * T, np.asarray(drops, float)
+        return bool((((a[:, None, :] - b[None, :, :]) ** 2).sum(-1) > (FAR * T) ** 2).all())
 
     def walls(self, n, x):
         """Taunt 54 of the ally x: wall sites on the tiles between its two last live flares; 55: the wall ring around the
