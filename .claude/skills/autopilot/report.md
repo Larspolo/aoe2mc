@@ -28,14 +28,18 @@ it only prints the report. A question for the owner goes on its
 issue, not here (`owner.md`).
 End it with one metrics line for each ticket of the run (the `improve` skill reads these lines):
 
-    Metrics: ticket #<n> · <size> · <merged|pr #n|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none"> · phases read <m> · claim <m> · code <m> · verify <m> · ci <m> · conflict <m> · report <m>
+    Metrics: ticket #<n> · <size> · <merged|pr #n|closed|checked|blocked|needs-human|none> · <minutes> min · setup <m> min · checks <k> · checks <c> min · time sinks: <list or "none"> · phases read <m> · claim <m> · code <m> · verify <m> · ci <m> · conflict <m> · report <m>
 
 Example: `Metrics: ticket #876 · size:S · merged · 45 min · setup 0 min · checks 2 · checks 6 min · time sinks: none ·
 phases read 8 · claim 1 · code 18 · verify 9 · ci 0 · conflict 5 · report 4` (one line).
 
 Result (`report.py` stops any other form): `pr #n` when you pushed PR #n and Automerge merges it later (the usual case: you report before the merge);
 `closed` when you finished the ticket with no PR (a check ticket with the label `close`, 2026-10-29: 80 of 345 tickets
-said `none`, most of them such checks); `none` only when the run stopped without a PR and the ticket stays open. `framework/tools/health.py` counts the `pr #n` lines by the present PR state (#902).
+said `none`, most of them such checks); `checked` when a check ticket (or a deep-lane split or epic check) ran
+and put its findings on the ticket (a comment, new bug tickets, `Depends on`) and the ticket stays open by design (#5782:
+8 of 18 given-back runs were such checks); `none` only when the run stopped without a PR and the ticket stays open.
+Before you give back a ticket whose next step only the owner can do, add `needs-human` (`owner.md`): with `none` and
+a release only, the next run takes it again in minutes (#5676: 2 runs). `framework/tools/health.py` counts the `pr #n` lines by the present PR state (#902).
 `framework/tools/report.py` puts the output of `python3 tools/release.py` (the release bar of each goal, #879) above the
 `Usage:` line, when the project has that tool (#1963).
 Below the metrics lines, put the output of `python3 framework/tools/tokens.py` (one `Tokens:` line for the run: the tokens of
