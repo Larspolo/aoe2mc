@@ -2,9 +2,7 @@
 server through the stdin of the game program (run.console). Fake processes and a fake server: no Minecraft."""
 import io
 import json
-import os
 import queue
-import shutil
 import subprocess
 import sys
 import threading
@@ -92,7 +90,7 @@ def test_the_console_sends_each_line_to_the_server_while_the_game_runs(monkeypat
     assert capsys.readouterr().out == "Set the time to 1000 (time set day)\nSet the time to 1000 (list)\n"
 
 
-def test_the_window_enables_the_replay_fields_for_a_record(tmp_path):
+def test_the_window_enables_the_replay_fields_for_a_record(tmp_path, on_display):
     if subprocess.run([sys.executable, "-c", "import tkinter"], capture_output=True).returncode:
         pytest.skip("no tkinter")
     rec, game = world(tmp_path / "r", {"timeline": []}), world(tmp_path / "g", {"objects": []})
@@ -102,10 +100,6 @@ def test_the_window_enables_the_replay_fields_for_a_record(tmp_path):
             f"e.delete(0, 'end'); e.insert(0, {game!r}); w.update(); a = boxes[0].instate(['disabled']); "
             f"e.delete(0, 'end'); e.insert(0, {rec!r}); w.update(); b = boxes[0].instate(['disabled']); "
             "print(a, b); w.destroy()")
-    cmd = [sys.executable, "-c", code]
-    if not os.environ.get("DISPLAY"):
-        if not shutil.which("xvfb-run"):
-            pytest.skip("no display and no xvfb-run")
-        cmd = ["xvfb-run", "-a"] + cmd
+    cmd = on_display([sys.executable, "-c", code])
     r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=60)
     assert r.returncode == 0 and r.stdout.split()[-2:] == ["True", "False"], r.stderr
