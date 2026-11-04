@@ -1501,6 +1501,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if (from instanceof Player p && commandStick(p.getInventory().getItemInMainHand())) {
             ev.setCancelled(true);                                     // a left click on a unit deselects (#1788)
             leftClick(p);
+            input(p);                                                  // the select click of a unit: at once (#5760)
             return;
         }
         if (from instanceof Projectile p && p.getShooter() instanceof Entity shooter) {
