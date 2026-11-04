@@ -11,7 +11,8 @@ In scope: the lines of `data/achievements.jsonl` (the advancement tab "Age of Em
 - Counts (#5628): Minecraft keeps the advancements and the statistics per world, and each converted scenario is a new
   world. A count is in scope when the games of one world can reach it, so when one game can reach it (#5280).
   `AGE_OF_EMPIRES` of `data/achievements.jsonl` (win with every civilization) needs the wins of many worlds: it has
-  no grant by the same rule.
+  no grant by the same rule. Its data line stays as the parent of the civilization victories in the advancement tab
+  (`"parent": "AGE_OF_EMPIRES"`), with no grant.
 - The six AI rows: the Steam text is cut after "on". The levels are the AoE2 DE "AI difficulty" names (Easiest,
   Standard, Moderate, Hard, Hardest, Extreme; `game/data/difficulty.jsonl`). The key `EASY_AI` is Standard.
 
@@ -24,14 +25,7 @@ The reasons of the `out` rows (the game program has no such event):
 - `out: many games`: a count that one game cannot reach (see "Counts").
 - `out: no event`: the unit, the ability or the count of the achievement is not in the game program.
 
-The `in` rows give the event that they need. The new `in` rows (#5628) have no line in `data/achievements.jsonl` yet,
-by event kind (one sub-issue of the epic per kind):
-
-- challenge: `ACHIEVEMENT_CHALLENGE_ACCEPTED`, `ACHIEVEMENT_GOING_FOR_THE_GOLD`
-- convert: `ACHIEVEMENT_LOSING_YOUR_RELIGION`
-- explore: `ACHIEVEMENT_MARCO_POLO`
-- siege tower: `ACHIEVEMENT_HOWDY_NEIGHBOR`
-- trade: `ACHIEVEMENT_BULL_MARKET`
+The `in` rows give the event that they need. Each `in` row has a line in `data/achievements.jsonl` (#5640 to #5646).
 
 | Steam key | Name | Description | Scope |
 |---|---|---|---|
@@ -172,7 +166,7 @@ by event kind (one sub-issue of the epic per kind):
 | ACHIEVEMENT_HOMELESS | Homeless | Delete your starting Town Center and still win the game. | in: win after the delete of the own start TOWN_CENTER |
 | ACHIEVEMENT_EASY_AI | Easy Going | Beat an AI opponent on Standard difficulty. | in: win against a bot on standard |
 | ACHIEVEMENT_NO_SUNTZU_LIGHT | No Suntzu Light | Shoot 100,000 arrows with your Chu Ko Nu. | out: many games |
-| ACHIEVEMENT_VICTORY_WITH_EVERY_CIV | Age of Empires | Win a game with every civilization. | in |
+| ACHIEVEMENT_VICTORY_WITH_EVERY_CIV | Age of Empires | Win a game with every civilization. | out: many games |
 | ACHIEVEMENT_NOT_JUST_A_MILITIA | Not Just a Militia | Upgrade your Militia to Men-at-Arms | in: research MAN_AT_ARMS_UPGRADE |
 | ACHIEVEMENT_FAMILY_FEUDAL | Family Feudal | Advance to the Feudal Age in a Campaign Scenario | in |
 | ACHIEVEMENT_CAN_I_BE_FRANK_WITH_YOU | Can I be Frank with You? | Win the | out: campaign |
