@@ -1,6 +1,7 @@
 import faulthandler
 import io
 import os
+import shutil
 import sys
 
 import pytest
@@ -90,3 +91,18 @@ def rcon_limit(request):
     for obj in list(vars(request.module).values()):
         if isinstance(obj, type) and callable(vars(obj).get("command")) and not getattr(obj.command, "limited", False):
             obj.command = limited(vars(obj)["command"])
+
+
+@pytest.fixture
+def on_display():
+    """Give a command a display: the own DISPLAY, else xvfb-run. Each xdist worker starts its search at its own display
+    number: `xvfb-run -a` of two workers at the same time can take the same number, and one Xvfb does not start (#5653)."""
+    def wrap(cmd):
+        if os.environ.get("DISPLAY"):
+            return cmd
+        if not shutil.which("xvfb-run"):
+            pytest.skip("no display and no xvfb-run")
+        worker = os.environ.get("PYTEST_XDIST_WORKER", "gw0")
+        num = 100 + 20 * int(worker.removeprefix("gw") or 0) + os.getpid() % 20
+        return ["xvfb-run", "-a", "-n", str(num)] + cmd
+    return wrap
