@@ -116,6 +116,7 @@
 {"name": "MARKET", "object": 84}
 {"name": "OAKTREE", "object": 349}
 {"name": "OLIVE_TREE", "object": 1349}
+{"name": "PALISADE_WALL", "object": 72}
 {"name": "PALMTREE", "object": 351}
 {"name": "PINETREE", "object": 350}
 {"name": "RELIC", "object": 285}
