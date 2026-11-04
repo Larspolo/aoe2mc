@@ -2427,7 +2427,8 @@ class Gather:
         """Play in real time until seconds passed, until() is true or the game ended (a cheat, #819)."""
         end = seconds and time.monotonic() + seconds
         while (not end or time.monotonic() < end) and not (until and until()) and not self.ended:
-            t = time.monotonic()
+            clock = vars(self).get("clock", time.monotonic)      # a partial Gather of the run loop tests
+            t, c = time.monotonic(), clock()
             self.point()                                               # before clicks(): hints.tick shows its text
             for name in self.clicks():
                 self.click(name)
@@ -2483,6 +2484,16 @@ class Gather:
             treaty.tick(self, self.tick * NORMAL)
             record.tick(self, self.tick * NORMAL)                      # the game time of Record Game (#2649)
             self.wait_input(t + self.tick / self.speed)                # a step stays tick game seconds
+            lag(self, clock() - c - self.tick / self.speed)
+
+
+def lag(g, late):
+    """A slow step (late real seconds after its tick) stops the game clock of g and its bots for that time, as a pause
+    (pause.toggle): each step does tick game seconds of work (train.tick, the gather timers), so the clock must not go
+    faster than the steps (#5736: 1.5 s steps at speed 4 made the town center train 25 times too slowly)."""
+    if late > 0:
+        for h in {id(h): h for h in [g, *(getattr(b, "g", None) for b in g.bots)] if h is not None and hasattr(h, "t0")}.values():
+            h.t0 += late
 
 
 def add_waypoint(g, name, cell):

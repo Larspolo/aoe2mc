@@ -133,6 +133,7 @@ def drive(games, states, shown, a, out, report, seen):
                     rows = max(i[0] for i in items) // 9 + 1
                     slot = next((i[0] for i in items if "Villager" in str(i[2])), 0)
                     c.shot(os.path.join(out, "menu.png"))
+                    first["queued"] = sum(len(q) for q in g.queues.values())   # the queue trains on during the walk
                     c.click(*c.slot(slot, rows))
                     time.sleep(3)
                     queued = sum(len(q) for q in g.queues.values())
