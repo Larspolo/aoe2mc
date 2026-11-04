@@ -47,7 +47,8 @@ older ticket of the same epic when that ticket changed only data. Never write a 
 holds X": no test checks the content of a data or configuration file (owner, 2026-10-29, `docs/extend.md`).
 
 Labels: one priority (`P0`-`P3`), one kind (`bug`, `feature`, `tooling`, `design`, `docs`, `cleanup`),
-one size (`size:S`, `size:M`, `size:L`). Add `needs-human` when only the owner can do it.
+one size (`size:S`, `size:M`, `size:L`), and the lane (`lane:haiku`, none or `lane:deep`, section "Model lanes";
+a `bug` with a named cause and fix is Haiku). Add `needs-human` when only the owner can do it.
 A ticket that changes the agent system (skills, `CLAUDE.md`, the agent tools in `tools/`, workflows, the setup) also
 gets `process` (#901): the dashboard counts the merged PRs with it.
 
