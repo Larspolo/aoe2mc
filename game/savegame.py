@@ -279,6 +279,9 @@ NOT_SAVED = (                                                          # the fie
     "wonder_at",                                                       # wonder.py: the next check time
     "work_on",                                                         # bot.py: a setup value (#3271)
     "xs",                                                              # scenario.setup makes it again; its state: "xs" (#5665)
+    "xs_at",                                                           # scenario.py effects(): the next check time
+    "xs_calls",                                                        # scenario.py effects(): found again from aoe2mc.json "xs"
+    "xs_skip",                                                         # scenario.py effects(): the effects with a syntax error, found again
 )
 SKIP = ("session.lock",)                                               # the lock of the running server
 

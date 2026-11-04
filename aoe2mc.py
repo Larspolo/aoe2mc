@@ -4295,6 +4295,15 @@ def research_lines(e, c):
     return [f"scoreboard players set #r{c.t['id']}.{i} aoe_tech 1"]   # the game program reads it
 
 
+def xs_lines(e, c):
+    """The command of "Script Call" (#5663): the score #x<trigger>.<effect index> of aoe_xs is 1. The game program runs
+    the XS code of the effect (aoe2mc.json "xs", game/scenario.py effects)."""
+    if not (e.get("message") or "").strip():
+        return []
+    c.setup["scoreboard objectives add aoe_xs dummy"] = None
+    return [f"scoreboard players set #x{c.t['id']}.{effect_index(e, c)} aoe_xs 1"]
+
+
 def cost_lines(e, c, what="change object cost"):
     """The command of "Change Object Cost" (#2776): the new cost of the unit or building type of the player (up to 3
     resources of ATTRIBUTES; a quantity of 0 drops the resource) goes into the list of the data storage aoe2mc:costs as
@@ -4977,6 +4986,7 @@ EFFECTS = {
     TRIBUTE: resource_lines,
     UNLOAD: unload_lines,
     UNLOCK_GATE: gate_lines,
+    XS_EFFECT: xs_lines,
 }
 # The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys);
 # triggers: all triggers of the scenario (attack_lines)
@@ -5327,6 +5337,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             "aoe_techstate",
             "aoe_trade",
             "aoe_vic",
+            "aoe_xs",
     ):
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
@@ -5477,10 +5488,12 @@ def visible_list(triggers):
 # list is one line here, in alphabetical order (#2832): no new keyword of write_objects.
 def xs_list(triggers):
     """The XS code of the Script Call conditions and effects (#5122): {"trigger": id, "kind": "condition" or "effect",
-    "code": text}, in the order of the triggers. A disabled trigger "XS SCRIPT" of AoE2ScenarioParser holds a whole script."""
-    return [{"trigger": t["id"], "kind": k, "code": c} for t in triggers for k, items, key, kind in
+    "index": the index in its list, "code": text}, in the order of the triggers. The game program finds the score
+    #x<trigger>.<index> of aoe_xs of an effect (#5663). A disabled trigger "XS SCRIPT" of AoE2ScenarioParser holds a
+    whole script."""
+    return [{"trigger": t["id"], "kind": k, "index": n, "code": i.get(key)} for t in triggers for k, items, key, kind in
             (("condition", t["conditions"], "xs", SCRIPT_CALL), ("effect", t["effects"], "message", XS_EFFECT))
-            for c in (i.get(key) or "" for i in items if i["type"] == kind) if c.strip()]
+            for n, i in enumerate(items) if i["type"] == kind and (i.get(key) or "").strip()]
 
 
 TRIGGER_LISTS = {
