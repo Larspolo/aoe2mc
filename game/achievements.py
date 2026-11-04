@@ -45,9 +45,34 @@ def event(g, h, name, seconds=None):
     if getattr(h, "share", None) or not hasattr(g, "command"):    # a bot, or a test double with no server
         return
     for r in ROWS:
-        if (r.get("event") == name and (seconds is None or seconds < r.get("before", float("inf")))
-                and matches(g, h, r)):
+        e = r.get("event")
+        if ((name in e if isinstance(e, list) else e == name) and (seconds is None or seconds < r.get("before", float("inf")))
+                and len(getattr(h, "villagers", ())) >= r.get("villagers", 0) and matches(g, h, r)):
             grant(g, h.player, r["name"].lower())
+
+
+def counted(g, kind, key, names, n):
+    """Grant each "count:<kind>" line of g (a Gather, not a bot) whose key has a name of names and whose need is n or less."""
+    if getattr(g, "share", None) or not hasattr(g, "command"):
+        return
+    for r in ROWS:
+        if r.get("event") == f"count:{kind}" and set(names) & set(r[key]) and matches(g, g, r) and n(r) >= r["need"]:
+            grant(g, g.player, r["name"].lower())
+
+
+def built(g, name, by=()):
+    """Count a complete own building name of g and its builder names by (build.rise), and grant the "count:build" lines."""
+    counts = vars(g).setdefault("build_counts", {})
+    for k in {name, *(f"{name} by {b}" for b in set(by))}:
+        counts[k] = counts.get(k, 0) + 1
+    counted(g, "build", "buildings", [name], lambda r: sum(
+        counts.get(f"{b} by {u}" if "by" in r else b, 0) for b in r["buildings"] for u in r.get("by", [None])))
+
+
+def queued(g, q, ages):
+    """Grant each "count:queue" line whose units are `need` times in the queue q of g, in an age up to its "ages"."""
+    counted(g, "queue", "units", [e["name"] for e in q], lambda r: -1 if ages > r["ages"] else
+            sum(e["name"] in r["units"] for e in q))
 
 
 def won(g, h, levels=()):

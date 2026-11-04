@@ -6,10 +6,11 @@ import os
 
 import aoe2mc
 
-FORM = {"name": str, "title": str, "description": str, "icon": str, "parent": str, "event": str}
+FORM = {"name": str, "title": str, "description": str, "icon": str, "parent": str, "event": (str, list)}
 OPTIONAL = {"civ": str, "mode": str,   # limit a line to a civilization and a game mode (#5281)
             "units": list, "need": int,   # the event count:train (#5280)
-            "killed": list, "by": list}   # the event kill (#5640)
+            "killed": list, "by": list,   # the event kill (#5640)
+            "buildings": list, "ages": int, "villagers": int}   # count:build, count:queue, a research (#5642)
 
 
 def test_each_line_has_the_form_and_a_known_parent():
