@@ -532,3 +532,21 @@ def compile(tree, text=None, civs=None):
     order = sorted(range(len(rules)), key=lambda i: (-rules[i][2].get("priority", 0), i))
     tick = [TICK] + [c.rule(rules[i]) for i in order] + [f"scoreboard players add {NOW} 1"]
     return {f"{DIR}/main.mcfunction": "\n".join(lines) + "\n"} | c.files, tick, list(LOAD), c.warnings
+
+
+def snippet(code, name):
+    """(files, function, holder, warnings) of the XS code of one "Script Call" (#5693): compile() under xs/<name>/, and the
+    first function of the code (not main) to run, with the holder of its return value. No such function: no function,
+    and the game program runs the code (its warnings say why)."""
+    import xs
+    try:
+        tree = xs.parse(code, name)
+    except xs.XsError as e:
+        return {}, None, None, [f"XS script: {e}: no datapack form, the game program runs it (game/run.py)"]
+    files, _, _, warnings = compile(tree, code)
+    first = next((n[2] for n in tree if n[0] == "func" and n[2] != "main"), None)
+    if first is None or f"{DIR}/f/{first}.mcfunction" not in files:
+        return {}, None, None, warnings
+    # the names of one code do not clash with the other codes or the map script: the prefix goes into every path
+    out = {k.replace(f"{DIR}/", f"{DIR}/{name}/", 1): v.replace("aoe2mc:xs/", f"aoe2mc:xs/{name}/") for k, v in files.items()}
+    return out, f"aoe2mc:xs/{name}/f/{first}", f"#r.{first}", warnings
