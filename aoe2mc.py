@@ -544,6 +544,8 @@ def read_scenario(path):
             c["tile"] = None if c.get("unit") else tiles.get(c.get("ref"))
             c["next_tile"] = None if c.get("next_unit", True) else tiles.get(c.get("next"))
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
+    texts["ai_files"] = {f.ai_file_name.replace("\\", "/"): f.ai_file for f in   # the files of (load ...) (#5798)
+                         getattr(scn.sections.get("Files"), "ai_files", None) or () if f.ai_file_name}
     texts["xs_name"] = getattr(scn.xs_manager, "script_name", "") or ""   # a file of the AoE2 profile (#5122)
     texts["mood"] = (getattr(mood, "name", None) or str(mood or "DEFAULT")).upper()
     om = scn.option_manager                  # the tab "Global Victory" for the scenario mode (#2566, run.VICTORIES)
@@ -3138,7 +3140,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         data["messages"] = texts
     for key, items in (lists or {}).items():
         if items:
-            data[key] = list(items)
+            data[key] = items if isinstance(items, dict) else list(items)   # ai_files: {name: text} (#5798)
     if map_ground is not None:
         data["map_ground"] = [bytes(row).hex() for row in np.asarray(map_ground, np.uint8)]
     if buildings.TURN:                                  # the game program turns its buildings with the map (#3035)
@@ -6624,6 +6626,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
                   texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
                   {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()} |
                   ({"xs_script": texts["xs_script"]} if "xs_script" in texts else {}) |
+                  ({"ai_files": texts["ai_files"]} if texts.get("ai_files") else {}) |
                   ({"timers": timer_list(texts.get("triggers", []), T, ground, players)} if record else {}), yaw,
                   views and {"views": views, "recorder": record_state["recorder"]}, texts.get("lobby"),
                   terrain, elevation)
