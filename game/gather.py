@@ -122,6 +122,7 @@ INFINITE = {r["name"] for r in table.load("setup.jsonl") if r.get("infinite")}  
 RANDOM = {r["name"]: r["random"] for r in table.load("setup.jsonl") if "random" in r}   # "Random": one of the levels
 NOMAD = {"wood": 275, "stone": 100}     # AoE2 Nomad (wiki "Nomad (map)"): no building at the start, the cost of a town center
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
+STUMP = "setblock {x} {{y}} {z} minecraft:spruce_log[axis=y]"                 # the stump of a felled tree (Gather.stump)
 # plants of the ground that are not in #minecraft:replaceable: the trunk on a slope removes them from its row (#1124)
 PLANTS = ("#minecraft:buttons", "#minecraft:flowers", "#minecraft:saplings", "#minecraft:wool_carpets",
           "minecraft:brown_mushroom", "minecraft:moss_carpet", "minecraft:pale_moss_carpet", "minecraft:red_mushroom")
@@ -791,6 +792,14 @@ class Gather:
     @property
     def wood(self):
         return self.stock["wood"]
+
+    def batch(self, cmds):
+        """Send cmds in this order and drop the answers: in `aoe batch` commands on Paper (Game.batch, #2761), else
+        one by one."""
+        if batch := getattr(self.game, "batch", None):
+            return batch(list(cmds))
+        for c in cmds:
+            self.command(c)
 
     def command(self, cmd):
         if isinstance(getattr(self, "stock", None), Endless) and cmd.startswith("scoreboard players remove ") \
@@ -2252,35 +2261,36 @@ class Gather:
         if self.trunks.get(tile) == n:
             return
         log, leaf = self.map.woods.get(tile, ("minecraft:oak_log", None))
+        out = []                                                      # one batch: the loop waited for each RCON call (#5736)
         y, flat = min(ys), min(ys) == max(ys)
         y0, y1 = (y, y + 1) if flat else (min(ys) - 1, max(ys) + 2)
         if tile not in self.trunks:
             self.clear(tile, ys)
-            self.stump(sx, sz, ys)
+            out += self.ground(sx, sz, ys, STUMP.format(x=sx, z=sz), down=1)
             for plant in () if flat else PLANTS:                     # the probe takes them for the ground
-                self.command(f"fill {fx0} {y0} {rz} {fx1 - 1} {y1} {rz} air replace {plant}")
+                out.append(f"fill {fx0} {y0} {rz} {fx1 - 1} {y1} {rz} air replace {plant}")
         self.trunks[tile] = n
         for old in (log, leaf) if leaf else (log,):                   # the row again as the converter made it
-            self.command(f"fill {fx0} {y0} {rz} {fx1 - 1} {y1} {rz} minecraft:barrier replace {old.split('[')[0]}")
+            out.append(f"fill {fx0} {y0} {rz} {fx1 - 1} {y1} {rz} minecraft:barrier replace {old.split('[')[0]}")
         if flat:
             for keep in ("replace minecraft:barrier", "keep"):        # not into the ground of a slope
-                self.command(f"fill {fx1 - n} {y} {rz} {fx1 - 1} {y} {rz} {log}[axis=x] {keep}")
+                out.append(f"fill {fx1 - n} {y} {rz} {fx1 - 1} {y} {rz} {log}[axis=x] {keep}")
                 if leaf:
-                    self.command(f"fill {fx1 - n} {y + 1} {rz} {fx1 - n} {y + 1} {rz} {leaf} {keep}")
-            return
+                    out.append(f"fill {fx1 - n} {y + 1} {rz} {fx1 - n} {y + 1} {rz} {leaf} {keep}")
+            return self.batch(out)
         for x in range(fx1 - n, fx1):
             for c in self.ground(x, rz, ys, f"setblock {x} {{y}} {rz} {log}[axis=x]", top=True):
-                self.command(c)
+                out.append(c)
         if leaf:                                                      # the crown on the log of the tip
             for h in range(y0, y1 + 1):
                 for free in ("#minecraft:replaceable", "minecraft:barrier"):
-                    self.command(f"execute if block {fx1 - n} {h} {rz} {free} if block {fx1 - n} {h - 1} {rz} "
-                                 f"{log}[axis=x] run setblock {fx1 - n} {h} {rz} {leaf}")
+                    out.append(f"execute if block {fx1 - n} {h} {rz} {free} if block {fx1 - n} {h - 1} {rz} "
+                               f"{log}[axis=x] run setblock {fx1 - n} {h} {rz} {leaf}")
+        self.batch(out)
 
     def stump(self, sx, sz, ys):
         """The stump: the top of a log level with the ground of the footprint, so that nothing stops the player."""
-        for c in self.ground(sx, sz, ys, f"setblock {sx} {{y}} {sz} minecraft:spruce_log[axis=y]", down=1):
-            self.command(c)
+        self.batch(self.ground(sx, sz, ys, STUMP.format(x=sx, z=sz), down=1))
 
     def fell(self, tile):
         """An empty tree disappears (logs, leaves, its trunk and the barriers of its footprint). A stump stays: the top
