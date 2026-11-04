@@ -75,3 +75,4 @@ framework/files.txt merge=union
 game/plugin/src/main/resources/META-INF/services/aoe2mc.Ability merge=union
 game/data/tutorial.jsonl merge=jsonl
 game/data/tunes.jsonl merge=jsonl
+game/data/xs_constants.jsonl merge=jsonl
