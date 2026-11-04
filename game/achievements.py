@@ -10,7 +10,12 @@ optional "before" in game seconds (recap.aged, train.research). An optional "civ
 (autoscout.start), "train <UNIT> at <BUILDING>" (train.tick) and "win ai <level>" (cheats.over: a win while a bot of
 that bots.LEVELS name lost).
 "kill" with "killed" and "by" (#5640): the player killed a unit of "killed" with a unit of "by" (kills, once per tick: the
-kill log of the plugin, Kills.java). An item is a unit name, a group of civs.GROUPS, or groups joined by "+" (all of them)."""
+kill log of the plugin, Kills.java). An item is a unit name, a group of civs.GROUPS, or groups joined by "+" (all of them).
+More events (#5642): "event" can be a list (any of them); an optional "villagers" needs that many live villagers
+(Golden Spurs). "count:build" with "buildings", "need" and an optional "by" (builder names): the player completed `need`
+buildings of these names in this game (gather.Gather.step; with "by": built by one of these units; the counts in a
+saved game: "build_counts"). "count:queue" with "units", "need" and "ages" (the highest age index, build.ages): one
+queue of the player has `need` of these units (train.queue). "policy": a policy change (train.research, the Athenians)."""
 import functools
 import json
 import os
@@ -61,7 +66,7 @@ def counted(g, kind, key, names, n):
 
 
 def built(g, name, by=()):
-    """Count a complete own building name of g and its builder names by (build.rise), and grant the "count:build" lines."""
+    """Count a complete own building name of g and its builder names by (gather.Gather.step), and grant the "count:build" lines."""
     counts = vars(g).setdefault("build_counts", {})
     for k in {name, *(f"{name} by {b}" for b in set(by))}:
         counts[k] = counts.get(k, 0) + 1

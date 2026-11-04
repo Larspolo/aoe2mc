@@ -2073,9 +2073,10 @@ class Gather:
             men = repair.raisers(self, site)                           # Serjeants at their Donjon site (#2129)
             # AoE2: n builders need 3 / (n + 2) of the time of one
             n = len(builders) + len(men)
-            if n and build.rise(self, site, math.inf if self.aegis else self.tick * NORMAL * (n + 2) / 3,
-                                 ["VILLAGER" if v.uuid in self.villagers else "SHIP" for v in builders]
-                                 + [self.soldiers.get(u) for u in men]):
+            if n and build.rise(self, site, math.inf if self.aegis else self.tick * NORMAL * (n + 2) / 3):
+                if site.get("player", self.player) == self.player:      # Steppe People: the builder names (#5642)
+                    achievements.built(self, site["name"], ["VILLAGER" if v.uuid in self.villagers else "SHIP"
+                                                            for v in builders] + [self.soldiers.get(u) for u in men])
                 repair.drop(self, men)                                 # complete: the Serjeants stand
                 if nxt := build.next_tile(self, site):                 # a wall line: on to its next tile (#1322)
                     self.build(nxt, {v.uuid for v in builders})
