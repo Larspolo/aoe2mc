@@ -429,7 +429,8 @@ def map_description(d, path):
         players[pid] = {"color": buildings.COLOR_NAMES[(pid - 1) % 8], "arch": "western", "civ": "?", "view": None}
     terrain = apply_layers(arrays["terrain"].astype(np.int16), arrays["layer"], terrain_names)
     return (size, terrain, arrays["elevation"].astype(np.float32), terrain_names,
-            {k: "" for k in CHAPTERS} | ({"mood": d["mood"]} if d.get("mood") in MOODS else {}), objects, players)
+            {k: "" for k in CHAPTERS} | ({"mood": d["mood"]} if d.get("mood") in MOODS else {})
+            | ({"xs_name": str(d["xs_name"])} if d.get("xs_name") else {}), objects, players)   # #includeXS (#5666)
 
 
 def apply_layers(terrain, layer, terrain_names):
@@ -6444,7 +6445,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
         with open(xs, encoding="utf-8") as f:
             texts["xs_script"] = [texts.get("xs_name") or os.path.splitext(os.path.basename(xs))[0], f.read()]
     elif texts.get("xs_name"):
-        print(f"warning: the scenario uses the XS script {texts['xs_name']}: give its file with --xs FILE")
+        print(f"warning: the map uses the XS script {texts['xs_name']}.xs: give its file with --xs FILE")
     record_state = {}
     timeline = read_timeline(src, record_state) if record else None
     views = record_state.get("views")

@@ -1,4 +1,4 @@
-"""The #include lines of an AoE2 random map script (#3058): random_map.def has the constants, the XS files are not run."""
+"""The #include lines of an AoE2 random map script (#3058): random_map.def has the constants, an #includeXS file gives its name (#5666)."""
 import pytest
 from test_rmap import SCRIPT, make
 
@@ -12,10 +12,10 @@ def test_an_include_drs_before_the_first_section_is_the_same_land(line):
     assert make(3, script=line + SCRIPT)[0] == make(3)[0]
 
 
-def test_an_includexs_gives_the_same_land_and_one_warning_that_names_the_file():
+def test_an_includexs_gives_the_same_land_and_its_name_for_the_converter():
     d, notes = make(3, script=SCRIPT.replace("<LAND_GENERATION>", "#includeXS triggers.xs\n<LAND_GENERATION>", 1))
-    assert d == make(3)[0]
-    assert includes(notes) == ["#includeXS triggers.xs is not read"]
+    assert d.pop("xs_name") == "triggers" and d == make(3)[0]
+    assert includes(notes) == []                     # the converter warns with the name (#5666)
 
 
 def test_random_map_def_gives_no_warning():
