@@ -6,7 +6,7 @@ from test_gather_attack import click
 from test_select_type import setup
 
 import aoe2mc
-from game import scenario, stance
+from game import gather, scenario, stance
 
 
 def effect(type, area=(1, 2, 2, 3), player=1):
@@ -68,7 +68,7 @@ def test_a_selected_unit_that_gets_the_tag_leaves_the_selection():
     click(server, g, (5.5, 13.5), (5.5, 10.5))
     assert g.selected == {"m-1"}
     tagged(g, {"m-1"})
-    assert not g.selected and "data merge entity m-1 {Glowing:0b}" in server.log
+    assert not g.selected and f"aoe select off {gather.SELECT} m-1" in server.log   # Paper: one command (#5760)
 
 
 def test_vanilla_reads_no_tags():

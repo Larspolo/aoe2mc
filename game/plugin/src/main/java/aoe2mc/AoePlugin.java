@@ -1262,6 +1262,15 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 .getScore(p.getName()).setScore(1);
     }
 
+    /** Each input of a player (a click with the command stick, a menu click) sets the score aoe_input 1: Gather.wait_input
+     *  reads it each 50 ms, also between the game steps (#5760). */
+    private static void input(org.bukkit.entity.HumanEntity p) {
+        Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+        Objective o = sb.getObjective("aoe_input");
+        (o != null ? o : sb.registerNewObjective("aoe_input", Criteria.DUMMY, Component.text("Input")))
+                .getScore(p.getName()).setScore(1);
+    }
+
     private static Menu menuOf(Player p) {
         return p.getOpenInventory().getTopInventory().getHolder(false) instanceof Menu m ? m : null;
     }
@@ -1403,7 +1412,16 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 && commandStick(ev.getPlayer().getInventory().getItemInMainHand())) {
             ev.setCancelled(true);                                     // creative mode: no broken block
             leftClick(ev.getPlayer());
+            input(ev.getPlayer());
+        } else if ((ev.getAction() == Action.RIGHT_CLICK_AIR || ev.getAction() == Action.RIGHT_CLICK_BLOCK)
+                && ev.getItem() != null && ev.getItem().getType() == Material.CARROT_ON_A_STICK) {
+            input(ev.getPlayer());                                     // also a group item: aoe_use counts it (#5760)
         }
+    }
+
+    @EventHandler
+    public void onUnitClick(org.bukkit.event.player.PlayerInteractEntityEvent ev) {   // a right click on a unit (#5760)
+        input(ev.getPlayer());
     }
 
     @EventHandler
@@ -1417,6 +1435,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                 && !ev.getCurrentItem().isEmpty()) {
             menuScore().getScore(ev.getWhoClicked().getName()).setScore(ev.isShiftClick() ? -(slot + 1)
                     : ev.getClick() == ClickType.RIGHT ? slot + 1 + MENU_RIGHT : slot + 1);
+            input(ev.getWhoClicked());
         }
     }
 
@@ -3973,6 +3992,34 @@ public final class AoePlugin extends JavaPlugin implements Listener {
                         fought.remove(e.getUniqueId()) | (f != null && target(f) != null) ? 1 : 0));
             }
             sender.sendMessage("Where " + found.size() + ": " + String.join(", ", parts));
+            return true;
+        }
+        if (args.length >= 3 && args[0].equals("select") && (args[1].equals("on") || args[1].equals("off"))) {
+            boolean on = args[1].equals("on");                   // aoe select on|off TAG UUID...: Gather.choose (#5760)
+            int n = 0;
+            for (String id : List.of(args).subList(3, args.length)) {
+                Entity e;
+                try {
+                    e = Bukkit.getEntity(UUID.fromString(id));
+                } catch (IllegalArgumentException x) {
+                    continue;
+                }
+                if (e == null) {
+                    continue;
+                }
+                e.setGlowing(on);
+                if (on) {
+                    e.addScoreboardTag(args[2]);
+                } else {
+                    e.removeScoreboardTag(args[2]);
+                }
+                e = crew(e);                                 // the name line shows the selection (#661)
+                if (names.containsKey(e.getUniqueId())) {
+                    nameLine(e);
+                }
+                n++;
+            }
+            sender.sendMessage("Select: " + n + " units");
             return true;
         }
         if (args.length >= 2 && args[0].equals("label")) {
