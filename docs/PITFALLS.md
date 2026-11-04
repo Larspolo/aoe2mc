@@ -92,3 +92,6 @@ Read it before a change of `game/` or its tests.
 - A data-only ticket that makes an old test fail (the test names the old values, `stats_command("cb", "ELITE_COMPOSITE_BOWMAN")`): the quick CI stops a test change in that PR (#4242). Fix the test in its own ticket and PR first (expected value from the data, `train.hits`), then merge main into the data PR (#4637, PR #4634).
 - `lang.EN_US` exists only after the first `lang.text()` call (lazy read, #3665): a test reads `lang.en_us()`, else it passes in the full suite and fails alone (#5375).
 - A new field `vars(g).setdefault(NAME, ...)` in a module of `game/` needs its line in `game/savegame.py` (a save step, or `NOT_SAVED` with the reason): `tests/test_savegame_fields.py` scans the code, so `ship_pr.py` does not run it for the change (PR #5497 got a red quick CI). Run it with the tests of the change.
+- A new call in the loop of `Gather.run`: the loop tests (`tests/test_gather_clock.py`, `test_capture_relic.py`,
+  `test_mode_on_top.py`) run a bare Gather (`object.__new__`, no `player`, no server). Return early when `g` has no
+  `player`, or the three tests fail with an `AttributeError` (#5640).
