@@ -1,5 +1,6 @@
 """XS script -> datapack functions (#5689, option B of #5120, docs/research/xs.md "XS as datapack functions").
 
+Step 7: `xsGetObjectCount`, `xsGetObjectCountTotal` (an entity count) and `xsGetPlayerCivilization` (a constant, #5695).
 Step 1: the `int` and `bool` globals, the operators and `main()`, with `xsSetTriggerVariable`, `xsTriggerVariable`
 and `xsChatData`. Minecraft feature: datapack functions and scoreboards. A part with no datapack form skips its
 statement and gives one warning line: the game program runs the whole script (game/scenario.py xs(), option A).
@@ -15,6 +16,10 @@ TICK = f"execute unless score #a {OBJ} matches 1 unless score #main {OBJ} matche
 LOAD = [f"scoreboard objectives add {OBJ} dummy", f"scoreboard objectives add {VAR} dummy"]
 NUMBERS = ("int", "bool")
 OPS = {"+": "+=", "-": "-=", "*": "*="}
+STORE = "aoe2mc:xs"
+MOUNT = "aoe2mc.mount"      # units.MOUNT: the horse of a unit does not count (as aoe2mc.area_selector)
+# A computed player or type: a macro function puts them into the selector (Minecraft feature: macro functions).
+COUNT = f"$return run execute if entity @e[tag=aoe2mc.p$(p),tag=aoe2mc.t$(id),tag=!{MOUNT}]"
 COMPARE = {"<": "<", "<=": "<=", ">": ">", ">=": ">=", "==": "="}
 
 
@@ -23,8 +28,9 @@ class Skip(Exception):
 
 
 class Compiler:
-    def __init__(self, text=None):
+    def __init__(self, text=None, civs=None):
         self.text, self.k, self.ints, self.warnings, self.lines = text or "", 0, {}, [], []
+        self.civs, self.files = civs or {}, {}
 
     def warn(self, part):
         m = re.search(rf"\b{re.escape(part)}\b", self.text)
@@ -142,7 +148,30 @@ class Compiler:
                 parts = [before, {"score": {"name": h, "objective": o}}, after]
             self.emit("tellraw @a " + json.dumps([""] + [p for p in parts if p != ""]))
             return None
+        if name in ("xsGetObjectCount", "xsGetObjectCountTotal") and len(args) == 2:
+            return self.count(*args)
+        if name == "xsGetPlayerCivilization" and len(args) == 1 and literal(args[0]):
+            t = self.temp()
+            self.emit(f"scoreboard players set {t} {civ_id(self.civs.get(args[0][1]))}")
+            return t
         raise Skip(name)
+
+    def count(self, player, kind):
+        """The units of a player and type (no queue or site in a vanilla world: the total is the same count)."""
+        t = self.temp()
+        if literal(player) and literal(kind):
+            self.emit(f"execute store result score {t} if entity "
+                      f"@e[tag=aoe2mc.p{player[1]},tag=aoe2mc.t{kind[1]},tag=!{MOUNT}]")
+            return t
+        for key, node in (("p", player), ("id", kind)):
+            if literal(node):
+                self.emit(f"data modify storage {STORE} count.{key} set value {node[1]}")
+            else:
+                v = self.expr(node)
+                self.emit(f"execute store result storage {STORE} count.{key} int 1 run scoreboard players get {v}")
+        self.files[f"{DIR}/count.mcfunction"] = COUNT + "\n"
+        self.emit(f"execute store result score {t} run function aoe2mc:xs/count with storage {STORE} count")
+        return t
 
     def stmt(self, node, local):
         kind = node[0]
@@ -169,6 +198,16 @@ class Compiler:
             self.warn(str(e))
 
 
+def literal(node):
+    return node[0] == "num" and isinstance(node[1], int)
+
+
+def civ_id(name):
+    """The AoE2 civilization ID of a civilization key, as game/xs_host.civ_id (the .dat order), else 0."""
+    from AoE2ScenarioParser.datasets.object_support import Civilization
+    return next((i for i, c in enumerate(Civilization) if c.name == name), 0)
+
+
 def pure(node):
     """False when node has a call or an assignment (they must not run when && or || stops early)."""
     if isinstance(node, tuple):
@@ -180,9 +219,10 @@ def pure(node):
     return True
 
 
-def compile(tree, text=None):
-    """(files, tick lines, load lines, warning lines) of the datapack form of the parsed script tree (xs.parse)."""
-    c = Compiler(text)
+def compile(tree, text=None, civs=None):
+    """(files, tick lines, load lines, warning lines) of the datapack form of the parsed script tree (xs.parse).
+    civs: {player: civilization key} of the converted map (xsGetPlayerCivilization)."""
+    c = Compiler(text, civs)
     main = None
     for node in tree:
         if node[0] == "var":
@@ -198,4 +238,4 @@ def compile(tree, text=None):
     if main is not None:
         c.stmt(main[4], "l.main")
     c.emit(f"scoreboard players set #main {OBJ} 1")
-    return {f"{DIR}/main.mcfunction": "\n".join(c.lines) + "\n"}, [TICK], list(LOAD), c.warnings
+    return {f"{DIR}/main.mcfunction": "\n".join(c.lines) + "\n"} | c.files, [TICK], list(LOAD), c.warnings

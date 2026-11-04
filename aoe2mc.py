@@ -5985,7 +5985,8 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
         import xs
         import xs_mc
         try:
-            fns, _, xs_load, warnings = xs_mc.compile(xs.parse(xs_script[1], xs_script[0]), xs_script[1])
+            fns, _, xs_load, warnings = xs_mc.compile(xs.parse(xs_script[1], xs_script[0]), xs_script[1],
+                                                    {n: p.get("civ") for n, p in (players or {}).items()})
         except xs.XsError as e:
             fns, xs_load, warnings = {}, [], [f"XS script: {e}: no datapack form, the game program runs it (game/run.py)"]
         for w in warnings:
