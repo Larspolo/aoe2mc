@@ -43,7 +43,7 @@ def test_events():
                 {"body": "Started by `claude/b`."}, {"body": None},
                 {"body": "Merged `main` into the branch: git solved the conflict alone (`merge=union`). CI runs again."},
                 {"body": "Run of `claude/c`: PR #9 had a merge conflict, merged main."}]       # a report: no count
-    assert health.events(comments) == {"takeovers": 1, "releases": 2, "conflicts": 1, "solved": 1}
+    assert health.events(comments) == {"takeovers": 1, "conflicts": 1, "solved": 1}   # "Released" is no count (#5649)
 
 
 def test_claim_to_merge():

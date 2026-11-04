@@ -137,12 +137,12 @@ def setup_minutes(comments):
 
 
 def events(comments):
-    """Counts of takeovers, releases and merge conflicts in the issue and PR comments. A conflict counts only from
+    """Counts of takeovers and merge conflicts in the issue and PR comments. A conflict counts only from
     the comments of the workflows: Automerge could not merge, or Unconflict solved it alone ("solved"). Run reports
-    that only name a conflict counted 5 times too many (improve, run 145)."""
+    that only name a conflict counted 5 times too many (improve, run 145). No run comments "Released" now (a claim
+    release is a commit on `claim/N`): only the release workflows do, so that is no count (#5649, `given_back`)."""
     bodies = [(c.get("body") or "").lstrip() for c in comments]
     return {"takeovers": sum(b.startswith("Taken over by") for b in bodies),
-            "releases": sum(b.startswith("Released") for b in bodies),
             "conflicts": sum(b.startswith("CI is green, but the merge failed") for b in bodies),
             "solved": sum(b.startswith("Merged `main` into the branch") for b in bodies)}
 
@@ -665,6 +665,13 @@ def next_effect(comments):
     return took, failed, med(first), med(later)
 
 
+def given_back(comments):
+    """{result: count} of the `Metrics:` lines whose ticket the run gave back with no PR (`none`, `blocked`,
+    `needs-human`; `report.md`): the lost tickets of the runs (#5649)."""
+    return dict(Counter(m[1] for c in comments for line in (c.get("body") or "").splitlines()
+                        if line.startswith("Metrics:") and (m := re.match(r"Metrics: ticket #\d+ · [^·]+ · (none|blocked|needs-human) ·", line))))
+
+
 def pr_results(comments, prs):
     """The `pr #n` results of the `Metrics:` lines: (merged PRs, not merged PRs) by the present PR state (#902)."""
     merged = {p["number"] for p in prs if p.get("merged_at")}
@@ -768,7 +775,10 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     out.append(f"Metrics lines with pr #n: merged {len(ok)}, not merged {len(lost)}"
                + (f" ({', '.join(f'#{n}' for n in lost)})" if lost else ""))
     e = events(comments)
-    out.append(f"Takeovers {e['takeovers']}, releases {e['releases']}, merge conflicts {e['conflicts']} (solved by Unconflict {e['solved']})")
+    back = given_back(status_comments)
+    out.append(f"Takeovers {e['takeovers']}, given back {sum(back.values())}"
+               + (f" ({', '.join(f'{k} {v}' for k, v in sorted(back.items()))})" if back else "")
+               + f", merge conflicts {e['conflicts']} (solved by Unconflict {e['solved']})")
     out.append(takeover_lines(takeovers(comments, status_comments, prs, since, runs=runs))[-1])
     if files_of:
         out.append(f"Files of the {len(files_of)} conflicted PRs (PRs): "
