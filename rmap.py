@@ -764,7 +764,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
             base = value(attrs["base_size"][0], consts) if "base_size" in attrs else 3
             clump = value(attrs["clumping_factor"][0], consts) if "clumping_factor" in attrs else 8
             kind = value(attrs["terrain_type"][0], consts) if "terrain_type" in attrs else 0
-            zone = value(attrs["zone"][0], consts) if "zone" in attrs else None      # None: a zone of its own
+            zone = value(attrs["zone"][0], consts) if "zone" in attrs else None      # None: the default zone (#5737)
             top = value(attrs["base_layer"][0], consts) if "base_layer" in attrs else None   # a layer on the land
             height = value(attrs["base_elevation"][0], consts) if "base_elevation" in attrs else 0
             edge = {a: value(attrs[a][0], consts) * n // 100 if a in attrs else 0 for a in BORDERS}
@@ -788,7 +788,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                               for v, lo, hi in ((c[0], box[0], box[1]), (c[1], box[2], box[3])))
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
                     t = teams[p - 1] if teams and "set_zone_by_team" in attrs else None
-                    z = zone if zone is not None else -1 - len(lands)
+                    z = zone if zone is not None else p - 10    # RMS guide: each player land in its own zone (#5737)
                     z = ("team", t) if t is not None else z             # one zone per team (#4696)
                     if "set_zone_randomly" in attrs:    # a random zone of 0..players-1: lands can share one (#4934)
                         z = ("random", int(rng.integers(players)))
@@ -814,7 +814,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
                 p = owner_of(attrs, consts, starts, players, teams)
                 if p:                                       # direct_placement: the land of player p (#3947)
                     starts.append({"player": p, "x": c[0], "y": c[1], "base_size": base, "land": len(lands)})
-                links.append((c, p, zone if zone is not None else -1 - len(lands)))
+                links.append((c, p, zone if zone is not None else -10))   # RMS guide: all create_land lands in one zone
                 lands.append({"id": len(lands), "cells": square(c, base, n, circular="set_circular_base" in attrs),
                               "clump": clump, "box": box, "fuzz": fuzz, "zone": links[-1][2], "avoid": avoid,
                               "target": tiles(attrs, consts, n, (2 * base + 1) ** 2)})
@@ -925,7 +925,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     ridges = scenery + cliffs(sections.get("CLIFF_GENERATION", ()), terrain, starts, consts, rng, warn)   # before objects()
     found = []                                     # one line per object part, so that parallel parts do not conflict
     found += objects(sections.get("OBJECTS_GENERATION", ()), consts, terrain, starts, rng, warn, owner, ridges, layer,
-                     land_ids=ids)
+                     land_ids=ids, land_zones={land["id"]: land.get("zone", -1 - land["id"]) for land in lands})
     found += trees(terrain)
     found += ridges
     if mode == "king-of-the-hill":                 # AoE2 DE puts the Monument of the mode at the map center (#5200)
@@ -1062,7 +1062,7 @@ CREATE_OBJECT = (               # the attributes of create_object that objects()
     "ignore_terrain_restrictions",  # also a land object on water, a fish on land (#4137)
     "layer_to_place_on",            # only the tiles of this land layer (#4132, `layer`: the land layer of each tile)
     "make_indestructible",          # no damage: the key "indestructible" of the object, Invulnerable (#5074)
-    "max_distance_to_other_zones",  # tiles from the lands of the other players (#3857)
+    "max_distance_to_other_zones",  # tiles from the lands of another zone (#3857, #5737)
     "max_distance_to_players",      # tiles from the origin of the player land (#3855)
     "min_distance_group_placement", # tiles from the other objects (#3857)
     "min_distance_to_map_edge",     # tiles from each map edge (#4427)
@@ -1113,13 +1113,15 @@ def hill(found, n):
     return rest + [{"name": "MONUMENT", "player": 0, "x": n / 2, "y": n / 2}]
 
 
-def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), layer=None, land_ids=None):
+def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), layer=None, land_ids=None, land_zones=None):
     """The objects of the create_object commands of <OBJECTS_GENERATION> (#3855), with the attributes of
     `CREATE_OBJECT`: number_of_objects on random free tiles, in groups with number_of_groups or a grouping attribute (#3856, #4699).
     Never on water (only a fish or a ship), a forest, a cliff or another object; an object with no free tile is missing.
     temp_min_distance_group_placement keeps the groups of one command apart; later commands do not avoid them (#4138).
     generate_for_first_land_only gives the objects of set_place_for_every_player to the first land only (#4138).
-    require_path, force_placement and ignore_terrain_restrictions as in `CREATE_OBJECT` (#4137)."""
+    require_path, force_placement and ignore_terrain_restrictions as in `CREATE_OBJECT` (#4137).
+    land_zones: land index -> zone; max_distance_to_other_zones avoids only the lands of another zone (#5737; none:
+    each land is a zone of its own)."""
     import aoe2mc
     kinds = aoe2mc.object_kinds(old=False)
     ids = {name: i for i, (_, name) in kinds.items()}
@@ -1133,6 +1135,10 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
     used |= cliff
     placed = np.zeros((n, n), bool)                    # the tiles of the objects (min_distance_group_placement)
     x, y = np.mgrid[0:n, 0:n]
+    if owner is not None:                              # the zone of each tile as a number, -1 = no land (#5737)
+        zone = [(land_zones or {}).get(i, -1 - i) for i in range(max(int(owner.max()), *(st["land"] for st in starts), 0) + 1)]
+        code = np.array([zone.index(z) for z in zone])
+        zgrid = np.where(owner >= 0, code[np.maximum(owner, 0)], -1)
     areas = {}                                         # actor_area ID -> the tiles of its objects (#3858)
     pools = {}                                         # create_object_group NAME -> the (kind, name) of its objects (#5251)
     for cmd, args, attrs in cmds:
@@ -1223,7 +1229,7 @@ def objects(cmds, consts, terrain, starts, rng, warn, owner=None, ridges=(), lay
         second = kinds.get(value(attrs["second_object"][0], consts), (None, None))[1] if "second_object" in attrs else None
         for st, player in owners:
             if zones and st and owner is not None:
-                place = ground & ~dilate((owner >= 0) & (owner != st["land"]), zones)
+                place = ground & ~dilate((zgrid >= 0) & (zgrid != code[st["land"]]), zones)
             else:
                 place = ground
             own = land if land is not None else st["land"] if st else None
