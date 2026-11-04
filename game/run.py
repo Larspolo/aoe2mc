@@ -955,6 +955,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if wait:
         import savegame
         start_on_join(game, savegame.sides(g), people, g=g)
+    elif "loaded_seconds" in vars(game):            # a takeover: no wait, the clocks go on from its time (#5700)
+        import savegame
+        start_clocks(game, savegame.sides(g))
     g.run(seconds)
     if g.ended:
         unveil(g)
@@ -1006,13 +1009,18 @@ def start_on_join(game, sides, people, sleep=time.sleep, g=None):
         game.command(f"title @a subtitle {json.dumps(lang.text('aoe2mc.run.starts_in', n))}")
         game.command(f"title @a title {json.dumps(str(n))}")
         sleep(1)
-    import gather
     welcome(game)                                    # the goal, the first step, the controls (#5514)
     game.command("scoreboard players reset #wait aoe_trig")
     game.command("tick unfreeze")
     game.wait = False                                # a restart (#979) does not freeze again
     show_titles(game)                                # nobody saw a title before the join (#3772)
-    for h in sides:                                                    # a loaded game goes on at its saved game time (#3377)
+    start_clocks(game, sides)
+
+
+def start_clocks(game, sides):
+    """Start the game clock of each side (Gather.t0): a loaded game goes on at its saved game time (#3377, #5700)."""
+    import gather
+    for h in sides:
         h.t0 = h.clock() - vars(game).get("loaded_seconds", 0.0) / (gather.NORMAL * getattr(h, "speed", 1.0))
 
 
