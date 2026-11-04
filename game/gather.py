@@ -168,6 +168,9 @@ TYPE_REACH = 16                                                    # blocks: a s
 REACH = 160    # blocks: the ray of a click (the pick functions): far views of the camera mode (camera.py), 10 chunks
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
 LEFT = "aoe_left"                     # score of a left click with the command stick (Paper plugin, #1788)
+INPUT_SCORE = "aoe_input"             # score of each input of a player: a click, a menu click (Paper plugin, #5760)
+INPUT = 0.05                          # seconds between two input checks in the wait of a step (#5760)
+SELECT_BATCH = 30                     # UUIDs in one `aoe select` command: an RCON command has at most 1446 bytes
 RELEASE = 0.45   # seconds without a wand use: the player released the held right click (uses come each 0.2 s, #992)
 HOLD = 0.2       # seconds: a held right click sends its next command stick use in this time, so a use with no next use
                  # is a click (on Paper the stick also draws the selection box, #1786)
@@ -841,6 +844,7 @@ class Gather:
         techtree.setup(self)
         if self.paper:
             self.command(f'scoreboard objectives add {LEFT} dummy "Left click"')    # set by the plugin (#1788)
+            self.command(f'scoreboard objectives add {INPUT_SCORE} dummy "Input"')   # set by the plugin (#5760)
             train.lore(self)                                           # the help lines of the menus (#1160)
             self.command(allies_command(self.data.get("players", {})))   # allies do not shoot each other (#1315)
             self.command(neutral_command(self.data.get("players", {})))  # no automatic attack on neutrals (#1645)
@@ -1022,14 +1026,20 @@ class Gather:
 
     def choose(self, uuids, last=None):
         """Make uuids the selection: the other units leave it, the new ones glow. The boss bar shows unit last."""
-        for u in sorted(self.selected - uuids - self.others()):
-            self.command(f"data merge entity {u} {{Glowing:0b}}")
-            self.command(f"tag {u} remove {SELECT}")
-        for u in sorted(uuids - self.selected):
-            self.command(f"data merge entity {u} {{Glowing:1b}}")
-            self.command(f"tag {u} add {SELECT}")
-        for u in sorted(self.selected ^ uuids):                        # the name line shows the selection (#661)
-            self.command(f"aoe label {u}")
+        off, on = sorted(self.selected - uuids - self.others()), sorted(uuids - self.selected)
+        if self.paper:                                                 # glow, tag and name line of many units (#5760)
+            for flag, us in (("off", off), ("on", on)):
+                for i in range(0, len(us), SELECT_BATCH):
+                    self.command(f"aoe select {flag} {SELECT} " + " ".join(us[i:i + SELECT_BATCH]))
+        else:
+            for u in off:
+                self.command(f"data merge entity {u} {{Glowing:0b}}")
+                self.command(f"tag {u} remove {SELECT}")
+            for u in on:
+                self.command(f"data merge entity {u} {{Glowing:1b}}")
+                self.command(f"tag {u} add {SELECT}")
+            for u in sorted(self.selected ^ uuids):                    # the name line shows the selection (#661)
+                self.command(f"aoe label {u}")
         new, self.selected = uuids - self.selected, set(uuids)
         if new and last is not None:                                   # a pick, not a unit that left (#3499)
             self.voice(last)
@@ -1406,7 +1416,6 @@ class Gather:
         techtree.tick(self)
         hints.tick(self)
         map_table.tick(self)
-        menu.clicks(self)
         cheats.clicks(self)
         self.taunted = getattr(self, "taunted", []) + [n for _, n in cheats.taunts(self)]   # for AI scripts (#4827)
         self.command(f"execute as {self.who} unless items entity @s container.* minecraft:carrot_on_a_stick[!custom_data] "
@@ -1424,6 +1433,12 @@ class Gather:
         if not self.paper:                                             # Paper: hold right click with the stick (#1786)
             self.command(f"execute as {self.who} unless items entity @s container.* minecraft:{WAND} "
                          f'run give @s minecraft:{WAND}[item_name="Selection box"]')
+        return self.inputs()
+
+    def inputs(self):
+        """The input part of clicks(): the menu clicks, the drags, the left clicks and the players who clicked. No
+        housekeeping (give, build.tick, hints.tick): wait_input calls it between the steps (#5760)."""
+        menu.clicks(self)
         self.release()                                                 # the drags of the selection box (#992)
         if getattr(self, "paper", False):                               # a partial Gather of tests/test_menu.py
             self.deselect()
@@ -2381,6 +2396,23 @@ class Gather:
             del self.map.farm_at[c]
         self.sites[:] = [s for s in self.sites if not ("FARM" in s["name"] and rect and tuple(s["footprint"]) == tuple(rect))]
 
+    def wait_input(self, deadline):
+        """Wait until the monotonic time deadline. Each INPUT seconds check with one command if a player gave an input
+        (Paper: the score INPUT_SCORE of the plugin; vanilla: the use of the stick), and do it at once (#5760)."""
+        if "map" not in vars(self):                                    # a partial Gather of the run loop tests: no server
+            return time.sleep(max(0.0, deadline - time.monotonic()))
+        while (left := deadline - time.monotonic()) > 0:
+            time.sleep(min(INPUT, left))
+            if left <= INPUT:
+                return
+            obj = INPUT_SCORE if getattr(self, "paper", False) else "aoe_use"
+            if "passed" not in self.command(f"execute if entity {only(self.who, f'scores={{{obj}=1..}}')}"):
+                continue
+            if obj == INPUT_SCORE:
+                self.command(f"scoreboard players reset {self.who} {INPUT_SCORE}")
+            for name in self.inputs():
+                self.click(name)
+
     def run(self, seconds=None, until=None):
         """Play in real time until seconds passed, until() is true or the game ended (a cheat, #819)."""
         end = seconds and time.monotonic() + seconds
@@ -2390,7 +2422,7 @@ class Gather:
             for name in self.clicks():
                 self.click(name)
             if getattr(self, "paused", False):                         # pause.toggle: only the clicks continue (#3374)
-                time.sleep(max(0.0, self.tick / self.speed - (time.monotonic() - t)))
+                self.wait_input(t + self.tick / self.speed)
                 continue
             self.step()
             for b in self.bots:
@@ -2439,7 +2471,7 @@ class Gather:
                 tutorial.tick(self)
             treaty.tick(self, self.tick * NORMAL)
             record.tick(self, self.tick * NORMAL)                      # the game time of Record Game (#2649)
-            time.sleep(max(0.0, self.tick / self.speed - (time.monotonic() - t)))   # a step stays tick game seconds
+            self.wait_input(t + self.tick / self.speed)                # a step stays tick game seconds
 
 
 def add_waypoint(g, name, cell):
