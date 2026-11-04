@@ -846,8 +846,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             s.g.reveal, s.g.peers = reveal, [g, *(o.g for o in g.bots)]   # its fog sees all units (#1631)
             s.g.unlock_speed = settings["unlock_speed"]          # each person has the Game menu (#2933)
         game.starts, game.yaw = start_places(data)   # the start views and the spawn yaw (#3347)
-        for name in list(game.sides):                # players who joined before the teams were there
-            game.side(name)
+        for name in sorted({*game.sides, *vars(game).pop("taken", ())}):   # joined before the teams; the person online
+            game.side(name)                          # at the takeover trigger gets the team and the town (#5701)
         first = [*getattr(game, "seats", ()), 1, 2][:2] if getattr(game, "seats", ()) else [1, 2]
         print(f"{people} people: the first Minecraft player who joins plays player {first[0]}, the second player "
               f"{first[1]}.", file=sys.stderr)
@@ -1143,6 +1143,19 @@ def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=N
     print(f"{stats['events']} events, {stats['commands']} commands in {stats['busy']} s "
           f"({stats['rate']} commands per second, the timeline needs {stats['need']}), largest lag {stats['lag']} s")
     return stats
+
+
+def drop_replay_kit(game):
+    """The person online at the takeover trigger (#5701): the replay items and the replay boss bar go, the game mode
+    is creative again (the Spectator view item). play() then puts the person on its team and in its town (Game.side)."""
+    import replay
+    import replay_input
+    game.command(f"bossbar remove {replay.BAR}")
+    for name in sorted(game.joined):
+        for n in replay_input.ITEMS:
+            game.command(f"clear {name} *[custom_data={{{replay_input.OBJECTIVE}:{n}}}]")
+        game.command(f"gamemode creative {name}")
+    game.taken = set(game.joined)
 
 
 class Taken(tuple):
@@ -1619,6 +1632,7 @@ def main(argv=None, scenario=None):
             if isinstance(r, Taken):                 # the trigger of the takeover: as --takeover P (#5601)
                 r, a.takeover = r
                 game.seats = (a.takeover,)           # play() puts the joined person on team pP
+                drop_replay_kit(game)                # no join of play() gives the game items (#5701)
             if a.takeover is not None:               # the save of the replay state, then a game on it (#5450)
                 import takeover
                 state = savegame.read(takeover.write(game, r, savegame.folder(a.world), taken=a.takeover,
