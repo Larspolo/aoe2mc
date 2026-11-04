@@ -48,7 +48,7 @@ def test_trigger_plays_the_player(tmp_path, monkeypatch):
         got["stop"] = stop
         return run.Taken(r, 2)
 
-    def fake_write(game, replay, saves, t=None, taken=None, difficulty=None):
+    def fake_write(game, replay, saves, t=None, taken=None, difficulty=None, bot_attack=None):
         assert replay is r
         got["taken"] = taken
         return "SAVE"

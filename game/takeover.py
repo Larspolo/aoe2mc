@@ -136,34 +136,37 @@ def player(r, p, t=0):
                                 if any(i in r.units and r.units[i].uuid in us for i in inside))}
 
 
-ATTACK = 120                                                           # AoE2 seconds after the takeover (#5452)
+ATTACK = 300                                     # AoE2 seconds after the takeover: time to play first (#5452, #5632)
 
 
-def bot(r, p, t, difficulty="standard"):
+def bot(r, p, t, difficulty="standard", bot_attack="10:00"):
     """The savegame.BOT fields of the bot that plays player p after a takeover at game time t (ms) (#5452): its clock
-    goes on from t, and its first attack comes ATTACK seconds after t, on the first enemy of the record's teams."""
+    goes on from t, and its first attack comes at the --bot-attack time (MM:SS), but not before ATTACK seconds after t
+    (#5632), on the first enemy of the record's teams."""
+    import replay
     import run  # run imports replay: import it late
     s = t / 1000
-    return {"time": s, "charged": False, "attack": s + ATTACK, "foe": run.bot_foe(r.data["players"], p),
+    attack = max(s + ATTACK, replay.aoe2mc.game_time(bot_attack) / 1000)
+    return {"time": s, "charged": False, "attack": attack, "foe": run.bot_foe(r.data["players"], p),
             "difficulty": difficulty}
 
 
-def state(r, t=None, taken=1, difficulty="standard"):
+def state(r, t=None, taken=1, difficulty="standard", bot_attack="10:00"):
     """The savegame.dump dict of the Replay r at game time t (ms; None: the time of its controls): the stock, the
     technologies, the population, the units and the done buildings of each player of the record, and the game time.
     Each player but `taken` (the Minecraft player) gets the state of its bot (#5452); difficulty: the --ai-difficulty
-    setting (a comma list: one level per bot in seat order, bot.level_of).
+    setting (a comma list: one level per bot in seat order, bot.level_of); bot_attack: the --bot-attack setting.
     The same replay at the same time gives the same dict (sorted keys and lists)."""
     t = (getattr(r, "control", None) or {}).get("time", 0) if t is None else t
     ps = sorted(int(k) for k in r.data.get("players") or {} if int(k))
     import bot as ai
     seats = {p: ai.level_of(difficulty, k) for k, p in enumerate(q for q in ps if q != taken)}
-    d = {"players": {str(p): player(r, p, t) | ({"bot": bot(r, p, t, seats[p])} if p in seats else {}) for p in ps},
+    d = {"players": {str(p): player(r, p, t) | ({"bot": bot(r, p, t, seats[p], bot_attack)} if p in seats else {}) for p in ps},
          "game_time": round(t / 1000, 3)}
     return json.loads(json.dumps(d, sort_keys=True))                   # the JSON form: sorted keys, no tuples
 
 
-def write(game, r, saves, t=None, taken=1, difficulty="standard"):
+def write(game, r, saves, t=None, taken=1, difficulty="standard", bot_attack="10:00"):
     """Save the replay of game at its time: a copy of the world after `save-all flush` (run.save) and state(r) next to
     it (savegame.write). Returns the save folder."""
     import run  # run imports replay: import it late
@@ -171,6 +174,6 @@ def write(game, r, saves, t=None, taken=1, difficulty="standard"):
     world = os.path.join(tempfile.mkdtemp(dir=os.path.dirname(copy)), os.path.basename(os.path.normpath(game.world)))
     os.rename(copy, world)                                             # the save takes the name of the world
     try:
-        return savegame.write(saves, world, state(r, t, taken, difficulty))
+        return savegame.write(saves, world, state(r, t, taken, difficulty, bot_attack))
     finally:
         shutil.rmtree(os.path.dirname(world), ignore_errors=True)

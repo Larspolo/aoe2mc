@@ -33,11 +33,11 @@ def test_the_bot_of_player_2_has_the_replay_state_and_no_new_town():
     assert b.g.sites == [] and [s["name"] for s in me.sites] == ["HOUSE"]   # no start town of its own
 
 
-def test_the_bot_attacks_two_minutes_after_the_takeover():
+def test_the_bot_attacks_attack_seconds_after_the_takeover():
     _, _, _, b = loaded(t=600_000)
     assert b.time == 600 and not b.charged and b.attack == 600 + takeover.ATTACK
     clock = b.time
     while clock < b.attack:                                            # a fake clock: the bot time of each tick
-        assert clock - 600 < 120
+        assert clock - 600 < takeover.ATTACK
         clock += 1
-    assert clock - 600 == 120
+    assert clock - 600 == takeover.ATTACK
