@@ -27,8 +27,7 @@ The reasons of the `out` rows (the game program has no such event):
 The `in` rows give the event that they need. The new `in` rows (#5628) have no line in `data/achievements.jsonl` yet,
 by event kind (one sub-issue of the epic per kind):
 
-- kill: `ACHIEVEMENT_CASTLE_OF_DOUBT`, `ACHIEVEMENT_DARK_HUMOR`, `ACHIEVEMENT_FINAL_COUNTDOWN`, `ACHIEVEMENT_ITS_A_TREB`, `ACHIEVEMENT_KING_OF_THE_SEAS`, `ACHIEVEMENT_PROMACHOS`, `ACHIEVEMENT_SHUING_ENEMIES`
-- win: `ACHIEVEMENT_HOMELESS`, `ACHIEVEMENT_SUPREMELY_UNEXPECTED`, `ACHIEVEMENT_WINGMAN`
+- kill: `ACHIEVEMENT_DARK_HUMOR`, `ACHIEVEMENT_ITS_A_TREB`, `ACHIEVEMENT_KING_OF_THE_SEAS`, `ACHIEVEMENT_PROMACHOS`, `ACHIEVEMENT_SHUING_ENEMIES`
 
 | Steam key | Name | Description | Scope |
 |---|---|---|---|

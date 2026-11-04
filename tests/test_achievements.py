@@ -12,6 +12,7 @@ OPTIONAL = {"civ": str, "mode": str,   # limit a line to a civilization and a ga
             "killed": list, "by": list,   # the event kill (#5640)
             "gather": str, "age": int,   # the event count:gather (#5643)
             "buildings": list, "ages": int, "villagers": int,   # count:build, count:queue, a research (#5642)
+            "before": (int, float), "least": (int, float),   # the limits of a value of an event (#5644)
             "tiles": int, "part": float}   # the event explore (#5646)
 
 
