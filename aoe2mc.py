@@ -4310,13 +4310,18 @@ def xs_lines(e, c):
         ([f"execute unless score #a aoe_xs matches 1 run function {fn}"] if fn else [])
 
 
+XS_WARNED = set()   # the warning lines printed for this conversion (each pass of trigger_files compiles them again)
+
+
 def xs_snippet(code, name):
     """(function, holder, files) of the XS code of a "Script Call" (#5693): xs_mc compiles it to datapack functions under
     xs/<name>/. No function: the game program runs the code, and the warning lines say why."""
     import xs_mc
     files, fn, holder, warnings = xs_mc.snippet(code, name)
     for w in warnings:
-        print(f"  {w}")
+        if (name, w) not in XS_WARNED:                                     # once per effect and line (#5792)
+            XS_WARNED.add((name, w))
+            print(f"  {w}")
     return fn, holder, files
 
 
@@ -5122,6 +5127,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     replay: a world of a record (#5158): a unit of a trigger that the live replay runs once has a fixed UUID (created_uuid)."""
     if live is None:
         live = {t["id"] for t in triggers}
+        XS_WARNED.clear()                                                  # a new conversion prints its warnings again (#5792)
         while any(e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER) for t in triggers for e in t["effects"]) and \
                 live != (made := {int(k.split("/")[-1].split(".")[0]) for k in
                                 trigger_files(triggers, T, ground, players, Counter(), mood, live)[1]
