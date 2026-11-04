@@ -489,7 +489,7 @@ class Side:
 
 def saved_attack(state, player, at):
     """The game time (AoE2 seconds) of the first attack of the bot of player: the attack of a loaded save wins over at,
-    the time of the options (a takeover at 5:00 attacks at 7:00, takeover.ATTACK, #5626)."""
+    the time of the options (a takeover at 5:00 attacks at 10:00, takeover.bot, #5626, #5632)."""
     if at == math.inf:
         return at
     return (((state or {}).get("players", {}).get(str(player)) or {}).get("bot") or {}).get("attack", at)
@@ -1619,7 +1619,7 @@ def main(argv=None, scenario=None):
             if a.takeover is not None:               # the save of the replay state, then a game on it (#5450)
                 import takeover
                 state = savegame.read(takeover.write(game, r, savegame.folder(a.world), taken=a.takeover,
-                                                     difficulty=a.ai_difficulty))
+                                                     difficulty=a.ai_difficulty, bot_attack=a.bot_attack))
                 a.play, a.people, a.bot = True, 1, "all"   # a bot plays each other player of the record (#5452)
                 told = given(ap, argv)               # the rules of the record; a given option wins (#5603)
                 for k, v in record_lobby(a.world).items():

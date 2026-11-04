@@ -36,7 +36,7 @@ def test_takeover_plays_the_replay_state(tmp_path, monkeypatch):
         got["replay"] = (start, stop)
         return r
 
-    def fake_write(game, replay, saves, t=None, taken=None, difficulty=None):
+    def fake_write(game, replay, saves, t=None, taken=None, difficulty=None, bot_attack=None):
         assert replay is r and taken == 1 and difficulty == "standard"
         return "SAVE"
 
