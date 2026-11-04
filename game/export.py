@@ -7,16 +7,20 @@ The start map comes from aoe2mc.json of the world: the size, the terrain and ele
 their civilizations, and the objects. A save folder (savegame.py: `world/` and `savegame.json`) gives the state at the
 end of the game: the units that still live (the "soldiers" and "villagers" of each player), the buildings of the
 construction sites that are done, the fallen start buildings ("ruins") and the mines with no resource left. The
-entities of the world give the last position of each unit (its UUID). Tiles stay in the turned grid of aoe2mc.json, as
-the world shows them. The resources and the starting age of each player: the end of the game with a save, else those of
-aoe2mc.json. Not yet: the terrain that a player changed in Minecraft (blocks).
+entities of the world give the last position of each unit (its UUID). The tiles and the terrain turn back to the
+orientation of the source scenario (the turn of --orientation, #5674). The resources and the starting age of each
+player: the end of the game with a save, else those of aoe2mc.json. Not yet: the terrain that a player changed in
+Minecraft (blocks).
 """
 import argparse
 import contextlib
 import io
 import json
+import math
 import os
 import sys
+
+import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -105,6 +109,11 @@ def objects(data, state, pos):
         if (i := unit_id(s["name"])) is not None and not any(tuple(o.get("footprint", ())) == (x0, z0, x1, z1)
                                                              for o in data["objects"]):
             out.append({"id": i, "player": s["player"], "tile": ((x0 + x1) / 2 / T, (z0 + z1) / 2 / T), "rotation": 0.0})
+    import aoe2mc  # the tiles of the world are turned (#5674)
+    back, turn = (4 - data.get("turn", 0)) % 4, data.get("turn", 0)
+    for o in out:
+        o["tile"] = aoe2mc.turn_tile(*o["tile"], data["map_size"], back)
+        o["rotation"] = o["rotation"] - turn * math.pi / 2
     return out
 
 
@@ -126,10 +135,11 @@ def export(path, out):
         data = json.load(f)
     n = data["map_size"]
     scn = scenarios.new_scenario(n)
-    terrain = [[int(v) for v in row.split()] for row in data["terrain"]]
-    elevation = [[int(v) for v in row.split()] for row in data["elevation"]]
+    back = (4 - data.get("turn", 0)) % 4                # the turn of --orientation, undone (#5674)
+    terrain = np.rot90(np.array([[int(v) for v in row.split()] for row in data["terrain"]]).T, back)
+    elevation = np.rot90(np.array([[int(v) for v in row.split()] for row in data["elevation"]]).T, back)
     for t in scn.map_manager.terrain:
-        t.terrain_id, t.elevation = terrain[t.y][t.x], elevation[t.y][t.x]
+        t.terrain_id, t.elevation = int(terrain[t.x, t.y]), int(elevation[t.x, t.y])
     players = [int(p) for p in data["players"] if int(p)]
     scn.player_manager.active_players = max(players, default=1)
     for p in players:
