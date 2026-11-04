@@ -3,9 +3,8 @@ drop-site cells in one array operation, with the same answer as the plain distan
 import math
 import types
 
-import numpy as np
-
 import bot
+import numpy as np
 
 
 def plain(full, drops, T):
