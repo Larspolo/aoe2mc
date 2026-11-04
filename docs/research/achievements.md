@@ -27,16 +27,12 @@ The reasons of the `out` rows (the game program has no such event):
 The `in` rows give the event that they need. The new `in` rows (#5628) have no line in `data/achievements.jsonl` yet,
 by event kind (one sub-issue of the epic per kind):
 
-- build: `ACHIEVEMENT_STEPPE_PEOPLE`, `ACHIEVEMENT_SURVEILLANCE_NETWORK`
 - challenge: `ACHIEVEMENT_CHALLENGE_ACCEPTED`, `ACHIEVEMENT_GOING_FOR_THE_GOLD`
 - convert: `ACHIEVEMENT_LOSING_YOUR_RELIGION`
 - explore: `ACHIEVEMENT_MARCO_POLO`
 - kill: `ACHIEVEMENT_DARK_HUMOR`, `ACHIEVEMENT_ITS_A_TREB`, `ACHIEVEMENT_KING_OF_THE_SEAS`, `ACHIEVEMENT_PROMACHOS`, `ACHIEVEMENT_SHUING_ENEMIES`
-- policy: `ACHIEVEMENT_POLITICAL_ANIMAL`
-- research: `ACHIEVEMENT_BY_AHURAMAZDAS_GRACE`, `ACHIEVEMENT_FLEMISH_REVOLUTION`
 - siege tower: `ACHIEVEMENT_HOWDY_NEIGHBOR`
 - trade: `ACHIEVEMENT_BULL_MARKET`
-- train: `ACHIEVEMENT_BABY_BOOMER`
 
 | Steam key | Name | Description | Scope |
 |---|---|---|---|

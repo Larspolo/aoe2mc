@@ -15,6 +15,11 @@ kill log of the plugin, Kills.java). An item is a unit name, a group of civs.GRO
 animal name (gather.Gather.hunt: one at its death, when it leaves its carcass for the player), "FOLWARK" (the food of
 build.folwark), a "trickle" technology (its food, feitoria.tick) or "KESHIK" (its gold, spoils.attacks). An optional
 "age" counts only the amounts of the ages up to it (0: the Dark Age, build.ages).
+More events (#5642): "event" can be a list (any of them); an optional "villagers" needs that many live villagers
+(Golden Spurs). "count:build" with "buildings", "need" and an optional "by" (builder names): the player completed `need`
+buildings of these names in this game (gather.Gather.step; with "by": built by one of these units; the counts in a
+saved game: "build_counts"). "count:queue" with "units", "need" and "ages" (the highest age index, build.ages): one
+queue of the player has `need` of these units (train.queue). "policy": a policy change (train.research, the Athenians).
 The state of a win (#5644): "win homeless" (demolish.delete of the first own TOWN_CENTER of the scenario), "win only"
 with "units" (the player trained units in this game, all of these names) and "win ally" (an allied player, gather.allied).
 "destroy WONDER" with "before" in years (wonder.tick: an enemy wonder fell with less years left) and "lose site <BUILDING>"
@@ -54,9 +59,34 @@ def event(g, h, name, seconds=None):
     if getattr(h, "share", None) or not hasattr(g, "command"):    # a bot, or a test double with no server
         return
     for r in ROWS:
-        if (r.get("event") == name and (seconds is None or r.get("least", -1) <= seconds < r.get("before", float("inf")))
-                and matches(g, h, r)):
+        e = r.get("event")
+        if ((name in e if isinstance(e, list) else e == name) and (seconds is None or r.get("least", -1) <= seconds < r.get("before", float("inf")))
+                and len(getattr(h, "villagers", ())) >= r.get("villagers", 0) and matches(g, h, r)):
             grant(g, h.player, r["name"].lower())
+
+
+def counted(g, kind, key, names, n):
+    """Grant each "count:<kind>" line of g (a Gather, not a bot) whose key has a name of names and whose need is n or less."""
+    if getattr(g, "share", None) or not hasattr(g, "command"):
+        return
+    for r in ROWS:
+        if r.get("event") == f"count:{kind}" and set(names) & set(r[key]) and matches(g, g, r) and n(r) >= r["need"]:
+            grant(g, g.player, r["name"].lower())
+
+
+def built(g, name, by=()):
+    """Count a complete own building name of g and its builder names by (gather.Gather.step), and grant the "count:build" lines."""
+    counts = vars(g).setdefault("build_counts", {})
+    for k in {name, *(f"{name} by {b}" for b in set(by))}:
+        counts[k] = counts.get(k, 0) + 1
+    counted(g, "build", "buildings", [name], lambda r: sum(
+        counts.get(f"{b} by {u}" if "by" in r else b, 0) for b in r["buildings"] for u in r.get("by", [None])))
+
+
+def queued(g, q, ages):
+    """Grant each "count:queue" line whose units are `need` times in the queue q of g, in an age up to its "ages"."""
+    counted(g, "queue", "units", [e["name"] for e in q], lambda r: -1 if ages > r["ages"] else
+            sum(e["name"] in r["units"] for e in q))
 
 
 def won(g, h, levels=()):
