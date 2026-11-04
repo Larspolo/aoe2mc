@@ -8,6 +8,7 @@ The technologies with the key "trickle" of game/data/train.jsonl (#4279: Burgund
 add income for each working unit of a kind: "farm" (villagers at work on a farm), "wood" (villagers at work on wood),
 "military" (the own military units).
 """
+import achievements
 import ruins
 import table
 import train
@@ -41,6 +42,8 @@ def tick(g, dt):
         if tech in getattr(g, "techs", ()) and (n := workers(g, who)):   # a test g can have no techs
             for res, rate in rates.items():
                 part[res] = part.get(res, 0.0) + rate * dt * n
+                if res == "food":
+                    achievements.gathered(g, tech, rate * dt * n)
     for res in part:
         if (whole := int(part[res] + 1e-9)) > 0:                      # 40 × 0.175 is 6.99999…
             part[res] -= whole
