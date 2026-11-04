@@ -968,6 +968,7 @@ def freeze(game):
     """Stop the `schedule` timers of the scenario triggers and the mobs until start_on_join."""
     game.command("tick freeze")
     game.command("scoreboard players set #wait aoe_trig 1")   # the tick triggers too (aoe2mc.WAIT, #3892)
+    game.command("scoreboard players set #a aoe_xs 1")       # the game program runs the XS script (#5689)
 
 
 def welcome(game):
