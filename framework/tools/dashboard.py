@@ -23,6 +23,8 @@ import urllib.request
 
 from agent_config import CONFIG
 
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))   # the project tools: dashboard_data.py (#5804)
+
 REPO = os.environ.get("GITHUB_REPOSITORY") or CONFIG["repo"]
 STATUS, PAUSED = CONFIG["status"]["label"], CONFIG["status"]["paused"]
 MUTED = "muted"                # the owner mutes a ticket: no agent works on it, and "Waiting for you" hides it
