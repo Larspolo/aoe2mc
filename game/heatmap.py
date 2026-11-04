@@ -75,14 +75,15 @@ KINDS = ("walk", "fight", "death")   # the kinds of grid() (#5589)
 SHADES = 4                  # the 4 shades of a map color: the heat from low to high (#5457)
 
 
-def item_commands(grids, dyes, tile, n, limit=1400):
+def item_commands(grids, dyes, tile, n, limit=1400, label="walk"):
     """Commands `aoe heatmap TILE N X,Y,COLOR,SHADE ...` (#5457): the Paper plugin paints a map item of them and gives it
     to the spectators. One entry per tile with a count: COLOR is the map color ID (aoe2mc.MAP_DYES) of the player with
     the highest count there, SHADE 0 (low) to 3 (high) by the log of the count. dyes: {player: map color ID}.
-    Each command stays below `limit` characters (RCON); the plugin gives the item at the last one ("end")."""
-    head = f"aoe heatmap {tile} {n}"
+    Each command stays below `limit` characters (RCON); the plugin gives the item at the last one ("end=LABEL": the
+    name of the item, #5671)."""
+    head, end = f"aoe heatmap {tile} {n}", f" end={label}"
     if not grids:
-        return [head + " end"]
+        return [head + end]
     players = sorted(grids)
     stack = np.stack([grids[p] for p in players])
     top, best = stack.max(0), stack.argmax(0)
@@ -93,4 +94,4 @@ def item_commands(grids, dyes, tile, n, limit=1400):
         if len(line) + len(part) + 4 > limit:
             out, line = out + [line], head
         line += part
-    return out + [line + " end"]
+    return out + [line + end]
