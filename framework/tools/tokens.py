@@ -203,8 +203,8 @@ PHASE_RULES = (("conflict", r"merge_main\.py|unconflict\.py|\bgit merge\b"),
 WRITES = re.compile(r"""\bopen\([^()]*(?:\([^()]*\)[^()]*)*,\s*['"][wax]b?\+?['"]|\.write(?:_text|_bytes)?\(|\bsed -i\b""")
 BEAT = re.compile(r"\S*claim\.py\s+\d+\s+--beat\b[^;&|\n]*")   # a keep-alive: the rest of its command gives the phase
 ORDER = ("conflict", "verify", "ci", "code", "claim", "report", "read")   # a call with several tools: the first here
-# a claim: no option but --takeover, or --or with the next candidates (`claim.py N --or M K`)
-CLAIMED = re.compile(r"claim\.py (\d+)(?:\s+--or((?:\s+\d+)+)|\s+--takeover)?(?=\s*(?:$|[;&|)<>\n]|\d>))")
+# a claim: no option but --takeover or --adopt NAME (the brief of the pacer, #5622), or --or with the next candidates
+CLAIMED = re.compile(r"claim\.py (\d+)(?:\s+--or((?:\s+\d+)+)|\s+--takeover|\s+--adopt\s+[\w.-]+)?(?=\s*(?:$|[;&|)<>\n]|\d>))")
 PHASES = ("read", "claim", "code", "verify", "ci", "conflict", "report")   # the order of the Metrics: line
 
 
@@ -307,7 +307,7 @@ def won(block, numbers):
     or None."""
     c = block.get("content")
     text = c if isinstance(c, str) else " ".join(x.get("text", "") for x in c or [] if isinstance(x, dict))
-    m = re.search(r"claimed claim/(\d+)\b", text or "")
+    m = re.search(r"(?:claimed|adopted) claim/(\d+)\b", text or "")
     return int(m[1]) if m and int(m[1]) in numbers else None
 
 
