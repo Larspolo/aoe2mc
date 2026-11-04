@@ -15,6 +15,8 @@ def fake(monkeypatch, seen):
     monkeypatch.setattr(health, "owner_and_waits", lambda since, until=None: ([], []))
     monkeypatch.setattr(health, "claim_refs", lambda: None)
     monkeypatch.setattr("feedback.fetch", lambda: [])
+    # No network: the open PRs and the pacer runs change between two calls (#5619)
+    monkeypatch.setattr(health, "api", lambda path: {"workflow_runs": [], "jobs": []} if "runs" in path else [])
 
 
 def test_until_without_a_zone_is_utc(monkeypatch, capsys):
