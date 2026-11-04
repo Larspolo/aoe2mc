@@ -163,10 +163,18 @@ def random_file(args, consts, rng, where):
     return default
 
 
-def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0, rng=None):
+def find_in(files, name):
+    """The key of (load "NAME") in the AI files of a scenario, by the rules of find(): ".per" added, any case."""
+    name = "/".join(p for p in name.replace("\\", "/").split("/") if p)
+    name += "" if os.path.splitext(name.rsplit("/", 1)[-1])[1] else ".per"
+    return next((k for k in sorted(files) if k.replace("\\", "/").lower() == name.lower()), None)
+
+
+def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0, rng=None, files=None):
     """The rules of the text, in the order of the file. defined: the symbols of the game for #load-if-defined (for
     example the age, the map type, the civilization). folder: the AI folder of (load ...). rng: the seeded generator of
-    (load-random ...). A broken text gives a ValueError with the file and the line; an unknown top-level form gives one
+    (load-random ...). files: {name: text}, the AI files of a scenario (#5798), before the folder; a file that is in
+    neither gives one warning line and no rules. A broken text gives a ValueError with the file and the line; an unknown top-level form gives one
     warning line and is skipped."""
     defined = {s.lower() for s in defined}
     consts = {} if consts is None else consts           # one table for the file and the files that it loads
@@ -200,12 +208,18 @@ def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0, 
                 chosen = args[0][0]
             elif (chosen := random_file(args, consts, rng, f"{file}:{line}")) is None:
                 continue                                           # no chance hit and no default: no rules
+            if depth <= 20 and files is not None and (key := find_in(files, chosen)) is not None:
+                rules += parse(files[key], defined, folder, key, consts, depth + 1, rng, files)
+                continue
             path = find(folder, chosen)
+            if depth <= 20 and files is not None and (folder is None or not os.path.isfile(path)):
+                print(f"AI script {file}:{line}: no file {chosen} for load: skipped", file=sys.stderr)
+                continue                                           # the game program must start (#5798)
             if folder is None or not os.path.isfile(path) or depth > 20:
                 raise ValueError(f"{file}:{line}: no file {path} for load" if depth <= 20 else
                                  f"{file}:{line}: load loops")
             with open(path, encoding="utf-8", errors="replace") as f:
-                rules += parse(f.read(), defined, folder, path, consts, depth + 1, rng)
+                rules += parse(f.read(), defined, folder, path, consts, depth + 1, rng, files)
         else:
             print(f"AI script {file}:{line}: unknown form {name}: skipped", file=sys.stderr)
     return rules
