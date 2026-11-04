@@ -10,7 +10,11 @@ optional "before" in game seconds (recap.aged, train.research). An optional "civ
 (autoscout.start), "train <UNIT> at <BUILDING>" (train.tick) and "win ai <level>" (cheats.over: a win while a bot of
 that bots.LEVELS name lost).
 "kill" with "killed" and "by" (#5640): the player killed a unit of "killed" with a unit of "by" (kills, once per tick: the
-kill log of the plugin, Kills.java). An item is a unit name, a group of civs.GROUPS, or groups joined by "+" (all of them)."""
+kill log of the plugin, Kills.java). An item is a unit name, a group of civs.GROUPS, or groups joined by "+" (all of them).
+"convert <UNIT>" (monk.take, #5646), "trade route" (trade.order: a land route to another market), "siege tower wall"
+(siege_tower.out next to an enemy wall), "challenge medal" and "challenge <MEDAL>" (challenge.tick), and "explore"
+with "tiles" and "part" (fog.minimap, no revealed map): the part of the tiles explored on a map of at least "tiles"
+tiles a side (480: Ludicrous, game/data/per_names.jsonl)."""
 import functools
 import json
 import os
@@ -123,3 +127,12 @@ def kills(g):
         h = a and sides.get(int(a[1]))
         if h and b and not gather.allied(getattr(h, "players", {}), h.player, int(b[1])):
             killed(h, unit_name(g, f[3]), unit_name(g, f[1]))
+
+
+def explored(g, n, count):
+    """Grant each "explore" line whose map size ("tiles") n reaches and whose "part" count of the n x n tiles reaches."""
+    if getattr(g, "share", None) or not hasattr(g, "command"):
+        return
+    for r in ROWS:
+        if r.get("event") == "explore" and n >= r["tiles"] and count >= r["part"] * n * n and matches(g, g, r):
+            grant(g, g.player, r["name"].lower())
