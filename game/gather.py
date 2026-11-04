@@ -2456,6 +2456,7 @@ class Gather:
             else:
                 scenario.patrol(self)                                  # the patrols of the players (#3355)
                 scenario.xs(self)                                      # the #includeXS script of a random map (#5666)
+                scenario.effects(self)                                 # the Script Calls of a scenario in each mode (#5796)
             waypoint(self)                                             # the next waypoint of a move (#3515)
             stance.arrive(self)                                        # the attack moves: the old stance at the point (#3357)
             follow.tick(self)                                          # the Follow and Guard orders (#3358)
