@@ -1,7 +1,5 @@
 """gui.py: the converter window (#1540). The pure functions run without a display; the window test opens the window
 under xvfb-run and skips without tkinter or a display."""
-import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -65,13 +63,9 @@ def test_convert_returns_the_error_of_a_wrong_option(tmp_path):
     assert "--tile-size" in "".join(out)
 
 
-def test_the_window_opens_and_closes():
+def test_the_window_opens_and_closes(on_display):
     if subprocess.run([sys.executable, "-c", "import tkinter"], capture_output=True).returncode:
         pytest.skip("no tkinter")
-    cmd = [sys.executable, "-c", "import gui; w = gui.window(); w.update(); w.destroy(); print('ok')"]
-    if not os.environ.get("DISPLAY"):
-        if not shutil.which("xvfb-run"):
-            pytest.skip("no display and no xvfb-run")
-        cmd = ["xvfb-run", "-a"] + cmd
+    cmd = on_display([sys.executable, "-c", "import gui; w = gui.window(); w.update(); w.destroy(); print('ok')"])
     r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=60)
     assert r.returncode == 0 and r.stdout.strip() == "ok", r.stderr
