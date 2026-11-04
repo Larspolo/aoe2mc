@@ -433,14 +433,20 @@ def grow(owner, lands, free, rng):
 
 def inside(land, c, rng=None):
     """True when tile c is in the borders of the land (its "box"), or the land has no borders. A land with a "fuzz"
-    (border_fuzziness 0 to 100, #4422) takes a tile d tiles out of the box with the chance (1 - fuzz / 100) ** d: 0
-    ignores the borders, 100 keeps them, a value between gives an irregular coast near the border (#5382). It draws
+    (border_fuzziness 0 to 100, #4422) takes a tile d tiles out of the box when d is at most the
+    reach of a random walk along that side (0 to 12 × (1 - fuzz / 100) tiles): 100 keeps the borders, a lower value gives
+    an irregular coast near the border (#5382, #5716). It draws
     only for such a tile, so that the maps of other scripts stay the same."""
     x0, x1, y0, y1 = land.get("box", (0, 1 << 30, 0, 1 << 30))
-    if x0 <= c[0] < x1 and y0 <= c[1] < y1:
-        return True
-    d = max(x0 - c[0], c[0] - x1 + 1, y0 - c[1], c[1] - y1 + 1)
-    return rng is not None and land.get("fuzz", 100) < 100 and rng.uniform() < (1 - land["fuzz"] / 100) ** d
+    if rng is None or "box" not in land or land.get("fuzz", 100) >= 100:
+        return x0 <= c[0] < x1 and y0 <= c[1] < y1
+    if "reach" not in land:   # one random walk per side: bays and capes, not a noisy band of 1 tile (#5716)
+        h = round(6 * (1 - land["fuzz"] / 100))
+        walk = np.cumsum(rng.integers(-1, 2, (4, 1024)), axis=1) % max(1, 4 * h)
+        land["reach"] = np.abs(walk - 2 * h) - h            # folded into -h to h tiles
+    r = land["reach"]
+    a, b = min(int(c[1]), 1023), min(int(c[0]), 1023)
+    return x0 - r[0, a] <= c[0] < x1 + r[1, a] and y0 - r[2, b] <= c[1] < y1 + r[3, b]
 
 
 def spot(box, n, rng):
