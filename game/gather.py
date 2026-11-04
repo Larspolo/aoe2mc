@@ -795,8 +795,8 @@ class Gather:
 
     def batch(self, cmds):
         """Send cmds in this order and drop the answers: in `aoe batch` commands on Paper (Game.batch, #2761), else
-        one by one."""
-        if batch := getattr(self.game, "batch", None):
+        one by one: also when an adapter set its own command (replay.Replay.crew)."""
+        if "command" not in vars(self) and (batch := getattr(getattr(self, "game", None), "batch", None)):
             return batch(list(cmds))
         for c in cmds:
             self.command(c)

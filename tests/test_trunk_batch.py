@@ -30,3 +30,15 @@ def test_a_trunk_on_a_slope_is_one_batch_with_the_same_blocks():
     chop(h, FULL)
     assert world.blocks == plain.blocks and row(world, top) == row(plain, top)
     assert world.calls < len(plain.log) / 4                           # the probes go in batches, not one by one
+
+
+def test_an_own_command_gets_each_command():
+    """The crew of the replay has no game, only its own command (replay.Replay.crew)."""
+    top = lambda x: 40 + x                                          # noqa: E731
+    plain, g = tree_world(top)
+    chop(g, FULL)
+    _, h = tree_world(top)
+    del h.game
+    h.command = (sent := []).append
+    chop(h, FULL)
+    assert sent == plain.log
