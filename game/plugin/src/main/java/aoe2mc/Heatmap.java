@@ -17,9 +17,9 @@ import net.kyori.adventure.text.Component;
 
 /**
  * The heat map of a record as a map item (#5457, game/heatmap.py item_commands): "aoe heatmap TILE N X,Y,COLOR,SHADE ...
- * [end]". Each entry paints tile (X, Y) of the N × N tiles in map color COLOR, shade 0 (low) to 3 (high); "end" makes a
- * new map (a MapView with this renderer) and gives it as the item "Heat map: walk" to each online player (the
- * spectators of the replay). The map item and its colors are Minecraft; the plugin only paints the pixels.
+ * [end=LABEL]". Each entry paints tile (X, Y) of the N × N tiles in map color COLOR, shade 0 (low) to 3 (high); "end=LABEL"
+ * makes a new map (a MapView with this renderer) and gives it as the item "Heat map: LABEL" to each online player (the
+ * spectators of the replay). LABEL is the kind and the time range, for example "fight 10:00-20:00"; "end" alone is walk. The map item and its colors are Minecraft; the plugin only paints the pixels.
  */
 final class Heatmap extends MapRenderer {
     static final int[] SHADE = {3, 0, 1, 2};             // heat 0..3 -> the map shade byte, dark to bright
@@ -44,9 +44,13 @@ final class Heatmap extends MapRenderer {
     static boolean command(CommandSender sender, String[] args) {
         int n = Integer.parseInt(args[2]);
         boolean end = false;
+        String label = "walk";                           // the item name: "end=LABEL" (#5671); "end" alone is walk
         for (int i = 3; i < args.length; i++) {
-            if (args[i].equals("end")) {
+            if (args[i].equals("end") || args[i].startsWith("end=")) {
                 end = true;
+                if (args[i].startsWith("end=")) {
+                    label = args[i].substring(4).replace(",", " ");
+                }
                 continue;
             }
             String[] v = args[i].split(",");
@@ -80,7 +84,7 @@ final class Heatmap extends MapRenderer {
             ItemStack item = new ItemStack(Material.FILLED_MAP);
             MapMeta meta = (MapMeta) item.getItemMeta();
             meta.setMapView(view);
-            meta.displayName(Component.text("Heat map: walk"));
+            meta.displayName(Component.text("Heat map: " + label));
             item.setItemMeta(meta);
             p.getInventory().addItem(item);
             given++;

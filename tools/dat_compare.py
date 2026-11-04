@@ -6,7 +6,7 @@ Usage: python3 tools/dat_compare.py [PATH/empires2_x2_p1.dat] [--write DIR [--ba
 Prints one line for each difference ("NAME key: data value, game value"). Exit 0: no difference, 1: differences,
 2: no .dat or no genieutils-py. With --write DIR, PATH is the .dat of a data mod: the tool writes the unit values of
 the mod that differ from the base game (BASE.dat, default the installed game) as data mod lines (DIR/units.jsonl ...,
-epic #5352, #5354; the costs and times: DIR/train.jsonl, DIR/build.jsonl, #5355) and prints their count. The rules of the compare: tickets #5245 and #5297 (epic #5236). When the .dat and
+epic #5352, #5354; the costs and times: DIR/train.jsonl, DIR/build.jsonl, #5355; the technology effects, #5668) and prints their count. The rules of the compare: tickets #5245 and #5297 (epic #5236). When the .dat and
 the AoE2 wiki do not agree, the .dat wins (docs/research/gameplay.md).
 """
 import copy
@@ -328,6 +328,50 @@ def mod_costs(name, data, old, new):
     return out
 
 
+EFFECT_KEYS = {HP: "hp", ATTACK: "attack", RANGE: "range"}
+
+
+def effect_sums(dat, tid):
+    """({key: amount} of the type 4 commands of technology tid on hp, attack, armor and range, the targets of those
+    commands) or None: no technology, or a command of another type on those attributes (set, mul)."""
+    t = dat.techs[tid] if 0 <= tid < len(dat.techs) else None
+    if t is None or not 0 <= t.effect_id < len(dat.effects):
+        return None
+    sums, seen, targets = {}, set(), []
+    for c in dat.effects[t.effect_id].effect_commands:
+        if c.type not in (0, 4, 5) or c.c not in (HP, ATTACK, ARMOR, RANGE):
+            continue
+        if c.type != 4:
+            return None
+        cls, v = divmod(int(c.d), 256) if c.c in (ARMOR, ATTACK) else (None, c.d)
+        k = {4: "melee", 3: "pierce"}.get(cls) if c.c == ARMOR else EFFECT_KEYS[c.c]
+        if k is None:
+            continue
+        targets.append((c.a, c.b, c.c, cls))
+        if (k, v) not in seen:                       # one amount on several units or classes counts once
+            seen.add((k, v))
+            sums[k] = sums.get(k, 0) + v
+    return sums, sorted(targets)
+
+
+def mod_effect(name, data, base, mod, tid):
+    """The key effect of one line of train.jsonl that the mod .dat changes (#5668): the effect of the data with the mod
+    amounts of add (hp, attack, melee, pierce, range). None: no change; "skip": the mod effect has another form."""
+    add = (data.get("effect") or {}).get("add") if isinstance(data.get("effect"), dict) else None
+    old = effect_sums(base, tid)
+    if not add or not old:
+        return None
+    keys = [k for k in add if k in ("hp", "attack", "melee", "pierce", "range")]
+    if not keys or any(old[0].get(k) != add[k] for k in keys):
+        return None
+    new = effect_sums(mod, tid)
+    if new is None or new[1] != old[1] or set(new[0]) != set(old[0]):
+        return "skip" if new != old else None
+    if all(new[0][k] == add[k] for k in keys):
+        return None
+    return dict(data["effect"], add={**add, **{k: new[0][k] for k in keys}})
+
+
 def write(base, mod, units, tables, folder, techs=None, civs=None):
     """Write the data mod lines of the mod .dat into folder (#5354, #5355): one file for each unit, train and build
     file (also with no line, so an older line goes), one line per changed name with only its changed keys. techs:
@@ -340,6 +384,12 @@ def write(base, mod, units, tables, folder, techs=None, civs=None):
             if f in ("train.jsonl", "build.jsonl"):
                 d = mod_costs(r["name"], r, priced(base, f, r, units, techs or {}, civs),
                               priced(mod, f, r, units, techs or {}, civs))
+                if f == "train.jsonl" and r["name"] in (techs or {}):
+                    e = mod_effect(r["name"], r, base, mod, techs[r["name"]])
+                    if e == "skip":
+                        print(f"{r['name']} effect: the mod effect has a form that the game program cannot hold")
+                    elif e:
+                        d["effect"] = e
                 if d:
                     lines.append(json.dumps({"name": r["name"], **d}, ensure_ascii=False))
                 continue

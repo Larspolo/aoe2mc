@@ -158,7 +158,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe gate lock|unlock <x> <z>               the trigger effects "Lock Gate", "Unlock Gate" (#2762): the gates
  *                                              with the block column x z keep their bars down for all units
  *   aoe goals <selector>                       the goals of the first unit (#436), for checks
- *   aoe heatmap <tile> <n> <x,y,color,shade> ... [end]   the heat map of the record as a map item for the
+ *   aoe heatmap <tile> <n> <x,y,color,shade> ... [end=LABEL]   the heat map of the record as a map item for the
  *                                              spectators at the replay end (#5457, Heatmap.java)
  *   aoe huntglow <players> on|add <uuid> ... | off  the animals glow only for these players (#5509, HuntGlow.java)
  *   aoe hide <players> <uuid> ...              Player#hideEntity: the players do not see these entities, also a

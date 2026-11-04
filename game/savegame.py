@@ -33,6 +33,7 @@ OPTIONAL = ("auto", "auto_by",                                         # the aut
             "challenge_enemy",                                         # the enemy fleet of Naval Battle (#3909)
             "free_trained",                                            # the free units of a castle: Cuman Mercenaries (#4330)
             "risers",                                                  # the units that rise where a Konnik died: train.fell (#4471)
+            "homeless",                                                # the start town center deleted: achievement Homeless (#5644)
             "build_counts",                                            # achievements.built (#5642)
             "gather_counts",                                           # achievements.gathered (#5643)
             "train_counts",                                            # the count achievements: achievements.trained (#5280)
@@ -276,6 +277,7 @@ NOT_SAVED = (                                                          # the fie
     "wonder",                                                          # defend_wonder.setup makes it again
     "wonder_at",                                                       # wonder.py: the next check time
     "work_on",                                                         # bot.py: a setup value (#3271)
+    "xs",                                                              # scenario.setup makes it again; its state: a later ticket
 )
 SKIP = ("session.lock",)                                               # the lock of the running server
 

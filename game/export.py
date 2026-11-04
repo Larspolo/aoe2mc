@@ -8,9 +8,10 @@ their civilizations, and the objects. A save folder (savegame.py: `world/` and `
 end of the game: the units that still live (the "soldiers" and "villagers" of each player), the buildings of the
 construction sites that are done, the fallen start buildings ("ruins") and the mines with no resource left. The
 entities of the world give the last position of each unit (its UUID). Tiles stay in the turned grid of aoe2mc.json, as
-the world shows them. A tile whose ground a player changed (most of its T x T block columns have a new top block)
-gets the AoE2 terrain of the new top block (`ground()`); the elevation stays the one of aoe2mc.json (a dug hole does
-not change the AoE2 elevation). Not yet: the resources of the players.
+the world shows them. The resources and the starting age of each player: the end of the game with a save, else those of
+aoe2mc.json. A tile whose ground a player changed (most of its T x T block columns have a new top block) gets the AoE2
+terrain of the new top block (`ground()`); the elevation stays the one of aoe2mc.json (a dug hole does not change the
+AoE2 elevation).
 """
 import argparse
 import contextlib
@@ -23,12 +24,16 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import build  # noqa: E402
 import savegame  # noqa: E402
 import scenarios  # noqa: E402
-from AoE2ScenarioParser.datasets.object_support import Civilization  # noqa: E402
+from AoE2ScenarioParser.datasets.object_support import Civilization, StartingAge  # noqa: E402
 
 import aoe2mc  # noqa: E402
 import units as unitlib  # noqa: E402
+
+RESOURCES = ("food", "wood", "gold", "stone")
+AGES = (StartingAge.DARK_AGE, StartingAge.FEUDAL_AGE, StartingAge.CASTLE_AGE, StartingAge.IMPERIAL_AGE)
 
 
 def folders(path):
@@ -62,21 +67,30 @@ def objects(data, state, pos):
     T, out = data["tile_size"], []
     live = alive(state) if state else None
     ruins, empty, done = set(), set(), []
+    seen, left = set(), set()                                          # trees, bushes and fish (#5672)
     for x in (state or {}).get("players", {}).values():
         ruins |= {tuple(r) for r in savegame.unpack(x.get("ruins", {"set": []}))}
         for tiles in savegame.unpack(x.get("map", {}).get("mines", {})).values():
             empty |= {tuple(t) for t, amount in tiles.items() if amount <= 0}
+        for key in ("bushes", "fish", "trees"):
+            if key in x.get("map", {}):
+                tiles = savegame.unpack(x["map"][key])
+                seen |= {tuple(t) for t in tiles}
+                left |= {tuple(t) for t, amount in tiles.items() if amount > 0}
         done += [s for s in savegame.unpack(x.get("sites", [])) if s.get("progress", 0) >= 1]
+    empty |= seen - left                                               # a cut tree, an empty bush or fish
     for o in data["objects"]:
         tile = tuple(o["tile"])
         if o["kind"] == "unit" and live is not None and o.get("uuid") and o["player"] and o["uuid"] not in live:
             continue                                                   # killed in the game
+        if o["kind"] == "unit" and state is not None and o.get("uuid") and not o["player"] and o["uuid"] not in pos:
+            continue                                                   # a hunted animal: no entity left (#5672)
         if o["kind"] == "building" and "footprint" in o:
             x0, z0, x1, z1 = o["footprint"]
             if (x0, x1, z0, z1) in ruins:
                 continue
         if o["kind"] == "other" and (int(tile[0]), int(tile[1])) in empty:
-            continue                                                   # a mined mine
+            continue                                                   # a mined mine, a cut tree or an empty food source
         if o.get("uuid") in pos:
             tile = tuple(v / T for v in pos[o["uuid"]])
         player = live.get(o.get("uuid"), o["player"]) if live else o["player"]   # a converted unit (monk)
@@ -235,6 +249,18 @@ def export(path, out):
         civ = data["players"][str(p)].get("civ")
         if civ in Civilization.__members__:
             scn.player_manager.players[p].civilization = Civilization[civ]
+        pl, info = scn.player_manager.players[p], data["players"][str(p)]
+        if state and str(p) in state["players"]:           # the end of the game (#5673)
+            s = state["players"][str(p)]
+            for r in RESOURCES:
+                setattr(pl, r, int(s.get("stock", {}).get(r, 0)))
+            reached = sum(t in s.get("techs", ()) for t in build.AGE_TECHS)
+            pl.starting_age = AGES[min(reached, len(AGES) - 1)]
+        else:
+            for r, v in info.get("resources", {}).items():
+                setattr(pl, r, int(v))
+            if "age" in info:                               # "feudal" in aoe2mc.json, as the setup of the world
+                pl.starting_age = StartingAge[info["age"].upper().replace("-", "_") + "_AGE"]
     from AoE2ScenarioParser.datasets.players import PlayerId
     with contextlib.redirect_stdout(io.StringIO()):
         for o in objects(data, state, positions(world)):
