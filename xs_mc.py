@@ -1,6 +1,7 @@
 """XS script -> datapack functions (#5689, option B of #5120, docs/research/xs.md "XS as datapack functions").
 
 Step 7: `xsGetObjectCount`, `xsGetObjectCountTotal` (an entity count) and `xsGetPlayerCivilization` (a constant, #5695).
+Step 2: `if`, `else`, `while`, `for`, `break`, `continue` and `switch` as sub-functions `xs/b/<k>` (#5690).
 Step 1: the `int` and `bool` globals, the operators and `main()`, with `xsSetTriggerVariable`, `xsTriggerVariable`
 and `xsChatData`. Minecraft feature: datapack functions and scoreboards. A part with no datapack form skips its
 statement and gives one warning line: the game program runs the whole script (game/scenario.py xs(), option A).
@@ -31,6 +32,7 @@ class Compiler:
     def __init__(self, text=None, civs=None):
         self.text, self.k, self.ints, self.warnings, self.lines = text or "", 0, {}, [], []
         self.civs, self.files = civs or {}, {}
+        self.b, self.loops, self.breaks = 0, 0, 0    # sub-functions; loops and loops or switches around the code
 
     def warn(self, part):
         m = re.search(rf"\b{re.escape(part)}\b", self.text)
@@ -173,13 +175,98 @@ class Compiler:
         self.emit(f"execute store result score {t} run function aoe2mc:xs/count with storage {STORE} count")
         return t
 
+    def sub(self, body):
+        """A new sub-function xs/b/<k> with the lines of body(); returns its name."""
+        self.b += 1
+        k, outer, self.lines = self.b, self.lines, []
+        try:
+            body()
+            self.files[f"{DIR}/b/{k}.mcfunction"] = "\n".join(self.lines) + "\n"
+        finally:
+            self.lines = outer
+        return f"aoe2mc:xs/b/{k}"
+
+    def flags(self):
+        """After a sub-function: leave the current function when a break or continue is set."""
+        if self.breaks:
+            for f in ("brk", "cont") if self.loops else ("brk",):
+                self.emit(f"execute if score #{f} {OBJ} matches 1 run return 0")
+
+    def body(self, node, local, loop):
+        def run():
+            self.loops += loop
+            self.breaks += 1
+            try:
+                self.stmt(node, local)
+            finally:
+                self.loops -= loop
+                self.breaks -= 1
+        return self.sub(run)
+
+    def loop(self, cond, body, local, step=None):
+        """A loop: a sub-function that tests the condition, runs the body and calls itself (Minecraft feature)."""
+        name = f"aoe2mc:xs/b/{self.b + 1}"
+
+        def run():
+            c = self.expr(cond)
+            self.emit(f"execute if score {c} matches 0 run return 0")
+            self.emit(f"function {self.body(body, local, 1)}")
+            self.emit(f"scoreboard players set #cont {OBJ} 0")
+            self.emit(f"execute if score #brk {OBJ} matches 1 run return run scoreboard players set #brk {OBJ} 0")
+            if step:
+                step()
+            self.emit(f"function {name}")
+        self.emit(f"function {self.sub(run)}")
+
+    def control(self, node, local):
+        kind = node[0]
+        if kind == "if":
+            c = self.copy(self.expr(node[1]))       # the body can change a variable of the condition
+            self.emit(f"execute unless score {c} matches 0 run function {self.body(node[2], local, 0)}")
+            if node[3] is not None:
+                self.emit(f"execute if score {c} matches 0 run function {self.body(node[3], local, 0)}")
+            self.flags()
+        elif kind == "while":
+            self.loop(node[1], node[2], local)
+        elif kind == "for":
+            _, var, start, op, limit, body = node
+            h = self.ints.setdefault(var, f"#{local}.{var} {OBJ}")
+            self.emit(f"scoreboard players operation {h} = {self.expr(start)}")
+            self.loop(("bin", op, ("name", var), limit), body, local,
+                      lambda: self.emit(f"scoreboard players {'add' if op in ('<', '<=') else 'remove'} {h} 1"))
+        elif kind == "switch":
+            # As game/xs_run.py: the first case with the value (else default) runs, no fall through
+            v, hit = self.expr(node[1]), self.temp()
+            self.emit(f"scoreboard players set {hit} 0")
+            for i, (label, _) in enumerate(node[2], 1):
+                if label is not None and not literal(label):
+                    raise Skip("case")
+                test = f" if score {v} matches {label[1]}" if label is not None else ""
+                if label is not None:
+                    self.emit(f"execute if score {hit} matches 0{test} run scoreboard players set {hit} {i}")
+            for i, (label, _) in enumerate(node[2], 1):
+                if label is None:
+                    self.emit(f"execute if score {hit} matches 0 run scoreboard players set {hit} {i}")
+            for i, (_, stmts) in enumerate(node[2], 1):
+                self.emit(f"execute if score {hit} matches {i} run function {self.body(('block', stmts), local, 0)}")
+            self.emit(f"scoreboard players set #brk {OBJ} 0")
+            if self.breaks:
+                self.flags()
+        elif kind in ("break", "continue"):
+            if not (self.loops if kind == "continue" else self.breaks):
+                raise Skip(kind)
+            self.emit(f"scoreboard players set #{'cont' if kind == 'continue' else 'brk'} {OBJ} 1")
+            self.emit("return 0")
+        else:
+            raise Skip(kind)
+
     def stmt(self, node, local):
         kind = node[0]
         if kind == "block":
             for s in node[1]:
                 self.stmt(s, local)
             return
-        before = len(self.lines)
+        before, files, b = len(self.lines), dict(self.files), self.b
         try:
             if kind == "var":
                 _, typ, name, value, _ = node
@@ -192,9 +279,10 @@ class Compiler:
             elif kind == "expr":
                 self.expr(node[1])
             else:
-                raise Skip(kind)
+                self.control(node, local)
         except Skip as e:
             del self.lines[before:]
+            self.files, self.b = files, b
             self.warn(str(e))
 
 
