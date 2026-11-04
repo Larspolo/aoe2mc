@@ -443,7 +443,9 @@ def main(argv=None):
     except ImportError:
         print("no genieutils-py: pip install genieutils-py")
         return 2
-    sys.path.insert(0, ROOT)
+    for d in (os.path.join(ROOT, "game"), ROOT):     # game/gather.py imports its neighbors by plain name (#5734)
+        if d not in sys.path:
+            sys.path.insert(0, d)
     from game.gather import AOE2_WORK
     units, techs = names()
     tables = {f: rows(f"game/data/{f}") for f in ("units.jsonl", "buildings.jsonl", "train.jsonl", "build.jsonl",
