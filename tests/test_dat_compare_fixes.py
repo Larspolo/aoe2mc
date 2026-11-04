@@ -70,8 +70,8 @@ def test_a_technology_line_and_a_unit_line_of_the_same_name():             # cau
     d = dat([[], [keep]], techs=[tech(costs=((0, 500), (1, 350)), time=75)])
     row = {"name": "KEEP", "item": "book", "cost": {"food": 500, "wood": 350}, "time": 75}
     assert dc.compare(d, {"KEEP": 1}, {"KEEP": 0}, {"train.jsonl": [row]}) == []
-    ratha = {"name": "ELITE_RATHA", "item": "minecart", "cost": {"wood": 60, "gold": 60}, "time": 18}
-    assert dc.compare(d, {}, {"ELITE_RATHA": 0}, {"train.jsonl": [ratha]}) == []      # a unit line with no unit ID
+    ratha = {"name": "ELITE_NEW_UNIT", "item": "minecart", "cost": {"wood": 60, "gold": 60}, "time": 18}
+    assert dc.compare(d, {}, {"ELITE_NEW_UNIT": 0}, {"train.jsonl": [ratha]}) == []      # a unit line with no unit ID
 
 
 def test_a_range_of_half_a_tile():                                          # cause 5
