@@ -3154,14 +3154,14 @@ class Replay:
 
     def deaths(self):
         """{(player, x, y): deaths} up to now: the counts of the plugin per tile (#5458)."""
-        return heatmap.death_counts(self.game.command(f"aoe deathmarks heat {self.T}") or "") if self.ai else {}
+        return heatmap.death_counts(self.game.command(f"aoe deathmarks heat {self.T}") or "") if self.ai and getattr(self.game, "kind", "") == "paper" else {}
 
     def death_snapshot(self, now):
         """The death counts at each full game minute (#5589): the plugin counts without time, a death heat map of a
         range subtracts the counts at its start."""
         snaps = self.__dict__.setdefault("death_snaps", {})
         t = int(now) // 60000 * 60000
-        if self.ai and t not in snaps:                              # the plugin counts only with `aoe deathmarks on`
+        if self.ai and getattr(self.game, "kind", "") == "paper" and t not in snaps:   # with `aoe deathmarks on`
             snaps[t] = self.deaths()
 
     def end_heat_commands(self):

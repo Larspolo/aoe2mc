@@ -23,6 +23,7 @@ class Deaths(Fake):
     def __init__(self, answers):
         super().__init__()
         self.answers = answers
+        self.kind = "paper"
 
     def command(self, cmd):
         self.sent.append(cmd)
