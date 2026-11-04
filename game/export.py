@@ -84,8 +84,9 @@ def objects(data, state, pos):
     empty |= seen - left                                               # a cut tree, an empty bush or fish
     for o in data["objects"]:
         tile = tuple(o["tile"])
-        if o["kind"] == "unit" and live is not None and o.get("uuid") and o["player"] and o["uuid"] not in live:
-            continue                                                   # killed in the game
+        if o["kind"] == "unit" and live is not None and o.get("uuid") and o["player"] and o["uuid"] not in live \
+                and (str(o["player"]) in state["players"] or o["uuid"] not in pos):
+            continue                                                   # killed in the game; no loop: no entity (#5752)
         if o["kind"] == "unit" and state is not None and o.get("uuid") and not o["player"] and o["uuid"] not in pos:
             continue                                                   # a hunted animal: no entity left (#5672)
         if o["kind"] == "building" and "footprint" in o:

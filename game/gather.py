@@ -122,6 +122,7 @@ INFINITE = {r["name"] for r in table.load("setup.jsonl") if r.get("infinite")}  
 RANDOM = {r["name"]: r["random"] for r in table.load("setup.jsonl") if "random" in r}   # "Random": one of the levels
 NOMAD = {"wood": 275, "stone": 100}     # AoE2 Nomad (wiki "Nomad (map)"): no building at the start, the cost of a town center
 TREE_WOOD = 100                                                    # wood in one tree, as in AoE2
+STUMP = "setblock {x} {{y}} {z} minecraft:spruce_log[axis=y]"                 # the stump of a felled tree (Gather.stump)
 # plants of the ground that are not in #minecraft:replaceable: the trunk on a slope removes them from its row (#1124)
 PLANTS = ("#minecraft:buttons", "#minecraft:flowers", "#minecraft:saplings", "#minecraft:wool_carpets",
           "minecraft:brown_mushroom", "minecraft:moss_carpet", "minecraft:pale_moss_carpet", "minecraft:red_mushroom")
@@ -168,6 +169,9 @@ TYPE_REACH = 16                                                    # blocks: a s
 REACH = 160    # blocks: the ray of a click (the pick functions): far views of the camera mode (camera.py), 10 chunks
 WAND = "warped_fungus_on_a_stick"     # the selection wand: a second item with its own "used" statistic (#778)
 LEFT = "aoe_left"                     # score of a left click with the command stick (Paper plugin, #1788)
+INPUT_SCORE = "aoe_input"             # score of each input of a player: a click, a menu click (Paper plugin, #5760)
+INPUT = 0.05                          # seconds between two input checks in the wait of a step (#5760)
+SELECT_BATCH = 30                     # UUIDs in one `aoe select` command: an RCON command has at most 1446 bytes
 # Control groups (#779, owner choice #745): carrots on a stick with custom_data {aoe_group:N} in hotbar slots 4..8
 # (keys 5-9), with the model of a dye. A shift right click saves the selection as group N, a right click selects it.
 GROUPS = {n: (3 + n, dye) for n, dye in enumerate(("red_dye", "yellow_dye", "lime_dye", "light_blue_dye",
@@ -788,6 +792,14 @@ class Gather:
     def wood(self):
         return self.stock["wood"]
 
+    def batch(self, cmds):
+        """Send cmds in this order and drop the answers: in `aoe batch` commands on Paper (Game.batch, #2761), else
+        one by one: also when an adapter set its own command (replay.Replay.crew)."""
+        if "command" not in vars(self) and (batch := getattr(getattr(self, "game", None), "batch", None)):
+            return batch(list(cmds))
+        for c in cmds:
+            self.command(c)
+
     def command(self, cmd):
         if isinstance(getattr(self, "stock", None), Endless) and cmd.startswith("scoreboard players remove ") \
                 and cmd.split()[4:5] == [self.board]:
@@ -837,6 +849,7 @@ class Gather:
         techtree.setup(self)
         if self.paper:
             self.command(f'scoreboard objectives add {LEFT} dummy "Left click"')    # set by the plugin (#1788)
+            self.command(f'scoreboard objectives add {INPUT_SCORE} dummy "Input"')   # set by the plugin (#5760)
             train.lore(self)                                           # the help lines of the menus (#1160)
             self.command(allies_command(self.data.get("players", {})))   # allies do not shoot each other (#1315)
             self.command(neutral_command(self.data.get("players", {})))  # no automatic attack on neutrals (#1645)
@@ -1018,14 +1031,20 @@ class Gather:
 
     def choose(self, uuids, last=None):
         """Make uuids the selection: the other units leave it, the new ones glow. The boss bar shows unit last."""
-        for u in sorted(self.selected - uuids - self.others()):
-            self.command(f"data merge entity {u} {{Glowing:0b}}")
-            self.command(f"tag {u} remove {SELECT}")
-        for u in sorted(uuids - self.selected):
-            self.command(f"data merge entity {u} {{Glowing:1b}}")
-            self.command(f"tag {u} add {SELECT}")
-        for u in sorted(self.selected ^ uuids):                        # the name line shows the selection (#661)
-            self.command(f"aoe label {u}")
+        off, on = sorted(self.selected - uuids - self.others()), sorted(uuids - self.selected)
+        if self.paper:                                                 # glow, tag and name line of many units (#5760)
+            for flag, us in (("off", off), ("on", on)):
+                for i in range(0, len(us), SELECT_BATCH):
+                    self.command(f"aoe select {flag} {SELECT} " + " ".join(us[i:i + SELECT_BATCH]))
+        else:
+            for u in off:
+                self.command(f"data merge entity {u} {{Glowing:0b}}")
+                self.command(f"tag {u} remove {SELECT}")
+            for u in on:
+                self.command(f"data merge entity {u} {{Glowing:1b}}")
+                self.command(f"tag {u} add {SELECT}")
+            for u in sorted(self.selected ^ uuids):                    # the name line shows the selection (#661)
+                self.command(f"aoe label {u}")
         new, self.selected = uuids - self.selected, set(uuids)
         if new and last is not None:                                   # a pick, not a unit that left (#3499)
             self.voice(last)
@@ -1385,7 +1404,6 @@ class Gather:
         techtree.tick(self)
         hints.tick(self)
         map_table.tick(self)
-        menu.clicks(self)
         cheats.clicks(self)
         self.taunted = getattr(self, "taunted", []) + [n for _, n in cheats.taunts(self)]   # for AI scripts (#4827)
         self.command(f"execute as {self.who} unless items entity @s container.* minecraft:carrot_on_a_stick[!custom_data] "
@@ -1404,6 +1422,12 @@ class Gather:
         if not self.paper:                                             # Paper: hold left click with the stick (#5759)
             self.command(f"execute as {self.who} unless items entity @s container.* minecraft:{WAND} "
                          f'run give @s minecraft:{WAND}[item_name="Selection box"]')
+        return self.inputs()
+
+    def inputs(self):
+        """The input part of clicks(): the menu clicks, the drags, the left clicks and the players who clicked. No
+        housekeeping (give, build.tick, hints.tick): wait_input calls it between the steps (#5760)."""
+        menu.clicks(self)
         if getattr(self, "paper", False):                               # a partial Gather of tests/test_menu.py
             self.deselect()
         objs = ("aoe_use", "aoe_talk", "aoe_box")
@@ -2204,35 +2228,36 @@ class Gather:
         if self.trunks.get(tile) == n:
             return
         log, leaf = self.map.woods.get(tile, ("minecraft:oak_log", None))
+        out = []                                                      # one batch: the loop waited for each RCON call (#5736)
         y, flat = min(ys), min(ys) == max(ys)
         y0, y1 = (y, y + 1) if flat else (min(ys) - 1, max(ys) + 2)
         if tile not in self.trunks:
             self.clear(tile, ys)
-            self.stump(sx, sz, ys)
+            out += self.ground(sx, sz, ys, STUMP.format(x=sx, z=sz), down=1)
             for plant in () if flat else PLANTS:                     # the probe takes them for the ground
-                self.command(f"fill {fx0} {y0} {rz} {fx1 - 1} {y1} {rz} air replace {plant}")
+                out.append(f"fill {fx0} {y0} {rz} {fx1 - 1} {y1} {rz} air replace {plant}")
         self.trunks[tile] = n
         for old in (log, leaf) if leaf else (log,):                   # the row again as the converter made it
-            self.command(f"fill {fx0} {y0} {rz} {fx1 - 1} {y1} {rz} minecraft:barrier replace {old.split('[')[0]}")
+            out.append(f"fill {fx0} {y0} {rz} {fx1 - 1} {y1} {rz} minecraft:barrier replace {old.split('[')[0]}")
         if flat:
             for keep in ("replace minecraft:barrier", "keep"):        # not into the ground of a slope
-                self.command(f"fill {fx1 - n} {y} {rz} {fx1 - 1} {y} {rz} {log}[axis=x] {keep}")
+                out.append(f"fill {fx1 - n} {y} {rz} {fx1 - 1} {y} {rz} {log}[axis=x] {keep}")
                 if leaf:
-                    self.command(f"fill {fx1 - n} {y + 1} {rz} {fx1 - n} {y + 1} {rz} {leaf} {keep}")
-            return
+                    out.append(f"fill {fx1 - n} {y + 1} {rz} {fx1 - n} {y + 1} {rz} {leaf} {keep}")
+            return self.batch(out)
         for x in range(fx1 - n, fx1):
             for c in self.ground(x, rz, ys, f"setblock {x} {{y}} {rz} {log}[axis=x]", top=True):
-                self.command(c)
+                out.append(c)
         if leaf:                                                      # the crown on the log of the tip
             for h in range(y0, y1 + 1):
                 for free in ("#minecraft:replaceable", "minecraft:barrier"):
-                    self.command(f"execute if block {fx1 - n} {h} {rz} {free} if block {fx1 - n} {h - 1} {rz} "
-                                 f"{log}[axis=x] run setblock {fx1 - n} {h} {rz} {leaf}")
+                    out.append(f"execute if block {fx1 - n} {h} {rz} {free} if block {fx1 - n} {h - 1} {rz} "
+                               f"{log}[axis=x] run setblock {fx1 - n} {h} {rz} {leaf}")
+        self.batch(out)
 
     def stump(self, sx, sz, ys):
         """The stump: the top of a log level with the ground of the footprint, so that nothing stops the player."""
-        for c in self.ground(sx, sz, ys, f"setblock {sx} {{y}} {sz} minecraft:spruce_log[axis=y]", down=1):
-            self.command(c)
+        self.batch(self.ground(sx, sz, ys, STUMP.format(x=sx, z=sz), down=1))
 
     def fell(self, tile):
         """An empty tree disappears (logs, leaves, its trunk and the barriers of its footprint). A stump stays: the top
@@ -2333,6 +2358,23 @@ class Gather:
             del self.map.farm_at[c]
         self.sites[:] = [s for s in self.sites if not ("FARM" in s["name"] and rect and tuple(s["footprint"]) == tuple(rect))]
 
+    def wait_input(self, deadline):
+        """Wait until the monotonic time deadline. Each INPUT seconds check with one command if a player gave an input
+        (Paper: the score INPUT_SCORE of the plugin; vanilla: the use of the stick), and do it at once (#5760)."""
+        if "map" not in vars(self):                                    # a partial Gather of the run loop tests: no server
+            return time.sleep(max(0.0, deadline - time.monotonic()))
+        while (left := deadline - time.monotonic()) > 0:
+            time.sleep(min(INPUT, left))
+            if left <= INPUT:
+                return
+            obj = INPUT_SCORE if getattr(self, "paper", False) else "aoe_use"
+            if "passed" not in self.command(f"execute if entity {only(self.who, f'scores={{{obj}=1..}}')}"):
+                continue
+            if obj == INPUT_SCORE:
+                self.command(f"scoreboard players reset {self.who} {INPUT_SCORE}")
+            for name in self.inputs():
+                self.click(name)
+
     def run(self, seconds=None, until=None):
         """Play in real time until seconds passed, until() is true or the game ended (a cheat, #819)."""
         end = seconds and time.monotonic() + seconds
@@ -2342,7 +2384,7 @@ class Gather:
             for name in self.clicks():
                 self.click(name)
             if getattr(self, "paused", False):                         # pause.toggle: only the clicks continue (#3374)
-                time.sleep(max(0.0, self.tick / self.speed - (time.monotonic() - t)))
+                self.wait_input(t + self.tick / self.speed)
                 continue
             self.step()
             for b in self.bots:
@@ -2391,7 +2433,7 @@ class Gather:
                 tutorial.tick(self)
             treaty.tick(self, self.tick * NORMAL)
             record.tick(self, self.tick * NORMAL)                      # the game time of Record Game (#2649)
-            time.sleep(max(0.0, self.tick / self.speed - (time.monotonic() - t)))   # a step stays tick game seconds
+            self.wait_input(t + self.tick / self.speed)                # a step stays tick game seconds
 
 
 def add_waypoint(g, name, cell):

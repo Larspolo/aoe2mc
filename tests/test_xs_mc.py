@@ -63,7 +63,8 @@ def run(lines, scores):
             a = get(*t)
             if op in ("/=", "%=") and v == 0:
                 continue
-            scores[t] = {"=": v, "+=": a + v, "-=": a - v, "*=": a * v, "/=": a // v if v else a, "%=": a % v if v else a}[op]
+            scores[t] = {"=": v, "+=": a + v, "-=": a - v, "*=": a * v, "/=": a // v if v else a, "%=": a % v if v else a,
+                        "<": min(a, v), ">": max(a, v)}[op]
         elif w[0] == "tellraw":
             scores.setdefault("chat", []).append(json.loads(line.split(" ", 2)[2]))
         else:
@@ -77,7 +78,7 @@ def compiled(text):
 
 def test_scores_are_those_of_the_game_program():
     lines, tick, load, warnings = compiled(SCRIPT)
-    assert warnings == [] and tick == [xs_mc.TICK] and load == xs_mc.LOAD
+    assert warnings == [] and tick[0] == xs_mc.TICK and load == xs_mc.LOAD
     scores = {}
     run(lines, scores)
     want = xs_run.Xs(SCRIPT, out=lambda t: None)

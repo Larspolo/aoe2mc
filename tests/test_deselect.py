@@ -22,7 +22,7 @@ def test_a_left_click_clears_the_selection():
     server.scores[gather.LEFT] = 1
     assert g.clicks() == []                                            # no right click: no ray, no order
     assert g.selected == set() and g.bar is None
-    assert f"tag m-1 remove {gather.SELECT}" in server.log and gather.LEFT not in server.scores
+    assert f"aoe select off {gather.SELECT} m-1" in server.log and gather.LEFT not in server.scores
 
 
 def test_no_left_click_keeps_the_selection():

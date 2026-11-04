@@ -5,7 +5,7 @@ verify skill for the takeover (game/takeover.py, run.py --replay --takeover P, t
 
 Usage:
     python3 aoe2mc.py samples/de-64.3.aoe2record OUTWorld
-    python3 tools/takeover_check.py OUTWorld OUTDIR [--from 5:00] [--player 1] [--trigger] [--minutes 2] [--speed 4]
+    python3 tools/takeover_check.py OUTWorld OUTDIR [--from 5:00] [--player 1] [--trigger] [--minutes 2] [--speed 4] [--beat N]
 
 The tool copies the world, runs `run.main([WORLD, --replay, --from T, --takeover P])` and joins the real client
 (tools/mc_shot.py). --trigger: no --takeover; the client types `/trigger aoe_replay set N` in the chat after the join
@@ -178,7 +178,10 @@ def main(argv=None):
     ap.add_argument("--trigger", action="store_true", help="take over with /trigger aoe_replay in the chat, not --takeover")
     ap.add_argument("--minutes", type=float, default=2.0, help="game minutes of play after the click (default 2)")
     ap.add_argument("--speed", type=float, default=4.0, help="times the Normal game speed (default 4)")
+    ap.add_argument("--beat", type=int, metavar="N", help="beat the claim of ticket N every 10 minutes (#5783)")
     a = ap.parse_args(argv)
+    if a.beat:
+        mc_shot.beat(a.beat)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
     os.makedirs(a.out, exist_ok=True)

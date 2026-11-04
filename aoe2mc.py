@@ -4302,7 +4302,22 @@ def xs_lines(e, c):
     if not (e.get("message") or "").strip():
         return []
     c.setup["scoreboard objectives add aoe_xs dummy"] = None
-    return [f"scoreboard players set #x{c.t['id']}.{effect_index(e, c)} aoe_xs 1"]
+    k = effect_index(e, c)
+    fn, _, files = xs_snippet(e["message"], f"e{c.t['id']}_{k}")
+    c.files.update(files)
+    # the datapack function runs only when the game program does not run the XS (#a aoe_xs, #5693)
+    return [f"scoreboard players set #x{c.t['id']}.{k} aoe_xs 1"] + \
+        ([f"execute unless score #a aoe_xs matches 1 run function {fn}"] if fn else [])
+
+
+def xs_snippet(code, name):
+    """(function, holder, files) of the XS code of a "Script Call" (#5693): xs_mc compiles it to datapack functions under
+    xs/<name>/. No function: the game program runs the code, and the warning lines say why."""
+    import xs_mc
+    files, fn, holder, warnings = xs_mc.snippet(code, name)
+    for w in warnings:
+        print(f"  {w}")
+    return fn, holder, files
 
 
 def cost_lines(e, c, what="change object cost"):
@@ -5223,6 +5238,12 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                 continue
             if c["type"] == SCRIPT_CALL:                               # the XS function: its score (#5664)
                 k = next(j for j, x in enumerate(t["conditions"]) if x is c)   # the index of xs_list
+                fn, holder, fs = xs_snippet(c.get("xs"), f"c{n}_{k}")          # the datapack form first (#5693)
+                files.update(fs)
+                if fn:                                                 # the game program keeps its score (#a aoe_xs)
+                    counts += [f"execute unless score #a aoe_xs matches 1 run function {fn}",
+                               f"execute unless score #a aoe_xs matches 1 run scoreboard players operation "
+                               f"#c{n}.{k} aoe_xs = {holder} aoe_xs"]
                 tests.append(f"if score #c{n}.{k} aoe_xs matches 1")
                 unless.append(f"unless score #c{n}.{k} aoe_xs matches 1")
                 continue
@@ -5985,17 +6006,17 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
         import xs
         import xs_mc
         try:
-            fns, _, xs_load, warnings = xs_mc.compile(xs.parse(xs_script[1], xs_script[0]), xs_script[1],
+            fns, xs_tick, xs_load, warnings = xs_mc.compile(xs.parse(xs_script[1], xs_script[0]), xs_script[1],
                                                     {n: p.get("civ") for n, p in (players or {}).items()})
         except xs.XsError as e:
-            fns, xs_load, warnings = {}, [], [f"XS script: {e}: no datapack form, the game program runs it (game/run.py)"]
+            fns, xs_tick, xs_load, warnings = {}, [], [], [f"XS script: {e}: no datapack form, the game program runs it (game/run.py)"]
         for w in warnings:
             print(f"  {w}")
         if fns:
             files.update(fns)
             tag = "data/minecraft/tags/function/tick.json"
             files[tag] = {"values": [*files.get(tag, {}).get("values", []), "aoe2mc:xs/tick"]}
-            files["data/aoe2mc/function/xs/tick.mcfunction"] = xs_mc.TICK + "\n"
+            files["data/aoe2mc/function/xs/tick.mcfunction"] = "\n".join(xs_tick) + "\n"
             files["data/aoe2mc/function/load.mcfunction"] = "\n".join(xs_load) + "\n" + files["data/aoe2mc/function/load.mcfunction"]
     files.update(advancement_files())
     for name, chance in CHANCE.items():

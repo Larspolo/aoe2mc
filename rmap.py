@@ -40,6 +40,7 @@ from units import rows
 RMAP = rows("rmap.jsonl")
 TERRAINS = {r["name"]: r["terrain"] for r in RMAP if "terrain" in r}
 OBJECTS = {r["name"]: r["object"] for r in RMAP if "object" in r}     # the object constants of random_map.def: AoE2 IDs
+CONSTS = {r["name"]: r["const"] for r in RMAP if "const" in r}       # other constants of random_map.def: an if is true (#5766)
 LIKE = {r["name"]: r["like"] for r in RMAP if "like" in r}   # a DE object that object_kinds has not: the object to place (#4714)
 FOREST_TREES = dict(sorted((t, r["name"]) for r in RMAP for t in r.get("forest", ())))
 ASSIGN = {r["name"]: r["assign"] for r in RMAP if "assign" in r}       # the targets of assign_to: player, color, team
@@ -179,12 +180,12 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
     while i < len(words):
         w = words[i]
         if w == "if":                               # AoE2 DE reads an if apart from the random blocks (#4692)
-            c = on([f for f in stack if "acc" not in f]) and arg() in defined
+            c = on([f for f in stack if "acc" not in f]) and (arg() in defined or arg() in consts)   # a const is true too (#5766)
             stack.append({"on": c, "done": c})
             i += 2
         elif w == "elseif":
             f = top()
-            f["on"] = not f["done"] and arg() in defined
+            f["on"] = not f["done"] and (arg() in defined or arg() in consts)
             f["done"] |= f["on"]
             i += 2
         elif w == "else":
@@ -238,7 +239,7 @@ def expand(words, rng, defined, consts, includes, folder=None, depth=0):
                 consts[words[i + 1]] = v
                 i += 3
             else:
-                i += 3 if v else 2                  # an unknown value word is no command (#5248)
+                i += 2 if v[:1] in ("#", "<", "") else 3   # a directive or section is no value (#5767); an unknown word is no command (#5248)
         elif w.startswith(("(", "rnd(")):
             text, i = group(words, i)
             out.append(str(calc(text, consts, rng)))     # one rnd() draw where it is written (#4306)
@@ -685,7 +686,7 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
     n = size or SIZES.get(players, 200)
     defined = {next((label for s, label in LABELS if n <= s), "LUDIKRIS_MAP")} | ({MODE_LABELS[mode]} if MODE_LABELS.get(mode) else set()) | set(labels)
     defined |= team_labels(players, teams, together)
-    consts = TERRAINS | OBJECTS | {"MAPSIZE_SIDE": n,   # DE: the side of the map in tiles (#4693)
+    consts = TERRAINS | OBJECTS | CONSTS | {"MAPSIZE_SIDE": n,   # DE: the side of the map in tiles (#4693)
                                   "MAPSCALE_AREA": n * n / 10000, "PLAYER_COUNT": players}   # area / 100x100 map (#4928)
     includes = []
     sections = commands(expand(tokens(text), rng, defined, consts, includes, folder))
@@ -892,9 +893,8 @@ def generate(text, seed, players=2, size=None, warn=None, teams=None, folder=Non
             free &= ~dilate(terrain == t, s)
         avoid = attrs.get("set_avoid_player_start_areas")      # None: not set; []: the default distance
         far = 0 if avoid is None else value(avoid[0], consts) if avoid else AVOID
-        for st in starts:                      # never in the start area of a player (its base_size square)
-            r = max(st["base_size"], far)
-            for c in square((st["x"], st["y"]), r, n):
+        for st in starts if avoid is not None else ():  # AoE2 default: no avoidance (#5738)
+            for c in square((st["x"], st["y"]), far, n):
                 free[c] = False
         clumps, total = scaled(attrs, consts, n, value(attrs["number_of_clumps"][0], consts)
                                if "number_of_clumps" in attrs else 1, tiles(attrs, consts, n, 1))
