@@ -1,5 +1,8 @@
 """XS script -> datapack functions (#5689, option B of #5120, docs/research/xs.md "XS as datapack functions").
 
+Step 3: XS functions as `xs/f/<F>` with parameters `#l.F.<name>`, `static` locals `#s.F.<name>` and the return
+value `#r.F`; `return` sets `#ret` and leaves (Minecraft feature: the `return` command, #5691). Recursion has no
+datapack form (shared holders, no stack): the functions of a cycle give one warning line.
 Step 7: `xsGetObjectCount`, `xsGetObjectCountTotal` (an entity count) and `xsGetPlayerCivilization` (a constant, #5695).
 Step 2: `if`, `else`, `while`, `for`, `break`, `continue` and `switch` as sub-functions `xs/b/<k>` (#5690).
 Step 1: the `int` and `bool` globals, the operators and `main()`, with `xsSetTriggerVariable`, `xsTriggerVariable`
@@ -33,6 +36,7 @@ class Compiler:
         self.text, self.k, self.ints, self.warnings, self.lines = text or "", 0, {}, [], []
         self.civs, self.files = civs or {}, {}
         self.b, self.loops, self.breaks = 0, 0, 0    # sub-functions; loops and loops or switches around the code
+        self.consts, self.funcs, self.fn = {}, {}, None  # const values; compiled XS functions; current function
 
     def warn(self, part):
         m = re.search(rf"\b{re.escape(part)}\b", self.text)
@@ -68,6 +72,8 @@ class Compiler:
             self.emit(f"scoreboard players set {t} {int(node[1])}")
             return t
         if kind == "name":
+            if node[1] in self.consts:             # const: its value goes into each use
+                return self.expr(self.consts[node[1]])
             return self.holder(node[1])
         if kind == "assign":
             h, v = self.holder(node[1]), self.expr(node[2])
@@ -102,9 +108,16 @@ class Compiler:
         return h
 
     def binary(self, op, left, right):
-        if op in ("&&", "||"):                 # no call or assignment on the right: both sides can run
-            if pure(right) is False:
-                raise Skip(op)
+        if op in ("&&", "||"):
+            if pure(right) is False:           # a sub-function runs the right side only when needed (short circuit)
+                a, t = self.expr(left), self.temp()
+                self.emit(f"execute store success score {t} unless score {a} matches 0")
+
+                def rhs():
+                    b = self.expr(right)
+                    self.emit(f"execute store success score {t} unless score {b} matches 0")
+                self.emit(f"execute {'unless' if op == '&&' else 'if'} score {t} matches 0 run function {self.sub(rhs)}")
+                return t
             a, b, t = self.expr(left), self.expr(right), self.temp()
             if op == "&&":
                 self.emit(f"execute store success score {t} unless score {a} matches 0 unless score {b} matches 0")
@@ -134,6 +147,8 @@ class Compiler:
         raise Skip(op)
 
     def call(self, name, args):
+        if name in self.funcs:
+            return self.xs_call(name, args)
         if name == "xsTriggerVariable" and len(args) == 1 and args[0][0] == "num" and isinstance(args[0][1], int):
             return f"#v{args[0][1]} {VAR}"
         if name == "xsSetTriggerVariable" and len(args) == 2 and args[0][0] == "num" and isinstance(args[0][1], int):
@@ -157,6 +172,24 @@ class Compiler:
             self.emit(f"scoreboard players set {t} {civ_id(self.civs.get(args[0][1]))}")
             return t
         raise Skip(name)
+
+    def xs_call(self, name, args):
+        """A call of an XS function: the arguments into its parameters, then the function (no stack: no recursion)."""
+        params, typ = self.funcs[name]
+        if len(args) > len(params):
+            raise Skip(name)
+        vals = [self.copy(self.expr(a)) for a in args]       # all arguments first: one can read a parameter
+        for i, (_, p, default) in enumerate(params):
+            h = f"#l.{name}.{p} {OBJ}"
+            if i < len(vals):
+                self.emit(f"scoreboard players operation {h} = {vals[i]}")
+            elif default is not None:
+                self.emit(f"scoreboard players operation {h} = {self.expr(default)}")
+            else:
+                self.emit(f"scoreboard players set {h} 0")
+        self.emit(f"function aoe2mc:xs/f/{name}")
+        self.emit(f"scoreboard players set #ret {OBJ} 0")
+        return self.copy(f"#r.{name} {OBJ}") if typ in NUMBERS else None
 
     def count(self, player, kind):
         """The units of a player and type (no queue or site in a vanilla world: the total is the same count)."""
@@ -187,7 +220,9 @@ class Compiler:
         return f"aoe2mc:xs/b/{k}"
 
     def flags(self):
-        """After a sub-function: leave the current function when a break or continue is set."""
+        """After a sub-function: leave the current function when a return, break or continue is set."""
+        if self.fn:
+            self.emit(f"execute if score #ret {OBJ} matches 1 run return 0")
         if self.breaks:
             for f in ("brk", "cont") if self.loops else ("brk",):
                 self.emit(f"execute if score #{f} {OBJ} matches 1 run return 0")
@@ -211,12 +246,16 @@ class Compiler:
             c = self.expr(cond)
             self.emit(f"execute if score {c} matches 0 run return 0")
             self.emit(f"function {self.body(body, local, 1)}")
+            if self.fn:
+                self.emit(f"execute if score #ret {OBJ} matches 1 run return 0")
             self.emit(f"scoreboard players set #cont {OBJ} 0")
             self.emit(f"execute if score #brk {OBJ} matches 1 run return run scoreboard players set #brk {OBJ} 0")
             if step:
                 step()
             self.emit(f"function {name}")
         self.emit(f"function {self.sub(run)}")
+        if self.fn:
+            self.emit(f"execute if score #ret {OBJ} matches 1 run return 0")
 
     def control(self, node, local):
         kind = node[0]
@@ -250,8 +289,15 @@ class Compiler:
             for i, (_, stmts) in enumerate(node[2], 1):
                 self.emit(f"execute if score {hit} matches {i} run function {self.body(('block', stmts), local, 0)}")
             self.emit(f"scoreboard players set #brk {OBJ} 0")
-            if self.breaks:
-                self.flags()
+            self.flags()
+        elif kind == "return":
+            if self.fn is None:
+                raise Skip("return")
+            if node[1] is not None:
+                v = self.expr(node[1])
+                self.emit(f"scoreboard players operation #r.{self.fn} {OBJ} = {v}")
+            self.emit(f"scoreboard players set #ret {OBJ} 1")
+            self.emit("return 0")
         elif kind in ("break", "continue"):
             if not (self.loops if kind == "continue" else self.breaks):
                 raise Skip(kind)
@@ -259,6 +305,17 @@ class Compiler:
             self.emit("return 0")
         else:
             raise Skip(kind)
+
+    def function(self, node):
+        """xs/f/<F>: the body of an XS function with its own holders."""
+        name, ints, consts, outer = node[2], dict(self.ints), dict(self.consts), self.lines
+        self.ints.update({p: f"#l.{name}.{p} {OBJ}" for _, p, _ in node[3]})
+        self.fn, self.lines = name, []
+        try:
+            self.stmt(node[4], f"l.{name}")
+            self.files[f"{DIR}/f/{name}.mcfunction"] = "\n".join(self.lines) + "\n"
+        finally:
+            self.fn, self.lines, self.ints, self.consts = None, outer, ints, consts
 
     def stmt(self, node, local):
         kind = node[0]
@@ -269,9 +326,23 @@ class Compiler:
         before, files, b = len(self.lines), dict(self.files), self.b
         try:
             if kind == "var":
-                _, typ, name, value, _ = node
+                _, typ, name, value, mods = node
                 if typ not in NUMBERS:
                     raise Skip(typ)
+                if "const" in mods and value is not None:
+                    self.consts[name] = value
+                    return
+                if "static" in mods and self.fn:  # set once: a flag holder marks the first run
+                    h = f"#s.{self.fn}.{name} {OBJ}"
+
+                    def init():
+                        v = self.expr(value) if value is not None else None
+                        self.emit(f"scoreboard players operation {h} = {v}" if v else f"scoreboard players set {h} 0")
+                        self.emit(f"scoreboard players set #s.{self.fn}.{name}.i {OBJ} 1")
+                    sub = self.sub(init)
+                    self.ints[name] = h
+                    self.emit(f"execute unless score #s.{self.fn}.{name}.i {OBJ} matches 1 run function {sub}")
+                    return
                 h = f"#{local}.{name} {OBJ}"
                 v = self.expr(value) if value is not None else None
                 self.ints[name] = h
@@ -284,6 +355,32 @@ class Compiler:
             del self.lines[before:]
             self.files, self.b = files, b
             self.warn(str(e))
+
+
+def calls(node):
+    """The names of the calls in node."""
+    if isinstance(node, tuple):
+        own = {node[1]} if node[:1] == ("call",) else set()
+        return own.union(*(calls(x) for x in node[1:]))
+    if isinstance(node, list):
+        return set().union(*(calls(x) for x in node))
+    return set()
+
+
+def cycles(graph):
+    """The names that can reach themselves through the call graph {name: called names}."""
+    out = set()
+    for start in graph:
+        seen, todo = set(), list(graph[start])
+        while todo:
+            n = todo.pop()
+            if n == start:
+                out.add(start)
+                break
+            if n in graph and n not in seen:
+                seen.add(n)
+                todo.extend(graph[n])
+    return out
 
 
 def literal(node):
@@ -312,11 +409,18 @@ def compile(tree, text=None, civs=None):
     civs: {player: civilization key} of the converted map (xsGetPlayerCivilization)."""
     c = Compiler(text, civs)
     main = None
+    funcs = {n[2]: n for n in tree if n[0] == "func" and n[2] != "main"}
+    bad = cycles({k: calls(f[4]) for k, f in funcs.items()})
+    for name, f in funcs.items():
+        if name not in bad and f[1] in NUMBERS + ("void",) and all(p[0] in NUMBERS for p in f[3]):
+            c.funcs[name] = (f[3], f[1])
     for node in tree:
         if node[0] == "var":
             c.stmt(node, "g")
         elif node[0] == "func" and node[2] == "main" and not node[3]:
             main = node
+        elif node[0] == "func" and node[2] in c.funcs:
+            c.function(node)
         elif node[0] == "func":
             c.warn(node[2])
         elif node[0] == "rule":
