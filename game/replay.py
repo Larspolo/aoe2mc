@@ -3132,17 +3132,41 @@ class Replay:
                 "title @a title " + json.dumps(say("replay_ended")),
                 "playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1"]
 
-    def heat_commands(self):
-        """The walk heat map of the record as a map item for the spectators (#5457, heatmap.item_commands): only on
-        Paper (the plugin paints the map)."""
+    def heat_commands(self, kind="walk", start=0, end=None):
+        """The heat map of `kind` (heatmap.grid: walk, fight, death) from game time `start` to `end` ms (None: up to now)
+        as a map item for the spectators (#5457, #5589, heatmap.item_commands): only on Paper (the plugin paints the map).
+        The deaths come from the plugin (`aoe deathmarks heat`): a range is the difference of two snapshots (deaths())."""
         if getattr(self.game, "kind", "paper") != "paper":
             return []
-        timeline = self.data.get("timeline", [])
         n = -(-self.n // self.T)                                    # self.n is in blocks
-        grids = heatmap.grid(timeline, owners(self.data.get("objects", []), timeline), n)
+        if kind == "death":
+            snaps = getattr(self, "death_snaps", {})
+            new = self.deaths() if end is None else next((snaps[t] for t in sorted(snaps, reverse=True) if t <= end), {})
+            old = next((snaps[t] for t in sorted(snaps, reverse=True) if t <= start), {}) if start else {}
+            grids = heatmap.grid({k: c - old.get(k, 0) for k, c in new.items() if c > old.get(k, 0)}, {}, n, kind)
+        else:
+            timeline = self.data.get("timeline", [])
+            grids = heatmap.grid(timeline, owners(self.data.get("objects", []), timeline), n, kind, start,
+                                 math.inf if end is None else end)
         dyes = {p: aoe2mc.MAP_DYES.get(heatmap.dye(info, p), 8) for p, info in
                 ((int(k), v) for k, v in self.data.get("players", {}).items())}
         return heatmap.item_commands(grids, dyes, self.T, n, RCON_MAX)
+
+    def deaths(self):
+        """{(player, x, y): deaths} up to now: the counts of the plugin per tile (#5458)."""
+        return heatmap.death_counts(self.game.command(f"aoe deathmarks heat {self.T}") or "") if self.ai else {}
+
+    def death_snapshot(self, now):
+        """The death counts at each full game minute (#5589): the plugin counts without time, a death heat map of a
+        range subtracts the counts at its start."""
+        snaps = self.__dict__.setdefault("death_snaps", {})
+        t = int(now) // 60000 * 60000
+        if self.ai and t not in snaps:                              # the plugin counts only with `aoe deathmarks on`
+            snaps[t] = self.deaths()
+
+    def end_heat_commands(self):
+        """The three heat maps of the whole game at the replay end (#5589)."""
+        return [c for k in heatmap.KINDS for c in self.heat_commands(k)]
 
     def summary_commands(self):
         """Two chat lines per player at the end of the replay, as the AoE2 achievements screen: the economy (#1065):
@@ -3854,6 +3878,9 @@ class Replay:
                     if self.control.get("view") != self.pov:
                         self.pov = self.control.get("view")
                         self.send(self.fog())
+                    self.death_snapshot(self.control["time"])
+                    if (heat := self.control.pop("heat", None)) is not None:        # a heat map on demand (#5589)
+                        self.send(self.heat_commands(*heat))
                     if (place := self.control.pop("place", None)) is not None:      # a fight jump (#2950)
                         self.follow = None                          # the follow view ends
                         self.send(self.place_view(place))
@@ -3954,7 +3981,7 @@ class Replay:
         send(self.clock_commands(end, end, speed, done=True) + self.score_commands() + self.end_commands(end) +
              self.summary_commands() + self.timeline_commands(end) +
              self.build_order_commands(end) + self.spending_commands(end) +
-             self.heat_commands())                                      # after the books of fixed slots (#5457)
+             self.end_heat_commands())                                  # after the books of fixed slots (#5457)
         span = (events[-1]["time"] - start) / 1000 / speed if events else 0                 # at the start speed
         return {"events": n, "commands": self.sent, "busy": round(self.busy, 2), "lag": round(lag, 2),
                 "rate": round(self.sent / self.busy) if self.busy else 0, "need": round(self.sent / span) if span else 0}
