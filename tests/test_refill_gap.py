@@ -6,7 +6,7 @@ import pytest
 import usage
 
 NOW = 1_800_000_000
-EPIC = {"number": 7, "labels": [{"name": "epic"}], "body": "", "created_at": "2027-01-15T08:00:00Z"}
+EPIC = {"number": 7, "labels": [{"name": "epic"}], "body": "", "created_at": "2027-01-15T07:00:00Z"}   # 1 h before NOW: older than NEW_EPIC_WAIT
 
 
 def ref(key, minutes_ago):

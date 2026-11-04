@@ -2,6 +2,7 @@
 import os
 import subprocess
 import sys
+import time
 
 import claim
 from test_claim import clones, tool  # noqa: F401 (fixture)
@@ -31,5 +32,10 @@ def test_whole_refill_locks_one_hour(clones):  # noqa: F811
     """Epic 0 (the whole refill) without --state locks the UTC hour and its quarter of a local remote (#609)."""
     deep(clones)
     assert claim.refill_state(0, now=1793000000) == "20261026073"                 # 07:33 UTC: slot 3 of the hour
+    # The two calls use the real clock: when they fall in two 10-minute slots, the second gets a new lock (main CI red
+    # at 04:39 UTC on 2026-11-03, #767). Start them well inside one slot.
+    left = 600 - time.time() % 600
+    if left < 10:
+        time.sleep(left + 1)
     assert tool(clones[0], "0", "--refill").returncode == 0
     assert tool(clones[1], "0", "--refill").returncode == 1

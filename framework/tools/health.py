@@ -28,6 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from agent_config import CONFIG, first_account, owners  # noqa: E402
 from dashboard import api, closes, merges, owner_work, start_after  # noqa: E402
 from feedback import by_owner  # noqa: E402
+from usage import epic_key  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -84,12 +85,15 @@ def loop_gaps(runs, since, until):
 
 
 def idle_queue(cycles, until):
-    """(longest, sum) in hours of the idle stretches of the pacer `cycles` (dicts of `pacer/YYYY-MM-DD.jsonl`): the
-    consecutive cycles with `target` > 0, no claim and no started run, from the first one to the next cycle that is not
-    idle (or `until`). The queue stood still for hours on 2026-10-31 while the pacer loop ran (#5199). A paused
-    project is not idle."""
-    stretches, start = [], None
-    for c in sorted(cycles, key=lambda c: c["at"]):
+    """(longest, sum, no work) in hours of the idle stretches of the pacer `cycles` (dicts of `pacer/YYYY-MM-DD.jsonl`):
+    the consecutive cycles with `target` > 0, no claim and no started run, from the first one to the next cycle that is
+    not idle (or `until`). The queue stood still for hours on 2026-10-31 while the pacer loop ran (#5199). A paused
+    project is not idle. "No work": the hours of the idle cycles with `ready` 0 and `refill` 0, each until the next
+    cycle: the queue had no ticket and the refill no source (each ticket waited for the owner, 19.7 h on 2026-11-03,
+    #854), so no fault of the pacer."""
+    stretches, start, dry = [], None, 0.0
+    rows = sorted(cycles, key=lambda c: c["at"])
+    for i, c in enumerate(rows):
         idle = (c.get("target", 0) > 0 and not c.get("claims") and not sum((c.get("started") or {}).values())
                 and "paused True" not in c.get("line", ""))
         if idle and start is None:
@@ -97,9 +101,12 @@ def idle_queue(cycles, until):
         elif not idle and start is not None:
             stretches.append((ts(c["at"]) - start).total_seconds() / 3600)
             start = None
+        if idle and not c.get("ready") and not c.get("refill"):
+            end = ts(rows[i + 1]["at"]) if i + 1 < len(rows) else until
+            dry += max(0.0, (end - ts(c["at"])).total_seconds() / 3600)
     if start is not None:
         stretches.append(max(0.0, (until - start).total_seconds() / 3600))
-    return max(stretches, default=0.0), sum(stretches)
+    return max(stretches, default=0.0), sum(stretches), dry
 
 
 def held(r):
@@ -450,6 +457,19 @@ def milestone_per_week(issues, points):
     return (len(done) / used, len(done), used, sorted({i["milestone"]["title"] for i in done})) if used else None
 
 
+def features_per_week(issues, points):
+    """(closed roadmap epics per 1 % of 7-day quota, closed epics, quota %) or None (#797): the issues with the label
+    `epic` and a line "Roadmap: `key`" that closed as done between the first and the last point of weekly(). The
+    release percent stays flat while each roadmap review adds features, so this counts the finished features."""
+    if len(points) < 2:
+        return None
+    used = sum(b[1] - a[1] for a, b in zip(points, points[1:]) if b[1] > a[1])
+    done = [i for i in issues if "pull_request" not in i and i.get("closed_at") and i.get("state_reason") != "not_planned"
+            and "epic" in {lb["name"] for lb in i.get("labels", [])} and epic_key(i.get("body"))
+            and points[0][0] <= ts(i["closed_at"]) <= points[-1][0]]
+    return (len(done) / used, len(done), used) if used else None
+
+
 def weak_spots(issues, events, prs, runs, since):
     """Counts that cost quality: issues that the owner reopened, bug tickets that name a PR merged since `since` and
     before the bug (rework: a PR that merged later is a blocked PR, not the cause, #5461), bug tickets that name a
@@ -526,6 +546,9 @@ def status_comments(hours=24, since=None):
     import metrics_log
     since = since or datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours)
     stored = metrics_log.load(since)
+    if stored is None:      # the run reports live only on the branch: the lines of the reports would read as 0
+        print(f"warning: git cannot read the branch {metrics_log.BRANCH}: the run reports since {since:%Y-%m-%d %H:%M} "
+              "are missing (Metrics, Tokens and Usage lines read as 0); run it again", file=sys.stderr)
     last = metrics_log.newest(stored or [])
     tail = metrics_log.api_comments(metrics_log.parse(last) if last else since)
     out = {c["id"]: c for c in (stored or []) + tail if c["created_at"] >= f"{since:%Y-%m-%dT%H:%M:%SZ}"}
@@ -700,6 +723,14 @@ RUN = re.compile(r"^(?:Started|Taken over) by [^`\n]*`([^`]+)`")   # also "by th
 CAUSES = ("quota", "merge conflict", "long mc test", "red CI", "no report", "after the report")
 
 
+def by_run(report, run):
+    """True when `report` is a report of the run `run`: its name in backticks (a comment of the status issue), or the
+    `branch` of a run record of the branch `metrics`, also with the suffix `-k` of a later ticket of the same session
+    (the Run: line has no backticks: each takeover counted as "no report" before)."""
+    base = lambda b: re.sub(r"-\d+$", "", b or "")
+    return f"`{run}`" in (report.get("body") or "") or (bool(report.get("branch")) and base(report["branch"]) == base(run))
+
+
 def takeovers(comments, status_comments, prs=(), since=None, full=0.95, runs=()):
     """[(time, item, old run, minutes since its last report or None, cause)] of the "Taken over by" comments (#1703).
     The old run: the last other "Started by" or "Taken over by" branch on the item, its ticket or its PR, else the
@@ -729,7 +760,7 @@ def takeovers(comments, status_comments, prs=(), since=None, full=0.95, runs=())
         heads = {old} | {p["head"]["ref"] for n, p in by_pr.items() if n in rel and p.get("head")}
         mine = re.compile("|".join([rf"`{re.escape(b)}`|\bbranch {re.escape(b)}(?:\s|$)" for b in heads]
                                    + [rf"\bticket #{n}\b" for n in rel]))
-        reports = sorted((c for c in status_comments if after(c) and mine.search(c.get("body") or "")),
+        reports = sorted((c for c in status_comments if after(c) and (mine.search(c.get("body") or "") or by_run(c, old))),
                          key=lambda c: c["created_at"])
         last = reports[-1] if reports else None
         ci = [r for r in runs if r.get("name") == "CI" and r.get("head_branch") in heads and after(r) and not held(r)]
@@ -763,8 +794,9 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
         out.append(f"  {name}: {k}, {fmt(m)}, {fmt(mx)}, {fail}")
     if loop is not None:                        # a dead pacer loop starts no run (#4647): (longest, sum, hours)
         out.append(f"Pacer loop gaps (no live run, #4647): longest {loop[0]:.1f} h, sum {loop[1]:.1f} h of {loop[2]:.1f} h")
-    if idle is not None:                        # the loop runs, but it starts nothing (#5199): (longest, sum)
-        out.append(f"Idle queue (target > 0, no claim, no start): longest {idle[0]:.1f} h, sum {idle[1]:.1f} h")
+    if idle is not None:                        # the loop runs, but it starts nothing (#5199): (longest, sum, no work)
+        out.append(f"Idle queue (target > 0, no claim, no start): longest {idle[0]:.1f} h, sum {idle[1]:.1f} h"
+                   f" (no work: {idle[2]:.1f} h, #854)")
     held, again = held_runs(runs)
     out.append("Runs held by GitHub (#4645): " + (", ".join(f"{k} {v}" for k, v in sorted(held.items())) or "0")
                + " · started again by hand: " + (", ".join(f"{k} {v}" for k, v in sorted(again.items())) or "0"))
@@ -826,6 +858,9 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     mw = milestone_per_week(issues, week)
     out.append("Release milestone per 1 % of 7-day quota (#5552): " + ("-" if mw is None else
                f"{mw[0]:.2f} closed issues ({mw[1]} closed in {', '.join(mw[3]) or '-'}, {mw[2]:g} % used)"))
+    fw = features_per_week(issues, week)
+    out.append("Features per 1 % of 7-day quota: " + ("-" if fw is None else
+               f"{fw[0]:.2f} closed roadmap epics ({fw[1]} closed in {fw[2]:g} % used)"))
     w = weak_spots(issues, issue_events, prs, runs, since)
     out.append("Weak spots: " + ", ".join(f"{k} {v}" for k, v in w.items()))
     lr = lane_rework(issues, prs, status_comments, since)

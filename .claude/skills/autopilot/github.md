@@ -5,8 +5,10 @@ Read this file when you need a GitHub REST call or a label name (part of the `au
 ## GitHub access
 
 Use the GitHub MCP tools (`mcp__github__*`) when the session has them. Else use the REST API with `gh api`:
-it works in cloud and local sessions. Cloud sessions block GraphQL and the search API, so `gh issue list`,
-`gh pr create` and `search/issues` fail there. Put long text in a file and pass it with `-F body=@file.md`.
+it works in cloud and local sessions. Cloud sessions block GraphQL, so `gh issue list` and `gh pr create` fail there.
+`search/issues` works when `q` has `is:issue` or `is:pull-request` (else 422): look for a duplicate with
+`gh api -X GET search/issues -f q='repo:OWNER/NAME is:issue WORDS' --jq '.items[] | "#\(.number) \(.state) \(.title)"'`.
+Put long text in a file and pass it with `-F body=@file.md`.
 Put the method after the path (`... -X PATCH`): the permission rules match the start of the command.
 `gh api --paginate` stops after the first page in the cloud (403 "Numeric-ID repository paths": the next-page link
 names `repositories/ID`): add `&page=P` in a loop until a page has fewer than 100 entries (#1707).

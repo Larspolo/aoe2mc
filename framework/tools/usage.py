@@ -12,7 +12,7 @@ reset, so that each window reaches the limit (#587).
 
 The flow brake (owner, 2026-10-27): the quota is not the only bottleneck. When CI, merge conflicts or anything else
 stops the merges, the agent PRs build up, and a night of new PRs gives many conflicts. So `--fire` counts the open
-agent PRs older than `pr_minutes` (they wait for something that is not the quota) and the queued CI runs. At
+agent PRs older than `pr_minutes` (they wait for something that is not the quota) and the queued runs of the quick CI (`ci.yml` only, #106). At
 `max_waiting_prs` it starts at most 1 run per cycle, and that run only repairs PRs (autopilot step 2). At
 `max_ci_queue` it starts no run: a run cannot make CI faster. While the brake is on, the pacer keeps one open `tooling` issue that
 asks for a faster CI (`pacer.brake_ticket`, #4301). The limits are in `[pacing]` of `steering/system/system.toml`.
@@ -34,12 +34,14 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 import agent_config
 from agent_config import CONFIG
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))   # the project tools: release.py (#4195)
 
+NEW_EPIC_WAIT = 10 * 60   # seconds: an epic made less than this ago is split by its run first (#328)
 BURN = 0.03         # share of the 5-hour quota that one run uses per hour (16 runs used about 50 % per hour, 2026-10-25)
 BURN7 = 0.005       # share of the 7-day quota that one run uses per hour (0.0053 measured on 2026-10-27, #1695)
 MID, MID_LEFT = 0.90, 2.0   # aim: this share is used this many hours before the 5-hour window resets (#587)
@@ -181,7 +183,7 @@ def pending(started, lines, now, minutes=PENDING, refill_lane="deep"):
     return {task: n - made.get(task, 0) for task, n in started.items() if n - made.get(task, 0) > 0}
 
 
-def refill_need(ready, target, issues, due=lambda: [], reviews=lambda: [], free=lambda: []):
+def refill_need(ready, target, issues, due=lambda: [], reviews=lambda: [], free=lambda: [], now=None, closing=lambda e: False):
     """The reason of the refill runs, or "" when they have no work (#3547): an open epic with no open sub-issue and no
     open "Part of #E" ticket (the epic check; a release epic with an open ticket in its milestone has work), the tickets with
     `rank` after a release (release.yml gives it to the next release epic too: the `roadmap` skill, "Release cycle"),
@@ -189,14 +191,11 @@ def refill_need(ready, target, issues, due=lambda: [], reviews=lambda: [], free=
     locks: with no deep run they never run, #3560), and only while R < N (`queue.md`) the other refill sources. 5 deep
     runs in one hour found none with R >= N (2026-10-29), and one with R < N found no source (#3560). issues: the open
     issues and PRs; due, reviews, free: the release checks with no ticket, the due reviews and the other sources
-    (free_sources), read only when needed."""
+    (free_sources), read only when needed. An epic made less than 10 minutes ago gets no epic check: its run splits it
+    itself (#328). now: Unix seconds (default: the time now). closing(E): True when close.yml closes the epic E by
+    itself (`epic_autoclose.ready`, #835): its check run would only add the label `close`."""
     import dashboard
-    work = {int(n) for i in issues if "pull_request" not in i for n in re.findall(r"Part of #(\d+)", i.get("body") or "")}
-    work |= {i["number"] for i in issues if dashboard.RELEASE in dashboard.labels(i)
-             and dashboard.release_scope(i, issues)[2]}             # a release epic with open milestone tickets has work
-    subs = lambda i: (s := i.get("sub_issues_summary") or {}).get("total", 0) - s.get("completed", 0)   # open sub-issues
-    epics = [i["number"] for i in issues if "epic" in dashboard.labels(i) and i["number"] not in work and not subs(i)
-             and not {dashboard.MUTED, dashboard.AFTER, dashboard.RANK, dashboard.CLOSE, "needs-human"} & dashboard.labels(i)]
+    epics = [n for n in epic_checks(issues, now) if not closing(n)]
     if epics:
         return "epic check " + ", ".join(f"#{n}" for n in epics)
     if rank := sum(dashboard.RANK in dashboard.labels(i) for i in issues if "pull_request" not in i):
@@ -208,10 +207,39 @@ def refill_need(ready, target, issues, due=lambda: [], reviews=lambda: [], free=
     return f"ready {ready} < target {target}: " + ", ".join(sources) if ready < target and (sources := free()) else ""
 
 
+def epic_checks(issues, now=None):
+    """The open epics that wait for an epic check (`refill_need`): no open sub-issue, no open "Part of #E" ticket and
+    no release milestone ticket, no hold, older than NEW_EPIC_WAIT. now: Unix seconds (default: the time now)."""
+    import dashboard
+    work = {int(n) for i in issues if "pull_request" not in i for n in re.findall(r"Part of #(\d+)", i.get("body") or "")}
+    work |= {i["number"] for i in issues if dashboard.RELEASE in dashboard.labels(i)
+             and dashboard.release_scope(i, issues)[2]}             # a release epic with open milestone tickets has work
+    subs = lambda i: (s := i.get("sub_issues_summary") or {}).get("total", 0) - s.get("completed", 0)   # open sub-issues
+    now = time.time() if now is None else now
+    made = lambda i: datetime.datetime.fromisoformat(i["created_at"].replace("Z", "+00:00")).timestamp() \
+        if i.get("created_at") else 0                    # no time (a partial record): an old epic
+    epics = [i["number"] for i in issues if "epic" in dashboard.labels(i) and i["number"] not in work and not subs(i)
+             and not {dashboard.MUTED, dashboard.AFTER, dashboard.RANK, dashboard.CLOSE, "needs-human"} & dashboard.labels(i)
+             and now - made(i) >= NEW_EPIC_WAIT]
+    return epics
+
+
+def autoclosing(epic):
+    """True when close.yml closes the epic by itself (`epic_autoclose.ready`); a missing tool or an error: False."""
+    try:
+        import epic_autoclose  # not in an older bootstrap copy
+    except ImportError:
+        return False
+    return bool(epic_autoclose.ready(epic))
+
+
 def release_due():
     """The release checks with no ticket (`release.due`), or [] when the read fails: the pacer must still start runs."""
     try:
         import release  # not in a bootstrap copy (`framework/tools/bootstrap.py`)
+    except ImportError:                                     # a project with no release tool has no release checks (#153)
+        return []
+    try:
         features, _, rows, epics = release.load()
         return release.due(features, rows, epics)
     except Exception as e:                                  # a GitHub or file error
@@ -243,19 +271,51 @@ def held(numbers):
                and {dashboard.AFTER, dashboard.MUTED} & dashboard.labels(i) for n in sorted(numbers))
 
 
-def free_sources(root=None):
+def roadmap_features(text):
+    """{key: (goal, done, named)} of the feature lines "- [ ] `key` ..." under the "## N." goals of a roadmap (the
+    `roadmap` skill): done for "[x]", named = the issue numbers on the line. A project with no tools/release.py (#153)."""
+    out, goal = {}, 0
+    for line in text.splitlines():
+        if m := re.match(r"## (\d+)\.", line):
+            goal = int(m[1])
+        elif goal and (m := re.match(r"- \[([ xX])\] `([^`]+)`(.*)", line)):
+            out[m[2]] = (goal, m[1] != " ", {int(n) for n in re.findall(r"#(\d+)", m[3])})
+    return out
+
+
+def epic_key(body):
+    """The roadmap key of an epic body ("Roadmap: `key`", the `roadmap` skill), or None."""
+    m = re.search(r"^Roadmap: `([^`]+)`", body or "", re.M)
+    return m and m[1]
+
+
+def free_sources(root=None, epics=None, holds=held):
     """The refill sources of R < N besides the checks and reviews (#3560): the `[ ]` features of the goals 1 to 3 with
-    no epic (the `roadmap` skill) inside the release focus (`release.focus`) and the fallbacks of docs/coverage.md. A
-    read error counts as a source."""
+    no epic (the `roadmap` skill) inside the release focus (`release.focus`), not held by the owner (`held`), and the
+    fallbacks of docs/coverage.md (none without the file). A read error counts as a source. Without tools/release.py
+    the roadmap of `agent.toml` and the epics of GitHub (`epics`: a test stub, #153), and no release focus."""
     try:
-        import release
-        features, _, rows, epics = release.load()
-        keys, numbers = {release.epic_key(e.get("body")) for e in epics}, {e["number"] for e in epics}
-        wait = set(release.waiting(features, rows, release.focus(root)))     # outside the release focus
+        try:
+            import release
+            features, _, rows, found = release.load()
+            key, root = release.epic_key, root or release.ROOT
+            wait = set(release.waiting(features, rows, release.focus(root)))     # outside the release focus
+        except ImportError:
+            root = root or agent_config.ROOT
+            with open(os.path.join(root, CONFIG["docs"]["roadmap"])) as f:
+                features = roadmap_features(f.read())
+            if epics is None:
+                import dashboard
+                epics = lambda: dashboard.pages("issues?labels=epic&state=all")   # noqa: E731
+            found, key, wait = epics(), epic_key, set()
+        keys, numbers = {key(e.get("body")) for e in found}, {e["number"] for e in found}
         free = [k for k, (goal, done, named) in features.items() if goal < 4 and not done and k not in keys
-                and k not in wait and not named & numbers and not held(named)]
-        with open(os.path.join(root or release.ROOT, "docs", "coverage.md")) as f:   # the totals: | Group | types | own | infantry | fallback |
-            fallbacks = sum(int(m[1]) for m in re.finditer(r"^\| [A-Z][a-z ]+ \| \d+ \| \d+ \| \d+ \| (\d+) \|$", f.read(), re.M))
+                and k not in wait and not named & numbers and not holds(named)]
+        coverage = os.path.join(root, "docs", "coverage.md")
+        fallbacks = 0
+        if os.path.exists(coverage):
+            with open(coverage) as f:   # the totals: | Group | types | own | infantry | fallback |
+                fallbacks = sum(int(m[1]) for m in re.finditer(r"^\| [A-Z][a-z ]+ \| \d+ \| \d+ \| \d+ \| (\d+) \|$", f.read(), re.M))
     except Exception as e:                                  # a GitHub or file error
         print(f"refill sources: {e}", file=sys.stderr)
         return ["read error"]
@@ -308,11 +368,16 @@ def flow_cap(waiting, queued, max_waiting=WAIT, max_queue=QUEUE):
     return None, f"flow ok: {waiting} waiting PRs, CI queue {queued}"
 
 
+QUEUE_PATH = "actions/workflows/ci.yml/runs?status=queued&per_page=1"   # the flow brake counts only the quick CI (#106)
+
+
 def read_flow(now):
-    """(cap, reason) from GitHub: the open PRs and the queued workflow runs."""
+    """(cap, reason) from GitHub: the open PRs and the queued runs of the quick CI. Only ci.yml: the cron runs of
+    the other workflows wait in their concurrency groups and counted as a CI queue of 31 while the quick CI started
+    each run at once (#106)."""
     import dashboard
     prs = dashboard.pages("pulls?state=open")
-    queued = dashboard.api("actions/runs?status=queued&per_page=1")["total_count"]
+    queued = dashboard.api(QUEUE_PATH)["total_count"]
     return flow_cap(len(waiting_prs(prs, now)), queued)
 
 
@@ -370,13 +435,35 @@ def sample_line(usage, now, claims, release=None, lanes=None, account=None):
     return line + (f" · account {account}" if account else "")
 
 
-def release_percent():
-    """The percent of milestone C over all goals (tools/release.py), or None without GitHub access."""
+def release_percent(root=None, epics=None):
+    """The percent of milestone C over all goals (tools/release.py), or None without GitHub access. A project with no
+    tools/release.py: `roadmap_release` (the release per quota of `health.py` was always "-" without it)."""
     try:
         import release
+    except ImportError:
+        return roadmap_release(root, epics)
+    try:
         return release.total(release.current())
     except Exception:
         return None
+
+
+def roadmap_release(root=None, epics=None):
+    """The percent of the features of the goals 1 to 3 of the roadmap that are done: "[x]", or a closed epic with its
+    key ("Roadmap: `key`") or named on the line. None on a read error. `epics`: a test stub of the GitHub list."""
+    try:
+        with open(os.path.join(root or agent_config.ROOT, CONFIG["docs"]["roadmap"])) as f:
+            features = {k: v for k, v in roadmap_features(f.read()).items() if v[0] < 4}
+        if epics is None:
+            import dashboard
+            epics = lambda: dashboard.pages("issues?labels=epic&state=all")   # noqa: E731
+        closed = [e for e in epics() if e.get("state") == "closed"]
+    except Exception as e:                                  # a GitHub or file error: no release field
+        print(f"release: {e}", file=sys.stderr)
+        return None
+    keys, numbers = {epic_key(e.get("body")) for e in closed}, {e["number"] for e in closed}
+    done = sum(d or k in keys or bool(named & numbers) for k, (_, d, named) in features.items())
+    return 100 * done / len(features) if features else None
 
 
 def describe(usage, now, burn=BURN, burn7=None):
@@ -414,7 +501,8 @@ def fire(usage, now, burn=BURN, burn7=None, skip=(), status=None, started=None, 
     target = target_runs(usage, now, burn, burn7=burn7) if target is None else target
     reviews = functools.cache(lambda: due_reviews(starved=lambda: target is not None and ready < target
                                                   and not free_sources()))
-    need = refill_need(ready, target, open_all, release_due, free=free_sources, reviews=reviews)   # reviews after checks
+    need = refill_need(ready, target, open_all, release_due, free=free_sources, reviews=reviews,
+                       now=now.timestamp() if hasattr(now, "timestamp") else now, closing=autoclosing)   # reviews after checks
     only_review = False
     if need and refill_recent(refs, now) and ready >= target // 2:
         # A refill runs now or ran; a near-empty queue refills at once. A due review skips the gap (owner, 2026-10-29):

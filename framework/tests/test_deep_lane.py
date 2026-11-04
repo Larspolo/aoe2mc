@@ -20,6 +20,7 @@ def test_the_pacer_gives_each_lane_its_tickets_and_the_deep_lane_the_refill():
 
 
 def test_only_deep_runs_do_the_reviews_and_the_refill(monkeypatch, capsys):
+    monkeypatch.setattr(claim, "who", lambda: "claude/lane-test")          # a branch, not a detached HEAD (#155)
     monkeypatch.setitem(claim.CONFIG["pacing"], "reserved", ["haiku", "deep"])
     monkeypatch.setattr(claim, "lane", lambda: "")
     assert not claim.deep_lane()

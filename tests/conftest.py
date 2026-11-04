@@ -40,6 +40,14 @@ def no_pack_assets(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def no_owner_feedback(monkeypatch):
+    """No owner comment waits in a pacer test: `pacer.unanswered` reads GitHub (#294 of tumach-dance), and a waiting
+    comment there took the brief of one main run. `framework/tests/test_pacer_feedback.py` tests it."""
+    import pacer
+    monkeypatch.setattr(pacer, "unanswered", lambda: False)
+
+
+@pytest.fixture(autouse=True)
 def own_medal_file(monkeypatch, tmp_path):
     """The medal file of the Art of War challenges in the test folder, not in the home folder (#3904)."""
     import challenge

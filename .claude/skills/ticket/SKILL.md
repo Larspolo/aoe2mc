@@ -160,7 +160,7 @@ does not say?
 
 - One goal per ticket. If you write "and also", make two tickets.
 - Search the open issues first. Do not make a duplicate.
-- Release focus (`steering/project/RELEASE.md`): decide for each new `feature` ticket if it goes into the next release
+- Release focus (`steering/project/RELEASE.md`; skip this rule when the project has no such file): decide for each new `feature` ticket if it goes into the next release
   (the GitHub milestone "vX.Y.Z" of the open release epic) or gets `after-release`, by comparison with the held tickets
   and the milestone ("A new feature: in the next release or after it?"). Not for a ticket with `in-progress` or an open PR: it
   finishes. Before the release, prefer tickets that make the play test work or improve what the player sees and does.
