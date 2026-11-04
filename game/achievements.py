@@ -24,6 +24,10 @@ The state of a win (#5644): "win homeless" (demolish.delete of the first own TOW
 with "units" (the player trained units in this game, all of these names) and "win ally" (an allied player, gather.allied).
 "destroy WONDER" with "before" in years (wonder.tick: an enemy wonder fell with less years left) and "lose site <BUILDING>"
 with "least", a part of 1 (demolish.unfound: an own site of at least that progress went).
+"convert <UNIT>" (monk.take, #5646), "trade route" (trade.order: a land route to another market), "siege tower wall"
+(siege_tower.out next to an enemy wall), "challenge medal" and "challenge <MEDAL>" (challenge.tick), and "explore"
+with "tiles" and "part" (fog.minimap, no revealed map): the part of the tiles explored on a map of at least "tiles"
+tiles a side (480: Ludicrous, game/data/per_names.jsonl).
 "count:kill" with "by", "need" and an optional "killed" and "age" (#5641): the player killed `need` units (of "killed")
 with units of "by" in this game, only while in the ages up to "age". The counts per line: vars(h)["kill_counts"], kept
 in a saved game."""
@@ -191,6 +195,15 @@ def kills(g):
         h = a and sides.get(int(a[1]))
         if h and b and not gather.allied(getattr(h, "players", {}), h.player, int(b[1])):
             killed(h, unit_name(g, f[3]), unit_name(g, f[1]))
+
+
+def explored(g, n, count):
+    """Grant each "explore" line whose map size ("tiles") n reaches and whose "part" count of the n x n tiles reaches."""
+    if getattr(g, "share", None) or not hasattr(g, "command"):
+        return
+    for r in ROWS:
+        if r.get("event") == "explore" and n >= r["tiles"] and count >= r["part"] * n * n and matches(g, g, r):
+            grant(g, g.player, r["name"].lower())
 
 
 def gathered(g, what, amount=1):

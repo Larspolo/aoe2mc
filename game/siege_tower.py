@@ -24,6 +24,7 @@ from aoe2mc import CARRIERS, GARRISONED
 NAME = "SIEGE_TOWER"
 SIZE = 10                   # units inside, as in AoE2
 DOOR = 2.5                  # blocks from the tower: there a unit goes in
+WALL_REACH = 2             # blocks from an enemy wall: the units come out over it (Howdy Neighbor, #5646)
 
 
 def fits(g, u):
@@ -91,8 +92,23 @@ def out(g, tower, pos=None):
             g.command(c)
         if (v := g.villagers.get(u)) is not None:
             v.pos, v.state = (x + 0.5, float(y), z + 0.5), "idle"
+    if wall(g, cell):
+        import achievements
+        achievements.event(g, g, "siege tower wall")               # Howdy Neighbor (#5646)
     g.command(f"tellraw @a[team=p{g.player}] " + json.dumps(lang.text("aoe2mc.siege_tower.out", len(units), color="gray")))
     return units
+
+
+def wall(g, cell, reach=WALL_REACH):
+    """True when an enemy wall or gate (combat.WALLS, g.forts) is within reach blocks of block cell (x, z)."""
+    import combat
+    import gather
+    import owners
+    for u, (x0, _, z0, x1, _, z1) in sorted(getattr(g, "forts", {}).items()):
+        if (g.fort_names.get(u) in combat.WALLS and max(x0 - cell[0], cell[0] - x1, z0 - cell[1], cell[1] - z1) <= reach
+                and (p := owners.player(g, u)) and not gather.allied(getattr(g, "players", {}), g.player, p)):
+            return True
+    return False
 
 
 def tick(g):
