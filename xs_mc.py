@@ -1,5 +1,8 @@
 """XS script -> datapack functions (#5689, option B of #5120, docs/research/xs.md "XS as datapack functions").
 
+Step 6: `float` as a fixed point score (the value × 1000) and `vector` as three such holders `.x .y .z`, with the math and
+vector functions of MATH (#5694). Minecraft feature: scoreboards (integers only). The trigonometric, `exp` and log
+functions keep the warning line.
 Step 4: the rules and the rule functions (#5692): `#now` counts the ticks; a rule R runs from its tick line when
 `#on.R` is 1 and `#now` >= `#due.R`, then `#due.R` = `#now` + `#min.R` (ticks). Minecraft feature: the tick function and
 scoreboards (no `schedule`: the world saves the scores).
@@ -29,6 +32,29 @@ MOUNT = "aoe2mc.mount"      # units.MOUNT: the horse of a unit does not count (a
 COUNT = f"$return run execute if entity @e[tag=aoe2mc.p$(p),tag=aoe2mc.t$(id),tag=!{MOUNT}]"
 NOW = f"#now {OBJ}"
 TICKS = 20
+# The math and vector functions with a datapack form: name -> the numbers of arguments. One entry per line.
+MATH = {
+    "abs": (1,),
+    "ceil": (1,),
+    "degrees": (1,),
+    "dist": (2,),
+    "floor": (1,),
+    "pow": (2,),
+    "radians": (1,),
+    "round": (1, 2),
+    "sqrt": (1,),
+    "vector": (3,),
+    "xsCeilToInt": (1,),
+    "xsVectorGetX": (1,),
+    "xsVectorGetY": (1,),
+    "xsVectorGetZ": (1,),
+    "xsVectorLength": (1,),
+    "xsVectorNormalize": (1,),
+    "xsVectorSet": (3,),
+    "xsVectorSetX": (2,),
+    "xsVectorSetY": (2,),
+    "xsVectorSetZ": (2,),
+}
 RULE_CALLS = ("xsDisableRule", "xsEnableRule", "xsIsRuleEnabled", "xsSetRuleMaxInterval", "xsSetRuleMinInterval")
 GROUP_CALLS = ("xsDisableRuleGroup", "xsEnableRuleGroup", "xsIsRuleGroupEnabled")
 SELF_CALLS = ("xsDisableSelf", "xsSetRuleMaxIntervalSelf", "xsSetRuleMinIntervalSelf")
@@ -37,6 +63,16 @@ COMPARE = {"<": "<", "<=": "<=", ">": ">", ">=": ">=", "==": "="}
 
 class Skip(Exception):
     """A part with no datapack form: its word for the warning line."""
+
+
+class Fx(str):
+    """The holder of a float: a score of the value × 1000 (fixed point, #5694). A vector is a tuple of three."""
+
+
+SCALE = 1000
+DEG = 57296                 # 180 / pi × 1000: degrees() multiplies, radians() divides (0.001)
+SQRT_STEPS = 24             # Newton steps from x / 2 + 0.5: enough for the range ±2 147 483
+POW_MAX = 16
 
 
 class Compiler:
@@ -62,9 +98,76 @@ class Compiler:
         self.lines.append(line)
 
     def copy(self, src):
+        if isinstance(src, tuple) or src is None:
+            raise Skip("vector")
         t = self.temp()
         self.emit(f"scoreboard players operation {t} = {src}")
-        return t
+        return Fx(t) if isinstance(src, Fx) else t
+
+    def vcopy(self, v):
+        return tuple(self.copy(Fx(c)) for c in v) if isinstance(v, tuple) else self.copy(v)
+
+    def to_f(self, h):
+        """A float holder of h (an int × 1000)."""
+        if isinstance(h, Fx):
+            return h
+        t = self.copy(h)
+        self.emit(f"scoreboard players operation {t} *= {self.const(SCALE)}")
+        return Fx(t)
+
+    def to_i(self, h):
+        """An int holder of h (a float truncates toward zero, as xs_run.convert)."""
+        if isinstance(h, tuple) or h is None:
+            raise Skip("vector")
+        return self.idiv(str(h), self.const(SCALE), "/") if isinstance(h, Fx) else h
+
+    def fit(self, target, v):
+        """The value v for the holder target: the type of the target decides (int, float or vector)."""
+        if isinstance(target, tuple) != isinstance(v, tuple):
+            raise Skip("vector")
+        if isinstance(target, tuple):
+            return v
+        return self.to_f(v) if isinstance(target, Fx) else self.to_i(v)
+
+    def store(self, target, v):
+        v = self.fit(target, v)
+        for t, x in zip(target, v) if isinstance(target, tuple) else [(target, v)]:
+            self.emit(f"scoreboard players operation {t} = {x}")
+        return target
+
+    def fmul(self, a, b):
+        """a × b of two floats: (a / 1000) × b + (a % 1000) × b / 1000, so that a result that fits does not overflow."""
+        a, b = self.to_f(a), self.to_f(b)
+        q, r, c = self.copy(a), self.copy(a), self.const(SCALE)
+        self.emit(f"scoreboard players operation {q} /= {c}")
+        self.emit(f"scoreboard players operation {q} *= {b}")
+        self.emit(f"scoreboard players operation {r} %= {c}")
+        self.emit(f"scoreboard players operation {r} *= {b}")
+        self.emit(f"scoreboard players operation {r} /= {c}")
+        self.emit(f"scoreboard players operation {q} += {r}")
+        return q
+
+    def fdiv(self, a, b):
+        """a / b of two floats: q = a / b, then q × 1000 + (a % b) × 1000 / b."""
+        a, b = self.to_f(a), self.to_f(b)
+        q, r, c = self.copy(a), self.copy(a), self.const(SCALE)
+        self.emit(f"scoreboard players operation {q} /= {b}")
+        self.emit(f"scoreboard players operation {q} *= {c}")
+        self.emit(f"scoreboard players operation {r} %= {b}")
+        self.emit(f"scoreboard players operation {r} *= {c}")
+        self.emit(f"scoreboard players operation {r} /= {b}")
+        self.emit(f"scoreboard players operation {q} += {r}")
+        return q
+
+    def idiv(self, a, b, op):
+        """a / b or a % b of two ints: Minecraft rounds down, XS truncates toward zero as C."""
+        q, m = self.copy(a), self.copy(a)
+        self.emit(f"scoreboard players operation {q} /= {b}")
+        self.emit(f"scoreboard players operation {m} %= {b}")      # a division by 0 keeps both scores
+        fix = f"scoreboard players add {q} 1" if op == "/" else f"scoreboard players operation {m} -= {b}"
+        for sa, sb in (("..-1", "1.."), ("0..", "..-1")):          # the signs differ and the rest is not 0
+            self.emit(f"execute unless score {m} matches 0 if score {a} matches {sa} if score {b} matches {sb} run {fix}")
+        return q if op == "/" else m
 
     def holder(self, name):
         if name not in self.ints:
@@ -75,9 +178,10 @@ class Compiler:
         """The lines of node; returns the holder ("<name> <objective>") of its value."""
         kind = node[0]
         if kind in ("num", "bool"):
-            if isinstance(node[1], float):
-                raise Skip("float")
             t = self.temp()
+            if isinstance(node[1], float):
+                self.emit(f"scoreboard players set {t} {round(node[1] * SCALE)}")
+                return Fx(t)
             self.emit(f"scoreboard players set {t} {int(node[1])}")
             return t
         if kind == "name":
@@ -85,17 +189,22 @@ class Compiler:
                 return self.expr(self.consts[node[1]])
             return self.holder(node[1])
         if kind == "assign":
-            h, v = self.holder(node[1]), self.expr(node[2])
-            self.emit(f"scoreboard players operation {h} = {v}")
-            return h
+            return self.store(self.holder(node[1]), self.expr(node[2]))
         if kind == "unary":
             op, a = node[1], node[2]
             if op in ("++", "--"):
                 return self.step(a, op)
-            v, t = self.expr(a), self.temp()
+            v = self.expr(a)
             if op == "-":
+                if isinstance(v, tuple):
+                    return tuple(self.binary("-", ("num", 0.0), ("h", Fx(c))) for c in v)
+                t = self.temp()
                 self.emit(f"scoreboard players set {t} 0")
                 self.emit(f"scoreboard players operation {t} -= {v}")
+                return Fx(t) if isinstance(v, Fx) else t
+            t = self.temp()
+            if isinstance(v, tuple):
+                raise Skip("vector")
             else:
                 self.emit(f"execute store success score {t} if score {v} matches 0")
             return t
@@ -107,13 +216,15 @@ class Compiler:
             return self.binary(*node[1:])
         if kind == "call":
             return self.call(node[1], node[2])
+        if kind == "h":                            # a holder of the compiler (a part of a vector)
+            return node[1]
         raise Skip({"str": "string"}.get(kind, kind))
 
     def step(self, node, op):
         h = self.holder(node[1]) if node[0] == "name" else None
-        if h is None:
+        if h is None or isinstance(h, tuple):
             raise Skip(op)
-        self.emit(f"scoreboard players {'add' if op == '++' else 'remove'} {h} 1")
+        self.emit(f"scoreboard players {'add' if op == '++' else 'remove'} {h} {SCALE if isinstance(h, Fx) else 1}")
         return h
 
     def binary(self, op, left, right):
@@ -134,20 +245,52 @@ class Compiler:
                 self.emit(f"execute store success score {t} unless score {a} matches 0")
                 self.emit(f"execute unless score {b} matches 0 run scoreboard players set {t} 1")
             return t
-        if op in ("/", "%"):                   # Minecraft rounds down, XS truncates toward zero as C
+        if op in ("/", "%"):
             a, b = self.expr(left), self.expr(right)
-            q, m = self.copy(a), self.copy(a)
-            self.emit(f"scoreboard players operation {q} /= {b}")
-            self.emit(f"scoreboard players operation {m} %= {b}")      # a division by 0 keeps both scores
-            fix = f"scoreboard players add {q} 1" if op == "/" else f"scoreboard players operation {m} -= {b}"
-            for sa, sb in (("..-1", "1.."), ("0..", "..-1")):          # the signs differ and the rest is not 0
-                self.emit(f"execute unless score {m} matches 0 if score {a} matches {sa} if score {b} matches {sb} run {fix}")
-            return q if op == "/" else m
-        a = self.copy(self.expr(left))
+            if typed(a) or typed(b):
+                return self.typed(op, a, b)
+            return self.idiv(a, b, op)
+        a = self.vcopy(self.expr(left))
         b = self.expr(right)
+        if typed(a) or typed(b):
+            return self.typed(op, a, b)
         if op in OPS:
             self.emit(f"scoreboard players operation {a} {OPS[op]} {b}")
             return a
+        if op in COMPARE or op == "!=":
+            t = self.temp()
+            self.emit(f"execute store success score {t} {'unless' if op == '!=' else 'if'} score {a} "
+                      f"{COMPARE.get(op, '=')} {b}")
+            return t
+        raise Skip(op)
+
+    def typed(self, op, a, b):
+        """op of a float or vector and another value: fixed point on each part."""
+        if isinstance(a, tuple) or isinstance(b, tuple):
+            if op in ("+", "-") and isinstance(a, tuple) and isinstance(b, tuple):
+                return tuple(self.typed(op, Fx(x), Fx(y)) for x, y in zip(a, b))
+            if op in ("*", "/") and isinstance(a, tuple) and not isinstance(b, tuple):
+                return tuple(self.typed(op, Fx(x), b) for x in a)
+            if op == "*" and isinstance(b, tuple) and not isinstance(a, tuple):
+                return tuple(self.typed(op, a, Fx(y)) for y in b)
+            if op in ("==", "!=") and isinstance(a, tuple) and isinstance(b, tuple):
+                t = self.temp()
+                self.emit(f"execute store success score {t} " + " ".join(f"if score {x} = {y}" for x, y in zip(a, b)))
+                if op == "!=":
+                    self.emit(f"execute store success score {t} if score {t} matches 0")
+                return t
+            raise Skip("vector")
+        a, b = self.to_f(a), self.to_f(b)
+        if op == "*":
+            return self.fmul(a, b)
+        if op == "/":
+            return self.fdiv(a, b)
+        if op == "%":                          # fmod: the int rest of the two scores
+            return Fx(self.idiv(a, b, "%"))
+        if op in ("+", "-"):
+            t = self.copy(a)
+            self.emit(f"scoreboard players operation {t} {OPS[op]} {b}")
+            return t
         if op in COMPARE or op == "!=":
             t = self.temp()
             self.emit(f"execute store success score {t} {'unless' if op == '!=' else 'if'} score {a} "
@@ -161,19 +304,21 @@ class Compiler:
         if name == "xsTriggerVariable" and len(args) == 1 and args[0][0] == "num" and isinstance(args[0][1], int):
             return f"#v{args[0][1]} {VAR}"
         if name == "xsSetTriggerVariable" and len(args) == 2 and args[0][0] == "num" and isinstance(args[0][1], int):
-            v = self.expr(args[1])
+            v = self.to_i(self.expr(args[1]))
             self.emit(f"scoreboard players operation #v{args[0][1]} {VAR} = {v}")
             return v
         if name == "xsChatData" and args and args[0][0] == "str" and len(args) <= 2:
             text = args[0][1]
             parts = [text]
             if len(args) == 2:
-                v = self.expr(args[1])
+                v = self.to_i(self.expr(args[1]))       # a float shows its whole part
                 h, o = v.split()
                 before, _, after = text.partition("%d") if "%d" in text else (text, "", "")
                 parts = [before, {"score": {"name": h, "objective": o}}, after]
             self.emit("tellraw @a " + json.dumps([""] + [p for p in parts if p != ""]))
             return None
+        if name in MATH:
+            return self.math(name, args)
         if name in RULE_CALLS + GROUP_CALLS + SELF_CALLS:
             return self.rule_call(name, args)
         if name in ("xsGetTime", "xsGetGameTime") and not args:
@@ -188,6 +333,90 @@ class Compiler:
             self.emit(f"scoreboard players set {t} {civ_id(self.civs.get(args[0][1]))}")
             return t
         raise Skip(name)
+
+    def math(self, name, args):
+        """The math and vector functions of MATH on fixed point holders (#5694)."""
+        n = len(args) == 2 and number(args[1])
+        if len(args) not in MATH[name] or (name == "pow" and not (n is not None and abs(n) <= POW_MAX)):
+            raise Skip(name)
+        if name == "pow":
+            x, r = self.to_f(self.expr(args[0])), self.expr(("num", 1.0))
+            for _ in range(abs(n)):
+                r = self.fmul(r, x)
+            return r if n >= 0 else self.fdiv(self.expr(("num", 1.0)), r)
+        if name == "round" and len(args) == 2 and not (literal(args[1]) and 0 <= args[1][1] <= 3):
+            raise Skip(name)
+        vs = [self.expr(a) for a in args]
+        if name in ("vector", "xsVectorSet"):
+            return tuple(self.copy(self.to_f(v)) for v in vs)
+        if name.startswith(("xsVectorGet", "xsVectorSet")):
+            if not isinstance(vs[0], tuple):
+                raise Skip(name)
+            i = "XYZ".index(name[-1])
+            if name.startswith("xsVectorGet"):
+                return self.copy(Fx(vs[0][i]))
+            out = list(self.vcopy(vs[0]))
+            out[i] = self.copy(self.to_f(vs[1]))
+            return tuple(out)
+        if name == "dist":
+            vs = [self.typed("-", *vs)]
+        if name in ("dist", "xsVectorLength", "xsVectorNormalize"):
+            if not isinstance(vs[0], tuple):
+                raise Skip(name)
+            sq = self.expr(("num", 0.0))
+            for c in vs[0]:
+                self.emit(f"scoreboard players operation {sq} += {self.fmul(Fx(c), Fx(c))}")
+            n = self.sqrt(sq)
+            if name != "xsVectorNormalize":
+                return n
+            out = tuple(self.fdiv(Fx(c), n) for c in vs[0])
+            for c in out:                              # a zero vector stays zero (as xs_run.normalize)
+                self.emit(f"execute if score {n} matches 0 run scoreboard players set {c} 0")
+            return out
+        x = self.to_f(vs[0])
+        if name == "abs":
+            t = self.copy(x)
+            self.emit(f"execute if score {t} matches ..-1 run scoreboard players operation {t} *= {self.const(-1)}")
+            return t
+        if name == "sqrt":
+            return self.sqrt(x)
+        if name == "degrees":
+            return self.fmul(x, self.expr(("num", DEG / SCALE)))
+        if name == "radians":
+            return self.fdiv(x, self.expr(("num", DEG / SCALE)))
+        unit = SCALE // 10 ** args[1][1] if name == "round" and len(args) == 2 else SCALE
+        t, u = self.copy(x), self.const(unit)
+        if name in ("ceil", "xsCeilToInt"):            # Minecraft rounds down: ceil(x) = floor(x + 0.999)
+            self.emit(f"scoreboard players add {t} {unit - 1}")
+        elif name == "round":                          # half away from zero is a choice: XS does not say more
+            self.emit(f"scoreboard players add {t} {unit // 2}")
+        self.emit(f"scoreboard players operation {t} /= {u}")
+        if name == "xsCeilToInt":
+            return str(t)
+        self.emit(f"scoreboard players operation {t} *= {u}")
+        return t
+
+    def sqrt(self, x):
+        """An integer square root by Newton steps: the function xs/sqrt with a fixed number of steps (0.001)."""
+        a, y = f"#sq.a {OBJ}", f"#sq.y {OBJ}"
+        if f"{DIR}/sqrt.mcfunction" not in self.files:
+            outer, self.lines = self.lines, []
+            try:
+                self.emit(f"scoreboard players set {y} 0")
+                self.emit(f"execute if score {a} matches ..0 run return 0")
+                self.emit(f"scoreboard players operation {y} = {a}")
+                self.emit(f"scoreboard players operation {y} /= {self.const(2)}")
+                self.emit(f"scoreboard players add {y} {SCALE // 2}")
+                for _ in range(SQRT_STEPS):             # y = (y + a / y) / 2
+                    q = self.fdiv(Fx(a), Fx(y))
+                    self.emit(f"scoreboard players operation {y} += {q}")
+                    self.emit(f"scoreboard players operation {y} /= {self.const(2)}")
+                self.files[f"{DIR}/sqrt.mcfunction"] = "\n".join(self.lines) + "\n"
+            finally:
+                self.lines = outer
+        self.emit(f"scoreboard players operation {a} = {x}")
+        self.emit("function aoe2mc:xs/sqrt")
+        return self.copy(Fx(y))
 
     def const(self, n):
         self.emit(f"scoreboard players set #c{n} {OBJ} {n}")
@@ -276,7 +505,7 @@ class Compiler:
         for i, (_, p, default) in enumerate(params):
             h = f"#l.{name}.{p} {OBJ}"
             if i < len(vals):
-                self.emit(f"scoreboard players operation {h} = {vals[i]}")
+                self.emit(f"scoreboard players operation {h} = {self.to_i(vals[i])}")
             elif default is not None:
                 self.emit(f"scoreboard players operation {h} = {self.expr(default)}")
             else:
@@ -338,6 +567,8 @@ class Compiler:
 
         def run():
             c = self.expr(cond)
+            if isinstance(c, tuple):
+                raise Skip("vector")
             self.emit(f"execute if score {c} matches 0 run return 0")
             self.emit(f"function {self.body(body, local, 1)}")
             if self.fn:
@@ -388,7 +619,7 @@ class Compiler:
             if self.fn is None:
                 raise Skip("return")
             if node[1] is not None:
-                v = self.expr(node[1])
+                v = self.to_i(self.expr(node[1]))
                 self.emit(f"scoreboard players operation #r.{self.fn} {OBJ} = {v}")
             self.emit(f"scoreboard players set #ret {OBJ} 1")
             self.emit("return 0")
@@ -411,6 +642,15 @@ class Compiler:
         finally:
             self.fn, self.lines, self.ints, self.consts = None, outer, ints, consts
 
+    def init(self, h, value, done=False):
+        """Set the new holder h to value (a tree node, or with done a holder), else to 0."""
+        v = value if done or value is None else self.expr(value)
+        if v is None:
+            for t in h if isinstance(h, tuple) else [h]:
+                self.emit(f"scoreboard players set {t} 0")
+        else:
+            self.store(h, v)
+
     def stmt(self, node, local):
         kind = node[0]
         if kind == "block":
@@ -421,26 +661,25 @@ class Compiler:
         try:
             if kind == "var":
                 _, typ, name, value, mods = node
-                if typ not in NUMBERS:
+                if typ not in NUMBERS + ("float", "vector"):
                     raise Skip(typ)
                 if "const" in mods and value is not None:
                     self.consts[name] = value
                     return
                 if "static" in mods and self.fn:  # set once: a flag holder marks the first run
-                    h = f"#s.{self.fn}.{name} {OBJ}"
+                    h = make(typ, f"#s.{self.fn}.{name}")
 
                     def init():
-                        v = self.expr(value) if value is not None else None
-                        self.emit(f"scoreboard players operation {h} = {v}" if v else f"scoreboard players set {h} 0")
+                        self.init(h, value)
                         self.emit(f"scoreboard players set #s.{self.fn}.{name}.i {OBJ} 1")
                     sub = self.sub(init)
                     self.ints[name] = h
                     self.emit(f"execute unless score #s.{self.fn}.{name}.i {OBJ} matches 1 run function {sub}")
                     return
-                h = f"#{local}.{name} {OBJ}"
-                v = self.expr(value) if value is not None else None
+                h = make(typ, f"#{local}.{name}")
+                v = self.fit(h, self.expr(value)) if value is not None else None
                 self.ints[name] = h
-                self.emit(f"scoreboard players operation {h} = {v}" if v else f"scoreboard players set {h} 0")
+                self.init(h, v, done=True)
             elif kind == "expr":
                 self.expr(node[1])
             else:
@@ -475,6 +714,25 @@ def cycles(graph):
                 seen.add(n)
                 todo.extend(graph[n])
     return out
+
+
+def make(typ, base):
+    """The holder of a new variable of the type typ: a vector has three float holders .x .y .z."""
+    if typ == "vector":
+        return tuple(Fx(f"{base}.{c} {OBJ}") for c in "xyz")
+    return Fx(f"{base} {OBJ}") if typ == "float" else f"{base} {OBJ}"
+
+
+def typed(h):
+    return isinstance(h, (Fx, tuple))
+
+
+def number(node):
+    """The int of a literal int, also with a minus (pow(x, -2)), else None."""
+    if node[:2] == ("unary", "-"):
+        n = number(node[2])
+        return None if n is None else -n
+    return node[1] if literal(node) else None
 
 
 def literal(node):
