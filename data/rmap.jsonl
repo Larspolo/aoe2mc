@@ -178,3 +178,6 @@
 {"name": "KING", "object": 434}
 {"name": "MONUMENT", "object": 826}
 {"name": "TERRAIN_SHALLOWS", "terrain": 4}
+{"name": "DLC_PIG", "const": 1245}
+{"name": "DLC_TIGER", "const": 1137}
+{"name": "DLC_GOAT", "const": 1060}
