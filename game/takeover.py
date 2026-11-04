@@ -111,7 +111,7 @@ def queues(r, p, t):
 
 def player(r, p, t=0):
     """The state of player p of the Replay r at game time t (ms) (savegame.dump form of one player), with the orders
-    of its units (#5453)."""
+    of its units (#5453) and the amounts left on the map of the replay: a carcass is only there (#5699)."""
     us = live_units(r, p)
     ids = {v.uuid: i for i, v in r.units.items()}
     progress = building(r, t)
@@ -127,6 +127,7 @@ def player(r, p, t=0):
                                      "tile": [math.floor(pos[0]) / T, math.floor(pos[2]) / T]}
                                     for u, (n, pos) in walkers.items()]),
             "villagers": jobs(r, p, t, walkers),
+            "map": {f: savegame.pack(getattr(r.map, f)) for f in savegame.MAP},   # the carcasses of the hunts (#5699)
             **({"explored": savegame.runs(tiles)} if (tiles := explored(r, p)) else {}),
             "farmers": [], "groups": {}, "ships": {},
             "stances": {u: s for u, i in sorted(ids.items()) if u in us and (s := r.stances.get(i, "aggressive"))
