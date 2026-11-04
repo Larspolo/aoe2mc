@@ -10,7 +10,7 @@ import units
 
 KEYS = {"animals.jsonl": ({"keys", "behavior", "mob"}, {"tags", "note"}),
         "aoe2_langs.jsonl": ({"name", "code"}, set()),
-        "achievements.jsonl": ({"name", "title", "description", "icon", "parent", "event"}, {"ages", "buildings", "by", "civ", "killed", "mode", "need", "units", "villagers"}),
+        "achievements.jsonl": ({"name", "title", "description", "icon", "parent", "event"}, {"age", "ages", "buildings", "by", "civ", "gather", "killed", "mode", "need", "units", "villagers"}),
         "carriers.jsonl": ({"name", "garrison"}, set()),
         "tech_names.jsonl": ({"tech", "name"}, set()),
         "trigger_conditions.jsonl": ({"name", "text"}, set()),

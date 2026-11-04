@@ -752,6 +752,8 @@ def folwark(g, farm, tile):
         food = int(g.map.farms[tile] * FOLWARK_SHARE + 0.5)            # 18 of 175, 55 of 550 (the wiki table)
         g.map.farms[tile] -= food
         g.earn("food", food)
+        import achievements  # achievements -> build (gathered)
+        achievements.gathered(g, "FOLWARK", food)
 
 
 def design(g, name, player):

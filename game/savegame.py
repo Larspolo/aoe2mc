@@ -34,6 +34,7 @@ OPTIONAL = ("auto", "auto_by",                                         # the aut
             "free_trained",                                            # the free units of a castle: Cuman Mercenaries (#4330)
             "risers",                                                  # the units that rise where a Konnik died: train.fell (#4471)
             "build_counts",                                            # achievements.built (#5642)
+            "gather_counts",                                           # achievements.gathered (#5643)
             "train_counts",                                            # the count achievements: achievements.trained (#5280)
             "limit_left", "policy", "rates", "relic_timer", "reseeds", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)

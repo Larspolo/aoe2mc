@@ -1247,6 +1247,7 @@ class Gather:
             x, _, z = self.seen.get(v.prey, v.pos)
             tile = int(x // self.map.T), int(z // self.map.T)
             name = self.prey.pop(v.prey)
+            achievements.gathered(self, name)
             if hunt_food(name):                                        # a predator leaves no food (#2310)
                 self.dead[v.prey] = tile
                 self.map.carcasses[tile] = self.map.carcasses.get(tile, 0) + hunt_food(name)
