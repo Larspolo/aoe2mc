@@ -1,5 +1,8 @@
 """XS script -> datapack functions (#5689, option B of #5120, docs/research/xs.md "XS as datapack functions").
 
+Step 4: the rules and the rule functions (#5692): `#now` counts the ticks; a rule R runs from its tick line when
+`#on.R` is 1 and `#now` >= `#due.R`, then `#due.R` = `#now` + `#min.R` (ticks). Minecraft feature: the tick function and
+scoreboards (no `schedule`: the world saves the scores).
 Step 3: XS functions as `xs/f/<F>` with parameters `#l.F.<name>`, `static` locals `#s.F.<name>` and the return
 value `#r.F`; `return` sets `#ret` and leaves (Minecraft feature: the `return` command, #5691). Recursion has no
 datapack form (shared holders, no stack): the functions of a cycle give one warning line.
@@ -24,6 +27,11 @@ STORE = "aoe2mc:xs"
 MOUNT = "aoe2mc.mount"      # units.MOUNT: the horse of a unit does not count (as aoe2mc.area_selector)
 # A computed player or type: a macro function puts them into the selector (Minecraft feature: macro functions).
 COUNT = f"$return run execute if entity @e[tag=aoe2mc.p$(p),tag=aoe2mc.t$(id),tag=!{MOUNT}]"
+NOW = f"#now {OBJ}"
+TICKS = 20
+RULE_CALLS = ("xsDisableRule", "xsEnableRule", "xsIsRuleEnabled", "xsSetRuleMaxInterval", "xsSetRuleMinInterval")
+GROUP_CALLS = ("xsDisableRuleGroup", "xsEnableRuleGroup", "xsIsRuleGroupEnabled")
+SELF_CALLS = ("xsDisableSelf", "xsSetRuleMaxIntervalSelf", "xsSetRuleMinIntervalSelf")
 COMPARE = {"<": "<", "<=": "<=", ">": ">", ">=": ">=", "==": "="}
 
 
@@ -36,6 +44,7 @@ class Compiler:
         self.text, self.k, self.ints, self.warnings, self.lines = text or "", 0, {}, [], []
         self.civs, self.files = civs or {}, {}
         self.b, self.loops, self.breaks = 0, 0, 0    # sub-functions; loops and loops or switches around the code
+        self.rules, self.current = {}, None          # {name: options}; the rule of the code
         self.consts, self.funcs, self.fn = {}, {}, None  # const values; compiled XS functions; current function
 
     def warn(self, part):
@@ -165,6 +174,13 @@ class Compiler:
                 parts = [before, {"score": {"name": h, "objective": o}}, after]
             self.emit("tellraw @a " + json.dumps([""] + [p for p in parts if p != ""]))
             return None
+        if name in RULE_CALLS + GROUP_CALLS + SELF_CALLS:
+            return self.rule_call(name, args)
+        if name in ("xsGetTime", "xsGetGameTime") and not args:
+            t = self.copy(NOW)
+            self.emit(f"scoreboard players operation {t} {'*=' if name == 'xsGetTime' else '/='} "
+                      f"{self.const(1000 // TICKS if name == 'xsGetTime' else TICKS)}")
+            return t
         if name in ("xsGetObjectCount", "xsGetObjectCountTotal") and len(args) == 2:
             return self.count(*args)
         if name == "xsGetPlayerCivilization" and len(args) == 1 and literal(args[0]):
@@ -172,6 +188,84 @@ class Compiler:
             self.emit(f"scoreboard players set {t} {civ_id(self.civs.get(args[0][1]))}")
             return t
         raise Skip(name)
+
+    def const(self, n):
+        self.emit(f"scoreboard players set #c{n} {OBJ} {n}")
+        return f"#c{n} {OBJ}"
+
+    def rule_call(self, name, args):
+        """The rule functions with a literal rule or group name (a computed name: a warning)."""
+        self_ = name.endswith("Self")
+        if self_:
+            if self.current is None:
+                raise Skip(name)
+            rules = [self.current]
+        else:
+            if not args or args[0][0] != "str":
+                raise Skip(name)
+            key, args = args[0][1], args[1:]
+            rules = ([n for n, o in self.rules.items() if o.get("group") == key] if name in GROUP_CALLS
+                     else [key] if key in self.rules else None)
+            if rules is None:
+                raise Skip(name)
+        base = name.removesuffix("Self").replace("RuleGroup", "Rule")
+        if base == "xsIsRuleEnabled":
+            t = self.temp()
+            self.emit(f"scoreboard players set {t} 0")
+            for r in rules:
+                self.emit(f"execute if score #on.{r} {OBJ} matches 1 run scoreboard players set {t} 1")
+            return t
+        if base in ("xsSetRuleMinInterval", "xsSetRuleMaxInterval"):
+            if len(args) != 1:
+                raise Skip(name)
+            v = self.copy(self.expr(args[0]))
+            self.emit(f"scoreboard players operation {v} *= {self.const(TICKS)}")
+            for r in rules:
+                self.emit(f"scoreboard players operation #{'mi' if 'Min' in base else 'ma'}.{r} {OBJ} = {v}")
+                self.interval(r)
+            return None
+        if args:
+            raise Skip(name)
+        for r in rules:
+            if base == "xsEnableRule":
+                self.emit(f"execute unless score #on.{r} {OBJ} matches 1 run scoreboard players operation #due.{r} {OBJ} = {NOW}")
+                if not self.rules[r].get("runImmediately"):
+                    self.emit(f"execute unless score #on.{r} {OBJ} matches 1 run "
+                              f"scoreboard players operation #due.{r} {OBJ} += #min.{r} {OBJ}")
+            self.emit(f"scoreboard players set #on.{r} {OBJ} {int(base == 'xsEnableRule')}")
+        return None
+
+    def interval(self, r):
+        """#min.R = min(minInterval, maxInterval) in ticks."""
+        self.emit(f"scoreboard players operation #min.{r} {OBJ} = #mi.{r} {OBJ}")
+        self.emit(f"scoreboard players operation #min.{r} {OBJ} < #ma.{r} {OBJ}")
+
+    def rule(self, node):
+        """The function xs/r/<name> of a rule and its tick line."""
+        _, name, opts, block = node
+        self.current, outer, self.lines = name, self.lines, []
+        try:
+            if not opts.get("highFrequency"):
+                self.emit(f"scoreboard players operation #due.{name} {OBJ} = {NOW}")
+                self.emit(f"scoreboard players operation #due.{name} {OBJ} += #min.{name} {OBJ}")
+            self.stmt(block, f"r.{name}")
+            self.files[f"{DIR}/r/{name}.mcfunction"] = "\n".join(self.lines) + "\n"
+        finally:
+            self.lines, self.current = outer, None
+        due = "" if opts.get("highFrequency") else f" if score {NOW} >= #due.{name} {OBJ}"
+        return f"execute if score #on.{name} {OBJ} matches 1{due} run function aoe2mc:xs/r/{name}"
+
+    def start(self):
+        """The rule scores at the start (before main())."""
+        for name, o in self.rules.items():
+            self.emit(f"scoreboard players set #on.{name} {OBJ} {int(not o.get('inactive'))}")
+            self.emit(f"scoreboard players set #mi.{name} {OBJ} {round(o.get('minInterval', 1) * TICKS)}")
+            mx = o.get("maxInterval")
+            self.emit(f"scoreboard players set #ma.{name} {OBJ} {2**31 - 1 if mx is None else round(mx * TICKS)}")
+            self.interval(name)
+            self.emit(f"scoreboard players operation #due.{name} {OBJ} = {NOW}")
+            if not o.get("runImmediately"):
+                self.emit(f"scoreboard players operation #due.{name} {OBJ} += #min.{name} {OBJ}")
 
     def xs_call(self, name, args):
         """A call of an XS function: the arguments into its parameters, then the function (no stack: no recursion)."""
@@ -409,6 +503,8 @@ def compile(tree, text=None, civs=None):
     civs: {player: civilization key} of the converted map (xsGetPlayerCivilization)."""
     c = Compiler(text, civs)
     main = None
+    rules = [n for n in tree if n[0] == "rule" and re.fullmatch(r"[A-Za-z0-9_]+", n[1])]
+    c.rules = {n[1]: n[2] for n in rules}
     funcs = {n[2]: n for n in tree if n[0] == "func" and n[2] != "main"}
     bad = cycles({k: calls(f[4]) for k, f in funcs.items()})
     for name, f in funcs.items():
@@ -424,10 +520,15 @@ def compile(tree, text=None, civs=None):
         elif node[0] == "func":
             c.warn(node[2])
         elif node[0] == "rule":
-            c.warn(node[1])
+            if node[1] not in c.rules:
+                c.warn(node[1])
         else:
             c.warn(node[0])
+    c.start()
     if main is not None:
         c.stmt(main[4], "l.main")
     c.emit(f"scoreboard players set #main {OBJ} 1")
-    return {f"{DIR}/main.mcfunction": "\n".join(c.lines) + "\n"} | c.files, [TICK], list(LOAD), c.warnings
+    lines, c.lines = c.lines, []
+    order = sorted(range(len(rules)), key=lambda i: (-rules[i][2].get("priority", 0), i))
+    tick = [TICK] + [c.rule(rules[i]) for i in order] + [f"scoreboard players add {NOW} 1"]
+    return {f"{DIR}/main.mcfunction": "\n".join(lines) + "\n"} | c.files, tick, list(LOAD), c.warnings
