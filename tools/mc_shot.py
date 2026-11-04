@@ -25,6 +25,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import uuid
 import zipfile
@@ -380,6 +381,25 @@ def view_spec(v):
     return x, y, z, yaw, pitch
 
 
+def beat(ticket, every=600, call=None):
+    """Beat the claim of ticket N in a daemon thread while a long check runs (#5783): a check can take more than the
+    30 minutes of `claim.py --stale`, and another run took the ticket over and did the same check. Returns a stop Event."""
+    stop = threading.Event()
+    call = call or (lambda n: subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "framework", "tools", "claim.py"),
+                                              str(n), "--beat"], capture_output=True))
+
+    def loop():
+        while True:
+            try:
+                call(ticket)
+            except Exception as e:                                     # a failed beat must not stop the check
+                print(f"beat failed: {e}", file=sys.stderr)
+            if stop.wait(every):
+                return
+    threading.Thread(target=loop, daemon=True).start()
+    return stop
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("world")
@@ -394,7 +414,10 @@ def main(argv=None):
     ap.add_argument("--timeout", type=float, default=240, help="seconds until the last view (default 240)")
     ap.add_argument("--player", action="store_true",
                     help="adventure mode, not spectator: a spectator sees invisible mobs (with hand and hotbar)")
+    ap.add_argument("--beat", type=int, metavar="N", help="beat the claim of ticket N every 10 minutes (#5783)")
     a = ap.parse_args(argv)
+    if a.beat:
+        beat(a.beat)
     _, (spawn, yaw) = world_version(a.world)
     x, y, z = a.at or (spawn[0] + 0.5, spawn[1] + 2, spawn[2] + 0.5)
     shoot(a.world, a.out, [(x, y, z, *(a.look or (yaw, 20)))] + a.more, a.version, settle=a.settle, timeout=a.timeout,
