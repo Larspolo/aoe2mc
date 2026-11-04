@@ -6,7 +6,7 @@ Usage: python3 tools/dat_compare.py [PATH/empires2_x2_p1.dat] [--write DIR [--ba
 Prints one line for each difference ("NAME key: data value, game value"). Exit 0: no difference, 1: differences,
 2: no .dat or no genieutils-py. With --write DIR, PATH is the .dat of a data mod: the tool writes the unit values of
 the mod that differ from the base game (BASE.dat, default the installed game) as data mod lines (DIR/units.jsonl ...,
-epic #5352, #5354) and prints their count. The rules of the compare: tickets #5245 and #5297 (epic #5236). When the .dat and
+epic #5352, #5354; the costs and times: DIR/train.jsonl, DIR/build.jsonl, #5355) and prints their count. The rules of the compare: tickets #5245 and #5297 (epic #5236). When the .dat and
 the AoE2 wiki do not agree, the .dat wins (docs/research/gameplay.md).
 """
 import copy
@@ -296,14 +296,53 @@ def mod_values(name, data, base, mod, uid):
     return out
 
 
-def write(base, mod, units, tables, folder):
-    """Write the data mod lines of the mod .dat into folder (#5354): one file for each unit file of tables (also
-    with no line, so an older line goes), one line per changed name with only its changed keys. Returns the count."""
+def priced(dat, f, r, units, techs, civs):
+    """The cost and the times (each variant, rule 2 and 7) of a line r of train.jsonl or build.jsonl in dat, by the
+    routes of compare(); None: no such unit or technology."""
+    n, own = r["name"], line_civs(r, civs)
+    uid = SAME_AS.get(n, units.get(n))
+    if f == "build.jsonl" or not ("effect" in r or r.get("item") == "book"):
+        i = None if uid is None else placed(dat, uid) if f == "build.jsonl" else uid
+        u = None if i is None else base_unit(dat, i)
+        if u is None or not u.creatable:
+            return None
+        return cost(u.creatable.resource_costs), [train_time(v) for v in variants(dat, u, own)]
+    if n not in techs or techs[n] >= len(dat.techs):
+        return None
+    t = dat.techs[techs[n]]
+    locs = getattr(t, "research_locations", None) or []
+    return cost(t.resource_costs), [locs[0].research_time if locs else None]
+
+
+def mod_costs(name, data, old, new):
+    """The keys cost and time of one line of train.jsonl or build.jsonl that the mod .dat changes (#5355): the whole
+    cost object; the mod time of the variant whose base time is the data time (compare_cost: whole seconds)."""
+    out = {}
+    if old and new and "cost" in data and (name, "cost") not in ACCEPTED and data["cost"] == old[0] != new[0]:
+        out["cost"] = new[0]
+    if old and new and "time" in data and (name, "time") not in ACCEPTED:
+        k = next((i for i, t in enumerate(old[1]) if t is not None and same(data["time"], t, 0.5)), None)
+        t = new[1][k] if k is not None and k < len(new[1]) else None
+        if t is not None and not same(data["time"], t, 0.5):
+            out["time"] = round(t)
+    return out
+
+
+def write(base, mod, units, tables, folder, techs=None, civs=None):
+    """Write the data mod lines of the mod .dat into folder (#5354, #5355): one file for each unit, train and build
+    file (also with no line, so an older line goes), one line per changed name with only its changed keys. techs:
+    {name: tech ID}; civs: {civilization key: .dat index} (rule 7). Returns the count."""
     os.makedirs(folder, exist_ok=True)
     count = 0
-    for f in ("units.jsonl", "buildings.jsonl", "replay.jsonl"):
+    for f in ("units.jsonl", "buildings.jsonl", "replay.jsonl", "train.jsonl", "build.jsonl"):
         lines = []
         for r in tables.get(f, ()):
+            if f in ("train.jsonl", "build.jsonl"):
+                d = mod_costs(r["name"], r, priced(base, f, r, units, techs or {}, civs),
+                              priced(mod, f, r, units, techs or {}, civs))
+                if d:
+                    lines.append(json.dumps({"name": r["name"], **d}, ensure_ascii=False))
+                continue
             i = SAME_AS.get(r["name"], units.get(r["name"]))
             d = {} if i is None else mod_values(r["name"], {"walk": r["walk"]} if "walk" in r else r, base, mod, i)
             if d:
@@ -361,7 +400,8 @@ def main(argv=None):
                                                    "replay.jsonl")}
     tables["AOE2_WORK"] = AOE2_WORK
     if "--write" in opt:
-        n = write(DatFile.parse(base), DatFile.parse(path), units, tables, opt["--write"])
+        n = write(DatFile.parse(base), DatFile.parse(path), units, tables, opt["--write"], techs,
+                  civ_ids())
         print(f"{n} data mod lines in {opt['--write']}")
         return 0
     lines = compare(DatFile.parse(path), units, techs, tables, civ_ids())
