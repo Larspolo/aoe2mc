@@ -71,6 +71,17 @@ def found(g):
     return out
 
 
+def countdown(g, n, left):
+    """The wonder of player n fell with left years of its countdown: the event "destroy WONDER" of each enemy (#5644)."""
+    import achievements
+    from conquest import main
+    from fog import gathers
+    from gather import allied
+    for h in gathers(main(g)):
+        if not allied(g.players, n, h.player):
+            achievements.event(g, h, "destroy WONDER", left)
+
+
 def close(g):
     """Remove the boss bars of all players: the game ended (cheats.end), no countdown goes on (#1178)."""
     for n in vars(g).pop("wonder_shown", {}):
@@ -89,8 +100,10 @@ def tick(g, dt):
     if g.clock() >= vars(g).get("wonder_at", 0.0):                     # not each tick: one command per wonder
         g.wonder_at = g.clock() + EVERY
         for uuid in [u for u in timers if "passed" not in g.command(f"execute if entity {u}")]:
-            n = timers.pop(uuid)["player"]
+            t = timers.pop(uuid)
+            n = t["player"]
             gone.add(uuid)
+            countdown(g, n, t["left"] / YEAR)
             g.command("tellraw @a " + json.dumps(lang.text("aoe2mc.wonder.destroyed", n, color="red")))
             if not any(t["player"] == n for t in timers.values()):
                 g.command(f"bossbar remove {bar(n)}")
