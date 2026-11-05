@@ -291,10 +291,52 @@ def host(g):
     def task_amount(field=-1, value=-1.0):
         task[int(field)] = float(value)
 
+    ctx = [None]                                                       # xsSetContextPlayer; None: the first AI script
+
+    def script():
+        """The AI script (per.Script) of the context player: the XS functions of the AI act on it (#5846)."""
+        bots = [b for b in getattr(g, "bots", ()) if getattr(b, "script", None)]
+        b = next((b for b in bots if ctx[0] is None or b.g.player == ctx[0]), None)
+        if b is None:
+            warn("AI script of player", ctx[0])
+        return b and b.script
+
+    def get(what, n, default=0):
+        if (s := script()) is None:
+            return default
+        if what == "goal":
+            return int(s.goals.get(int(n), 0 if 1 <= int(n) <= 512 else -1))
+        if what == "sn":
+            import per
+            if (name := per.SN_IDS.get(int(n))) is None:
+                return warn("strategic number", n) or default
+            return int(s.number(name))
+        return s.table(what).get(int(n), 0)                            # "signal"; "event": the AI script goal
+
+    def put(what, n, value):
+        if (s := script()) is None:
+            return
+        if what == "goal":
+            s.goals[int(n)] = int(value)
+        elif what == "sn":
+            import per
+            if (name := per.SN_IDS.get(int(n))) is None:
+                return warn("strategic number", n)
+            s.sn[name] = int(value)
+        else:
+            s.table(what)[int(n)] = int(value)
+
+    def set_context(player):
+        ctx[0] = int(player)
+
     return {"xsDoesUnitExist": lambda uid: any(i == int(uid) for i, *_ in objects(g)),
             "xsEffectAmount": effect,
+            "xsGetAiScriptGoal": lambda n=-1: bool(get("event", n)),
+            "xsGetAiSignal": lambda n=-1, legacy=False: get("signal", n),
+            "xsGetContextPlayer": lambda: -1 if ctx[0] is None else ctx[0],
             "xsGetDamageClassName": enum_name("DamageClass"),
             "xsGetGameTime": lambda: int(recap.game_time(g)),
+            "xsGetGoal": lambda n=-1: get("goal", n, -1),
             "xsGetObjectAttribute": object_attribute,
             "xsGetObjectAttributeName": enum_name("ObjectAttribute"),
             "xsGetObjectClass": object_class,
@@ -306,6 +348,7 @@ def host(g):
             "xsGetPlayerCivilization": civilization,
             "xsGetPlayerNumberOfObjects": lambda player: sum(x is side(player) for _, x, _, _ in objects(g)),
             "xsGetPlayerNumberOfTechs": techs,
+            "xsGetStrategicNumber": lambda n=-1: get("sn", n, -1),
             "xsGetTaskAmount": lambda field=-1: task.get(int(field), 0.0),
             "xsGetTechName": tech_name,
             "xsGetTechState": tech_state,
@@ -323,7 +366,12 @@ def host(g):
             "xsPlayerAttribute": attribute,
             "xsResearchTechnology": research_tech,
             "xsResetTaskAmount": task.clear,
+            "xsSetAiScriptGoal": lambda n=-1, v=False: put("event", n, bool(v)) or True,
+            "xsSetAiSignal": lambda n=-1, v=-1, legacy=False: put("signal", n, v),
+            "xsSetContextPlayer": set_context,
+            "xsSetGoal": lambda n=-1, v=-1: put("goal", n, v),
             "xsSetPlayerAttribute": set_attribute,
+            "xsSetStrategicNumber": lambda n=-1, v=-1: put("sn", n, v),
             "xsSetTechName": set_tech_name,
             "xsSetTriggerVariable": set_variable,
             "xsTaskAmount": task_amount,
