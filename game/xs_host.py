@@ -591,6 +591,113 @@ def host(g):
         import record
         return object_type(-1, record.types().get(u[2], -1)) if (u := unit(uid)) else -1
 
+    def rect_any(x, key):
+        """The rect (x0, x1, z0, z1) of the building key of side x: its garrisons, rally points, sites or start data."""
+        rects = [*getattr(x, "garrisons", {}), *getattr(x, "rally", {}), *(tuple(s["footprint"]) for s in x.sites)]
+        rects += [(f[0], f[2], f[1], f[3]) for o in x.data.get("objects", ()) if (f := o.get("footprint"))]
+        return next((r for r in rects if rect_key(r) == key), None)
+
+    def block(x, loc):
+        """The block position (x, y, z) of the tile vector loc (the middle of the tile, on the ground)."""
+        bx, bz = int(loc[0] * x.map.T), int(loc[1] * x.map.T)
+        return bx + 0.5, float(x.map.y(bx, bz)), bz + 0.5
+
+    def create(o=-1, player=-1, loc=(-1.0, -1.0, -1.0), foundation=False, sound=False, collision=False):
+        """As "Create Object" (train.summon; a building: scenario.foundation, complete without foundation). The id of
+        the new object, or -1."""
+        import scenario
+        x, name = kind(player, o)
+        if not (x and name) or loc[0] < 0 or loc[1] < 0:
+            return -1
+        before = {i for i, *_ in objects(g)}
+        if aoe2mc.object_kinds()[int(o)][0] == "B":
+            scenario.foundation(g, x.player, name, (int(loc[0]), int(loc[1])), done=not foundation)
+        elif train.summon(x, name, block(x, loc)) is None:
+            return -1
+        return max({i for i, *_ in objects(g)} - before, default=-1)
+
+    def unit_do(f):
+        """f(Gather, key, name) for the unit id, True; False for an unknown id (one warning)."""
+        def call(uid=-1, *a):
+            if (u := unit(uid)) is None:
+                return False
+            return f(*u, *a) is not False
+        return call
+
+    def remove(x, key, name):
+        if key in getattr(x, "forts", ()):                             # a building is blocks: no kill
+            return warn("removal of building", key) or False
+        x.command(f"kill {key}")                                       # the Gather drops a dead unit
+
+    def set_hp(x, key, name, value=-1.0):
+        if key in getattr(x, "forts", ()):
+            x.command(f"scoreboard players set {key} aoe_hp {max(int(value), 0)}")
+        else:
+            x.command(f"data modify entity {key} Health set value {max(float(value), 0.0)}f")
+
+    def set_owner(x, key, name, player=-1, flash=False):
+        import owners  # owners imports gather: import it late
+        if row(player) is None or key in getattr(x, "forts", ()):
+            return False
+        owners.give(g, key, int(player))
+        x.command(f"team join p{int(player)} {key}")                   # the team color (as "Change Ownership")
+
+    def set_position(x, key, name, loc=(-1.0, -1.0, -1.0), collision=False):
+        if key in getattr(x, "forts", ()) or loc[0] < 0:
+            return False
+        x.command("tp {} {} {} {}".format(key, *block(x, loc)))
+
+    def name_unit(x, key, name, text=""):
+        x.command(f"data modify entity {key} CustomName set value " + json.dumps(str(text)))
+
+    def flash(x, key, name, player=-1, sound=-1):
+        x.command(f"effect give {key} minecraft:glowing 2 0 true")     # the Minecraft outline as the AoE2 flash
+
+    def stop(x, key, name):
+        import ai
+        if (p := x.positions([key]).get(key)) is None:
+            return False
+        ai.move(x, key, name, x.map.T, *p)                             # a walk to its own place ends its order
+
+    def set_held(x, key, name, value=-1.0, a=-1):
+        v = x.villagers.get(key)
+        if v is None or not 0 <= int(a) < len(aoe2mc.STORES):
+            return False
+        v.res, v.load = aoe2mc.STORES[int(a)], max(int(value), 0)
+
+    def set_build_points(x, key, name, value=-1.0):
+        site = next((s for s in x.sites if rect_key(s["footprint"]) == key), None)
+        if site is None:
+            return False
+        site["progress"] = min(max(float(value), 0.0), 1.0)
+
+    def set_gather_point(x, key, name, loc=(-1.0, -1.0, -1.0), target=-1):
+        if (rect := rect_any(x, key)) is None or loc[0] < 0:
+            return False
+        train.rally(x, rect, (int(loc[0] * x.map.T), int(loc[1] * x.map.T)))
+
+    def task_units(uid=-1, action=-1, loc=(-1.0, -1.0, -1.0), target=-1, *more):
+        """A move to loc, or an attack of the unit target (as "Task Object": `aoe moveto`, `aoe attack`)."""
+        import ai
+        if (u := unit(uid)) is None:
+            return False
+        x, key, name = u
+        if int(target) >= 0:
+            t = unit(target)
+            return bool(t) and bool(ai.attack(x, [key], [name], x.map.T, t[1]) or True)
+        if loc[0] < 0:
+            return False
+        ai.move(x, key, name, x.map.T, *block(x, loc))
+        return True
+
+    def train_object(building=-1, o=-1, n=-1):
+        """Queue n units o at the building (train.queue, with its cost, as a click of the player)."""
+        u, name = unit(building), object_key(o)
+        rect = u and rect_any(u[0], u[1])
+        if not (rect and name):
+            return False
+        return sum(bool(train.queue(u[0], u[0].player, (rect[0], rect[2]), name)) for _ in range(max(int(n), 1))) > 0
+
     task = {}
 
     def task_amount(field=-1, value=-1.0):
@@ -634,9 +741,10 @@ def host(g):
     def set_context(player):
         ctx[0] = int(player)
 
-    return {**files(g, warn), "xsDeclareVictory": declare_victory,
+    return {**files(g, warn), "xsCreateUnit": create, "xsDeclareVictory": declare_victory,
             "xsDoesUnitExist": lambda uid: any(i == int(uid) for i, *_ in objects(g)),
             "xsEffectAmount": effect,
+            "xsFlashUnit": unit_do(flash),
             "xsGetAiScriptGoal": lambda n=-1: bool(get("event", n)),
             "xsGetAiSignal": lambda n=-1, legacy=False: get("signal", n),
             "xsGetCivName": lambda civ, localized=False: civ_title(int(civ)),
@@ -708,6 +816,7 @@ def host(g):
             "xsIsObjectAvailable": available,
             "xsIsObjectValid": lambda oid, player=-1: int(oid) in aoe2mc.object_kinds(),
             "xsPlayerAttribute": attribute,
+            "xsRemoveUnit": unit_do(remove),
             "xsResearchTechnology": research_tech,
             "xsResetTaskAmount": task.clear,
             "xsSetAiScriptGoal": lambda n=-1, v=False: put("event", n, bool(v)) or True,
@@ -722,5 +831,16 @@ def host(g):
             "xsSetStrategicNumber": lambda n=-1, v=-1: put("sn", n, v),
             "xsSetTechName": set_tech_name,
             "xsSetTriggerVariable": set_variable,
+            "xsSetUnitAttributeHeld": unit_do(set_held),
+            "xsSetUnitBuildPoints": unit_do(set_build_points),
+            "xsSetUnitCaption": unit_do(name_unit),
+            "xsSetUnitGatherPoint": unit_do(set_gather_point),
+            "xsSetUnitHitpoints": unit_do(set_hp),
+            "xsSetUnitName": unit_do(name_unit),
+            "xsSetUnitOwner": unit_do(set_owner),
+            "xsSetUnitPosition": unit_do(set_position),
+            "xsStopUnit": unit_do(stop),
             "xsTaskAmount": task_amount,
+            "xsTaskUnits": task_units,
+            "xsTrainObject": train_object,
             "xsTriggerVariable": variable}
