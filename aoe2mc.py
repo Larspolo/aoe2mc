@@ -5416,8 +5416,8 @@ def research_list(triggers):
     """The "Research Technology" effects that trigger_files writes, for aoe2mc.json "research" (#2577): the score of
     the effect in aoe_tech (1: the trigger fired), its player and its technology (a name of game/data/train.jsonl). A
     converted world has no technologies: the scenario mode of the game program gives them (game/scenario.py)."""
-    found = "".join(trigger_files(triggers)[1].get(f"data/aoe2mc/function/trigger/{t['id']}.mcfunction", "")
-                    for t in triggers)
+    files = trigger_files(triggers)[1]                       # once: each call runs the whole fixed point (#5825)
+    found = "".join(files.get(f"data/aoe2mc/function/trigger/{t['id']}.mcfunction", "") for t in triggers)
     return [dict(score=f"#r{t['id']}.{i}", player=e["player"], technology=e["technology"])
             for t in triggers for i, e in enumerate(t["effects"]) if f"#r{t['id']}.{i} aoe_tech 1" in found]
 
