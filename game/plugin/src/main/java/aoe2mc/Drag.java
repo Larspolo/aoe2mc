@@ -44,8 +44,9 @@ final class Drag implements Listener {
 
     static final NamespacedKey REACH = new NamespacedKey("aoe2mc", "drag_reach");
     static final double RANGE = 64;                                  // blocks: the camera floor is 24 blocks up (camera.UP)
-    static final long GAP = 5;                                       // ticks without a swing: the button is up (the
-                                                                     // client swings each 3 ticks or less, a real drag)
+    static final long GAP = 3;                                       // ticks without a swing: the button is up (the
+                                                                     // client swings each 1 or 2 ticks in a real drag,
+                                                                     // #5865: 150 ms, the selection before 250 ms)
     static final long FIRST = 20;                                    // ticks: the client sends the second swing up to
                                                                      // 18 ticks after the press (real client, #5759)
     static final long MARKS = 2;                                     // ticks between the marks of the box (#5761)
