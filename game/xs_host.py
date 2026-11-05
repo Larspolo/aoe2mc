@@ -368,6 +368,19 @@ def host(g):
         import civs  # civs imports gather: import it late
         return civ_id(civs.real(g, player)) if side(player) else 0
 
+    def difficulty():
+        import bot  # bot imports gather: import it late
+        name = (getattr(getattr(g, "game", None), "settings", None) or {}).get("ai_difficulty", "standard")
+        return bot.LEVELS[name.split(",")[0]]["aoe2"]                       # the first bot (#4020)
+
+    def player_type(player=-1):
+        n = who(player)
+        if n == 0:
+            return 2                                                        # gaia
+        if any(b.g.player == n for b in getattr(g, "bots", ())):
+            return 3                                                        # computer
+        return 1 if n == g.player else -1                                  # human, else no such player
+
     def techs(player):
         return len(x.techs) if (x := side(player)) else 0
 
@@ -877,6 +890,7 @@ def host(g):
             "xsGetCivName": lambda civ, localized=False: civ_title(int(civ)),
             "xsGetContextPlayer": lambda: -1 if ctx[0] is None else ctx[0],
             "xsGetDamageClassName": enum_name("DamageClass"),
+            "xsGetDifficulty": difficulty,
             "xsGetDiplomacy": stance,
             "xsGetGarrisonedInUnitId": garrisoned_in,
             "xsGetGarrisonedUnitIds": garrisoned_ids,
@@ -904,6 +918,7 @@ def host(g):
             "xsGetPlayerName": lambda player=-1: (player_data(player) or {}).get("name", f"Player {who(player)}"),
             "xsGetPlayerNumberOfObjects": lambda player: sum(x is side(player) for _, x, _, _ in objects(g)),
             "xsGetPlayerNumberOfTechs": techs,
+            "xsGetPlayerType": player_type,
             "xsGetPlayerUnitIds": player_unit_ids,
             "xsGetRandomNumber": lambda: int(rng.integers(0, 32768)),
             "xsGetRandomNumberLH": lambda low, high: int(rng.integers(int(low), max(int(high), int(low) + 1))),
