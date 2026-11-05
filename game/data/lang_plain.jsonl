@@ -24,3 +24,5 @@
 {"name": "watch.Guide.answer", "note": "an owner replay tool"}
 {"name": "watch.say", "note": "an owner replay tool"}
 {"name": "replay_input.takeover_text", "note": "the names of the record players"}
+{"name": "xs_host.screen.instructions", "note": "the text of an XS script (xsDisplayInstructions)"}
+{"name": "xs_host.screen.send_chat", "note": "the text of an XS script (xsSendChat)"}

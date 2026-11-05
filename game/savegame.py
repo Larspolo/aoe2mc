@@ -284,6 +284,7 @@ NOT_SAVED = (                                                          # the fie
     "xs_cond_sent",                                                    # scenario.py conditions(): sent again after a load
     "xs_conds",                                                        # scenario.py conditions(): found again from aoe2mc.json "xs"
     "xs_skip",                                                         # scenario.py effects(): the effects with a syntax error, found again
+    "xs_timers",                                                       # xs_host.py: the XS timers (boss bars, #5844); a load has no timer
 )
 SKIP = ("session.lock",)                                               # the lock of the running server
 
