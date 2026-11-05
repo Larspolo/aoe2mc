@@ -12,6 +12,7 @@ def trigger(id, enabled, effects):
 
 
 def test_each_xs_warning_prints_once_over_several_passes(capsys):
+    aoe2mc.XS_WARNED.clear()                    # a new conversion (#5833)
     script = dict(type=aoe2mc.XS_EFFECT, message=XS, player=1, time=0, object=None, tile=[-1, -1], area=[-1] * 4)
     activate = dict(type=aoe2mc.ACTIVATE_TRIGGER, trigger=8, player=1, time=0, object=None, tile=[-1, -1], area=[-1] * 4)
     chat = dict(type=aoe2mc.SEND_CHAT, message="Hi", player=1, time=0, object=None, tile=[-1, -1], area=[-1] * 4)

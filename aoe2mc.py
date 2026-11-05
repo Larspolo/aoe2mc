@@ -5129,7 +5129,6 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     replay: a world of a record (#5158): a unit of a trigger that the live replay runs once has a fixed UUID (created_uuid)."""
     if live is None:
         live = {t["id"] for t in triggers}
-        XS_WARNED.clear()                                                  # a new conversion prints its warnings again (#5792)
         while any(e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER) for t in triggers for e in t["effects"]) and \
                 live != (made := {int(k.split("/")[-1].split(".")[0]) for k in
                                 trigger_files(triggers, T, ground, players, Counter(), mood, live)[1]
@@ -6435,6 +6434,7 @@ def convert(src, out, T=4, H=3, name=None, seed=1, preview=False, arch=None, pla
     MC = VERSIONS[mc_version]
     units.ASSETS = resource_pack
     PALETTE_CACHE.clear()   # the cached entries can have the block names of another version
+    XS_WARNED.clear()       # a new conversion prints its warnings again, once (#5792, #5833)
     try:
         _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units, barriers, spawn, birds, orientation,
                  verbose, garrison, border_design, ambience, at, mood, fog, resource_pack, nplayers, teams, map_size, game_mode, labels, together=together,

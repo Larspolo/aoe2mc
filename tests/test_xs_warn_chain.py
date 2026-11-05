@@ -10,6 +10,7 @@ def effect(type, **kw):
 
 
 def test_a_chain_of_triggers_prints_each_xs_warning_once(capsys):
+    aoe2mc.XS_WARNED.clear()                    # a new conversion (#5833)
     script = effect(aoe2mc.XS_EFFECT, message=XS)
     triggers = [trigger(i, i == 0, [script, effect(aoe2mc.ACTIVATE_TRIGGER, trigger=i + 1)]) for i in range(6)]
     triggers.append(trigger(6, False, [script, effect(aoe2mc.SEND_CHAT, message="Hi")]))
