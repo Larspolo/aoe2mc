@@ -678,6 +678,8 @@ class Script:
         if ref is None:
             return None
         ref = self.goal_number(ref)
+        if not all(isinstance(x, (int, float)) for x in (value, ref)):     # a text strategic number (#5823)
+            return self.warn("number", ref if isinstance(value, (int, float)) else value)
         sign = 1 if (value < 0) == (ref < 0) else -1                  # the sign of value / ref
         if rel == "=":
             return ref
@@ -757,9 +759,14 @@ class Script:
                 break
             rule = self.rules[k]
             self.jump = k + 1
-            if k not in self.off and all(self.check(f) for f in rule.facts):
-                for a in rule.actions:
-                    self.act(k, a)
+            try:                                                       # an unknown form costs the rule only (#5823)
+                if k not in self.off and all(self.check(f) for f in rule.facts):
+                    for a in rule.actions:
+                        self.act(k, a)
+            except (TypeError, ValueError, KeyError, IndexError, AttributeError, ZeroDivisionError) as e:
+                if ("rule error", k) not in self.warned:
+                    self.warned.add(("rule error", k))
+                    print(f"AI script {rule.file}:{rule.line}: error {e!r}: rule skipped", file=sys.stderr)
             k = self.jump
         self.last = dict(self.bot.g.stock)
 
