@@ -70,6 +70,8 @@ timed rules. Scoreboards hold 32-bit integers, `scoreboard players operation` ha
 | `xsGetObjectCountTotal` | As `xsGetObjectCount` | A vanilla world has no training queue and no construction site: the count of the done units |
 | `xsGetPlayerCivilization` | A constant: the converter knows the civilization of each player | — |
 | `xsPlayerAttribute`, `xsSetPlayerAttribute`, `xsEffectAmount`, `xsGetPlayerNumberOfTechs` | None: a vanilla world has no stock, no attributes and no technologies (`resource_lines()` only stores the changes for the game program) | The game program only |
+| `xsGetObjectAttribute`, `xsGetObjectClass`, `xsGetObjectType`, `xsGetObjectName`, `xsGetDamageClassName`, `xsGetObjectAttributeName`, `xsGetPlayerAttributeName`, `xsTaskAmount`, `xsGetTaskAmount`, `xsResetTaskAmount` (#5842) | None: a vanilla world has no unit kind data and no task list | The game program only (`game/xs_host.py`) |
+| `xsTask`, `xsRemoveTask`, `xsModifyObjectTasks`, `xsModifyUnitTasks`, `xsObjectTaskAmount`, `xsUnitTaskAmount`, `xsGetObjectTaskCount`, `xsObjectHasAction`, `xsGetObjectCopyId`, `xsSetObjectDescription` (#5842) | None: the game program has no task list and no description of a unit kind (mob AI does the tasks) | No form: the warning line |
 | The rest of the game functions of the guide | A function that reads entities (a unit, a position) can get a selector in a later ticket | Until then: the game program only |
 | `abs`, `floor`, `ceil`, `round`, `xsCeilToInt` | Score operations on the fixed point value | — |
 | `sqrt`, `xsVectorLength`, `xsVectorNormalize`, `dist` | An integer square root by Newton steps (a fixed number of lines) | 0.001 |
