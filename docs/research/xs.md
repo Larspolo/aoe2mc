@@ -70,6 +70,8 @@ timed rules. Scoreboards hold 32-bit integers, `scoreboard players operation` ha
 | `xsGetObjectCountTotal` | As `xsGetObjectCount` | A vanilla world has no training queue and no construction site: the count of the done units |
 | `xsGetPlayerCivilization` | A constant: the converter knows the civilization of each player | — |
 | `xsPlayerAttribute`, `xsSetPlayerAttribute`, `xsEffectAmount`, `xsGetPlayerNumberOfTechs` | None: a vanilla world has no stock, no attributes and no technologies (`resource_lines()` only stores the changes for the game program) | The game program only |
+| `xsGetGoal`, `xsSetGoal`, `xsGetStrategicNumber`, `xsSetStrategicNumber`, `xsGetAiSignal`, `xsSetAiSignal`, `xsGetAiScriptGoal`, `xsSetAiScriptGoal`, `xsSetContextPlayer`, `xsGetContextPlayer` | None: a vanilla world has no AI script (`game/per.py` runs it in the game program) | The game program only (#5846): the AI script of the context player (default: the first bot with a script). A strategic number by its id (`per_numbers.jsonl`). An AI script goal is the trigger event of `(event-detected trigger N)`. `useLegacyAi` has no effect |
+| `xsGetGroupMoveTarget` | None | No form: the AI runtime has no unit groups with a move target. It keeps the warning line |
 | The rest of the game functions of the guide | A function that reads entities (a unit, a position) can get a selector in a later ticket | Until then: the game program only |
 | `abs`, `floor`, `ceil`, `round`, `xsCeilToInt` | Score operations on the fixed point value | — |
 | `sqrt`, `xsVectorLength`, `xsVectorNormalize`, `dist` | An integer square root by Newton steps (a fixed number of lines) | 0.001 |
