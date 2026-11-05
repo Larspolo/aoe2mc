@@ -25,8 +25,8 @@ def test_c_and_s_and_g_operators_compare_with_a_constant_a_number_and_a_goal():
 def test_an_unknown_operator_number_or_goal_warns_once_and_is_false(capsys):
     goals = ran("""(defrule (food-amount x:> 5) => (set-goal 1 1))
 (defrule (food-amount s:> sn-none) => (set-goal 2 1))
-(defrule (food-amount g:> 99) => (set-goal 3 1))
+(defrule (food-amount g:> 600) => (set-goal 3 1))
 (defrule (food-amount x:> 5) => (set-goal 4 1))""")
     err = capsys.readouterr().err
     assert not goals and err.count("unknown operator x:>") == 1
-    assert "unknown strategic number sn-none" in err and "unknown goal 99" in err
+    assert "unknown strategic number sn-none" in err and "unknown goal 600" in err

@@ -584,12 +584,17 @@ class Script:
         self.warn("number", v)
         return 0
 
+    def goal_value(self, ref):
+        """The value of a goal that a fact or an action reads: an unset goal of 1 to 512 is 0 (#5824), else -1."""
+        return self.goals.get(ref, 0 if 1 <= ref <= 512 else -1)
+
     def operand(self, kind, ref):
         """The value of ref for a typed prefix: a constant ("" or c:), a goal (g:) or a strategic number (s:, by name or
         id). None, with one warning, for an unknown goal or number."""
         if kind == "g":
             if ref not in self.goals:
-                return self.warn("goal", ref)
+                # AoE2 DE: each player has the goals 1 to 512, all 0 at the start (airef "Goals", #5824)
+                return 0 if 1 <= ref <= 512 else self.warn("goal", ref)
             return self.goals[ref]
         if kind == "s":
             ref = SN_IDS.get(ref, ref)
@@ -787,7 +792,7 @@ class Script:
             return {"and": all(got), "or": any(got), "nand": not all(got), "nor": not any(got), "not": not got[0]}[name]
         if name == "goal":                                         # (goal ID VALUE) or (goal ID REL VALUE)
             op, v = ("==", args[1]) if len(args) == 2 else args[1:3]
-            return self.compare(op, self.goals.get(args[0], -1), v)
+            return self.compare(op, self.goal_value(args[0]), v)
         if name in GET_FACT:                                       # a command as a fact: it runs, and is true
             self.get_fact(name, args)
             return True
@@ -811,7 +816,7 @@ class Script:
                 return self.compare(args[2], str(self.text).find(str(args[1])), args[3])
             return self.compare(args[1], self.text, str(args[0]))
         if name == "up-compare-goal":                              # (up-compare-goal GOAL REL VALUE)
-            return self.compare(args[1], self.goals.get(args[0], -1), args[2])
+            return self.compare(args[1], self.goal_value(args[0]), args[2])
         if name == "up-compare-sn":                                # (up-compare-sn SN REL VALUE)
             sn = SN_IDS.get(args[0], args[0])
             if sn not in SN:
@@ -3106,14 +3111,14 @@ class Script:
         elif name in COST_ACTIONS:
             self.cost_action(name, args)
         elif name == "up-modify-goal":                               # (up-modify-goal GOAL OP VALUE)
-            new = self.math(args[1], self.goals.get(args[0], -1), args[2])
+            new = self.math(args[1], self.goal_value(args[0]), args[2])
             if new is not None:
                 self.goals[args[0]] = new
         elif name == "up-get-indirect-goal":                         # (up-get-indirect-goal TYPE GOAL OUT)
             kind = self.type_kind(args[0])
             ref = self.operand(kind, args[1]) if kind else None
             if ref is not None:
-                self.goals[args[2]] = self.goals.get(ref, -1)
+                self.goals[args[2]] = self.goal_value(ref)
         elif name in SHARED:                                         # (up-get-shared-goal TYPE ID GOAL), (up-set-signal
             self.shared(name, args)                                  # TYPE ID TYPE2 VALUE) ... (#4878)
         elif name == "up-set-indirect-goal":                         # (up-set-indirect-goal TYPE GOAL TYPE2 VALUE)
