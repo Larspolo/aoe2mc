@@ -544,6 +544,8 @@ def read_scenario(path):
             c["tile"] = None if c.get("unit") else tiles.get(c.get("ref"))
             c["next_tile"] = None if c.get("next_unit", True) else tiles.get(c.get("next"))
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
+    texts["ai_files"] = {f.ai_file_name.replace("\\", "/"): f.ai_file for f in   # the files of (load ...) (#5798)
+                         getattr(scn.sections.get("Files"), "ai_files", None) or () if f.ai_file_name}
     texts["xs_name"] = getattr(scn.xs_manager, "script_name", "") or ""   # a file of the AoE2 profile (#5122)
     texts["mood"] = (getattr(mood, "name", None) or str(mood or "DEFAULT")).upper()
     om = scn.option_manager                  # the tab "Global Victory" for the scenario mode (#2566, run.VICTORIES)
@@ -3138,7 +3140,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         data["messages"] = texts
     for key, items in (lists or {}).items():
         if items:
-            data[key] = list(items)
+            data[key] = items if isinstance(items, dict) else list(items)   # ai_files: {name: text} (#5798)
     if map_ground is not None:
         data["map_ground"] = [bytes(row).hex() for row in np.asarray(map_ground, np.uint8)]
     if buildings.TURN:                                  # the game program turns its buildings with the map (#3035)
@@ -4310,13 +4312,18 @@ def xs_lines(e, c):
         ([f"execute unless score #a aoe_xs matches 1 run function {fn}"] if fn else [])
 
 
+XS_WARNED = set()   # the warning lines printed for this conversion (each pass of trigger_files compiles them again)
+
+
 def xs_snippet(code, name):
     """(function, holder, files) of the XS code of a "Script Call" (#5693): xs_mc compiles it to datapack functions under
     xs/<name>/. No function: the game program runs the code, and the warning lines say why."""
     import xs_mc
     files, fn, holder, warnings = xs_mc.snippet(code, name)
     for w in warnings:
-        print(f"  {w}")
+        if w not in XS_WARNED:                       # once per line: many calls share one code (#5792, #5809)
+            XS_WARNED.add(w)
+            print(f"  {w}")
     return fn, holder, files
 
 
@@ -5122,6 +5129,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     replay: a world of a record (#5158): a unit of a trigger that the live replay runs once has a fixed UUID (created_uuid)."""
     if live is None:
         live = {t["id"] for t in triggers}
+        XS_WARNED.clear()                                                  # a new conversion prints its warnings again (#5792)
         while any(e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER) for t in triggers for e in t["effects"]) and \
                 live != (made := {int(k.split("/")[-1].split(".")[0]) for k in
                                 trigger_files(triggers, T, ground, players, Counter(), mood, live)[1]
@@ -6624,6 +6632,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
                   texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
                   {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()} |
                   ({"xs_script": texts["xs_script"]} if "xs_script" in texts else {}) |
+                  ({"ai_files": texts["ai_files"]} if texts.get("ai_files") else {}) |
                   ({"timers": timer_list(texts.get("triggers", []), T, ground, players)} if record else {}), yaw,
                   views and {"views": views, "recorder": record_state["recorder"]}, texts.get("lobby"),
                   terrain, elevation)

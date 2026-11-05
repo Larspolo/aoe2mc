@@ -13,6 +13,7 @@ def slot(monkeypatch, merged, starved):
     monkeypatch.setattr(claim, "last_lock", lambda kind, remote="origin": None)
     monkeypatch.setattr(claim, "merged_since", lambda last, gap, remote="origin": merged)
     monkeypatch.setattr(claim, "idle_minutes", lambda last, remote="origin": 0)   # no merge read: tests/test_roadmap_idle.py
+    monkeypatch.setattr(claim, "live_runs", lambda remote="origin": 1)   # a live run: the real claims do not decide
     asked = []
     key, gap = claim.review_slot("roadmap", starved=lambda: asked.append(1) or starved)
     return key, gap, bool(asked)

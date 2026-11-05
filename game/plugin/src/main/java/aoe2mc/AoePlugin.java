@@ -1515,6 +1515,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
             ev.setCancelled(true);                                     // a left click on a unit deselects (#1788)
             drag.skip(p);
             leftClick(p);
+            input(p);                                                  // the select click of a unit: at once (#5760)
             return;
         }
         if (from instanceof Projectile p && p.getShooter() instanceof Entity shooter) {

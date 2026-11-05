@@ -17,6 +17,9 @@ slow = "python3 -m pytest -m slow"
 server = ""
 dev = ""                        # starts the development server on the owner's computer (the `try` skill); "" = none
 
+[ci]                            # framework/tools/ship_pr.py
+gates = []                      # the PR checks of ci.yml besides `quick` that Automerge needs green (for example ["browser"])
+
 [docs]
 system = "framework/docs/SYSTEM.md"
 steering = "framework/docs/STEERING.md"

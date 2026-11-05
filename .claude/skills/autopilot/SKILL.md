@@ -26,8 +26,8 @@ The rare cases are in files next to this one (#1700). Read a file only when its 
 ## GitHub access
 
 Use the GitHub MCP tools (`mcp__github__*`) when the session has them. Else use the REST API with `gh api`
-(`github.md`). Cloud sessions block GraphQL and the search API, so `gh issue list`, `gh pr create` and
-`search/issues` fail there. Put long text in a file and pass it with `-F body=@file.md`.
+(`github.md`). Cloud sessions block GraphQL, so `gh issue list` and `gh pr create` fail there; `search/issues` needs
+`is:issue` in `q`. Put long text in a file and pass it with `-F body=@file.md`.
 
 ## Runs can overlap
 
@@ -62,7 +62,7 @@ report of step 8, and the `Usage:` line (of the brief, else of the first `cycle_
 7. Ship in one call: `python3 framework/tools/ship_pr.py N --message MSG.txt --title "<ticket title>" --body BODY.md`
    (MSG.txt: subject in STE imperative, what and why, `Closes #<number>`; BODY.md: what changed, how you verified,
    and all that a later run needs to fix a red CI with no other context, #4187).
-   It runs ruff and the test files of the change (`--tested`: you ran them on this tree), commits, runs the guard (hard rule before each
+   It commits, runs the lint of `agent.toml` (always) and the test files of the change (`--tested`: you ran them on this tree), runs the guard (hard rule before each
    push: it fails when the claim is not yours or another branch has a PR that closes #N, #288), pushes and opens the
    PR. A PR that changes `packaging/` or a workflow with its own PR checks: add `--hold` (the label `hold` at once).
    Then it waits for the quick CI (about 6 minutes, #4784): give the Bash call `timeout: 600000`.
@@ -72,7 +72,7 @@ report of step 8, and the `Usage:` line (of the brief, else of the first `cycle_
    `python3 framework/tools/merge_main.py --push N` (`conflict.md`), then `ship_pr.py N --ci`.
    Do not merge by hand: CI runs only the quick checks on each PR (lint and fast tests, about 6 minutes), and the
    Automerge workflow merges the PR when CI is green, removes `in-progress` and deletes the branch. Exit 5: the quick
-   CI is red, go to 9 now (a red PR after the run ends costs a takeover by a cold run, #4784). The CI still runs at
+   CI (or a check of `[ci] gates` in `agent.toml`) is red, go to 9 now (a red PR after the run ends costs a takeover by a cold run, #4784). The CI still runs at
    the time limit: `ship_pr.py N --ci` once, then continue. The slow and server tests run only each night on main:
    do the levels of the `verify` skill that the change needs (slow tests, server check) before the push. Continue
    with step 7 and the next ticket. Step 2 of a later cycle finds a red or conflicted PR.

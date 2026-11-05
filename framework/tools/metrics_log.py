@@ -23,6 +23,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import zlib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -251,8 +252,14 @@ def load(since, remote="origin"):
     """The stored comments and run records created since `since`, from `remote`/metrics, or None when git cannot read
     the branch."""
     try:  # a hung git call (#3290) reads as a failed one; only the tip: the pacer adds a commit each cycle
-        if git("fetch", "-q", "--depth", "1", remote, f"+refs/heads/{BRANCH}:refs/remotes/{remote}/{BRANCH}").returncode:
-            return None
+        # a second try: a parallel fetch in the same clone holds the lock of the ref or of `shallow`, and the reader
+        # then counted 0 run reports in 100 merged PRs with no warning (process review 2026-11-02)
+        for wait in (2, None):
+            if not git("fetch", "-q", "--depth", "1", remote, f"+refs/heads/{BRANCH}:refs/remotes/{remote}/{BRANCH}").returncode:
+                break
+            if wait is None:
+                return None
+            time.sleep(wait)
         out, d, days = [], since.date(), []
         while d <= datetime.datetime.now(UTC).date():
             r = git("show", f"{remote}/{BRANCH}:status/{d:%Y-%m-%d}.jsonl")

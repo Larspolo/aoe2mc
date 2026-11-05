@@ -83,18 +83,24 @@ def pr_work(pr, open_issues, checks, beat, now, me="", ticket=None):
         return None
     idle = (now - dashboard.ts(pr.get("updated_at") or pr["created_at"])).total_seconds() / 60
     live = beat and not beat[1].startswith("Release") and beat[0] < STALE
-    if "hold" in dashboard.labels(pr):     # nothing removes `hold`: a run that stopped left it for ever (#4553)
-        return None if live or idle < STALE else (
-            f"`hold`, no live claim, no change for {idle:.0f} min: remove `hold` when its own checks passed, "
-            f"else add `needs-human` to #{ticket} with the reason")
     conflict = "conflict" in dashboard.labels(pr)
     red = [n for n, s, c in checks if s == "completed" and c in ("failure", "timed_out", "cancelled", "action_required")]
+    if "hold" in dashboard.labels(pr):     # nothing removes `hold`: a run that stopped left it for ever (#4553)
+        if live or idle < STALE:
+            return None
+        quick = any(n == "quick" and c == "success" for n, _, c in checks)
+        state = "checks red: " + ", ".join(red) if red else "checks green" if quick else "checks not finished"
+        if red or not quick:   # the auto mode denies a removal of `hold` on a PR of another run: the owner removes it (#581)
+            return f"`hold`, no live claim, no change for {idle:.0f} min, {state}: add `needs-human` to #{ticket} with the reason"
+        return (f"`hold`, no live claim, no change for {idle:.0f} min, {state}: add `needs-human` to #{ticket} and ask the "
+                "owner to remove `hold` (`owner.md`; the auto mode denies a removal of `hold` on a PR of another run)")
     if not checks and not conflict and idle > STALE:   # no CI event (a push of GITHUB_TOKEN): Automerge waits for ever
         return f"no CI run on its head for {idle:.0f} min: start CI on its branch (`github.md`)"
     if not conflict and not red:
         age = (now - dashboard.ts(pr["created_at"])).total_seconds() / 60
         quick = any(n == "quick" and c == "success" for n, _, c in checks)
-        return f"green and open {age:.0f} min: start the Automerge sweep (`github.md`)" if quick and age > SWEEP else None
+        done = all(s == "completed" for _, s, _ in checks)   # #606: Automerge can need other checks, so wait for every check
+        return f"green and open {age:.0f} min: start the Automerge sweep (`github.md`)" if quick and done and age > SWEEP else None
     what = "conflict" if conflict else "red CI: " + ", ".join(red)
     base = re.sub(r"-\d+$", "", me)
     if me and re.fullmatch(re.escape(base) + r"(-\d+)?", pr["head"]["ref"]):
@@ -199,6 +205,10 @@ def due_checks():
     planning gap must not stop the run start."""
     try:
         import release
+    except ImportError:                                     # a project with no tools/release.py has no release checks (#153)
+        return []
+    try:
+        import release
         features, _, rows, epics = release.load()
         return release.due_lines(release.due(features, rows, epics))
     except Exception as e:                                  # a GitHub or file error: the other sections still print
@@ -224,7 +234,38 @@ def section(title, lines):
     print(f"{title}: " + ("none" if not lines else lines[0] if len(lines) == 1 else "\n  " + "\n  ".join(lines)))
 
 
+def checkout(remote="origin", branch=None):
+    """Move a clean session branch with no own commits to the newest `remote/branch` (#105).
+
+    Returns (line, moved): line is None when HEAD is at the remote head. A branch with own commits or changes
+    does not move: the line tells the run to update it.
+    """
+    branch = branch or CONFIG["branch"]
+    git = lambda *a: subprocess.run(["git", *a], capture_output=True, text=True)
+    if git("fetch", "-q", remote, branch).returncode:
+        return f"Checkout: git fetch {remote} {branch} failed: check the checkout by hand", False
+    up = f"{remote}/{branch}"
+    behind = int(git("rev-list", "--count", f"HEAD..{up}").stdout.strip() or 0)
+    if not behind:
+        return None, False
+    own = int(git("rev-list", "--count", f"{up}..HEAD").stdout.strip() or 0)
+    me = git("branch", "--show-current").stdout.strip()
+    if own or git("status", "--porcelain", "--untracked-files=no").stdout.strip() or not me:
+        return f"Checkout: {behind} commits behind {up}: update before you work", False
+    if git("checkout", "-q", "-B", me, up).returncode:
+        return f"Checkout: {behind} commits behind {up}: update before you work", False
+    sha = git("rev-parse", "--short", "HEAD").stdout.strip()
+    return f"Checkout: moved to {sha} ({behind} commits behind)", True
+
+
 def main(argv=None):
+    if not os.environ.get("CYCLE_START_MOVED"):         # an old checkout runs old tools and skills (#105)
+        line, moved = checkout()
+        if line:
+            print(line)
+        if moved:                                       # run the new version of this tool once
+            os.environ["CYCLE_START_MOVED"] = "1"
+            os.execv(sys.executable, [sys.executable, os.path.abspath(__file__), *(sys.argv[1:] if argv is None else argv)])
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--lane", help="the pick list of this lane (haiku, #1715); sets `git config aoe2mc.lane`")
     ap.add_argument("--last", type=int, help="the last ticket of this run: related tickets first")

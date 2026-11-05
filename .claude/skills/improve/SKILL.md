@@ -52,7 +52,8 @@ Run `python3 framework/tools/health.py --prs 100 --compare` (about 2 minutes): t
 differs, the 100 PRs before (`  before: ...`). A change of more than 20 % between the two periods is a finding. It
 prints CI, setup, takeovers, conflicts and their files, phases, quota per merged PR, release points per 1 % of 7-day
 quota (the main number: progress to the goals 1 to 3 of `steering/project/ROADMAP.md` per quota; during a release
-focus, the closed issues of the release milestone per 1 % of quota, #5552), tokens and their sinks, lanes,
+focus, the closed issues of the release milestone per 1 % of quota, #5552; while the roadmap grows, the line
+`Features per 1 % of 7-day quota`: the closed roadmap epics), tokens and their sinks, lanes,
 weak spots, misses, owner work, time waits, data in the code, review slots and files that do not belong in git.
 `--hours N` only for a real clock (the night runs).
 
@@ -85,7 +86,7 @@ A lever with no number is a measurement gap: lever 10.
 | 9 | Owner chores | `needs-human` tickets about the environment; owner PRs that paste, test hosts, set secrets; `Runs held by GitHub` and `started again by hand` | any step that the owner did twice | One file to paste; a check that names exactly what is missing; a workflow or an API that does the step | #1964, #3614, #4181 |
 | 10 | Measurement gaps | A lever of this table with no number | any | Add the number to `framework/tools/health.py`, `framework/tools/tokens.py` or the pacer log first | #3819, #3970, #4171 |
 | 11 | Quality | Rework, reopened tickets, bugs of check tickets, red night runs | rework above 5 % of the merged PRs | A check in the `verify` skill or CI; a rule from owner feedback; a fix of the flaky test | - |
-| 12 | Waste of runs | Runs that merge nothing (`given back`), idle starts, lost claims, takeovers; `Pacer loop gaps` (no runs start); `Idle queue` (target > 0, no claim, no start, #5199) | above 5 % of the runs, a pacer gap above 1 h, or an idle stretch above 1 h | Rules of the pacer (`framework/tools/usage.py`) and of the claims (`framework/tools/claim.py`) | #3147, #4173 |
+| 12 | Waste of runs | Runs that merge nothing (`given back`), idle starts, lost claims, takeovers; `Pacer loop gaps` (no runs start); `Idle queue` (target > 0, no claim, no start, #5199) less its hours with `no work` (no ready ticket and no refill source: a wait for the owner) | above 5 % of the runs, a pacer gap above 1 h, or an idle stretch above 1 h with work | Rules of the pacer (`framework/tools/usage.py`) and of the claims (`framework/tools/claim.py`) | #3147, #4173 |
 
 The threshold also counts a loss that comes back with its full cost: its quota, the takeovers that it causes, and
 the rule lines that it added to `CLAUDE.md` and `docs/LEARNINGS.md` (each run loads them in each turn).
@@ -127,7 +128,8 @@ with all work in progress), add the label `paused` to the status issue and comme
 ## 5. Clean up
 
 - `docs/LEARNINGS.md` at 3000 bytes or less (lines for some tickets go to `docs/PITFALLS.md`, #4454) (only this skill merges and removes lines there; ticket runs only add),
-  `CLAUDE.md` below 150 lines. Remove lines that are no longer true.
+  `CLAUDE.md` below 150 lines. Remove lines that are no longer true. `merge=union` (`.gitattributes`) keeps a removed line
+  when main added lines next to it: after each merge of main, check that the removed lines stay out.
 - Turn a learning line into a check when you can (a rule of `.claude/hooks/guard-shell.sh`, a fast test, a clear
   assert message, a setting of the start hook), then remove the line.
 - Read the skills for instructions that contradict each other. Correct them.

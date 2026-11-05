@@ -214,6 +214,7 @@ decision follows it. The roadmap review checks that each held ticket fits a kind
 | `play:music` | C | 3 | | |
 | `play:languages` | A | 5 | | |
 | `play:data-mods` | A | 5 | | |
+| `play:network` | C | 5 | | |
 | `play-check-game` | B | 5 | An agent plays a full game against the bot with a script, from the Dark Age to a win or a loss (about 30 minutes): no server error, no stuck unit | #3324 |
 | `play-check-speed` | B | 2 | With 200 units of each player, the server keeps 20 ticks per second | #3325 |
 | `play-check-kit` | B | 2 | A play-test kit: how to start and join, the controls, how to report a bug | #3326 |

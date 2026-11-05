@@ -58,6 +58,7 @@ framework/tools/feedback.py
 framework/tools/health.py
 framework/tools/metrics_log.py
 framework/tools/report.py
+framework/tools/epic_autoclose.py
 framework/tools/ticket_context.py
 framework/tools/tokens.py
 framework/tools/operator_check.py
@@ -176,3 +177,19 @@ framework/tests/test_tokens_last_call.py
 
 # This list
 framework/files.txt
+framework/tests/test_claim_detached.py
+framework/tests/test_cycle_start_sweep.py
+framework/tests/test_epic_autoclose.py
+framework/tests/test_health_features.py
+framework/tests/test_health_idle_no_work.py
+framework/tests/test_health_takeover_report.py
+framework/tests/test_metrics_log_fetch.py
+framework/tests/test_pacer_feedback.py
+framework/tests/test_roadmap_no_live_run.py
+framework/tests/test_roadmap_ready_ticket.py
+framework/tests/test_ship_pr_gates.py
+framework/tests/test_ship_pr_lint.py
+framework/tests/test_tokens_node_checks.py
+framework/tests/test_usage_new_epic.py
+framework/tests/test_usage_release_roadmap.py
+framework/tests/test_usage_roadmap_sources.py

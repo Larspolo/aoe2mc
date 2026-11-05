@@ -28,3 +28,20 @@ def test_same_answer_as_the_plain_check():
 
 def test_no_drop_site_is_remote():
     assert remote([(3, 3)], []) is True
+
+
+def test_a_slow_step_stops_the_clock():
+    """A step that takes longer than its tick stops the game clock of the person and the bots for the extra time: the
+    clock does not go faster than the work of the steps (train.tick, the gather timers)."""
+    import gather
+    import recap
+    now = [0.0]
+    clock = lambda: now[0]                                             # noqa: E731
+    me = types.SimpleNamespace(clock=clock, t0=0.0, speed=4.0, bots=[])
+    foe = types.SimpleNamespace(g=types.SimpleNamespace(clock=clock, t0=0.0, speed=4.0))
+    me.bots = [foe, types.SimpleNamespace()]                           # a bot without its own Gather (a driver)
+    now[0] = 1.5                                                       # one step of 1.5 s, tick 0.25 at speed 4
+    gather.lag(me, now[0] - 0.25 / 4)
+    assert recap.game_time(me) == recap.game_time(foe.g) == 0.25 * gather.NORMAL     # one tick of work
+    gather.lag(me, -0.01)                                              # a fast step changes nothing
+    assert me.t0 == foe.g.t0 == 1.5 - 0.0625

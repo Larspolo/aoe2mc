@@ -30,6 +30,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path[:0] = [ROOT, HERE, os.path.join(ROOT, "game")]
 
+import build  # noqa: E402
 import mc_shot  # noqa: E402
 import menu  # noqa: E402
 import recap  # noqa: E402
@@ -60,9 +61,16 @@ def sample(g, bots=()):
             "age": sorted(t for t in g.techs if t.endswith("_AGE")), "bot_sites": {str(b.player): len(b.sites) for b in bots}}
 
 
-def result(saved, first, last, queued, errors, start=0.0):
+def unit_slot(items, label="Villager"):
+    """The slot of the menu item that trains label, or None (#5812). The queue row (train.ROW to train.MORE - 1) comes
+    first in the items of train.show and has the same names ("Villager 49 %"): a click there cancels a unit."""
+    return next((i[0] for i in items if label in str(i[2]) and not train.ROW <= i[0] < train.MORE), None)
+
+
+def result(saved, first, last, queued, errors, start=0.0, said=()):
     """The points of the check from the save of the takeover (its player dict), the first and the last sample, the
-    queue count after the click on "Villager", the server log errors and the game time of the save (start, seconds):
+    units that the click on "Villager" queued at the clicked town center (train.queue, #5812), the server log errors,
+    the game time of the save (start, seconds) and the chat lines of the person in the click window (build.say):
     {point: (ok, detail)}."""
     out = {"the clock goes on": (first["time"] >= start, f"save {start:g} s, game {first['time']:g} s at the start"),
            "stock of the replay": (all(first["stock"].get(r) == saved["stock"].get(r) for r in ("gold", "stone")),
@@ -75,8 +83,9 @@ def result(saved, first, last, queued, errors, start=0.0):
                                  f"{first['stock']} -> {last['stock']}"),
            "food goes up": (last["stock"]["food"] > first["stock"]["food"] - 50 * max(0, last["villagers"] - first["villagers"]),
                             f"{first['stock']['food']} -> {last['stock']['food']}"),
-           "the town center trains": (queued > first["queued"] and last["villagers"] > first["villagers"],
-                                      f"queue {first['queued']} -> {queued}, villagers {first['villagers']} -> {last['villagers']}"),
+           "the town center trains": (queued > 0 and last["villagers"] > first["villagers"],
+                                      f"the click queued {queued}, villagers {first['villagers']} -> {last['villagers']}"
+                                      + (f", chat: {'; '.join(said)}" if said else "")),
            "a bot builds": (any(last["bot_sites"][p] > n for p, n in first["bot_sites"].items()),
                             f"sites {first['bot_sites']} -> {last['bot_sites']}"),
            "no server errors": (not errors, "; ".join(e[:200] for e in errors[:5]))}
@@ -121,7 +130,7 @@ def drive(games, states, shown, a, out, report, seen):
             first = sample(g, bots)
             print(json.dumps(first), flush=True)
             c.shot(os.path.join(out, "t0.png"))
-            queued = first["queued"]
+            queued, said = 0, []
             if tcs := sorted(r for r, n in train.homes(g).items() if n == "TOWN_CENTER"):
                 if feet := next((p for u in g.villagers if (p := g.pos(u))), None):
                     c.place(game, (tcs[0][0] + tcs[0][1]) // 2, int(feet[1]), tcs[0][3] + 6, yaw=180, wait=5.0)
@@ -131,11 +140,14 @@ def drive(games, states, shown, a, out, report, seen):
                 if c.name in shown:
                     items = shown[c.name][1]
                     rows = max(i[0] for i in items) // 9 + 1
-                    slot = next((i[0] for i in items if "Villager" in str(i[2])), 0)
+                    slot = unit_slot(items)
                     c.shot(os.path.join(out, "menu.png"))
-                    c.click(*c.slot(slot, rows))
+                    n, k = len(seen["queued"]), len(seen["said"])
+                    if slot is not None:
+                        c.click(*c.slot(slot, rows))
                     time.sleep(3)
-                    queued = sum(len(q) for q in g.queues.values())
+                    queued = sum(r == tcs[0] for r, _ in seen["queued"][n:])   # only the clicked town center
+                    said = [t for p, t in seen["said"][k:] if p == c.name]
                     c.key("Escape")
             t0 = recap.game_time(g)
             while recap.game_time(g) - t0 < a.minutes * 60:
@@ -146,7 +158,7 @@ def drive(games, states, shown, a, out, report, seen):
         errors = [x for x in game.server.log if ERROR.search(x) and not OFFLINE.search(x)]
         saved = states[-1]["players"][str(a.player)] if states else {"stock": {}, "techs": []}
         start = states[-1]["game_time"] if states else 0.0
-        report.update(result(saved, first | {"time": seen.get("clock", first["time"])}, last, queued, errors, start))
+        report.update(result(saved, first | {"time": seen.get("clock", first["time"])}, last, queued, errors, start, said))
     except Exception:
         traceback.print_exc()
     finally:
@@ -188,7 +200,7 @@ def main(argv=None):
     a.copy = os.path.join(tempfile.mkdtemp(), os.path.basename(os.path.normpath(a.world)))
     shutil.copytree(a.world, a.copy)                                   # the game changes the world
     games, states, shown, report = [], [], {}, {}
-    init, state, show = run.Game.__init__, takeover.state, menu.show
+    init, state, show, enqueue, say = run.Game.__init__, takeover.state, menu.show, train.queue, build.say
 
     def game_init(self, *args, **kw):
         init(self, *args, **kw)
@@ -202,8 +214,19 @@ def main(argv=None):
         shown[player] = (title, items)
         return show(g, player, title, items, handler)
 
+    seen = {"queued": [], "said": []}
+
+    def keep_queue(g, player, cell, *args, **kw):                      # train.order calls the module name (#5812)
+        if (rect := enqueue(g, player, cell, *args, **kw)) is not None:
+            seen["queued"].append((rect, args[0] if args else kw.get("name", "VILLAGER_MALE")))
+        return rect
+
+    def keep_say(g, player, text, *args, **kw):
+        seen["said"].append((player, str(text)))
+        return say(g, player, text, *args, **kw)
+
     run.Game.__init__, takeover.state, menu.show = game_init, keep_state, keep_menu
-    seen = {}
+    train.queue, build.say = keep_queue, keep_say
     threading.Thread(target=watch_clock, args=(games, seen), daemon=True).start()
     threading.Thread(target=drive, args=(games, states, shown, a, a.out, report, seen), daemon=True).start()
     r, w = os.pipe()                                                   # run.console reads stdin: an open pipe, no EOF

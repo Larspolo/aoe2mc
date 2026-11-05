@@ -750,7 +750,7 @@ def effects(g):
     import xs_run
 
     import xs as xs_parse
-    if g.clock() < vars(g).get("xs_at", 0.0):
+    if not vars(g).get("data", {}).get("xs") or g.clock() < vars(g).get("xs_at", 0.0):   # no Script Call: no clock (#5796)
         return
     g.xs_at = g.clock() + 1.0
     calls, skip = vars(g).setdefault("xs_calls", {}), vars(g).setdefault("xs_skip", set())

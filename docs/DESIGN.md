@@ -99,7 +99,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Fired orange brick | `resin_bricks`, `chiseled_resin_bricks` | `split_gate` |
 | Relief panel, carving | `chiseled_stone_bricks` | `harbor`, `temple`, `aqueduct`, `furnish_worship` +9 more |
 | Balustrade of a stair | `polished_granite` | `great_pyramid`, `pyramid` |
-| Stone bridge (#455) | `stone_bricks` piers with cutwaters every tile, `stone_brick_stairs[half=top]` vault, `stone_brick_wall` balustrade with `chiseled_stone_bricks` posts, `cracked_stone_bricks` on cracked and broken pieces | `bridge`, `temple`, `cathedral`, `fortified_church` +18 more |
+| Stone bridge (#455) | `stone_bricks` piers with cutwaters every tile, `stone_brick_stairs[half=top]` vault, `stone_brick_wall` balustrade with `chiseled_stone_bricks` posts, `cracked_stone_bricks` on cracked and broken pieces | `bridge`, `temple`, `cathedral`, `fortified_church` +19 more |
 | Crop field | `wheat` rows (ages 5–7) on `farmland`, furrows of bare `farmland`, `dirt_path` edge | `folwark` |
 | Hay, fodder | `hay_block` | `settlement`, `hut`, `mill_room`, `granary` +20 more |
 | Fallen leaves in a forest | `leaf_litter[segment_amount=1-4]` under the trees | no design |
@@ -113,7 +113,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Log pile, cut timber | `*_log[axis=x]` stacked as a pyramid (`log_pile`) | `log_pile`, `wooden_bridge`, `crane`, `shelter` +37 more |
 | Debris heap of a barricade | `cobblestone`, `andesite`, `spruce_log`, `stripped_spruce_log`, `spruce_planks`, `spruce_slab`; on top `mangrove_roots` (branches), `spruce_fence`, `oak_leaves` (ivy), `barrel`, `decorated_pot` | `barricade`, `market`, `dock`, `tower` |
 | Wooden bridge: boards across the bridge, posts over the deck | `stripped_spruce_log[axis=*]` and `spruce_planks` in turn, `stripped_oak_log` posts every second block, no railing | `wooden_bridge`, `shipyard`, `dock`, `stable` +17 more |
-| Hoist | a log post and arm, `iron_chain`, a hanging log | `harbor_chain`, `hang`, `crane`, `lumber_camp` +4 more |
+| Hoist | a log post and arm, `iron_chain`, a hanging log | `hang`, `harbor_chain`, `crane`, `lumber_camp` +4 more |
 | Workbench | `crafting_table` | `lumber_camp`, `shipyard`, `dock`, `siege_workshop` |
 | Millstone | `grindstone` | `mill_room`, `decorate`, `keep_inside`, `mining_camp` +8 more |
 | Drive shaft of a windmill | `stripped_spruce_log[axis=y]` above the millstone | `crane`, `mill_room`, `barricade`, `wooden_bridge` +18 more |
@@ -123,7 +123,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Ore, mined gold and stone | `gold_ore`, `raw_gold_block`, `cobblestone`, `stone`, `andesite` | `mining_camp`, `mole` |
 | Mine cart track | `rail` | `mining_camp` |
 | Water trough | `cauldron` (water) | `decorate`, `svan_tower`, `oracles_temple` |
-| Fountain | `water` source in a 3 × 3 rim of `stone_bricks` (`smooth_quartz` for antiquity), posts on the corners | `theatre`, `tower`, `monastery`, `feitoria` +40 more |
+| Fountain | `water` source in a 3 × 3 rim of `stone_bricks` (`smooth_quartz` for antiquity), posts on the corners | `theatre`, `tower`, `monastery`, `feitoria` +41 more |
 | Bench | three `*_stairs` in a row | `storage`, `shelter`, `furnish_worship`, `town_hall` +43 more |
 | Clay pots, amphorae, water pots | `decorated_pot`, `water_cauldron` | `barricade`, `hearth_room`, `pasture`, `tomb` +7 more |
 | Banner, flag | `*_banner` (player color), `Canvas.flag` | `throne_hall`, `town_hall`, `keep_inside`, `arena_inside` +58 more |
@@ -149,16 +149,16 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Charred timber | `coal_block`, `blackstone`, dark oak logs | `burned_building` |
 | Scaffolding, building site | `scaffolding` posts, `spruce_slab` decks, `ladder` | `scaffold_walk`, `scaffolding`, `tower`, `market` |
 | Standing stones with lintels | `stone`, `andesite`, `tuff` posts, a ring of `stone` on top | `stonehenge`, `dome_rock`, `mole`, `mining_camp` +7 more |
-| Stone seats of a theatre | `stone_bricks` rising outward, `smooth_stone` and slabs on top | `theatre`, `fortified_church`, `port`, `donjon` +43 more |
+| Stone seats of a theatre | `stone_bricks` rising outward, `smooth_stone` and slabs on top | `theatre`, `fortified_church`, `port`, `donjon` +44 more |
 | Spire tip, finial | `lightning_rod` | `nine_bands`, `storage`, `army_tent`, `feitoria` +21 more |
 | Copper roof, copper dome | `weathered_cut_copper`, `weathered_copper` | `cathedral` |
 | Slate spire | `deepslate_tiles` | `hall_of_heroes`, `cathedral` |
-| Pinnacle | the `accent_wall` of the style (`*_wall`) | `ring`, `garden`, `courtyard_walls`, `storage` +23 more |
+| Pinnacle | the `accent_wall` of the style (`*_wall`) | `ring`, `garden`, `harbor_chain`, `courtyard_walls` +24 more |
 | Striped marble | rows of `polished_deepslate` in the main stone | `caravanserai`, `stone_head` |
 | Mud-brick pinnacle | `mud_brick_wall` on a buttress | `garden`, `storage`, `sankore`, `djenne` +15 more |
 | Glazed tile band, tile panel | `blue_terracotta`; `Style.dome` terracotta over arches | `minaret_of_jam`, `caravanserai`, `dome_rock`, `gol_gumbaz` +1 more |
 | Chhatri (small domed kiosk) | `quartz_pillar` posts and a small dome | `throne_hall`, `oracles_temple`, `arch_of_constantine`, `theatre` +3 more |
-| Chain, rope | `iron_chain` | `harbor_chain`, `hang`, `crane`, `lumber_camp` +4 more |
+| Chain, rope | `iron_chain` | `hang`, `harbor_chain`, `crane`, `lumber_camp` +4 more |
 | Bartizan (corner turret) | stone, `smooth_quartz` cap, `lightning_rod` | `temple_of_heaven`, `taj`, `stupa`, `dome_rock` +26 more |
 | Terracotta roof (Portuguese, Sicilian, Polish) | `brick` stairs | `oracles_temple`, `folwark`, `svan_tower`, `shelter` +13 more |
 | Portcullis, grille | `iron_bars` | `arena_inside`, `tower`, `donjon`, `krepost` +4 more |
@@ -178,7 +178,7 @@ A thing in the model is the Minecraft block of that thing. Do not paint it with 
 | Desks, light inside | `enchanting_table`, `cartography_table`, `candle` (lit, on shelves and desks), `lantern` on an `iron_chain` (`hang()`) | `study`, `hang`, `furnish_worship`, `lumber_camp` +16 more |
 | Ledger and trade maps (inside) | `lectern` (with a book) and `cartography_table` on a counter of top slabs | `market`, `feitoria`, `study`, `library` +9 more |
 | Scholar statue | `chiseled_stone_bricks` pedestal, `quartz_pillar`, `chiseled_quartz_block` | `university`, `oracles_temple`, `arch_of_constantine`, `theatre` |
-| Posts of an open belfry | `stone_brick_wall` | `ring`, `bridge`, `temple`, `barracks` +3 more |
+| Posts of an open belfry | `stone_brick_wall` | `harbor_chain`, `ring`, `bridge`, `temple` +4 more |
 | Orange roof tiles (Krepost; Central European, Southeast Asian sets) | `red_sandstone` stairs and blocks | `storage`, `fortified_church`, `shelter`, `taj` +25 more |
 | Stepped stone roof (Mesoamerican set) | `stone_brick` stairs (hip roof) | `bridge`, `shelter`, `storage`, `temple` +18 more |
 | Thatch or shingle roof (East Asian set) | `spruce` stairs | `pagoda`, `tomb`, `furnish_worship`, `wooden_fort` +15 more |

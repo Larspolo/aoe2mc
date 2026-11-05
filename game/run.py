@@ -503,12 +503,13 @@ def bot_foe(players, player):
     return next((p for p in [*range(1, player), *others] if p != player and not gather.allied(players, player, p)), None)
 
 
-def bot_script(players, player, files, k, defined=()):
+def bot_script(players, player, files, k, defined=(), ai_files=None):
     """The AI rules of the bot k of player: the embedded script of its scenario row (aoe2mc.json "ai", #4531), else
-    the file k of --ai (#4529), else None: a bot after the list plays by its own logic."""
+    the file k of --ai (#4529), else None: a bot after the list plays by its own logic. ai_files: the AI files of the scenario (aoe2mc.json
+    "ai_files", #5798) for (load ...)."""
     import per
     if text := players.get(str(player), {}).get("ai"):
-        return per.parse(text, defined, file=f"<script of player {player}>")
+        return per.parse(text, defined, file=f"<script of player {player}>", files=ai_files)
     return per.read(files[k], defined) if k < len(files or ()) else None
 
 
@@ -867,7 +868,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         level = bots.level_of(settings["ai_difficulty"], k)   # one level for each bot in seat order (#4020)
         import per
         script = bot_script(data["players"], player, settings["ai"], k,     # the symbols of #load-if-defined (#4683)
-                            per.symbols(data, player, level, modes, settings["age"]))
+                            per.symbols(data, player, level, modes, settings["age"]), data.get("ai_files"))
         import replay
         import treaty as treaties
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too

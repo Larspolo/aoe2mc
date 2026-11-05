@@ -13,6 +13,7 @@ BODY = f'<!-- agent-state: {{"last_review": "{STATE}", "last_roadmap": "{STATE}"
 def github(monkeypatch):
     """claim.main() on GitHub with stubs: the status body, the lock time, the merged PRs and the lock push."""
     seen = {"since": [], "keys": []}
+    monkeypatch.setattr(claim, "who", lambda: "claude/review-test")     # a branch: CI checks out a detached HEAD (#155)
     monkeypatch.setattr(claim, "deep_lane", lambda: True)
     monkeypatch.setattr(claim, "on_github", lambda remote="origin": True)
     monkeypatch.setattr(claim, "api", lambda path: {"body": BODY})

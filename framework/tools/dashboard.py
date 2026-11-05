@@ -23,6 +23,8 @@ import urllib.request
 
 from agent_config import CONFIG
 
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))   # the project tools: dashboard_data.py (#5804)
+
 REPO = os.environ.get("GITHUB_REPOSITORY") or CONFIG["repo"]
 STATUS, PAUSED = CONFIG["status"]["label"], CONFIG["status"]["paused"]
 MUTED = "muted"                # the owner mutes a ticket: no agent works on it, and "Waiting for you" hides it
@@ -43,8 +45,8 @@ def labels(issue):
 
 
 def depends(issue):
-    """Numbers in the "Depends on: #a, #b" lines of the issue body (only at the start of a line, not in text)."""
-    lines = re.findall(r"^Depends on:([^\n]*)", issue.get("body") or "", re.M)
+    """Numbers in the "Depends on: #a, #b" lines of the issue body (at the start of a line or of a list item, not in text, #5791)."""
+    lines = re.findall(r"^[ \t]*(?:[-*][ \t]+)?Depends on:([^\n]*)", issue.get("body") or "", re.M)
     return [int(n) for line in lines for n in re.findall(r"#(\d+)", line)]
 
 
