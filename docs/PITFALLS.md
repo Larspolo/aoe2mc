@@ -34,6 +34,7 @@ Read it before a claim, a push, a PR, a merge conflict, red main or a check tick
 - A duplicate search with `gh api -X GET search/issues -f q='repo:OWNER/NAME ...'` fails with 422 when the query has no `is:issue` (or `is:pull-request`): write `q='repo:OWNER/NAME is:issue "words"'` (#5446).
 - The list `issues?labels=X` of the REST API lags some seconds after a label change: a workflow on a `labeled` event takes its own issue from `github.event.issue.number`, not only from that list (close.yml missed the `close` of #5477, #5575).
 - To replay the merge of an old PR (a conflict that `unconflict.py` left): its merge commits are only on `refs/pull/N/head` (squash merges), and the clone is shallow: `git fetch --shallow-since=DATE origin main '+refs/pull/N/head:refs/remotes/pr/N'`, then `git merge` of the second parent in a worktree with `-c merge.conflictStyle=diff3` (#5860).
+- A brief cuts a long owner comment (a survey of 3 comments of 30 kB, #5864): read all comments into a file with `cd framework/tools && python3 -c 'import json; from dashboard import api; json.dump(api("issues/N/comments?per_page=100"), open(OUT, "w"))'` (the path has no `repos/OWNER/NAME/` prefix: 404), and post a long comment with `api("issues/N/comments", "POST", {"body": TEXT})`, not by hand in a tool parameter.
 
 ## Shell and waits
 
