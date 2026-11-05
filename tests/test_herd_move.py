@@ -32,8 +32,8 @@ def moves(server):
 def test_a_click_on_an_own_sheep_selects_it():
     server, g = setup()
     kind, key, _ = g.target(*g.look("Steve"), g.positions(sorted(g.pickable())))
-    assert (kind, key) == ("unit", "s") and lang.plain(g.says(kind, key)) == "Sheep · Right click: select"
-    g.click("Steve")
+    assert (kind, key) == ("unit", "s") and lang.plain(g.says(kind, key)) == "Sheep"   # Paper: the left click
+    assert g.left("Steve")                                             # selects (#5759)
     assert g.selected == {"s"}
     assert "data merge entity s {Glowing:1b}" in server.log and f"tag s add {gather.SELECT}" in server.log
     assert any(c.startswith("bossbar set ") and '"Sheep"' in c for c in plain_log(server.log))   # the boss bar names it

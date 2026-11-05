@@ -1614,7 +1614,8 @@ class Gather:
         if kind == "unit" and transport.order(self, name, u):          # the selection goes into a transport ship (#1385)
             return
         if kind == "unit":
-            self.select(u)
+            if not self.paper:                                         # Paper: the left click selects (#5759)
+                self.select(u)
             return
         if kind == "fort" and self.selected and self.selected <= self.villagers.keys():   # Siegecraft (#3916)
             self.sieged.add(u)
@@ -1825,7 +1826,8 @@ class Gather:
             unit = pretty(self.enemies.get(key) or self.soldiers.get(key) or self.prey.get(key) or "VILLAGER")
             name = lang.text("aoe2mc.gather.enemy", unit) if kind == "enemy" else unit
             act = "attack" if kind == "enemy" else "build_menu" if key in workers else \
-                "select_type" if key in self.selected and key in self.soldiers else "select"
+                "select_type" if key in self.selected and key in self.soldiers else \
+                None if self.paper else "select"                       # Paper: the left click selects (#5759)
         elif kind == "fort":
             name = lang.text("aoe2mc.gather.enemy", pretty(self.fort_names[key])) if key in self.fort_names \
                 else lang.text("aoe2mc.gather.enemy_building")

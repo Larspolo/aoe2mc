@@ -59,6 +59,16 @@ def test_a_right_click_on_the_ground_orders_at_once():
     assert g.clicks() == ["Steve"] and not g.corners                   # the same call: no wait, no box
 
 
+def test_a_right_click_on_an_own_unit_does_not_select_on_paper():
+    server, g = paper()                                                # the left click selects (#5759)
+    left(server, g, (5.5, 13.5), (5.5, 10.5))
+    server.scores.pop(gather.LEFT, None)
+    g.choose(set())
+    server.scores["aoe_use"] = 1
+    g.clicks()
+    assert g.selected == set()
+
+
 @pytest.mark.mc
 def test_a_real_left_drag_selects_the_box(tiny_world, tmp_path):
     """A real client on Paper holds the left button with the command stick and moves the look over the ground: the
@@ -110,3 +120,7 @@ def test_a_real_left_drag_selects_the_box(tiny_world, tmp_path):
         time.sleep(1.5)
         g.clicks()
         assert g.selected == set()
+        game.command("scoreboard players set aoe2mc aoe_build 1")     # a chosen building: a placement at once
+        client.xdo("click", 1)
+        time.sleep(0.3)                                                # less than Drag.FIRST (1 s)
+        assert "has 1" in game.command("scoreboard players get aoe2mc aoe_left")

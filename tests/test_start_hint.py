@@ -8,4 +8,4 @@ import run  # noqa: E402
 
 def test_start_hint_names_the_build_menu():
     assert "/trigger aoe_build" not in run.START_HINT
-    assert "build menu" in run.START_HINT and "right click the ground" in run.START_HINT
+    assert "build menu" in run.START_HINT and "left click the ground" in run.START_HINT

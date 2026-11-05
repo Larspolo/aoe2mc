@@ -771,9 +771,9 @@ def start_places(data):
 
 
 # The console text of --play (#5492): the build menu is a chest menu on a right click on a selected villager (#621)
-START_HINT = ("Hold the carrot on a stick: right click a villager to select it,\n"
+START_HINT = ("Hold the carrot on a stick: left click a villager to select it (hold left click: a box),\n"
               "then right click a tree, a fruit bush or a mine. To build: select villagers, right click them for the\n"
-              "build menu, then right click the ground. Right click your town center to train a villager (50 food).\n"
+              "build menu, then left click the ground. Right click your town center to train a villager (50 food).\n"
               "Ctrl-C stops.")
 
 def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attack="10:00", reveal="normal", people=1,

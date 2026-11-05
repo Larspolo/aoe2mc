@@ -61,7 +61,7 @@ final class Drag implements Listener {
         Player p = ev.getPlayer();
         UUID id = p.getUniqueId();
         if (ev.getHand() != EquipmentSlot.HAND || !AoePlugin.commandStick(p.getInventory().getItemInMainHand())
-                || now - skips.getOrDefault(id, Long.MIN_VALUE / 2) <= 1) {
+                || now - skips.getOrDefault(id, Long.MIN_VALUE / 2) <= 1 || AoePlugin.building(p)) {    // a chosen building: no drag
             return;
         }
         Hold h = holds.get(id);

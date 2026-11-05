@@ -3,6 +3,7 @@ aoe2mc.UNSELECTABLE. The scenario mode of the game program reads the tagged unit
 selects them."""
 import numpy as np
 from test_gather_attack import click
+from test_left_click import left
 from test_select_type import setup
 
 import aoe2mc
@@ -43,11 +44,11 @@ def tagged(g, uuids):
 def test_a_click_on_a_tagged_unit_selects_nothing():
     server, g = setup()
     tagged(g, {"m-1", "v-1"})
-    click(server, g, (5.5, 13.5), (5.5, 10.5))                         # the militia m-1
-    click(server, g, (12.5, 7.5), (12.5, 4.5))                         # the villager v-1
+    left(server, g, (5.5, 13.5), (5.5, 10.5))                          # the militia m-1
+    left(server, g, (12.5, 7.5), (12.5, 4.5))                         # the villager v-1
     assert not g.selected
     tagged(g, set())                                                   # "Enable Object Selection"
-    click(server, g, (5.5, 13.5), (5.5, 10.5))
+    left(server, g, (5.5, 13.5), (5.5, 10.5))                          # Paper: the left click selects (#5759)
     assert g.selected == {"m-1"}
 
 

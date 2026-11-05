@@ -1262,6 +1262,12 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         leftClick(p, 1);
     }
 
+    /** A chosen building (score aoe_build above 0, game/build.py): a left press is a placement, never a drag (#5759). */
+    static boolean building(Player p) {
+        Objective o = Bukkit.getScoreboardManager().getMainScoreboard().getObjective("aoe_build");
+        return o != null && o.getScore(p.getName()).isScoreSet() && o.getScore(p.getName()).getScore() > 0;
+    }
+
     /** Score aoe_left of p: 1 a click, 2 a drag of the selection box (Drag.java, #5759). */
     static void leftClick(Player p, int score) {
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
@@ -1420,7 +1426,8 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if ((ev.getAction() == Action.LEFT_CLICK_AIR || ev.getAction() == Action.LEFT_CLICK_BLOCK)
                 && commandStick(ev.getPlayer().getInventory().getItemInMainHand())) {
             ev.setCancelled(true);                                     // creative mode: no broken block
-            if (ev.getAction() == Action.LEFT_CLICK_AIR) {             // on a block, Drag decides (#5759)
+            if (ev.getAction() == Action.LEFT_CLICK_AIR || building(ev.getPlayer())) {   // on a block, Drag decides
+                                                                       // (#5759); a chosen building places at once
                 drag.skip(ev.getPlayer());
                 leftClick(ev.getPlayer());
             }
