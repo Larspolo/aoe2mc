@@ -498,6 +498,99 @@ def host(g):
             return n.replace("_", " ").title() if localized else n
         return get
 
+    def by_key(key):
+        """The XS id of the object key (also a Gaia start object), or -1."""
+        objects(g)
+        return ids(g).get(key, -1)
+
+    def rect_key(rect):
+        """The key of the building with the block rect (x0, x1, z0, z1) of garrisons, rally points and sites."""
+        import combat
+        return combat.target_uuid([rect[i] for i in (0, 2, 1, 3)])
+
+    def rect_of(x, key):
+        """The rect of the building key of side x in its garrisons or rally points, or None."""
+        return next((r for r in [*getattr(x, "garrisons", {}), *getattr(x, "rally", {})] if rect_key(r) == key), None)
+
+    def into(r, values, a):
+        """The int array a of the runtime r with values (a < 0: a new array): its id (#5838)."""
+        if int(a) < 0:
+            a = r.array_create("int", 0, -1, "")
+        if r.array_resize("int", int(a), len(values)):
+            for n, v in enumerate(values):
+                r.array_set("int", int(a), n, v)
+            return int(a)
+        return -1
+
+    def garrisoned_in(uid):
+        if (u := unit(uid)) is None:
+            return -1
+        rect = next((r for r, us in getattr(u[0], "garrisons", {}).items() if u[1] in us), None)
+        return by_key(rect_key(rect)) if rect else -1
+
+    def garrisoned_ids(r, uid):
+        u = unit(uid)
+        rect = u and rect_of(u[0], u[1])
+        return into(r, sorted(by_key(k) for k in u[0].garrisons.get(rect, ())) if rect else [], -1)
+    garrisoned_ids.runtime = True
+
+    def player_unit_ids(r, player=-1, kind=-1, a=-1):
+        """The ids of the objects of the player of object type or ObjectClass kind (-1: all) in array a (-1: a new one)."""
+        import per
+        import record
+        x, types = side(player), record.types()
+        out = [i for i, y, _, n in objects(g) if y is x and (int(kind) < 0 or types.get(n) == int(kind)
+                                                             or per.klass(n) == int(kind))]
+        return into(r, out, a)
+    player_unit_ids.runtime = True
+
+    def unit_attribute(uid, a=-1, damage=-1):
+        import combat
+        field = aoe2mc.STAT_ATTRIBUTES.get(int(a)) or aoe2mc.CLASS_ATTRIBUTES.get((int(a), int(damage)))
+        if field is None:
+            warn("unit attribute", (a, damage))
+        if not ((u := unit(uid)) and field and u[2] in combat.STATS):
+            return 0.0
+        return float(getattr(train.stats(u[0], u[2], u[1]), field))
+
+    def build_points(uid):
+        """The progress (0 to 1) of the construction site of the building; 1 for a complete building."""
+        if (u := unit(uid)) is None:
+            return -1.0
+        site = next((s for s in u[0].sites if rect_key(s["footprint"]) == u[1]), None)
+        return float(site["progress"]) if site else 1.0
+
+    def gather_point(uid):
+        """The rally point of the building in tiles, or (-1, -1, -1)."""
+        u = unit(uid)
+        rect = u and rect_of(u[0], u[1])
+        if rect and rect in getattr(u[0], "rally", {}):
+            x, z = u[0].rally[rect][0]
+            return ((x + 0.5) / u[0].map.T, (z + 0.5) / u[0].map.T, 0.0)
+        return (-1.0, -1.0, -1.0)
+
+    def move_target(uid):
+        """The walk goal of a villager in tiles, or (-1, -1, -1)."""
+        v = u[0].villagers.get(u[1]) if (u := unit(uid)) else None
+        if v is not None and v.goal:
+            return ((v.goal[0] + 0.5) / u[0].map.T, (v.goal[1] + 0.5) / u[0].map.T, 0.0)
+        return (-1.0, -1.0, -1.0)
+
+    def target_id(uid):
+        """The id of the attack target of a soldier of a bot, or the prey of a villager; -1 for none."""
+        if (u := unit(uid)) is None:
+            return -1
+        x, key = u[0], u[1]
+        v = x.villagers.get(key)
+        bot = next((b for b in getattr(g, "bots", ()) if b.g is x), None)
+        t = v.prey if v is not None else vars(bot).get("targets", {}).get(key) if bot else None
+        return by_key(t) if t else -1
+
+    def type_kind(uid):
+        """The ObjectType of the unit (as xsGetObjectType)."""
+        import record
+        return object_type(-1, record.types().get(u[2], -1)) if (u := unit(uid)) else -1
+
     task = {}
 
     def task_amount(field=-1, value=-1.0):
@@ -550,6 +643,8 @@ def host(g):
             "xsGetContextPlayer": lambda: -1 if ctx[0] is None else ctx[0],
             "xsGetDamageClassName": enum_name("DamageClass"),
             "xsGetDiplomacy": stance,
+            "xsGetGarrisonedInUnitId": garrisoned_in,
+            "xsGetGarrisonedUnitIds": garrisoned_ids,
             "xsGetGameTime": lambda: int(recap.game_time(g)),
             "xsGetGoal": lambda n=-1: get("goal", n, -1),
             "xsGetHandicapMultiplier": lambda player=-1: 1.0,           # the game program has no handicap
@@ -574,6 +669,7 @@ def host(g):
             "xsGetPlayerName": lambda player=-1: (player_data(player) or {}).get("name", f"Player {who(player)}"),
             "xsGetPlayerNumberOfObjects": lambda player: sum(x is side(player) for _, x, _, _ in objects(g)),
             "xsGetPlayerNumberOfTechs": techs,
+            "xsGetPlayerUnitIds": player_unit_ids,
             "xsGetRandomNumber": lambda: int(rng.integers(0, 32768)),
             "xsGetRandomNumberLH": lambda low, high: int(rng.integers(int(low), max(int(high), int(low) + 1))),
             "xsGetRandomNumberMax": lambda m: int(rng.integers(0, max(int(m), 1))),
@@ -582,15 +678,24 @@ def host(g):
             "xsGetTechName": tech_name,
             "xsGetTechState": tech_state,
             "xsGetTurn": lambda: int(recap.game_time(g) * 20),          # one turn per Minecraft tick (a choice)
+            "xsGetUnitAttribute": unit_attribute,
             "xsGetUnitAttributeHeld": held,
+            "xsGetUnitBuildPoints": build_points,
+            "xsGetUnitCaption": lambda uid: unit_name(uid),             # no own captions: the unit name
             "xsGetUnitCivName": civ_name,
             "xsGetUnitClass": unit_class,
             "xsGetUnitCopyId": type_id,
+            "xsGetUnitGatherPoint": gather_point,
             "xsGetUnitHitpoints": hitpoints,
             "xsGetUnitName": unit_name,
+            "xsGetUnitMoveTarget": move_target,
             "xsGetUnitObjectId": type_id,
             "xsGetUnitOwner": lambda uid: u[0].player if (u := unit(uid)) else -1,
+            "xsGetUnitPlayerName": lambda uid: (player_data(u[0].player) or {}).get("name", f"Player {u[0].player}")
+            if (u := unit(uid)) else "",
             "xsGetUnitPosition": position,
+            "xsGetUnitTargetUnitId": target_id,
+            "xsGetUnitType": type_kind,
             "xsGetVictoryCondition": lambda: victory()[0],
             "xsGetVictoryConditionForSecondaryGameMode": lambda: victory()[1],
             "xsGetVictoryPlayer": lambda: timer(g)[1],

@@ -372,7 +372,7 @@ class Xs:
         if fn is None:
             self.warn("function", name)
             return 0
-        return fn(*args) if name in self.host else fn(self, *args)
+        return fn(*args) if name in self.host and not getattr(fn, "runtime", False) else fn(self, *args)   # runtime: arrays
 
     def run_body(self, block, func=None):
         if func is None:
