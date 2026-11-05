@@ -361,11 +361,12 @@ XS_RULE = ("on", "since", "last", "minInterval", "maxInterval")
 
 
 def xs_state(x):
-    """The state of an xs_run.Xs: the global variables that are not const, the static locals, the start and the rule
-    states. pack() keeps the vectors (tuples) and the keys of the statics (func, name)."""
+    """The state of an xs_run.Xs: the global variables that are not const, the static locals, the start, the rule
+    states and the arrays. pack() keeps the vectors (tuples) and the keys of the statics (func, name)."""
     return {"globals": {n: pack(v[1]) for n, v in sorted(x.globals.items()) if not v[2]},
             "statics": pack({k: (v[0], v[1]) for k, v in x.statics.items()}), "started": x.started,
-            "rules": {n: {k: r[k] for k in XS_RULE} for n, r in sorted(x.rules.items())}}
+            "rules": {n: {k: r[k] for k in XS_RULE} for n, r in sorted(x.rules.items())},
+            "arrays": pack(x.arrays)}
 
 
 def xs_again(g, d):
@@ -380,6 +381,7 @@ def xs_again(g, d):
     for k, (typ, v) in unpack(s["statics"]).items():
         x.statics[k] = [typ, v, False]
     x.started = s["started"]
+    x.arrays = [list(a) for a in unpack(s.get("arrays", []))]
     for n, r in s["rules"].items():
         if n in x.rules:
             x.rules[n].update(r)
