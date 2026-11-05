@@ -4,17 +4,34 @@
 Minecraft feature: the scenario variables stay scores of `aoe_var` (the datapack triggers read them); the resources stay
 in the stock of `Gather`. XS itself has no Minecraft feature (#5610). An unknown player or attribute gives one warning
 line and 0, as an unknown name (`Xs.warn`), and the script goes on.
+The unit ids (#5837): a start object keeps the reference ID of the scenario ("ref" of aoe2mc.json), so the IDs of the
+editor in a script name the same objects; a new object takes the next ID above all start IDs, and an ID is never given
+again (the model of record.Recorder). The map key -> ID is on the main Gather (`xs_ids`, `xs_top`: one ID space for all
+sides), and the saved game keeps it (savegame.OPTIONAL). The keys are those of per.standing: a unit UUID, the building
+target UUID. The state of a unit comes from its entity (Health, Pos) or the score aoe_hp of a building, not a copy.
 """
+import json
+import math
 import os
 import re
 import sys
+import zlib
+
+import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import aoe2mc  # noqa: E402
+import units  # noqa: E402
+from buildings import COLOR_NAMES  # noqa: E402
+
+DIPLOMACY = (0, 1, 3)                                                  # DiplomacyState: ally, neutral, enemy
 
 POPULATION = {11: (lambda x: x.units, lambda x: x.soldiers),           # cAttributePopulation
               37: (lambda x: x.units,),                                # cAttributeCivilianPopulation
               40: (lambda x: x.soldiers,)}                             # cAttributeMilitaryPopulation
+# cTechState* of xs-check: the state of a technology for xsGetTechState
+INVALID, DISABLED, NOT_READY, READY, RESEARCHING, DONE, QUEUED = -2, -1, 0, 1, 2, 3, 4
+SET_ATTRIBUTE, MOD_RESOURCE, ENABLE_OBJECT, MUL_RESOURCE = 0, 1, 2, 6   # the effect IDs of xsEffectAmount
 
 
 def files(g, warn):
@@ -112,11 +129,66 @@ def civ_id(name):
     return next((i for i, c in enumerate(Civilization) if c.name == name), 0)
 
 
+def civ_title(civ):
+    """The English name of a civilization key or ID ("BRITONS" or 1 -> "Britons"), else ""."""
+    from AoE2ScenarioParser.datasets.object_support import Civilization
+    names = [c.name for c in Civilization]
+    key = names[civ] if isinstance(civ, int) and 0 <= civ < len(names) else civ if civ in names else ""
+    return key.replace("_", " ").title()
+
+
+def timer(g, hill=False):
+    """(seconds left, player) of the victory timer that ends first: the wonders and the relics (as per.victory_data), or
+    the King of the Hill monument (hill.py, on the Gather of player 1); (0, 0) with no timer."""
+    import conquest  # conquest imports gather: import it late
+    if hill:
+        h = vars(conquest.main(g)).get("hill") or {}
+        left = [(h["left"], h["owner"])] if h.get("owner") else []
+    else:
+        left = [(t["left"], t["player"]) for t in vars(g).get("wonders", {}).values()]
+        left += [(t["left"], t["player"])] if (t := vars(g).get("relic_timer")) else []
+    time, player = min(left, default=(0, 0))
+    return max(math.ceil(time), 0), int(player)
+
+
+def ids(g):
+    """{key: XS id} of the objects of g, made at the first call (the start objects of aoe2mc.json, the module doc)."""
+    import combat
+    if "xs_ids" not in vars(g):
+        objs = g.data.get("objects", [])
+        keys = [(combat.target_uuid(o["footprint"]) if o["kind"] == "building" and "footprint" in o else o.get("uuid"),
+                 o.get("ref")) for o in objs]
+        g.xs_ids = {k: ref for k, ref in keys if k and ref is not None}
+        g.xs_top = max((o.get("ref") or 0 for o in objs), default=0)
+        for k, ref in keys:
+            if k and ref is None and k not in g.xs_ids:
+                g.xs_top += 1
+                g.xs_ids[k] = g.xs_top
+    return g.xs_ids
+
+
+def objects(g):
+    """[(XS id, Gather, key, game name)] of the standing objects of all sides; a new object gets the next id."""
+    import per
+    known, out = ids(g), []
+    for x in [g, *(b.g for b in getattr(g, "bots", ()))]:
+        names = {u["uuid"]: u["name"] for u in x.units if "uuid" in u}
+        for key, name, _ in per.standing(x):
+            if key not in known:
+                g.xs_top += 1
+                known[key] = g.xs_top
+            out.append((known[key], x, key, names.get(key, name)))
+    return out
+
+
 def host(g):
     """{XS name: callable} of the game functions for the side g."""
     import recap  # recap imports gather: import it late
     import train
     warned = set()
+    data = getattr(g, "data", None) or {}
+    seed = zlib.crc32(f"{data.get('map_size')}-{len(data.get('objects', ()))}".encode())   # the map, not the clock
+    rng = np.random.default_rng(seed)
 
     def warn(what, value):
         if (what, value) not in warned:
@@ -124,7 +196,7 @@ def host(g):
             print(f"XS script: unknown {what} {value}: skipped", file=sys.stderr)
 
     def side(player):
-        x = {s.player: s for s in [g, *(b.g for b in getattr(g, "bots", ()))]}.get(int(player))
+        x = {s.player: s for s in [g, *(b.g for b in getattr(g, "bots", ()))]}.get(who(player))   # -1: the context
         if x is None:
             warn("player", player)
         return x
@@ -171,6 +243,213 @@ def host(g):
 
     def techs(player):
         return len(x.techs) if (x := side(player)) else 0
+
+    def size():
+        return int(data.get("map_size") or 0)
+
+    def tile(x, y, a):
+        rows = data.get({0: "terrain", 1: "elevation"}.get(int(a), ""))   # 0: terrain, 1: elevation (a choice)
+        if rows is None:
+            warn("tile attribute", a)
+            return -1
+        if not (0 <= int(y) < len(rows) and 0 <= int(x) < len(row := rows[int(y)].split())):
+            return -1
+        return int(row[int(x)])
+
+    def who(player=-1):
+        c = ctx[0] if ctx[0] is not None else g.player                 # no context: the side of the script
+        return c if int(player) == -1 else int(player)
+
+    def player_data(player):
+        return data.get("players", {}).get(str(who(player)))
+
+    def map_name(extension=False):
+        lobby = data.get("lobby", {})
+        name = lobby.get("scenario") or lobby.get("script") or ""
+        return name if extension else os.path.splitext(name)[0]
+
+    def in_game(player):
+        x = side(player)
+        return bool(x) and not getattr(x, "lost", False)
+
+    def color(n):
+        return COLOR_NAMES[n - 1] if isinstance(n, int) and 1 <= n <= len(COLOR_NAMES) else None
+
+    def row(player):
+        return g.players.get(str(int(player))) if side(player) else None
+
+    def stance(a, b):
+        """The DiplomacyState of player a to player b (ALLY 0, NEUTRAL 1, ENEMY 3), as diplomacy.stance."""
+        import gather
+        if row(a) is None or row(b) is None:
+            return -1
+        return 0 if gather.allied(g.players, int(a), int(b)) else 1 if int(b) in row(a).get("neutral", ()) else 3
+
+    def set_diplomacy(a, b, kind, mirror=False):
+        """As "Change Diplomacy" (aoe2mc.diplomacy_lines): the score of aoe_dip, and scenario.diplomacy applies it."""
+        a, b, kind = int(a), int(b), int(kind)
+        if row(a) is None or row(b) is None or a == b or kind not in DIPLOMACY:
+            return False
+        for n, m in ((a, b), (b, a))[:1 + bool(mirror)]:
+            g.command(f"scoreboard players set #p{n}.p{m} aoe_dip {kind + 1}")
+        g.command("scoreboard players set #any aoe_dip 1")
+        return True
+
+    def declare_victory(player, victory=False):
+        """As "Declare Victory" (aoe2mc.victory_lines): the score #p<N> of aoe_win, and scenario.victory ends the game.
+        A defeat (victory false) has no form: one warning line."""
+        if not victory:
+            warn("defeat of player", player)
+        elif side(player):
+            g.command(f"scoreboard players set #p{int(player)} aoe_win 1")
+
+    def set_name(player, key, name):
+        if (r := row(player)) is None:
+            return False
+        r[key] = str(name)
+        if key == "name":                                              # the team shows the name (Minecraft feature)
+            g.command(f"team modify p{int(player)} displayName " + json.dumps(str(name)))
+        return True
+
+    def set_color(player, n):
+        """As "Change Player Color" (aoe2mc.color_lines): the team color."""
+        if (r := row(player)) is None or color(int(n)) is None:
+            return False
+        r["color"] = color(int(n))
+        g.command(f"team modify p{int(player)} color {units.TEAM_COLOR[r['color']]}")
+        return True
+
+    def player_civ_name(player, localized=False):
+        return (r.get("civ_name") or civ_title(r.get("civ", ""))) if (r := row(player)) else ""
+
+    def color_tag(player):
+        return f"<{r.get('color', '').upper()}>" if (r := row(player)) else ""
+
+    def victory():
+        from AoE2ScenarioParser.datasets.trigger_lists import SecondaryGameMode, VictoryCondition
+        win = g.data.get("victory") or {}
+        key = win.get("condition", "standard").upper().replace("-", "_")
+        modes = sum(m.value for m in SecondaryGameMode if m.name.lower().replace("_", "-") in win.get("modes", ()))
+        return (VictoryCondition[key].value if key in VictoryCondition.__members__ else 0), modes
+
+    def victory_type():
+        import per  # per imports gather: import it late
+        return per.VICTORY_TYPES.get(getattr(g, "victory", "standard"), 0)
+
+    def tech(t):
+        n = aoe2mc.tech_names().get(int(t))
+        if n not in train.TECHS:
+            warn("technology", t)
+            return None
+        return n
+
+    def tech_state(t, player):
+        import civs  # civs imports gather: import it late
+        n, x = tech(t), side(player)
+        if n is None or x is None:
+            return INVALID
+        if train.researched(x, n):
+            return DONE
+        if (q := next((q for q in x.queues.values() if any(e["name"] == n for e in q)), None)) is not None:
+            return RESEARCHING if q[0]["name"] == n else QUEUED
+        if civs.missing(x, n):
+            return DISABLED
+        return READY if train.unlocked(x, n) else NOT_READY
+
+    def research_tech(t, force=False, available=False, player=-1):
+        """As the trigger effect "Research Technology" (scenario.research): at no cost, now. Without force only a
+        technology of the state READY (or NOT_READY with techAvailable)."""
+        state = tech_state(t, player)
+        if state in (INVALID, DONE) or not force and state not in (READY, *(NOT_READY,) * bool(available)):
+            return False
+        train.research(side(player), {"name": tech(t), "player": "@a"}, start=True)
+        return True
+
+    def tech_name(t, player=-1, internal=False):
+        from AoE2ScenarioParser.datasets.techs import TechInfo
+        if internal:
+            return next((i.name for i in TechInfo if i.ID == int(t)), "")
+        if (n := tech(t)) is None:
+            return ""
+        x = side(player) if int(player) > 0 else None
+        return vars(x).get("trigger_names", {}).get(n) if x and n in vars(x).get("trigger_names", {}) else \
+            train.ITEMS.get(n, (None, None, None))[2] or units.pretty(n)
+
+    def set_tech_name(t, player, text):
+        if (n := tech(t)) and (x := side(player)):                 # the menus show it (train.show, #2821)
+            vars(x).setdefault("trigger_names", {})[n] = str(text)
+
+    def object_key(unit):
+        n = aoe2mc.object_kinds().get(int(unit), (None, None))[1]
+        if n is None:
+            warn("object", unit)
+        return n
+
+    def available(unit, player):
+        n, x = object_key(unit), side(player)
+        return bool(n and x and train.unlocked(x, n))
+
+    def effect(e, o, a, value, player=-1, train_location=-1):
+        """cModResource (a = cAttributeSet or cAttributeAdd), cMulResource and cEnableObject (as the trigger effect
+        "Enable/Disable Object", g.trigger_menus). The unit attributes of the .dat have no table in the game program:
+        one warning line."""
+        x = side(player)
+        if x is None:
+            return
+        if int(e) in (MOD_RESOURCE, MUL_RESOURCE) and (r := resource(o)):
+            old = x.stock.get(r, 0)
+            x.stock[r] = max(int(old * value if int(e) == MUL_RESOURCE else value + old * (int(a) == 1)), 0)
+            x.show_stock()
+        elif int(e) == ENABLE_OBJECT and (n := object_key(o)):
+            vars(x).setdefault("trigger_menus", {})[n] = bool(int(a))
+        elif int(e) not in (MOD_RESOURCE, MUL_RESOURCE, ENABLE_OBJECT):
+            warn("effect", e)
+
+    def unit(uid):
+        """(Gather, key, game name) of the unit id, or None with one warning."""
+        hit = next(((x, k, n) for i, x, k, n in objects(g) if i == int(uid)), None)
+        if hit is None:
+            warn("unit", uid)
+        return hit
+
+    def type_id(uid):
+        import record
+        return record.types().get(u[2], -1) if (u := unit(uid)) else -1
+
+    def hitpoints(uid):
+        if (u := unit(uid)) is None:
+            return -1.0
+        x, key, _ = u
+        if key in getattr(x, "forts", ()):                             # a building: its score (bot.hp)
+            m = re.search(r" has (-?\d+) ", x.command(f"scoreboard players get {key} aoe_hp") or "")
+        else:
+            import gather
+            m = re.search(gather.NUMBER, (x.command(f"data get entity {key} Health") or "").rsplit(":", 1)[-1])
+        return float(m[1]) if m else -1.0
+
+    def position(uid):
+        """The tiles (x, y) of the unit and 0: the units walk on the ground (per "point-z")."""
+        if (u := unit(uid)) and (p := u[0].positions([u[1]]).get(u[1])) is not None:
+            return (p[0] / u[0].map.T, p[2] / u[0].map.T, 0.0)
+        return (-1.0, -1.0, -1.0)
+
+    def held(uid, a):
+        v = u[0].villagers.get(u[1]) if (u := unit(uid)) else None
+        return float(v.load) if v and v.load and 0 <= int(a) < len(aoe2mc.STORES) and aoe2mc.STORES[int(a)] == v.res \
+            else 0.0
+
+    def civ_name(uid, localized=False):
+        import civs
+        return (civs.real(g, u[0].player) or "").replace("_", " ").title() if (u := unit(uid)) else ""
+
+    def unit_name(uid, internal=False):
+        if (u := unit(uid)) is None:
+            return ""
+        return u[2] if internal else u[2].replace("_", " ").capitalize()
+
+    def unit_class(uid):
+        import per
+        return per.klass(u[2]) if (u := unit(uid)) else -1
 
     def kind(player, unit):
         """The side and the AoE2 name of object ID unit, or (None, None) with one warning line."""
@@ -224,8 +503,62 @@ def host(g):
     def task_amount(field=-1, value=-1.0):
         task[int(field)] = float(value)
 
-    return {**files(g, warn), "xsGetDamageClassName": enum_name("DamageClass"),
+    ctx = [None]                                                       # xsSetContextPlayer; None: the first AI script
+
+    def script():
+        """The AI script (per.Script) of the context player: the XS functions of the AI act on it (#5846)."""
+        bots = [b for b in getattr(g, "bots", ()) if getattr(b, "script", None)]
+        b = next((b for b in bots if ctx[0] is None or b.g.player == ctx[0]), None)
+        if b is None:
+            warn("AI script of player", ctx[0])
+        return b and b.script
+
+    def get(what, n, default=0):
+        if (s := script()) is None:
+            return default
+        if what == "goal":
+            return int(s.goals.get(int(n), 0 if 1 <= int(n) <= 512 else -1))
+        if what == "sn":
+            import per
+            if (name := per.SN_IDS.get(int(n))) is None:
+                return warn("strategic number", n) or default
+            return int(s.number(name))
+        return s.table(what).get(int(n), 0)                            # "signal"; "event": the AI script goal
+
+    def put(what, n, value):
+        if (s := script()) is None:
+            return
+        if what == "goal":
+            s.goals[int(n)] = int(value)
+        elif what == "sn":
+            import per
+            if (name := per.SN_IDS.get(int(n))) is None:
+                return warn("strategic number", n)
+            s.sn[name] = int(value)
+        else:
+            s.table(what)[int(n)] = int(value)
+
+    def set_context(player):
+        ctx[0] = int(player)
+
+    return {**files(g, warn), "xsDeclareVictory": declare_victory,
+            "xsDoesUnitExist": lambda uid: any(i == int(uid) for i, *_ in objects(g)),
+            "xsEffectAmount": effect,
+            "xsGetAiScriptGoal": lambda n=-1: bool(get("event", n)),
+            "xsGetAiSignal": lambda n=-1, legacy=False: get("signal", n),
+            "xsGetCivName": lambda civ, localized=False: civ_title(int(civ)),
+            "xsGetContextPlayer": lambda: -1 if ctx[0] is None else ctx[0],
+            "xsGetDamageClassName": enum_name("DamageClass"),
+            "xsGetDiplomacy": stance,
             "xsGetGameTime": lambda: int(recap.game_time(g)),
+            "xsGetGoal": lambda n=-1: get("goal", n, -1),
+            "xsGetHandicapMultiplier": lambda player=-1: 1.0,           # the game program has no handicap
+            "xsGetMapHeight": size,
+            "xsGetMapName": map_name,
+            "xsGetMapSeed": lambda: int(seed & 0x7FFFFFFF),
+            "xsGetMapTileAttribute": tile,
+            "xsGetMapWidth": size,
+            "xsGetNumPlayers": lambda: len(data.get("players", {})) + 1,   # with gaia, as AoE2
             "xsGetObjectAttribute": object_attribute,
             "xsGetObjectAttributeName": enum_name("ObjectAttribute"),
             "xsGetObjectClass": object_class,
@@ -234,12 +567,55 @@ def host(g):
             "xsGetObjectName": object_name,
             "xsGetObjectType": object_type,
             "xsGetPlayerAttributeName": enum_name("Attribute"),
+            "xsGetPlayerCivName": player_civ_name,
             "xsGetPlayerCivilization": civilization,
+            "xsGetPlayerColorTag": color_tag,
+            "xsGetPlayerInGame": in_game,
+            "xsGetPlayerName": lambda player=-1: (player_data(player) or {}).get("name", f"Player {who(player)}"),
+            "xsGetPlayerNumberOfObjects": lambda player: sum(x is side(player) for _, x, _, _ in objects(g)),
             "xsGetPlayerNumberOfTechs": techs,
+            "xsGetRandomNumber": lambda: int(rng.integers(0, 32768)),
+            "xsGetRandomNumberLH": lambda low, high: int(rng.integers(int(low), max(int(high), int(low) + 1))),
+            "xsGetRandomNumberMax": lambda m: int(rng.integers(0, max(int(m), 1))),
+            "xsGetStrategicNumber": lambda n=-1: get("sn", n, -1),
             "xsGetTaskAmount": lambda field=-1: task.get(int(field), 0.0),
+            "xsGetTechName": tech_name,
+            "xsGetTechState": tech_state,
+            "xsGetTurn": lambda: int(recap.game_time(g) * 20),          # one turn per Minecraft tick (a choice)
+            "xsGetUnitAttributeHeld": held,
+            "xsGetUnitCivName": civ_name,
+            "xsGetUnitClass": unit_class,
+            "xsGetUnitCopyId": type_id,
+            "xsGetUnitHitpoints": hitpoints,
+            "xsGetUnitName": unit_name,
+            "xsGetUnitObjectId": type_id,
+            "xsGetUnitOwner": lambda uid: u[0].player if (u := unit(uid)) else -1,
+            "xsGetUnitPosition": position,
+            "xsGetVictoryCondition": lambda: victory()[0],
+            "xsGetVictoryConditionForSecondaryGameMode": lambda: victory()[1],
+            "xsGetVictoryPlayer": lambda: timer(g)[1],
+            "xsGetVictoryPlayerForSecondaryGameMode": lambda: timer(g, True)[1],
+            "xsGetVictoryTime": lambda: timer(g)[0],
+            "xsGetVictoryTimeForSecondaryGameMode": lambda: timer(g, True)[0],
+            "xsGetVictoryType": victory_type,
+            "xsGetWorldPlayerId": who,
+            "xsGetWorldTime": lambda: int(recap.game_time(g) * 1000),   # milliseconds
+            "xsIsObjectAvailable": available,
+            "xsIsObjectValid": lambda oid, player=-1: int(oid) in aoe2mc.object_kinds(),
             "xsPlayerAttribute": attribute,
+            "xsResearchTechnology": research_tech,
             "xsResetTaskAmount": task.clear,
+            "xsSetAiScriptGoal": lambda n=-1, v=False: put("event", n, bool(v)) or True,
+            "xsSetAiSignal": lambda n=-1, v=-1, legacy=False: put("signal", n, v),
+            "xsSetContextPlayer": set_context,
+            "xsSetDiplomacy": set_diplomacy,
+            "xsSetGoal": lambda n=-1, v=-1: put("goal", n, v),
             "xsSetPlayerAttribute": set_attribute,
+            "xsSetPlayerCivName": lambda player, name="": set_name(player, "civ_name", name),
+            "xsSetPlayerColor": set_color,
+            "xsSetPlayerName": lambda player, name="": set_name(player, "name", name),
+            "xsSetStrategicNumber": lambda n=-1, v=-1: put("sn", n, v),
+            "xsSetTechName": set_tech_name,
             "xsSetTriggerVariable": set_variable,
             "xsTaskAmount": task_amount,
             "xsTriggerVariable": variable}
