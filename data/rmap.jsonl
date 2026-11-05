@@ -144,8 +144,31 @@
 {"name": "CLIFF_DESERT", "cliff_type": "CLIFF_DESERT"}
 {"name": "CLIFF_SNOW", "cliff_type": "CLIFF_SNOW"}
 {"name": "CT_DEFAULT", "cliff_type": "CLIFF_DEFAULT"}
-{"name": "CT_DESERT", "cliff_type": "CLIFF_DESERT"}
-{"name": "CT_SNOW", "cliff_type": "CLIFF_SNOW"}
+{"name": "CT_DESERT", "cliff_type": "CLIFF_DESERT", "id": 1}
+{"name": "CT_SNOW", "cliff_type": "CLIFF_SNOW", "id": 2}
+{"name": "CT_GRANITE", "cliff_type": "CLIFF_DEFAULT", "id": 0}
+{"name": "CT_MARBLE", "cliff_type": "CLIFF_DEFAULT", "id": 3}
+{"name": "CT_LIMESTONE", "cliff_type": "CLIFF_DEFAULT", "id": 4}
+{"name": "CT_TERRACE", "cliff_type": "CLIFF_DEFAULT", "id": 5}
+{"name": "CC_DEFAULT", "id": 0}
+{"name": "CC_AUTUMN", "id": 1}
+{"name": "CC_WINTER", "id": 2}
+{"name": "CC_JUNGLE", "id": 3}
+{"name": "CC_DESERT", "id": 4}
+{"name": "CC_NIGHT", "id": 5}
+{"name": "CC_EVENING", "id": 6}
+{"name": "CC_SPRING", "id": 7}
+{"name": "CC_SAVANNAH", "id": 8}
+{"name": "CC_ARCTIC", "id": 9}
+{"name": "CC_RAINFOREST", "id": 10}
+{"name": "CC_SWAMP", "id": 11}
+{"name": "CC_STEPPES", "id": 12}
+{"name": "CC_MISTY", "id": 13}
+{"name": "CC_SUMMER", "id": 14}
+{"name": "CC_MURKY", "id": 15}
+{"name": "CC_BRUMOUS", "id": 16}
+{"name": "CC_TWILIGHT", "id": 17}
+{"name": "CC_DARKNESS", "id": 18}
 {"name": "AT_COLOR", "assign": "color"}
 {"name": "AT_PLAYER", "assign": "player"}
 {"name": "AT_TEAM", "assign": "team"}
