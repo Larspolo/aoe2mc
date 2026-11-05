@@ -28,8 +28,10 @@ def repo(tmp_path, commit=True):
     return work
 
 
-def fake_github(monkeypatch, open_prs=()):
+def fake_github(monkeypatch, open_prs=(), lint=True):
     calls = []
+    if lint:                                            # the lint command of agent.toml: test_ship_pr_lint.py
+        monkeypatch.setattr(ship, "lint", lambda: True)
 
     def api(path, method="GET", data=None):
         calls.append((path, method, data))
@@ -48,6 +50,7 @@ def test_a_first_push_opens_the_pr_with_its_ticket(tmp_path, monkeypatch, capsys
     monkeypatch.chdir(repo(tmp_path))
     calls = fake_github(monkeypatch)
     pushed = []
+    monkeypatch.setattr(ship, "lint", lambda: True)
     monkeypatch.setattr(ship, "push", lambda n: pushed.append(n) or True)
     (tmp_path / "body.md").write_text("What changed.")
     assert ship.main(["5", "--title", "T", "--body", str(tmp_path / "body.md"), "--tested"]) == 0
@@ -59,6 +62,7 @@ def test_a_first_push_opens_the_pr_with_its_ticket(tmp_path, monkeypatch, capsys
 def test_failed_checks_stop_before_the_push(tmp_path, monkeypatch):
     monkeypatch.chdir(repo(tmp_path))
     fake_github(monkeypatch, open_prs=[{"number": 9}])
+    monkeypatch.setattr(ship, "lint", lambda: True)
     monkeypatch.setattr(ship, "checks", lambda: False)
     monkeypatch.setattr(ship, "push", lambda n: (_ for _ in ()).throw(AssertionError("pushed")))
     assert ship.main(["5"]) == 2

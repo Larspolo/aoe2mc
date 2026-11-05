@@ -18,6 +18,7 @@ def slot(monkeypatch, merges, minutes, starved=True):
     rows = [(datetime.datetime.fromtimestamp(T0 + m * 60, datetime.timezone.utc), 5000 + k, "") for k, m in enumerate(merges)]
     monkeypatch.setattr(claim, "merge_rows", lambda last: rows if last == LAST else [])
     monkeypatch.setattr(claim.time, "time", lambda: T0 + minutes * 60)
+    monkeypatch.setattr(claim, "live_runs", lambda remote="origin": 1)   # a live run: only the clock ends the wait
     asked = []
     key, gap = claim.review_slot("roadmap", starved=lambda: asked.append(1) or starved)
     return key, gap, bool(asked)

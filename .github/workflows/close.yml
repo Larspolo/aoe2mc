@@ -2,14 +2,16 @@ name: Close
 
 # Closes each open issue with the label `close` as completed (#1740). The auto mode denies an agent the close of an
 # issue (#862, #1323, #1641), so a run adds the label after its evidence comment, and this job does the close.
+# An epic whose last epic check ends with `Close this epic when #N merges.` gets the label here when #N merged (#835).
 on:
   issues:
-    types: [labeled]
+    types: [labeled, closed]
   schedule:
     - cron: "17 * * * *"     # each hour: labels that an event missed
-  workflow_dispatch:
+  workflow_dispatch:      # automerge.yml after a merge: a close by GITHUB_TOKEN starts no `issues: closed` event
 
 permissions:
+  contents: read         # checkout: framework/tools/epic_autoclose.py
   issues: write          # labels, comments, close
   actions: write         # gh workflow run claims.yml
 
@@ -19,19 +21,30 @@ concurrency:
 
 jobs:
   close:
-    if: github.event_name != 'issues' || github.event.label.name == 'close'
+    if: github.event_name != 'issues' || github.event.action == 'closed' || github.event.label.name == 'close'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/checkout@v4
+      - name: Label the epics whose last ticket merged
+        id: epics
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          # Before this step, a deep run started only to add the label (#835). An error must not stop the close below.
+          epics=$(python3 framework/tools/epic_autoclose.py --apply | tr '\n' ' ') || echo "::warning::epic_autoclose failed"
+          echo "numbers=$epics" >> "$GITHUB_OUTPUT"
       - name: Close the issues with the label close
         env:
           GH_TOKEN: ${{ github.token }}
           R: ${{ github.repository }}
           EV: ${{ github.event.issue.number }}
+          EPICS: ${{ steps.epics.outputs.numbers }}
         run: |
           n=0
-          # The issue of the event first: the label filter of the list lags some seconds after the label (#5575).
-          for i in $({ echo "$EV"; gh api --paginate "repos/$R/issues?state=open&labels=close&per_page=100" \
+          # The issue of the event and the epics of the step above first: the label filter of the list lags some
+          # seconds after the label (#5575).
+          for i in $({ echo "$EV"; tr ' ' '\n' <<<"$EPICS"; gh api --paginate "repos/$R/issues?state=open&labels=close&per_page=100" \
                        --jq '.[] | select(.pull_request | not) | .number'; } | grep -x '[0-9][0-9]*' | awk '!s[$0]++'); do
             labels=$(gh api "repos/$R/issues/$i" --jq '[.state, .labels[].name] | join(" ")')
             if [[ " $labels " != " open "* || " $labels " != *" close "* ]]; then echo "skip #$i: closed or no label close"; continue; fi

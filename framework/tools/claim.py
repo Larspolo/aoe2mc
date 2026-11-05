@@ -53,7 +53,7 @@ Parallel runs read the same `runs` counter of the status issue, so "every 5th ru
 the last review (`last_review` in the state comment of #1). A review with no change doubles the gap (50, 100, 200
 merged PRs), a change sets it back to 50 (`--reviewed`). `--roadmap` locks the roadmap review the same way, 100 merged
 PRs after `last_roadmap` or its newest lock ref (#3352: a write of the body can be lost), 30 while the refill has no
-source (#3741), or the merged count (at least 10, #5818) after 60 minutes with no merged PR (no ready ticket: no run merges). A gap counts
+source (#3741), or the merged count (at least 10, #5818) with no live run and no ready ticket (#851), or after 60 minutes with no merged PR. A gap counts
 merged PRs, not minutes: the speed of the project changes (#2039). The other times of this tool stay in seconds: a run that stopped
 merges nothing, so only the clock finds it.
 
@@ -84,7 +84,7 @@ REVIEW_MIN, REVIEW_MAX = REVIEW_CONFIG.get("min_gap", 10), REVIEW_CONFIG.get("ma
 OWNER_GAP = REVIEW_CONFIG.get("owner_gap", 20)   # the gap when an owner session merged a PR since the last review
 ROADMAP = 100               # merged PRs between two reviews of steering/project/ROADMAP.md (#2039)
 ROADMAP_EARLY = 30          # the same while the refill has no source: R < N, each roadmap feature has an epic (#3741)
-ROADMAP_IDLE = 60           # minutes with no merged PR: then the merged count is the gap (no ready ticket, no run merges)
+ROADMAP_IDLE = 60           # minutes with no merged PR (or no live run): then the merged count is the gap (no run merges)
 ROADMAP_IDLE_MIN = 10       # the least merged count of that gap: 1 or 2 PRs change no feature (#5818: 5 reviews in 8 h)
 STATUS = CONFIG["status"]["issue"]   # the status issue: its state comment holds the last reviews
 # The times below find a run that stopped: a stopped run merges nothing, so they stay on the clock (#2039).
@@ -386,8 +386,8 @@ def review_slot(kind, remote="origin", starved=None):
     """(lock key, gap) of the process review (`review`) or the roadmap review (`roadmap`); the key is None when the review
     is not due. For `--review`, `--roadmap` and `usage.due_reviews` (a due review is work of a deep run, #3560).
     starved: a function that is True when the refill has no source (default `starved`); the roadmap gap is then
-    ROADMAP_EARLY, so that the queue does not run empty for 100 merged PRs (#3741). After ROADMAP_IDLE minutes with no
-    merged PR the gap is the merged count (at least ROADMAP_IDLE_MIN): with no ready ticket no run merges, and the queue
+    ROADMAP_EARLY, so that the queue does not run empty for 100 merged PRs (#3741). When no more PR merges
+    (`nothing_merges`) the gap is the merged count (at least ROADMAP_IDLE_MIN): with no ready ticket no run merges, and the queue
     stopped at 27 of 30 (2026-10-31). It is read only in that window."""
     body = api(f"issues/{STATUS}")["body"] if on_github(remote) else ""
     state = agent_state(body)
@@ -399,11 +399,37 @@ def review_slot(kind, remote="origin", starved=None):
         last = max(filter(None, (last, last_lock(kind, remote))), default=None)
     merged = merged_since(last, gap, remote)
     if kind == "roadmap" and merged < gap and (merged >= ROADMAP_EARLY or merged >= ROADMAP_IDLE_MIN and
-                                               idle_minutes(last, remote) >= ROADMAP_IDLE) and (starved or refill_starved)():
+                                               nothing_merges(last, remote)) and (starved or refill_starved)():
         gap = min(merged, ROADMAP_EARLY)
     if kind == "review" and OWNER_GAP <= merged < gap and owner_since(last, remote):
         gap = OWNER_GAP
     return pr_slot(last, gap, merged, max(gap, REVIEW) if kind == "review" else None), gap
+
+
+def live_runs(remote="origin"):
+    """The runs that hold a beating ticket claim now (`health.beating_claims`); None when git cannot read the claims."""
+    import health  # health imports dashboard, which imports this module
+    return health.beating_claims(datetime.datetime.now(datetime.timezone.utc), remote=remote)
+
+
+def nothing_merges(last, remote="origin"):
+    """True when no PR will merge soon: no run holds a beating claim, or ROADMAP_IDLE minutes passed with no merge after
+    `last` (a run that stopped). Only the clock made the queue stand idle 13 times for about 1 h on 2026-11-01 and
+    2026-11-02 while no run worked (lever 8 of the `improve` skill). A ready ticket counts as a live run (#851): the
+    pacer starts its run in the same cycle, and its claim made the review not due for the deep run of that cycle (5
+    of 47 deep runs found no work on 2026-11-03)."""
+    return live_runs(remote) == 0 and not ready_tickets(remote) or idle_minutes(last, remote) >= ROADMAP_IDLE
+
+
+def ready_tickets(remote="origin"):
+    """The number of ready tickets of all lanes (`dashboard.candidates`), from one page of the open issues; None when
+    GitHub cannot be read (then `nothing_merges` keeps its result from before #851)."""
+    import dashboard
+    try:
+        return len(dashboard.candidates(api("issues?state=open&per_page=100"), reserved=()))
+    except (Exception, SystemExit) as e:                # claim.fail exits 2 on a GitHub error
+        print(f"ready tickets: {e}", file=sys.stderr)
+        return None
 
 
 def refill_starved():
@@ -418,7 +444,8 @@ def refill_starved():
         issues = dashboard.pages("issues?state=open")
         ready = len(dashboard.candidates(issues, reserved=()))
         return target is not None and ready < target and \
-            not usage.refill_need(ready, target, issues, usage.release_due, lambda: [], usage.free_sources)
+            not usage.refill_need(ready, target, issues, usage.release_due, lambda: [], usage.free_sources,
+                                 closing=usage.autoclosing)
     except Exception as e:                                         # a quota, GitHub or file error
         print(f"refill sources: {e}", file=sys.stderr)
         return False
@@ -469,6 +496,9 @@ def foreign(number, base=f"origin/{CONFIG['branch']}"):
     if git("rev-parse", "--is-shallow-repository", check=False).stdout.strip() == "true":
         # A shallow clone cuts off the merge bases: the commits of main then show as own commits (#4604).
         git("fetch", "--quiet", "--unshallow", base.split("/")[0], check=False)
+    # A stale local ref of main shows the newer commits of main as own commits (#183): fetch it first.
+    remote, _, branch = base.partition("/")
+    git("fetch", "--quiet", remote, f"+refs/heads/{branch}:refs/remotes/{base}", check=False)
     out = []
     for commit in filter(None, git("log", "--no-merges", "--format=%h %B%x00", f"{base}..HEAD", check=False).stdout.split("\0")):
         for m in re.findall(r"\b(?:close[sd]?|fix(?:es|ed)?|resolve[sd]?)\s*:?\s+#(\d+)", commit, re.I):
@@ -696,6 +726,12 @@ def main(argv=None):
                     help="a claim: when another run has the ticket, try these tickets in this order (one call)")
     ap.add_argument("--remote", default="origin")
     a = ap.parse_args(argv)
+    # A claim on a detached HEAD would be named `unknown`: the next beat of the run then calls its own claim a takeover (#155).
+    writes = a.comment or a.refill or a.review or a.roadmap or not (
+        a.release or a.show or a.beat or a.stale or a.stuck or a.guard or a.adopt or a.prune or a.fixmain or a.reviewed)
+    if writes and who() == "unknown":
+        print("detached HEAD: check out your branch first (`git checkout -B <branch> origin/main`)")
+        return 2
     if a.prune:
         gone = prune(a.remote)
         print("\n".join(f"deleted claim/{n}" for n in gone) or "nothing to delete")

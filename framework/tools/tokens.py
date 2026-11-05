@@ -22,7 +22,8 @@ transcript gives only `repo`. Sink `output`: text,
 thinking and tool input. The rest of the eq (not in the sinks): owner messages, hook text and the carried output.
 Field `cost`: the API list price of the calls in $, by the model of each call (`PRICES`). The eq weighs a cache read
 0.1, but Opus 5.5 pays 0.05 and Haiku 5.5 pays 5 times more above 100k prompt tokens: compare lanes by the cost.
-Field `verify` (#1704): the wall minutes and the count of the check commands (`pytest`, `ruff`, `mc_check.py`, `mc_shot.py`,
+Field `verify` (#1704): the wall minutes and the count of the check commands (`pytest`, `ruff`, `vitest`, `playwright`, `build`,
+`lighthouse`, `biome` (#810), `mc_check.py`, `mc_shot.py`,
 `render.py`, `check tool`: a server run of `tools/*_check.py` or `game/run.py`, and `wait`: a loop that waits for the
 output of a background check), from the time of a tool call to the time of its result. A background command has its
 minutes in the wait loop or the notification, not in its own call.
@@ -111,7 +112,10 @@ def label(name, inp):
 
 
 CHECKS = (("pytest -m mc", r"pytest\b.*-m\s+['\"]?mc\b"), ("pytest -m slow", r"pytest\b.*-m\s+['\"]?slow\b"),
-          ("pytest files", r"pytest\b.*\btests/\S+\.py"), ("pytest", r"\bpytest\b"), ("ruff", r"\bruff\b"),
+          ("playwright", r"\bplaywright\s+test\b"), ("lighthouse", r"\blighthouse\.mjs\b"),   # the Node checks (#810)
+          ("build", r"\bnpm run build\b|\bnext build\b"),
+          ("pytest files", r"pytest\b.*\btests/\S+\.py"), ("vitest files", r"\bvitest\b.*\btests/\S+\.ts\b"),
+          ("pytest", r"\bpytest\b"), ("vitest", r"\bvitest\b"), ("ruff", r"\bruff\b"), ("biome", r"\bbiome\b"),
           ("mc_check.py", r"mc_check\.py"), ("mc_shot.py", r"mc_shot\.py"), ("render.py", r"render\.py"),
           ("check tool", r"(?<!framework/)tools/\w+_check\.py|\bgame/run\.py\b"))   # a server run (#5424)
 WAIT = r"\buntil\b|\bsleep\b"                 # a wait loop (LEARNINGS #413): its minutes are the minutes of a check
@@ -243,11 +247,21 @@ def calls(records):
     return by_phase, by_label, pairs
 
 
-def calls_line(records, k=5):
-    """The Calls: line of the run report (#3970): the calls per phase and the k most frequent labels of a run."""
+def read_labels(records):
+    """The calls per `label()` of the phase `read` (#189): the reads that repeat."""
+    return Counter(label(b.get("name", ""), b.get("input") or {}) for r in records
+                   if r.get("type") == "assistant" and isinstance((r.get("message") or {}).get("content"), list)
+                   for b in r["message"]["content"] if b.get("type") == "tool_use"
+                   and phase(b.get("name", ""), b.get("input") or {}) == "read")
+
+
+def calls_line(records, k=5, k_read=3):
+    """The Calls: line of the run report (#3970): the calls per phase, the k most frequent labels of a run and the
+    k_read most frequent labels of the phase `read` (#189)."""
     ph, lab, _ = calls(records)
     return (f"Calls: {', '.join(f'{p} {n}' for p, n in ph.most_common())} · "
-            f"top {', '.join(f'{n}x {x}' for x, n in lab.most_common(k))}")
+            f"top {', '.join(f'{n}x {x}' for x, n in lab.most_common(k))} · "
+            f"read top {', '.join(f'{n}x {x}' for x, n in read_labels(records).most_common(k_read)) or '-'}")
 
 
 def phases(records):

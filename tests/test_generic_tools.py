@@ -16,6 +16,7 @@ TOOL = re.compile(r"tools/[\w/]+\.py")
 OPTIONAL = {(".claude/skills/autopilot/owner.md", "tools/mc_shot.py"),       # an example of a check (#1900)
             (".claude/skills/autopilot/report.md", "tools/release.py"),      # report.py skips it (#1963)
             (".claude/skills/ticket/SKILL.md", "tools/replay_drift.py"),     # the lesson of #829
+            ("framework/tools/cycle_start.py", "tools/release.py"),         # due_checks() gives [] (#153)
             ("framework/tools/report.py", "tools/release.py"),
             ("framework/tools/usage.py", "tools/release.py")}                          # release_percent() gives None
 

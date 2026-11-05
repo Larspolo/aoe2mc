@@ -185,6 +185,7 @@ jobs:
             gh workflow run claims.yml --repo "$R" || true                  # the claim refs of closed tickets
             gh workflow run ci.yml --repo "$R" --ref main
             gh workflow run coverage.yml --repo "$R" --ref main || true     # report and MAX on main (#233)
+            gh workflow run close.yml --repo "$R" || true                   # an epic whose last ticket merged (#835)
           fi
           # A push of GITHUB_TOKEN starts no `push` workflow: start each one of main whose paths filter matches the
           # merged files, once (#4839; for example the site image of a new project). labels.yml starts only when a PR
