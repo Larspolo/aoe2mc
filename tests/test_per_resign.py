@@ -6,7 +6,7 @@ from game import conquest, per
 from game.bot import build  # noqa: F401  (puts game/ on the path for the plain names)
 
 RULES = """(defrule (taunt-detected 1 104) => (set-goal 1 1))
-(defrule (goal 1 -1) => (resign))"""   # goal 1 is -1 (not set) until the taunt sets it
+(defrule (goal 1 0) => (resign))"""   # goal 1 is 0 (not set, #5824) until the taunt sets it
 
 
 def run(taunted):

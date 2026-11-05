@@ -40,9 +40,9 @@ def test_up_jump_dynamic_goes_from_the_rule_by_the_delta():
 
 
 def test_a_loop_with_no_end_stops_with_one_warning_and_the_next_step_runs_again(capsys):
-    script = ran("""(defrule (true) => (up-modify-goal 1 c:+ 1))
+    script = ran("""(defrule (true) => (up-modify-goal 600 c:+ 1))
 (defrule (true) => (up-jump-rule -1))""")
     script.step()
-    assert script.goals[1] == 1                                        # one rule run per step: -1 + 1, then + 1
+    assert script.goals[600] == 1                                        # one rule run per step: -1 + 1, then + 1
     err = capsys.readouterr().err
     assert err.count("a loop of rules has no end") == 1
