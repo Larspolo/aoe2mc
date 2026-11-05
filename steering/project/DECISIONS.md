@@ -54,3 +54,4 @@ the owner chose another option, `-`: no recommendation) · principle (`P<n>`, or
 - 2026-11-04 · #5511 · Camera mode: no hiding of leaves (option A); the player walks around the trees to see the units under them, and selected units glow · - · P1, P2
 - 2026-11-04 · #3101 · Chain objects: the name gives the direction of the chain line on the AoE2 screen, as for the gates (A); the AoE2 DE data agrees (1396 is 1.0 × 0.5 tiles, 1397 is 0.5 × 1.0) · taken · P1, P10
 - 2026-11-04 · #5759 · Selection box with a left drag: research first (#5773) if survival or adventure mode sends a held left click on each tick; until then the held right click stays · other · P1
+- 2026-11-05 · #5759 · Selection box: keep the held right click (a left drag needs a 1 s wait for each left click on the ground); select only with the right click, the left click only places a building (#5820) · other · P8
