@@ -65,6 +65,7 @@ timed rules. Scoreboards hold 32-bit integers, `scoreboard players operation` ha
 | `xsChatData` | `tellraw @a` with the text and a score component for `%d` | A `float` value shows its whole part |
 | `xsBreakPoint` | No command | — |
 | `xsGetGameTime` | `#now` / 20 | — |
+| `xsArrayCreate*`, `xsArrayGet*`, `xsArraySet*`, `xsArrayResize*`, `xsArrayGetSize`, `xsDumpArrays` (each type: Bool, Float, Int, String, Vector) | None | The game program only (`Xs.arrays`, #5838): an array is a list of values with an index that the script computes, and a vanilla score holds one number. A storage list could hold the values, but each get and set with a computed index needs a macro function, and a float or vector array has no score form. The converter keeps the warning line |
 | `xsTriggerVariable`, `xsSetTriggerVariable` | The score `#v<N> aoe_var` (the converted triggers use it, `trigger_files()`) | A literal N: one command. A computed N: a macro function |
 | `xsGetObjectCount` | `execute store result score ... if entity @e[tag=aoe2mc.p<P>,tag=aoe2mc.t<ID>,tag=!<MOUNT>]`, as `count_lines()` | A building is a block with no entity: it does not count (as "Count Units into Variable"). A computed P or ID: a macro function |
 | `xsGetObjectCountTotal` | As `xsGetObjectCount` | A vanilla world has no training queue and no construction site: the count of the done units |
