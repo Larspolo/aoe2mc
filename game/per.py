@@ -164,10 +164,12 @@ def random_file(args, consts, rng, where):
 
 
 def find_in(files, name):
-    """The key of (load "NAME") in the AI files of a scenario, by the rules of find(): ".per" added, any case."""
+    """The key of (load "NAME") in the AI files of a scenario, by the rules of find(): ".per" added, any case. With no
+    such file, ".per2": AoE2 DE stores the AI files of a scenario as NAME.per2 (#5834)."""
     name = "/".join(p for p in name.replace("\\", "/").split("/") if p)
-    name += "" if os.path.splitext(name.rsplit("/", 1)[-1])[1] else ".per"
-    return next((k for k in sorted(files) if k.replace("\\", "/").lower() == name.lower()), None)
+    ext = os.path.splitext(name.rsplit("/", 1)[-1])[1]
+    keys = {k.replace("\\", "/").lower(): k for k in sorted(files, reverse=True)}   # the first key wins a tie
+    return next((keys[n.lower()] for n in ([name] if ext else [name + ".per", name + ".per2"]) if n.lower() in keys), None)
 
 
 def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0, rng=None, files=None):
@@ -327,6 +329,8 @@ FACTS = {r["id"]: r["name"] for r in table.load("per_facts.jsonl")}   # airef Fa
 # The airef ids of objects and technologies (two sets of numbers): the up-* commands with g: take an id (#4869).
 OBJECT_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("unit", "building")}
 TECH_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("tech", "age")}
+CIV_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] == "civ"}   # #5834
+POSITION_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if r["kind"] == "position"}   # #5834
 SHARED = ("up-get-event", "up-get-shared-goal", "up-get-signal", "up-set-event", "up-set-shared-goal", "up-set-signal")
 POINTS = ("up-add-point", "up-bound-point", "up-bound-precise-point", "up-copy-point", "up-cross-tiles",   # #4956
           "up-get-point", "up-get-point-distance", "up-lerp-percent", "up-lerp-tiles", "up-set-precise-target-point",
@@ -578,6 +582,8 @@ class Script:
         (per_names.jsonl: with-escrow 1, a unit, a technology); another name gives one warning and 0."""
         if not isinstance(v, str):
             return v
+        if v == "my-player-number":                                    # the number of the bot (airef PlayerNumber)
+            return self.bot.g.player
         row = names().get(v)
         if row and "id" in row:
             return row["id"]
@@ -718,7 +724,7 @@ class Script:
     def game(self, name, *kinds):
         """The name of the game program of a script name of one of kinds, or None (one warning)."""
         if isinstance(name, int):                           # an airef id: its name of these kinds (#5182)
-            name = (TECH_IDS if {"tech", "age"} & set(kinds) else OBJECT_IDS).get(name, name)
+            name = (TECH_IDS if {"tech", "age"} & set(kinds) else CIV_IDS if kinds == ("civ",) else OBJECT_IDS).get(name, name)
         row = names().get(name)
         if row is None and (name == "all-units-class" or any(r["name"] == name and r["kind"] == "class" for r in CLASSES)):
             return ("CLASS:" + name,)                       # a class of the threat commands: count() matches it (#5104)
@@ -1385,6 +1391,7 @@ class Script:
     def position(self, kind):
         """The tile (x, y) of an airef PositionType, or None (the script gets (-1, -1)). The game program has no map
         facts of the teams: mirror reflects across the long axis to the town, flank is the enemy town."""
+        kind = POSITION_IDS.get(kind, kind)                         # a number: the airef id (#5834)
         n, b = self.tiles(), self.bot
         me = self.town_tile(b.g.player)
         c = (n // 2, n // 2)
