@@ -738,7 +738,9 @@ def xs(g):
     """Run main() and the due rules of the XS script (#5662) at the game seconds (recap.game_time)."""
     if getattr(g, "xs", None) is not None:
         import recap
+        import xs_host
         g.xs.tick(recap.game_time(g))
+        xs_host.timers(g)                                              # the boss bars of xsDisplayTimer (#5844)
 
 
 def effects(g):

@@ -181,6 +181,133 @@ def objects(g):
     return out
 
 
+def timers(g):
+    """Each game second: the boss bars of the XS timers (xsDisplayTimer) show the time left; a bar at 0 goes away."""
+    import recap
+    for n, t in list(vars(g).get("xs_timers", {}).items()):
+        left = t["end"] - recap.game_time(g)
+        bar = f"aoe2mc:xs_timer{n}"
+        if left <= 0:
+            g.command(f"bossbar remove {bar}")
+            del g.xs_timers[n]
+            continue
+        sec = math.ceil(left)
+        per = aoe2mc.TIME_UNITS.get(t["unit"], 1)
+        shown = f"{sec // 60}:{sec % 60:02d}" if t["unit"] == 3 else str(math.ceil(left / per))
+        g.command(f"bossbar set {bar} value {sec}")
+        g.command(f"bossbar set {bar} name " + json.dumps(t["msg"].replace("%d", shown), ensure_ascii=False))
+
+
+def screen(g, warn, side, unit, by_key, into):
+    """The chat, instruction, timer, sound and view functions of XS (#5844), with the commands of the trigger effects
+    "Send Chat", "Display Instructions", "Display Timer", "Play Sound" and "Change View" (aoe2mc.chat_lines, ...).
+    Player -1 or 0: all players. No form: the zoom, the color mood, xsGetString and xsSetChatToPlayer (docs/research/xs.md)."""
+    import recap
+
+    def to(player):
+        return "@a" if int(player) <= 0 else f"@a[team=p{int(player)}]"
+
+    def text(msg):
+        return re.sub(r"<[^<>]*>", "", str(msg)).replace("\r", "").strip()
+
+    def send_chat(msg="", player=-1, silent=False):
+        if not (t := text(msg)):
+            return False
+        g.command(f"tellraw {to(player)} " + json.dumps({"text": t}, ensure_ascii=False))
+        return True
+
+    def instructions(msg="", time=-1, source=-1, icon=-1, panel=-1, tag=False, notify=False, sound="", player=-1):
+        if not (t := text(msg)):
+            return False
+        ticks = 20 * (int(time) if int(time) > 0 else 10)               # AoE2 default: 10 s
+        for c in [f"title {to(player)} times 10 {ticks} 20", f"title {to(player)} subtitle " +
+                  json.dumps({"text": t}, ensure_ascii=False), f'title {to(player)} title ""']:
+            g.command(c)
+        if len(t) > aoe2mc.SUBTITLE_CHARS:                              # the client cuts a long subtitle (#5298)
+            send_chat(t, player)
+        return True
+
+    def display_timer(n=-1, msg="", time=-1, unit=-1, reset=False, player=-1):
+        unit, bar = int(unit) if int(unit) in aoe2mc.TIME_UNITS else 2, f"aoe2mc:xs_timer{int(n)}"
+        old = vars(g).setdefault("xs_timers", {}).get(int(n))
+        sec = max(int(time) * aoe2mc.TIME_UNITS[unit], 1)
+        end = old["end"] if old and not reset else recap.game_time(g) + sec
+        if not old or reset:
+            for c in [f"bossbar remove {bar}", f'bossbar add {bar} ""', f"bossbar set {bar} max {sec}",
+                      f"bossbar set {bar} players {to(player)}"]:
+                g.command(c)
+        g.xs_timers[int(n)] = dict(end=end, unit=unit, msg=text(msg) or "%d")
+        timers(g)
+        return True
+
+    def clear_timer(n=-1, player=-1):
+        if vars(g).get("xs_timers", {}).pop(int(n), None) is None:
+            return False
+        g.command(f"bossbar remove aoe2mc:xs_timer{int(n)}")
+        return True
+
+    def remaining(n=-1, unit=-1, player=-1):
+        if (t := vars(g).get("xs_timers", {}).get(int(n))) is None:
+            return 0.0
+        return max(t["end"] - recap.game_time(g), 0.0) / aoe2mc.TIME_UNITS.get(int(unit), 1)
+
+    def at(loc):
+        bx, bz = int(loc[0] * g.map.T), int(loc[1] * g.map.T)
+        return f"{bx + 0.5} {float(g.map.y(bx, bz))} {bz + 0.5}"
+
+    def play_sound(name="", player=-1, loc=(-1.0, -1.0, -1.0), angle=-1.0, uid=-1, everyone=False):
+        if not str(name):
+            return False
+        sound = next(s for part, s in aoe2mc.SOUNDS if part in str(name).upper())   # the last part "" fits all
+        who = "@a" if everyone else to(player)
+        if loc[0] >= 0 and loc[1] >= 0:
+            g.command(f"playsound minecraft:{sound} master {who} {at(loc)}")
+        elif int(uid) >= 0 and (u := unit(uid)):
+            u[0].command(f"execute at {u[1]} run playsound minecraft:{sound} master {who} ~ ~ ~")
+        else:
+            g.command(f"execute as {who} at @s run playsound minecraft:{sound} master @s")
+        return True
+
+    def set_view(player=-1, loc=(-1.0, -1.0, -1.0), duration=-1):
+        if loc[0] < 0 or loc[1] < 0:                                    # in Minecraft the player is the camera
+            return False
+        g.command(f"tp {to(player)} {at(loc)}")
+        return True
+
+    def view(player=-1):
+        x = side(player)
+        p = x and x.pos(getattr(x, "person", None) or x.who)
+        return (p[0] / x.map.T, p[2] / x.map.T, 0.0) if p else (-1.0, -1.0, -1.0)
+
+    def selected(r, a=-1, player=-1):
+        x = side(player)
+        return into(r, sorted(by_key(k) for k in (getattr(x, "selected", None) or ())) if x else [], a)
+    selected.runtime = True
+
+    def visible(uid=-1, fog=False, player=-1):
+        import diplomacy
+        import fog as fogs
+        x, u = side(player), unit(uid)
+        if not (x and u):
+            return False
+        if u[0] is x or diplomacy.stance(x, u[0].player) == "ally":
+            return True
+        return u[1] not in set(vars(x).get("fog", {}).get("hidden", ())) - fogs.seen(x)
+
+    return {"xsClearInstructions": lambda panel=-1, player=-1: g.command(f"title {to(player)} clear") is not None,
+            "xsClearTimer": clear_timer,
+            "xsDisplayInstructions": instructions,
+            "xsDisplayTimer": display_timer,
+            "xsPlaySound": play_sound,
+            "xsSendChat": send_chat,
+            "xsSetViewPosition": set_view,
+            "xsUnsyncGetLocalPlayerId": lambda: int(g.player),
+            "xsUnsyncGetPlayerSelectedUnitIds": selected,
+            "xsUnsyncGetTimerTimeRemaining": remaining,
+            "xsUnsyncGetViewPosition": view,
+            "xsUnsyncIsUnitVisible": visible}
+
+
 def host(g):
     """{XS name: callable} of the game functions for the side g."""
     import recap  # recap imports gather: import it late
@@ -741,7 +868,7 @@ def host(g):
     def set_context(player):
         ctx[0] = int(player)
 
-    return {**files(g, warn), "xsCreateUnit": create, "xsDeclareVictory": declare_victory,
+    return {**files(g, warn), **screen(g, warn, side, unit, by_key, into), "xsCreateUnit": create, "xsDeclareVictory": declare_victory,
             "xsDoesUnitExist": lambda uid: any(i == int(uid) for i, *_ in objects(g)),
             "xsEffectAmount": effect,
             "xsFlashUnit": unit_do(flash),
