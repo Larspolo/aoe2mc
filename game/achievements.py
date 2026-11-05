@@ -24,7 +24,17 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "achievements.jsonl")
+
+
+def path(frozen=None):
+    """data/achievements.jsonl of the converter: one folder up in a source checkout; in an app bundle the modules of
+    game/ are next to the folder data (packaging/aoe2mc.spec), so the up path is not in the bundle."""
+    frozen = getattr(sys, "frozen", False) if frozen is None else frozen
+    here = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(here if frozen else os.path.dirname(here), "data", "achievements.jsonl")
+
+
+PATH = path()
 ROWS = [json.loads(x) for x in open(PATH, encoding="utf-8") if x.strip()]
 ON = {}      # {source: {event kind: test (g, h, r, **at) -> bool}}: the lines of a win or a kill (on, run)
 SAVED = []   # the fields of a Gather that the achievements keep in a saved game (field, savegame.KEPT)
