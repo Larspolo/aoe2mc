@@ -51,9 +51,17 @@ def is_script(path):      # .rms, and .rms2 of the DE folder of the scripts (#53
     return path.lower().endswith((".rms", ".rms2"))
 
 
-def named(word, consts):      # a #const that names a color mood or a cliff type (#5248): its name, else the word
-    v = consts.get(word)
-    return v if isinstance(v, str) else word
+IDS = {(r["name"][:3], r["id"]): r["name"] for r in RMAP if "id" in r}   # random_map.def numbers: ("CC_", 1) is CC_AUTUMN
+
+
+def named(word, consts, prefix="CC_"):   # a #const that names a color mood or a cliff type (#5248): its name, else the word
+    v = consts.get(word, word)           # a number (#const CLIFF_TYPE 3): the name of random_map.def
+    if isinstance(v, str):
+        return v
+    try:
+        return IDS.get((prefix, int(v)), word)
+    except (TypeError, ValueError):
+        return word
 BLANK = {r["name"] for r in RMAP if r.get("blank")}     # placeholders: a tile and an actor_area, no object (#4698)
 SHORE_FISH = next(r["name"] for r in RMAP if r.get("shore_fish"))
 
@@ -1305,7 +1313,7 @@ def cliffs(cmds, terrain, starts, consts, rng, warn):
     o, kind = dict(CLIFF_DEFAULTS), "CLIFF_DEFAULT"
     for cmd, args, _ in cmds:
         if cmd == "cliff_type" and args:
-            word = named(args[0], consts)
+            word = named(args[0], consts, "CT_")
             if word in CLIFF_TYPES:
                 kind = CLIFF_TYPES[word]
             else:
