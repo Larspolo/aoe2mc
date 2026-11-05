@@ -70,6 +70,9 @@ timed rules. Scoreboards hold 32-bit integers, `scoreboard players operation` ha
 | `xsGetObjectCountTotal` | As `xsGetObjectCount` | A vanilla world has no training queue and no construction site: the count of the done units |
 | `xsGetPlayerCivilization` | A constant: the converter knows the civilization of each player | — |
 | `xsPlayerAttribute`, `xsSetPlayerAttribute`, `xsEffectAmount`, `xsGetPlayerNumberOfTechs` | None: a vanilla world has no stock, no attributes and no technologies (`resource_lines()` only stores the changes for the game program) | The game program only |
+| `xsSetDiplomacy`, `xsDeclareVictory` (victory true), `xsSetPlayerColor` | The commands of the trigger effects "Change Diplomacy", "Declare Victory" and "Change Player Color" (`diplomacy_lines()`, `victory_lines()`, `color_lines()`) | A computed player or stance: a macro function. `xsDeclareVictory` with victory false (a defeat): no form in A and B, one warning line (#5843) |
+| `xsGetVictoryCondition`, `xsGetVictoryConditionForSecondaryGameMode`, `xsGetVictoryType`, `xsGetCivName` | A constant: the converter knows the victory settings and the civilizations | — |
+| `xsGetDiplomacy`, `xsGetPlayerCivName`, `xsGetPlayerColorTag`, `xsSetPlayerName`, `xsSetPlayerCivName`, `xsGetVictoryTime`, `xsGetVictoryPlayer` (and `ForSecondaryGameMode`) | None: the stances, the names and the wonder, relic and hill timers are in the game program (`game/xs_host.py`, #5843); strings are no scores | The game program only |
 | The rest of the game functions of the guide | A function that reads entities (a unit, a position) can get a selector in a later ticket | Until then: the game program only |
 | `abs`, `floor`, `ceil`, `round`, `xsCeilToInt` | Score operations on the fixed point value | — |
 | `sqrt`, `xsVectorLength`, `xsVectorNormalize`, `dist` | An integer square root by Newton steps (a fixed number of lines) | 0.001 |
