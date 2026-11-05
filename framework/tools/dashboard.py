@@ -45,8 +45,8 @@ def labels(issue):
 
 
 def depends(issue):
-    """Numbers in the "Depends on: #a, #b" lines of the issue body (only at the start of a line, not in text)."""
-    lines = re.findall(r"^Depends on:([^\n]*)", issue.get("body") or "", re.M)
+    """Numbers in the "Depends on: #a, #b" lines of the issue body (at the start of a line or of a list item, not in text, #5791)."""
+    lines = re.findall(r"^[ \t]*(?:[-*][ \t]+)?Depends on:([^\n]*)", issue.get("body") or "", re.M)
     return [int(n) for line in lines for n in re.findall(r"#(\d+)", line)]
 
 
