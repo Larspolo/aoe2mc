@@ -172,13 +172,74 @@ def host(g):
     def techs(player):
         return len(x.techs) if (x := side(player)) else 0
 
-    f = files(g, warn)
-    return {**f, "xsGetGameTime": lambda: int(recap.game_time(g)),
+    def kind(player, unit):
+        """The side and the AoE2 name of object ID unit, or (None, None) with one warning line."""
+        name = aoe2mc.object_kinds().get(int(unit), (None, None))[1]
+        if name is None:
+            warn("object", unit)
+        return side(player), name
+
+    def object_attribute(player=-1, unit=-1, a=-1, damage=-1):
+        """A combat value of the unit type of the player (train.stats, with the trigger changes), as "Modify
+        Variable by Attribute" (scenario.reads): the attributes of aoe2mc.STAT_ATTRIBUTES and CLASS_ATTRIBUTES."""
+        import combat  # combat imports gather: import it late
+        x, name = kind(player, unit)
+        field = aoe2mc.STAT_ATTRIBUTES.get(int(a)) or aoe2mc.CLASS_ATTRIBUTES.get((int(a), int(damage)))
+        if field is None:
+            warn("object attribute", (a, damage))
+        if not (x and name and field and name in combat.STATS):
+            return 0.0
+        return float(getattr(train.stats(x, name), field))
+
+    def object_class(player=-1, unit=-1):
+        """The first ObjectClass whose test of train.CLASSES holds for the unit type, else -1."""
+        from AoE2ScenarioParser.datasets.trigger_lists import ObjectClass
+        _, name = kind(player, unit)
+        return next((c.value for c in ObjectClass if name and train.applies(f"@{c.name.lower()}", name)), -1)
+
+    def object_type(player=-1, unit=-1):
+        """The ObjectType: 2 building, 3 villager, 4 a unit with combat values, else 1 (other)."""
+        import combat  # combat imports gather: import it late
+        prefix, name = aoe2mc.object_kinds().get(int(unit), (None, None))
+        if name is None:
+            warn("object", unit)
+            return -1
+        return 2 if prefix == "B" else 3 if name.startswith("VILLAGER") else 4 if name in combat.STATS else 1
+
+    def object_name(unit=-1, player=-1, internal=False):
+        name = kind(player, unit)[1] if int(player) > 0 else aoe2mc.object_kinds().get(int(unit), (None, None))[1]
+        return (name if internal else name.replace("_", " ").title()) if name else ""
+
+    def enum_name(enum):
+        """The name of an enum member of AoE2ScenarioParser by its ID: "" for an unknown ID."""
+        def get(i=-1, localized=False):
+            from AoE2ScenarioParser.datasets import trigger_lists
+            e = getattr(trigger_lists, enum)
+            n = e(int(i)).name if int(i) in set(e) else ""
+            return n.replace("_", " ").title() if localized else n
+        return get
+
+    task = {}
+
+    def task_amount(field=-1, value=-1.0):
+        task[int(field)] = float(value)
+
+    return {**files(g, warn), "xsGetDamageClassName": enum_name("DamageClass"),
+            "xsGetGameTime": lambda: int(recap.game_time(g)),
+            "xsGetObjectAttribute": object_attribute,
+            "xsGetObjectAttributeName": enum_name("ObjectAttribute"),
+            "xsGetObjectClass": object_class,
             "xsGetObjectCount": count,
             "xsGetObjectCountTotal": lambda player, unit: count(player, unit, True),
+            "xsGetObjectName": object_name,
+            "xsGetObjectType": object_type,
+            "xsGetPlayerAttributeName": enum_name("Attribute"),
             "xsGetPlayerCivilization": civilization,
             "xsGetPlayerNumberOfTechs": techs,
+            "xsGetTaskAmount": lambda field=-1: task.get(int(field), 0.0),
             "xsPlayerAttribute": attribute,
+            "xsResetTaskAmount": task.clear,
             "xsSetPlayerAttribute": set_attribute,
             "xsSetTriggerVariable": set_variable,
+            "xsTaskAmount": task_amount,
             "xsTriggerVariable": variable}
