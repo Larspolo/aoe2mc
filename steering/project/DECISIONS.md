@@ -51,3 +51,6 @@ the owner chose another option, `-`: no recommendation) · principle (`P<n>`, or
 - 2026-11-01 · - · The scope of a release is a GitHub milestone "vX.Y.Z" (not a checklist in the epic body, not a GitHub Project); the roadmap milestones B, A, C are "levels" now · taken · P2
 - 2026-11-01 · #5509 · Highlight of the huntable animals: keep the extra switch in the Game menu (off by default, glowing for the player only), though AoE2 DE has no such option · taken · P3, P9
 - 2026-11-01 · #3846 · Random map attributes `enable_tile_shuffling` and `override_actor_radius_if_required`: excluded, they keep the warning "is not read yet"; the epic closes · other · P1
+- 2026-11-04 · #5511 · Camera mode: no hiding of leaves (option A); the player walks around the trees to see the units under them, and selected units glow · - · P1, P2
+- 2026-11-04 · #3101 · Chain objects: the name gives the direction of the chain line on the AoE2 screen, as for the gates (A); the AoE2 DE data agrees (1396 is 1.0 × 0.5 tiles, 1397 is 0.5 × 1.0) · taken · P1, P10
+- 2026-11-04 · #5759 · Selection box with a left drag: research first (#5773) if survival or adventure mode sends a held left click on each tick; until then the held right click stays · other · P1

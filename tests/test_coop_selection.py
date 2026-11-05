@@ -73,9 +73,9 @@ def test_a_unit_keeps_its_glow_while_another_person_has_it_selected():
     pick(g, "Steve", {"m0"})
     server.log.clear()
     pick(g, "Alex", set())
-    assert "data merge entity m0 {Glowing:0b}" not in server.log
+    assert f"aoe select off {gather.SELECT} m0" not in server.log
     pick(g, "Steve", set())
-    assert "data merge entity m0 {Glowing:0b}" in server.log
+    assert f"aoe select off {gather.SELECT} m0" in server.log
 
 
 def test_a_dead_unit_leaves_the_selection_of_each_person():

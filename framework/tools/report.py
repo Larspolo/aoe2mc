@@ -45,7 +45,7 @@ def num(x):
     return f"{x:g}"
 
 
-RESULTS = "merged, pr #N, closed, blocked, needs-human, none"
+RESULTS = "merged, pr #N, closed, checked, blocked, needs-human, none"
 
 
 def result(text):
@@ -53,7 +53,7 @@ def result(text):
     main lane wrote "PR #N", "pr" and "merged-pending", and 35 of its 43 runs counted as no PR (2026-10-31)."""
     t = " ".join(text.strip().lower().split())
     m = re.fullmatch(r"pr ?#(\d+)", t)
-    return f"pr #{m[1]}" if m else t if t in ("merged", "closed", "blocked", "needs-human", "none") else None
+    return f"pr #{m[1]}" if m else t if t in ("merged", "closed", "checked", "blocked", "needs-human", "none") else None
 
 
 def metrics(ticket, size, result, minutes=None, setup=0, checks=0, checks_min=0, sinks="none", phase="", lane=None,

@@ -544,6 +544,8 @@ def read_scenario(path):
             c["tile"] = None if c.get("unit") else tiles.get(c.get("ref"))
             c["next_tile"] = None if c.get("next_unit", True) else tiles.get(c.get("next"))
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
+    texts["ai_files"] = {f.ai_file_name.replace("\\", "/"): f.ai_file for f in   # the files of (load ...) (#5798)
+                         getattr(scn.sections.get("Files"), "ai_files", None) or () if f.ai_file_name}
     texts["xs_name"] = getattr(scn.xs_manager, "script_name", "") or ""   # a file of the AoE2 profile (#5122)
     texts["mood"] = (getattr(mood, "name", None) or str(mood or "DEFAULT")).upper()
     om = scn.option_manager                  # the tab "Global Victory" for the scenario mode (#2566, run.VICTORIES)
@@ -3138,7 +3140,7 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         data["messages"] = texts
     for key, items in (lists or {}).items():
         if items:
-            data[key] = list(items)
+            data[key] = items if isinstance(items, dict) else list(items)   # ai_files: {name: text} (#5798)
     if map_ground is not None:
         data["map_ground"] = [bytes(row).hex() for row in np.asarray(map_ground, np.uint8)]
     if buildings.TURN:                                  # the game program turns its buildings with the map (#3035)
@@ -3358,6 +3360,7 @@ TICKED = COUNTED + (                                               # conditions 
     PLAYER_DEFEATED,
     RESEARCHED,
     RESEARCHING_TECH,
+    SCRIPT_CALL,                                                       # its score of aoe_xs (#5664)
     TECHNOLOGY_STATE,
     TRIGGER_ACTIVE,
     UNITS_GARRISONED,
@@ -4295,6 +4298,35 @@ def research_lines(e, c):
     return [f"scoreboard players set #r{c.t['id']}.{i} aoe_tech 1"]   # the game program reads it
 
 
+def xs_lines(e, c):
+    """The command of "Script Call" (#5663): the score #x<trigger>.<effect index> of aoe_xs is 1. The game program runs
+    the XS code of the effect (aoe2mc.json "xs", game/scenario.py effects)."""
+    if not (e.get("message") or "").strip():
+        return []
+    c.setup["scoreboard objectives add aoe_xs dummy"] = None
+    k = effect_index(e, c)
+    fn, _, files = xs_snippet(e["message"], f"e{c.t['id']}_{k}")
+    c.files.update(files)
+    # the datapack function runs only when the game program does not run the XS (#a aoe_xs, #5693)
+    return [f"scoreboard players set #x{c.t['id']}.{k} aoe_xs 1"] + \
+        ([f"execute unless score #a aoe_xs matches 1 run function {fn}"] if fn else [])
+
+
+XS_WARNED = set()   # the warning lines printed for this conversion (each pass of trigger_files compiles them again)
+
+
+def xs_snippet(code, name):
+    """(function, holder, files) of the XS code of a "Script Call" (#5693): xs_mc compiles it to datapack functions under
+    xs/<name>/. No function: the game program runs the code, and the warning lines say why."""
+    import xs_mc
+    files, fn, holder, warnings = xs_mc.snippet(code, name)
+    for w in warnings:
+        if w not in XS_WARNED:                       # once per line: many calls share one code (#5792, #5809)
+            XS_WARNED.add(w)
+            print(f"  {w}")
+    return fn, holder, files
+
+
 def cost_lines(e, c, what="change object cost"):
     """The command of "Change Object Cost" (#2776): the new cost of the unit or building type of the player (up to 3
     resources of ATTRIBUTES; a quantity of 0 drops the resource) goes into the list of the data storage aoe2mc:costs as
@@ -4977,6 +5009,7 @@ EFFECTS = {
     TRIBUTE: resource_lines,
     UNLOAD: unload_lines,
     UNLOCK_GATE: gate_lines,
+    XS_EFFECT: xs_lines,
 }
 # The context of the effects of trigger t: a handler can add function files (files) and load lines (setup, the keys);
 # triggers: all triggers of the scenario (attack_lines)
@@ -5096,6 +5129,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
     replay: a world of a record (#5158): a unit of a trigger that the live replay runs once has a fixed UUID (created_uuid)."""
     if live is None:
         live = {t["id"] for t in triggers}
+        XS_WARNED.clear()                                                  # a new conversion prints its warnings again (#5792)
         while any(e["type"] in (ACTIVATE_TRIGGER, DEACTIVATE_TRIGGER) for t in triggers for e in t["effects"]) and \
                 live != (made := {int(k.split("/")[-1].split(".")[0]) for k in
                                 trigger_files(triggers, T, ground, players, Counter(), mood, live)[1]
@@ -5151,6 +5185,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
                     or c["type"] == DECISION_TRIGGERED and (c.get("decision", -1) < 0 or c.get("option") not in (1, 2))
                     or c["type"] == OBJECT_HP and (c.get("ref", -1) < 0 or variable_range(c) is None)
                     or c["type"] == UNITS_GARRISONED and c.get("unit", -1) < 0
+                    or c["type"] == SCRIPT_CALL and not (c.get("xs") or "").strip()   # no code (#5664)
                     or c["type"] == BUILDING_IS_TRADING and c.get("ref", -1) < 0
                     or c["type"] == VICTORY_TIMER and (c.get("player", -1) <= 0 or c.get("timer_type") not in (0, 1, 2)
                                                        or variable_range(c) is None)
@@ -5208,6 +5243,17 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             if test := brought_building(c, T):                         # a building: its tile and its score (#3782)
                 tests.append(test[c["inverted"]])
                 unless.append(test[not c["inverted"]])
+                continue
+            if c["type"] == SCRIPT_CALL:                               # the XS function: its score (#5664)
+                k = next(j for j, x in enumerate(t["conditions"]) if x is c)   # the index of xs_list
+                fn, holder, fs = xs_snippet(c.get("xs"), f"c{n}_{k}")          # the datapack form first (#5693)
+                files.update(fs)
+                if fn:                                                 # the game program keeps its score (#a aoe_xs)
+                    counts += [f"execute unless score #a aoe_xs matches 1 run function {fn}",
+                               f"execute unless score #a aoe_xs matches 1 run scoreboard players operation "
+                               f"#c{n}.{k} aoe_xs = {holder} aoe_xs"]
+                tests.append(f"if score #c{n}.{k} aoe_xs matches 1")
+                unless.append(f"unless score #c{n}.{k} aoe_xs matches 1")
                 continue
             if c["type"] in SCORE_TESTS:                               # a score of the world or the game
                 test = SCORE_TESTS[c["type"]](c)
@@ -5327,6 +5373,7 @@ def trigger_files(triggers, T=4, ground=None, players=None, stats=None, mood=Tru
             "aoe_techstate",
             "aoe_trade",
             "aoe_vic",
+            "aoe_xs",
     ):
         if any(f" {word} " in x for x in tick):
             setup[f"scoreboard objectives add {word} dummy"] = None
@@ -5477,10 +5524,12 @@ def visible_list(triggers):
 # list is one line here, in alphabetical order (#2832): no new keyword of write_objects.
 def xs_list(triggers):
     """The XS code of the Script Call conditions and effects (#5122): {"trigger": id, "kind": "condition" or "effect",
-    "code": text}, in the order of the triggers. A disabled trigger "XS SCRIPT" of AoE2ScenarioParser holds a whole script."""
-    return [{"trigger": t["id"], "kind": k, "code": c} for t in triggers for k, items, key, kind in
+    "index": the index in its list, "code": text}, in the order of the triggers. The game program finds the score
+    #x<trigger>.<index> of aoe_xs of an effect (#5663). A disabled trigger "XS SCRIPT" of AoE2ScenarioParser holds a
+    whole script."""
+    return [{"trigger": t["id"], "kind": k, "index": n, "code": i.get(key)} for t in triggers for k, items, key, kind in
             (("condition", t["conditions"], "xs", SCRIPT_CALL), ("effect", t["effects"], "message", XS_EFFECT))
-            for c in (i.get(key) or "" for i in items if i["type"] == kind) if c.strip()]
+            for n, i in enumerate(items) if i["type"] == kind and (i.get(key) or "").strip()]
 
 
 TRIGGER_LISTS = {
@@ -5899,13 +5948,14 @@ def advancement_files(rows=None):
 
 
 def write_datapack(out, objects, ground, biome_names=(), ambience="basic", players=None, triggers=(), T=4,
-                   trigger_stats=None, fog=None, mood=True, replay=False):
+                   trigger_stats=None, fog=None, mood=True, replay=False, xs_script=None):
     """datapacks/aoe2mc: a function every 2 s plays a work sound at each building with a player near it
     (docs/datapack.md). Fixed positions, no marker entities: the check costs nothing that /tick query shows.
     Ambience (#219): particles and sounds near the players by biome; "full" also writes the custom biomes, "off"
     writes no pack (and so no teams). Teams: `team_lines`. Timer and area triggers: `trigger_files`.
     fog: (start, end) blocks of the fog of a fog mood (FOG, #1626), a timeline of the overworld clock.
     mood: the "Change Color Mood" effects of the triggers change the time of day (--mood on, #1876).
+    xs_script: [name, text] of the XS map script (#5122): xs_mc compiles its main() to functions (#5689).
     Returns (work sounds, ambience lines)."""
     root = os.path.join(out, "datapacks", "aoe2mc")
     if ambience == "off":           # the world as before #188: no pack
@@ -5960,6 +6010,22 @@ def write_datapack(out, objects, ground, biome_names=(), ambience="basic", playe
         "data/aoe2mc/function/pulse.mcfunction": "\n".join(lines + team_pulse + ["schedule function aoe2mc:pulse 40t replace"]) + "\n",
     }
     files.update(trigger_fns)
+    if xs_script:                                   # the datapack form of the XS script (#5689)
+        import xs
+        import xs_mc
+        try:
+            fns, xs_tick, xs_load, warnings = xs_mc.compile(xs.parse(xs_script[1], xs_script[0]), xs_script[1],
+                                                    {n: p.get("civ") for n, p in (players or {}).items()})
+        except xs.XsError as e:
+            fns, xs_tick, xs_load, warnings = {}, [], [], [f"XS script: {e}: no datapack form, the game program runs it (game/run.py)"]
+        for w in warnings:
+            print(f"  {w}")
+        if fns:
+            files.update(fns)
+            tag = "data/minecraft/tags/function/tick.json"
+            files[tag] = {"values": [*files.get(tag, {}).get("values", []), "aoe2mc:xs/tick"]}
+            files["data/aoe2mc/function/xs/tick.mcfunction"] = "\n".join(xs_tick) + "\n"
+            files["data/aoe2mc/function/load.mcfunction"] = "\n".join(xs_load) + "\n" + files["data/aoe2mc/function/load.mcfunction"]
     files.update(advancement_files())
     for name, chance in CHANCE.items():
         files[f"data/aoe2mc/predicate/{name}.json"] = {"type": "minecraft:random_chance", "chance": chance}
@@ -6566,13 +6632,14 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
                   texts.get("mood", "DEFAULT"), map_colors(np.asarray(img))[0], texts.get("global_victory"), texts,
                   {k: f(texts.get("triggers", [])) for k, f in TRIGGER_LISTS.items()} |
                   ({"xs_script": texts["xs_script"]} if "xs_script" in texts else {}) |
+                  ({"ai_files": texts["ai_files"]} if texts.get("ai_files") else {}) |
                   ({"timers": timer_list(texts.get("triggers", []), T, ground, players)} if record else {}), yaw,
                   views and {"views": views, "recorder": record_state["recorder"]}, texts.get("lobby"),
                   terrain, elevation)
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
-                            mood == "on", replay=record)
+                            mood == "on", replay=record, xs_script=texts.get("xs_script"))
     if resource_pack:
         print(f"  resource pack (resourcepacks/resources.zip): {len(write_resourcepack(out)) - 1} textures")
     k = sum(bool(re.search(r"/trigger/\d+\.mcfunction$", f))     # not the roll and timer functions (#2791)

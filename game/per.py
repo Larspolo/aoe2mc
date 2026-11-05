@@ -163,10 +163,18 @@ def random_file(args, consts, rng, where):
     return default
 
 
-def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0, rng=None):
+def find_in(files, name):
+    """The key of (load "NAME") in the AI files of a scenario, by the rules of find(): ".per" added, any case."""
+    name = "/".join(p for p in name.replace("\\", "/").split("/") if p)
+    name += "" if os.path.splitext(name.rsplit("/", 1)[-1])[1] else ".per"
+    return next((k for k in sorted(files) if k.replace("\\", "/").lower() == name.lower()), None)
+
+
+def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0, rng=None, files=None):
     """The rules of the text, in the order of the file. defined: the symbols of the game for #load-if-defined (for
     example the age, the map type, the civilization). folder: the AI folder of (load ...). rng: the seeded generator of
-    (load-random ...). A broken text gives a ValueError with the file and the line; an unknown top-level form gives one
+    (load-random ...). files: {name: text}, the AI files of a scenario (#5798), before the folder; a file that is in
+    neither gives one warning line and no rules. A broken text gives a ValueError with the file and the line; an unknown top-level form gives one
     warning line and is skipped."""
     defined = {s.lower() for s in defined}
     consts = {} if consts is None else consts           # one table for the file and the files that it loads
@@ -190,8 +198,8 @@ def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0, 
                     isinstance(v := value(args[1][0], consts), int) and not -32768 <= v <= 32767:
                 raise ValueError(f"{file}:{line}: defconst must be (defconst NAME NUMBER|NAME|TEXT), "
                                  "a number from -32768 to 32767")   # airef defconst; a name or a text (#5098)
-            if (key := args[0][0].lower()) in consts:
-                raise ValueError(f"{file}:{line}: defconst {key} again")   # the game does not allow it
+            if (key := args[0][0].lower()) in consts and consts[key] != v:
+                raise ValueError(f"{file}:{line}: defconst {key} again")   # the game allows it only with the same value (#5797)
             consts[key] = v
         elif name in ("load", "load-random"):
             if name == "load":
@@ -200,12 +208,18 @@ def parse(text, defined=(), folder=None, file="<script>", consts=None, depth=0, 
                 chosen = args[0][0]
             elif (chosen := random_file(args, consts, rng, f"{file}:{line}")) is None:
                 continue                                           # no chance hit and no default: no rules
+            if depth <= 20 and files is not None and (key := find_in(files, chosen)) is not None:
+                rules += parse(files[key], defined, folder, key, consts, depth + 1, rng, files)
+                continue
             path = find(folder, chosen)
+            if depth <= 20 and files is not None and (folder is None or not os.path.isfile(path)):
+                print(f"AI script {file}:{line}: no file {chosen} for load: skipped", file=sys.stderr)
+                continue                                           # the game program must start (#5798)
             if folder is None or not os.path.isfile(path) or depth > 20:
                 raise ValueError(f"{file}:{line}: no file {path} for load" if depth <= 20 else
                                  f"{file}:{line}: load loops")
             with open(path, encoding="utf-8", errors="replace") as f:
-                rules += parse(f.read(), defined, folder, path, consts, depth + 1, rng)
+                rules += parse(f.read(), defined, folder, path, consts, depth + 1, rng, files)
         else:
             print(f"AI script {file}:{line}: unknown form {name}: skipped", file=sys.stderr)
     return rules
@@ -309,6 +323,7 @@ def airef_id(value, kind):
 SN = {r["name"]: r["default"] for r in table.load("per_numbers.jsonl")}
 RESOURCES = {r["name"]: r for r in table.load("per_resources.jsonl")}   # airef ResourceType (up-resource-amount)
 SN_IDS = {r["id"]: r["name"] for r in table.load("per_numbers.jsonl")}   # a script can name a number by its id
+FACTS = {r["id"]: r["name"] for r in table.load("per_facts.jsonl")}   # airef FactId: defconst gives a number (#5808)
 # The airef ids of objects and technologies (two sets of numbers): the up-* commands with g: take an id (#4869).
 OBJECT_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("unit", "building")}
 TECH_IDS = {r["id"]: r["name"] for r in table.load("per_names.jsonl") if "id" in r and r["kind"] in ("tech", "age")}
@@ -1137,6 +1152,10 @@ class Script:
         else:
             (who, fact, param, goal), xs = args, None
             xs = self.sides(who)[0] if who != self.bot.g.player else [self.bot.g]
+        if isinstance(fact, int):                                     # (defconst game-time 0): the FactId
+            if fact not in FACTS:
+                return self.warn("fact", fact)
+            fact = FACTS[fact]
         got = [v for x in xs if (v := self.fact_value(fact, param, x)) is not None]
         if xs and not got:
             return self.warn("fact", fact)

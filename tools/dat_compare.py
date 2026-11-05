@@ -34,9 +34,20 @@ RESOURCES = {0: "food", 1: "wood", 2: "stone", 3: "gold"}
 GATHERERS = {"farm": 214, "fish": 56, "food": 120, "gold": 579, "hunt": 122, "stone": 124, "wood": 123}
 # Lines that keep the values of another unit of the .dat on purpose (#5297), one entry per line.
 SAME_AS = {
+    "ATTILA": 777,          # the row names of units.jsonl that the enums name otherwise (#5733)
     "CAMEL": 329,           # replay.jsonl: the Camel Rider, not the camel animal 897
+    "DISMOUNTED_KONNIK": 1252,
+    "ELITE_DISMOUNTED_KONNIK": 1253,
+    "ELITE_RATHA": 1761,    # the ranged mode, as the row
+    "KOMODO": 1135,
+    "PANTHER": 2595,
     "POLEMARCH": 2164,      # the Civic Age values ("Polemarch 2")
+    "RATHA": 1759,          # the ranged mode, as the row
+    "TRADE_CART": 128,      # the empty cart
     "TREBUCHET": 331,       # the packed values; game/trebuchet.py sets the unpacked armor (#1409)
+    "VILLAGER": 83,         # the male villager
+    "WAR_CHARIOT": 1962,    # the focus fire mode, as the row
+    "WOLF": 126,
 }
 # Differences that aoe2mc keeps on purpose (#5297): (name, key): the reason, one entry per line.
 ACCEPTED = {
@@ -394,6 +405,8 @@ def write(base, mod, units, tables, folder, techs=None, civs=None):
                     lines.append(json.dumps({"name": r["name"], **d}, ensure_ascii=False))
                 continue
             i = SAME_AS.get(r["name"], units.get(r["name"]))
+            if i is None and "hp" in r:                             # a new row is not lost with no line (#5733)
+                print(f"{r['name']}: no .dat ID; add it to SAME_AS of tools/dat_compare.py")
             d = {} if i is None else mod_values(r["name"], {"walk": r["walk"]} if "walk" in r else r, base, mod, i)
             if d:
                 lines.append(json.dumps({"name": r["name"], **d}, ensure_ascii=False))
@@ -443,7 +456,9 @@ def main(argv=None):
     except ImportError:
         print("no genieutils-py: pip install genieutils-py")
         return 2
-    sys.path.insert(0, ROOT)
+    for d in (os.path.join(ROOT, "game"), ROOT):     # game/gather.py imports its neighbors by plain name (#5734)
+        if d not in sys.path:
+            sys.path.insert(0, d)
     from game.gather import AOE2_WORK
     units, techs = names()
     tables = {f: rows(f"game/data/{f}") for f in ("units.jsonl", "buildings.jsonl", "train.jsonl", "build.jsonl",

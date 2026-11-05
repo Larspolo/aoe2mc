@@ -50,6 +50,7 @@ game/data/per_object_data.jsonl merge=jsonl
 game/data/per_filter_ids.jsonl merge=jsonl
 game/data/per_numbers.jsonl merge=jsonl
 game/data/per_resources.jsonl merge=jsonl
+game/data/per_facts.jsonl merge=jsonl
 game/data/replay.jsonl merge=jsonl
 # One JSON object per option value of the game setup (#2264); table.load() stops on a name in two lines.
 game/data/setup.jsonl merge=jsonl
@@ -65,6 +66,8 @@ data/*.jsonl merge=union
 # The datapack text of each trigger type (tools/triggers.py MAP): runs change existing lines, so they merge by name.
 data/trigger_conditions.jsonl merge=jsonl
 data/trigger_effects.jsonl merge=jsonl
+# One JSON object per optional key of data/achievements.jsonl: its type, what it does, its issue (#5781).
+data/achievement_keys.jsonl merge=jsonl
 # The places of game data in the code (#1909): runs only delete lines or lower counts; tests/test_game_names_in_code.py
 # fails on two lines of one place and on a line that a merge put back.
 tests/data/game_names_in_code.txt merge=union
@@ -73,3 +76,4 @@ framework/files.txt merge=union
 game/plugin/src/main/resources/META-INF/services/aoe2mc.Ability merge=union
 game/data/tutorial.jsonl merge=jsonl
 game/data/tunes.jsonl merge=jsonl
+game/data/xs_constants.jsonl merge=jsonl

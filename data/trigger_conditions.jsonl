@@ -31,7 +31,7 @@
 {"name": "PLAYER_DEFEATED", "text": "`if score #pN aoe_lost matches 1..` in the tick function: the scenario mode of the game program sets the score when it defeats player N (conquest, regicide, #2710)"}
 {"name": "RESEARCHING_TECH", "text": "`if score #pN.NAME aoe_techstate matches 2` in the tick function: the scenario mode of the game program sets the AoE2 TechnologyState of the technology (#2769)"}
 {"name": "RESEARCH_TECHNOLOGY", "text": "`if score #pN.NAME aoe_tech matches 1..` in the tick function: the scenario mode of the game program sets the score of each researched technology (#2656)"}
-{"name": "SCRIPT_CALL", "text": "not supported: no XS scripts"}
+{"name": "SCRIPT_CALL", "text": "`execute if score #c<trigger>.<index> aoe_xs matches 1`: the game program calls the XS function once per game second (#5664)"}
 {"name": "TECHNOLOGY_STATE", "text": "`if score #pN.NAME aoe_techstate matches Q` in the tick function: the scenario mode of the game program sets the AoE2 TechnologyState of the technology (#2769)"}
 {"name": "TIMER", "text": "`schedule function ... <s>s` (one function per trigger)"}
 {"name": "TRIGGER_ACTIVE", "text": "`execute if score #N aoe_on matches 1` (0 when inverted) in the tick function: the state of trigger N (#2699)"}

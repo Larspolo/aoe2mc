@@ -156,6 +156,8 @@ def tick(g):
     actions(g)
     trading(g)
     xs(g)
+    effects(g)
+    conditions(g)
     if g.clock() < vars(g).get("book_at", 0.0):
         return
     g.book_at = g.clock() + EVERY
@@ -737,6 +739,79 @@ def xs(g):
     if getattr(g, "xs", None) is not None:
         import recap
         g.xs.tick(recap.game_time(g))
+
+
+def effects(g):
+    """Once per game second: run the XS code of each fired "Script Call" effect (aoe2mc.json "xs", score
+    #x<trigger>.<index> of aoe_xs, #5663) in g.xs, and reset its score. A loop trigger sets it again. Code with a
+    function (as the XS section of ugc.aoe2.rocks shows) goes into the script once, then its first function runs;
+    other code (a call as "main();") is the body of a new function. A syntax error: one warning line, no more checks."""
+    import xs_host
+    import xs_run
+
+    import xs as xs_parse
+    if not vars(g).get("data", {}).get("xs") or g.clock() < vars(g).get("xs_at", 0.0):   # no Script Call: no clock (#5796)
+        return
+    g.xs_at = g.clock() + 1.0
+    calls, skip = vars(g).setdefault("xs_calls", {}), vars(g).setdefault("xs_skip", set())
+    for e in g.data.get("xs", ()):
+        score = f"#x{e['trigger']}.{e.get('index', 0)}"
+        if e["kind"] != "effect" or score in skip or \
+                not re.search(r" has [1-9]", g.command(f"scoreboard players get {score} aoe_xs")):
+            continue
+        g.command(f"scoreboard players set {score} aoe_xs 0")
+        if getattr(g, "xs", None) is None:                             # no map script: a script of the effects only
+            g.xs = xs_run.Xs("", host=xs_host.host(g), out=lambda t: [g.command(c) for c in chat("@a", str(t))])
+        if score not in calls:
+            try:
+                nodes = xs_parse.parse(e["code"], score)
+                funcs = [n[2] for n in nodes if n[0] == "func"]
+                if not funcs:
+                    raise SyntaxError
+            except Exception:                                          # not whole code: a call or statements
+                funcs = [f"_effect_{e['trigger']}_{e.get('index', 0)}"]
+                try:
+                    nodes = xs_parse.parse(f"void {funcs[0]}() {{ {e['code']} }}", score)
+                except Exception as err:
+                    skip.add(score)
+                    print(f"Script Call: error in trigger {e['trigger']}: {err}: not run", file=sys.stderr)
+                    continue
+            g.xs.read(nodes)
+            calls[score] = funcs[0]
+        g.xs.call(calls[score])
+
+
+def conditions(g):
+    """Once per game second: call the XS function of each "Script Call" condition (aoe2mc.json "xs", #5664) in g.xs and
+    set the score #c<trigger>.<index> of aoe_xs to 1 (true) or 0 (false, an error or no return value). The code goes
+    into the script once. A syntax error: one warning line, the score stays 0."""
+    import xs_host
+    import xs_run
+
+    import xs as xs_parse
+    if g.clock() < vars(g).get("xs_cond_at", 0.0):
+        return
+    g.xs_cond_at = g.clock() + 1.0
+    calls, sent = vars(g).setdefault("xs_conds", {}), vars(g).setdefault("xs_cond_sent", {})
+    for e in g.data.get("xs", ()):
+        score = f"#c{e['trigger']}.{e.get('index', 0)}"
+        if e["kind"] != "condition":
+            continue
+        if getattr(g, "xs", None) is None:
+            g.xs = xs_run.Xs("", host=xs_host.host(g), out=lambda t: [g.command(c) for c in chat("@a", str(t))])
+        if score not in calls:
+            try:
+                nodes = xs_parse.parse(e["code"], score)
+                funcs = [n[2] for n in nodes if n[0] == "func"]
+                g.xs.read(nodes)
+                calls[score] = funcs[0] if funcs else None
+            except Exception as err:
+                calls[score] = None
+                print(f"Script Call: error in condition of trigger {e['trigger']}: {err}: false", file=sys.stderr)
+        v = int(calls[score] is not None and g.xs.call(calls[score]) is True)
+        if sent.get(score) != v:
+            g.command(f"scoreboard players set {score} aoe_xs {v}")
+            sent[score] = v
 
 
 def start_values(x, p):

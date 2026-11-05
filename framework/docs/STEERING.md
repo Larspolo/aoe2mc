@@ -9,7 +9,7 @@ Issues. You can do all of this in the GitHub app on your phone.
 Each run does one work cycle (the `autopilot` skill):
 
 1. It reads your new comments on issues and PRs, and does what they ask.
-2. It sorts new issues: priority, kind and size labels. It splits large tickets.
+2. It sorts new issues: priority, kind, size and lane labels. It splits large tickets.
 3. It does the top ticket: code, tests, a PR. It merges the PR when CI passes.
 4. It reports on the **Agent status** issue (label `agent-status`) with a short comment. GitHub sends you a
    notification. The dashboard in the issue body is generated from GitHub (`framework/tools/dashboard.py`, workflow

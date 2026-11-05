@@ -12,7 +12,7 @@ def slot(monkeypatch, ready=1, live=0, idle=5):
     monkeypatch.setattr(claim, "api", lambda path, *a, **k: {"body": ""})
     monkeypatch.setattr(claim, "agent_state", lambda body: {"last_roadmap": LAST})
     monkeypatch.setattr(claim, "last_lock", lambda kind, remote="origin": None)
-    monkeypatch.setattr(claim, "merged_since", lambda last, gap, remote="origin": 3)
+    monkeypatch.setattr(claim, "merged_since", lambda last, gap, remote="origin": claim.ROADMAP_IDLE_MIN)
     monkeypatch.setattr(claim, "idle_minutes", lambda last, remote="origin": idle)
     monkeypatch.setattr(claim, "live_runs", lambda remote="origin": live)
     monkeypatch.setattr(claim, "ready_tickets", lambda remote="origin": ready)

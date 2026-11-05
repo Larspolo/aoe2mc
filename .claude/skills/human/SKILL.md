@@ -126,7 +126,8 @@ the tree from the old tree, #718).
 
 1. Comment on the ticket in ASD-STE100: what the owner did, the owner's words quoted (`> ...`), the images, and the result.
    End the comment with the footer of `framework/tools/dashboard.py` (`FOOTER`).
-2. For each problem: a bug ticket with the `ticket` skill, and "Depends on: #bug" on the check ticket, so that a run
+2. For each problem: a bug ticket with the `ticket` skill, with all its labels: also the lane (`ticket` skill, "Model
+   lanes"; a found cause with the file, the function and the fix is `lane:haiku`, #5767), and "Depends on: #bug" on the check ticket, so that a run
    checks again after the fix (#668). Do not fix it in this session unless the owner asks.
 3. Remove `needs-human` when the answer is complete. For a decision: write the decision into the document of the
    topic and close the decision ticket (`ticket` skill, "Decision tickets"). Keep `needs-human` and say what is open

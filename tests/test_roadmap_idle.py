@@ -18,6 +18,7 @@ def slot(monkeypatch, merges, minutes, starved=True):
     rows = [(datetime.datetime.fromtimestamp(T0 + m * 60, datetime.timezone.utc), 5000 + k, "") for k, m in enumerate(merges)]
     monkeypatch.setattr(claim, "merge_rows", lambda last: rows if last == LAST else [])
     monkeypatch.setattr(claim.time, "time", lambda: T0 + minutes * 60)
+    monkeypatch.setattr(claim, "live_runs", lambda remote="origin": 1)   # a live run: only the clock ends the wait
     asked = []
     key, gap = claim.review_slot("roadmap", starved=lambda: asked.append(1) or starved)
     return key, gap, bool(asked)
@@ -30,7 +31,7 @@ def test_an_idle_hour_makes_the_review_due_at_the_merged_count(monkeypatch):
 
 
 def test_a_refill_with_a_source_does_not_get_the_idle_review(monkeypatch):
-    assert slot(monkeypatch, [10], 10 + claim.ROADMAP_IDLE, starved=False) == (None, claim.ROADMAP, True)
+    assert slot(monkeypatch, [10] * claim.ROADMAP_IDLE_MIN, 10 + claim.ROADMAP_IDLE, starved=False) == (None, claim.ROADMAP, True)
 
 
 def test_no_merged_pr_since_the_last_review_waits(monkeypatch):

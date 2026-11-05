@@ -21,6 +21,8 @@ import os
 import shutil
 import time
 
+import achievements
+
 FILE = "savegame.json"
 FIELDS = ("stock", "spare", "seconds", "repeats", "pop")              # dicts and numbers of Gather, as they are
 PACKED = ("queues", "trained", "sites", "rally",                       # with tuples (a building rect, a cell): pack()
@@ -33,11 +35,7 @@ OPTIONAL = ("auto", "auto_by",                                         # the aut
             "challenge_enemy",                                         # the enemy fleet of Naval Battle (#3909)
             "free_trained",                                            # the free units of a castle: Cuman Mercenaries (#4330)
             "risers",                                                  # the units that rise where a Konnik died: train.fell (#4471)
-            "homeless",                                                # the start town center deleted: achievement Homeless (#5644)
-            "build_counts",                                            # achievements.built (#5642)
-            "gather_counts",                                           # achievements.gathered (#5643)
-            "train_counts",                                            # the count achievements: achievements.trained (#5280)
-            "kill_counts",                                             # the kill count achievements: achievements.killed (#5641)
+            *achievements.SAVED,                                       # the counts of the achievements: achievements.field (#5781)
             "limit_left", "policy", "rates", "relic_timer", "reseeds", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
 MONK = ("carrier_at", "converting", "faith", "fetching", "heal_time", "monk_at", "relic_gold", "relic_homes",
@@ -278,7 +276,13 @@ NOT_SAVED = (                                                          # the fie
     "wonder",                                                          # defend_wonder.setup makes it again
     "wonder_at",                                                       # wonder.py: the next check time
     "work_on",                                                         # bot.py: a setup value (#3271)
-    "xs",                                                              # scenario.setup makes it again; its state: a later ticket
+    "xs",                                                              # scenario.setup makes it again; its state: "xs" (#5665)
+    "xs_at",                                                           # scenario.py effects(): the next check time
+    "xs_calls",                                                        # scenario.py effects(): found again from aoe2mc.json "xs"
+    "xs_cond_at",                                                      # scenario.py conditions(): the next check time
+    "xs_cond_sent",                                                    # scenario.py conditions(): sent again after a load
+    "xs_conds",                                                        # scenario.py conditions(): found again from aoe2mc.json "xs"
+    "xs_skip",                                                         # scenario.py effects(): the effects with a syntax error, found again
 )
 SKIP = ("session.lock",)                                               # the lock of the running server
 
@@ -333,6 +337,8 @@ def dump(g):
         d["settings"] = dict(g.game.settings)
     if getattr(g.game, "treaty", 0):                                   # treaty.start: the time goes on (#2409)
         d["treaty_time"] = g.game.treaty_time
+    if getattr(g, "xs", None) is not None:                             # the XS script goes on, no main() again (#5665)
+        d["xs"] = xs_state(g.xs)
     d["stances"] = {n: {k: p[k] for k in ("team", "neutral", "sees") if k in p}   # the Diplomacy page (#2934), the
                     for n, p in sorted(g.players.items())}                       # triggers' stances and sight (#2989)
     d["owners"] = owner_record(g)
@@ -348,6 +354,34 @@ def script_state(s):
             "escrow": dict(sorted(s.escrow.items())), "pct": dict(sorted(s.pct.items())), "last": s.last,
             "ids": sorted(map(list, s.ids.items())), "next_id": s.next_id, "target": s.target,   # the search (#4957)
             "search": [json.loads(json.dumps(s.search[k])) for k in (1, 2)], "filters": dict(sorted(s.filters.items()))}
+
+
+XS_RULE = ("on", "since", "last", "minInterval", "maxInterval")
+
+
+def xs_state(x):
+    """The state of an xs_run.Xs: the global variables that are not const, the static locals, the start and the rule
+    states. pack() keeps the vectors (tuples) and the keys of the statics (func, name)."""
+    return {"globals": {n: pack(v[1]) for n, v in sorted(x.globals.items()) if not v[2]},
+            "statics": pack({k: (v[0], v[1]) for k, v in x.statics.items()}), "started": x.started,
+            "rules": {n: {k: r[k] for k in XS_RULE} for n, r in sorted(x.rules.items())}}
+
+
+def xs_again(g, d):
+    """Put the saved XS state on g.xs (the script of the scenario, made again by scenario.setup). An older save: no
+    change."""
+    x, s = getattr(g, "xs", None), d.get("xs")
+    if x is None or not s:
+        return
+    for n, v in s["globals"].items():
+        if n in x.globals and not x.globals[n][2]:
+            x.globals[n][1] = unpack(v)
+    for k, (typ, v) in unpack(s["statics"]).items():
+        x.statics[k] = [typ, v, False]
+    x.started = s["started"]
+    for n, r in s["rules"].items():
+        if n in x.rules:
+            x.rules[n].update(r)
 
 
 def owner_record(g):
@@ -685,6 +719,7 @@ GAME_STEPS = (                                                          # load()
     stances_again,
     owners_step,
     razed_again,
+    xs_again,
     gates_step,                                                         # last: after the razed buildings
 )
 

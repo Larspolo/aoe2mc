@@ -87,7 +87,7 @@ final class Border {
             int x0 = Math.min(box.x(), b.getX()), x1 = Math.max(box.x(), b.getX()) + 1;   // the cells of both corners
             int z0 = Math.min(box.z(), b.getZ()), z1 = Math.max(box.z(), b.getZ()) + 1;   // are in the box
             double step = Math.max(0.5, 2.0 * (x1 - x0 + z1 - z0) / MAX);
-            var dust = new Particle.DustOptions(box.color(), 1.0f);
+            var dust = new Particle.DustOptions(box.color(), 2.0f);   // seen from the camera floor, as Sight.java (#5722)
             World w = p.getWorld();
             for (double t = 0; t <= x1 - x0; t += step) {
                 dot(p, w, x0 + t, z0, dust);
@@ -104,6 +104,6 @@ final class Border {
     private static void dot(Player p, World w, double x, double z, Particle.DustOptions dust) {
         int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
         double y = w.getHighestBlockYAt(bx, bz, HeightMap.MOTION_BLOCKING_NO_LEAVES) + 1.1;
-        p.spawnParticle(Particle.DUST, x, y, z, 1, 0, 0, 0, 0, dust);
+        p.spawnParticle(Particle.DUST, x, y, z, 1, 0, 0, 0, 0, dust, true);   // forced: seen beyond 32 blocks (#5722)
     }
 }

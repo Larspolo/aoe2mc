@@ -207,6 +207,9 @@ def minimap(g, state):
     inside = {(x, y) for x, y in state.get("tiles", ()) if 0 <= x < n and 0 <= y < n}
     explored = state.setdefault("explored", set())
     explored |= inside
+    if getattr(g, "reveal", "normal") == "normal":                 # Marco Polo (#5646): the explored part of the map
+        import achievements
+        achievements.explored(g, n, len(explored))
     new = "map" not in state
     if new and getattr(g, "reveal", "normal") == "explored":       # AoE2 "Reveal map: Explored": no black tile (#2932)
         explored |= {(x, y) for x in range(n) for y in range(n)}

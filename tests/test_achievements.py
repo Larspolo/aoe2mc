@@ -1,18 +1,16 @@
 """The advancement tab "Age of Empires II" of the datapack (#5278): root.json and one advancement per line of
 data/achievements.jsonl, each with the trigger minecraft:impossible and a parent that exists. Form only: the keys come
-from the data file."""
+from the data file, the optional keys and their types from data/achievement_keys.jsonl (#5781)."""
 import json
 import os
 
 import aoe2mc
 
 FORM = {"name": str, "title": str, "description": str, "icon": str, "parent": str, "event": (str, list)}
-OPTIONAL = {"civ": str, "mode": str,   # limit a line to a civilization and a game mode (#5281)
-            "units": list, "need": int,   # the event count:train (#5280)
-            "killed": list, "by": list,   # the event kill (#5640)
-            "gather": str, "age": int,   # the event count:gather (#5643)
-            "buildings": list, "ages": int, "villagers": int,   # count:build, count:queue, a research (#5642)
-            "before": (int, float), "least": (int, float)}   # the limits of a value of an event (#5644)
+TYPES = {"float": float, "int": int, "list": list, "number": (int, float), "str": str}
+KEYS = os.path.join(os.path.dirname(aoe2mc.__file__), "data", "achievement_keys.jsonl")
+# The optional keys of a line: one line per key in data/achievement_keys.jsonl, not here (#5781: parallel tickets conflicted).
+OPTIONAL = {r["name"]: TYPES[r["type"]] for r in map(json.loads, open(KEYS, encoding="utf-8"))}
 
 
 def test_each_line_has_the_form_and_a_known_parent():

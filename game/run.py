@@ -503,12 +503,13 @@ def bot_foe(players, player):
     return next((p for p in [*range(1, player), *others] if p != player and not gather.allied(players, player, p)), None)
 
 
-def bot_script(players, player, files, k, defined=()):
+def bot_script(players, player, files, k, defined=(), ai_files=None):
     """The AI rules of the bot k of player: the embedded script of its scenario row (aoe2mc.json "ai", #4531), else
-    the file k of --ai (#4529), else None: a bot after the list plays by its own logic."""
+    the file k of --ai (#4529), else None: a bot after the list plays by its own logic. ai_files: the AI files of the scenario (aoe2mc.json
+    "ai_files", #5798) for (load ...)."""
     import per
     if text := players.get(str(player), {}).get("ai"):
-        return per.parse(text, defined, file=f"<script of player {player}>")
+        return per.parse(text, defined, file=f"<script of player {player}>", files=ai_files)
     return per.read(files[k], defined) if k < len(files or ()) else None
 
 
@@ -846,8 +847,8 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
             s.g.reveal, s.g.peers = reveal, [g, *(o.g for o in g.bots)]   # its fog sees all units (#1631)
             s.g.unlock_speed = settings["unlock_speed"]          # each person has the Game menu (#2933)
         game.starts, game.yaw = start_places(data)   # the start views and the spawn yaw (#3347)
-        for name in list(game.sides):                # players who joined before the teams were there
-            game.side(name)
+        for name in sorted({*game.sides, *vars(game).pop("taken", ())}):   # joined before the teams; the person online
+            game.side(name)                          # at the takeover trigger gets the team and the town (#5701)
         first = [*getattr(game, "seats", ()), 1, 2][:2] if getattr(game, "seats", ()) else [1, 2]
         print(f"{people} people: the first Minecraft player who joins plays player {first[0]}, the second player "
               f"{first[1]}.", file=sys.stderr)
@@ -867,7 +868,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         level = bots.level_of(settings["ai_difficulty"], k)   # one level for each bot in seat order (#4020)
         import per
         script = bot_script(data["players"], player, settings["ai"], k,     # the symbols of #load-if-defined (#4683)
-                            per.symbols(data, player, level, modes, settings["age"]))
+                            per.symbols(data, player, level, modes, settings["age"]), data.get("ai_files"))
         import replay
         import treaty as treaties
         attack = max(bot_attack, settings["treaty"], key=replay.aoe2mc.game_time)   # the bot waits for the treaty too
@@ -955,6 +956,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if wait:
         import savegame
         start_on_join(game, savegame.sides(g), people, g=g)
+    elif "loaded_seconds" in vars(game):            # a takeover: no wait, the clocks go on from its time (#5700)
+        import savegame
+        start_clocks(game, savegame.sides(g))
     g.run(seconds)
     if g.ended:
         unveil(g)
@@ -965,6 +969,7 @@ def freeze(game):
     """Stop the `schedule` timers of the scenario triggers and the mobs until start_on_join."""
     game.command("tick freeze")
     game.command("scoreboard players set #wait aoe_trig 1")   # the tick triggers too (aoe2mc.WAIT, #3892)
+    game.command("scoreboard players set #a aoe_xs 1")       # the game program runs the XS script (#5689)
 
 
 def welcome(game):
@@ -1006,13 +1011,18 @@ def start_on_join(game, sides, people, sleep=time.sleep, g=None):
         game.command(f"title @a subtitle {json.dumps(lang.text('aoe2mc.run.starts_in', n))}")
         game.command(f"title @a title {json.dumps(str(n))}")
         sleep(1)
-    import gather
     welcome(game)                                    # the goal, the first step, the controls (#5514)
     game.command("scoreboard players reset #wait aoe_trig")
     game.command("tick unfreeze")
     game.wait = False                                # a restart (#979) does not freeze again
     show_titles(game)                                # nobody saw a title before the join (#3772)
-    for h in sides:                                                    # a loaded game goes on at its saved game time (#3377)
+    start_clocks(game, sides)
+
+
+def start_clocks(game, sides):
+    """Start the game clock of each side (Gather.t0): a loaded game goes on at its saved game time (#3377, #5700)."""
+    import gather
+    for h in sides:
         h.t0 = h.clock() - vars(game).get("loaded_seconds", 0.0) / (gather.NORMAL * getattr(h, "speed", 1.0))
 
 
@@ -1143,6 +1153,19 @@ def replay(game, world, speed=1.0, start="0:00", follow=None, guide=None, view=N
     print(f"{stats['events']} events, {stats['commands']} commands in {stats['busy']} s "
           f"({stats['rate']} commands per second, the timeline needs {stats['need']}), largest lag {stats['lag']} s")
     return stats
+
+
+def drop_replay_kit(game):
+    """The person online at the takeover trigger (#5701): the replay items and the replay boss bar go, the game mode
+    is creative again (the Spectator view item). play() then puts the person on its team and in its town (Game.side)."""
+    import replay
+    import replay_input
+    game.command(f"bossbar remove {replay.BAR}")
+    for name in sorted(game.joined):
+        for n in replay_input.ITEMS:
+            game.command(f"clear {name} *[custom_data={{{replay_input.OBJECTIVE}:{n}}}]")
+        game.command(f"gamemode creative {name}")
+    game.taken = set(game.joined)
 
 
 class Taken(tuple):
@@ -1619,6 +1642,7 @@ def main(argv=None, scenario=None):
             if isinstance(r, Taken):                 # the trigger of the takeover: as --takeover P (#5601)
                 r, a.takeover = r
                 game.seats = (a.takeover,)           # play() puts the joined person on team pP
+                drop_replay_kit(game)                # no join of play() gives the game items (#5701)
             if a.takeover is not None:               # the save of the replay state, then a game on it (#5450)
                 import takeover
                 state = savegame.read(takeover.write(game, r, savegame.folder(a.world), taken=a.takeover,

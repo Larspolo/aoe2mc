@@ -8,9 +8,12 @@ import nbtlib
 import buildings
 import units
 
+# The optional keys of data/achievements.jsonl: one line each in data/achievement_keys.jsonl, not in this table (#5781).
+ACHIEVEMENT_KEYS = {json.loads(s)["name"] for s in open(os.path.join(units.DATA, "achievement_keys.jsonl"), encoding="utf-8")}
 KEYS = {"animals.jsonl": ({"keys", "behavior", "mob"}, {"tags", "note"}),
+        "achievement_keys.jsonl": ({"name", "type", "text", "issue"}, set()),
         "aoe2_langs.jsonl": ({"name", "code"}, set()),
-        "achievements.jsonl": ({"name", "title", "description", "icon", "parent", "event"}, {"age", "ages", "buildings", "before", "by", "civ", "gather", "killed", "least", "mode", "need", "units", "villagers"}),
+        "achievements.jsonl": ({"name", "title", "description", "icon", "parent", "event"}, ACHIEVEMENT_KEYS),
         "carriers.jsonl": ({"name", "garrison"}, set()),
         "tech_names.jsonl": ({"tech", "name"}, set()),
         "trigger_conditions.jsonl": ({"name", "text"}, set()),
@@ -23,7 +26,7 @@ KEYS = {"animals.jsonl": ({"keys", "behavior", "mob"}, {"tags", "note"}),
         "scx_civs.jsonl": ({"id", "name"}, set()),
         "train.jsonl": ({"name", "seconds", "building"}, set()),
         "work_sounds.jsonl": ({"name", "sound", "when", "particle"}, set()),
-        "rmap.jsonl": ({"name"}, {"assign", "blank", "cliff_type", "fish", "forest", "like", "object", "scatter", "shore_fish", "start", "terrain", "wolves"}),
+        "rmap.jsonl": ({"name"}, {"assign", "blank", "cliff_type", "const", "fish", "forest", "like", "object", "scatter", "shore_fish", "start", "terrain", "wolves"}),
         "lines.jsonl": ({"name", "mob", "armor", "main", "off"}, {"tags"}),
         "footprint.jsonl": ({"name", "size"}, set()),
         "weapons.jsonl": ({"name", "weapon"}, set()),

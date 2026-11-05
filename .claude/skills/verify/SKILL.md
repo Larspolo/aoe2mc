@@ -66,6 +66,8 @@ ticket found the next fault (#5312, #5313, #5413, #5440, #5443).
 | The replay views, the trigger titles | `tools/replay_shot.py` (screenshots at game times) |
 | The tutorial (`run.py --play --tutorial`) | `tools/tutorial_check.py` |
 | The game of a person against the bot | `tools/play_check.py` (no client) |
+| The takeover (`game/takeover.py`, `run.py --replay --takeover P`, the takeover trigger) | `python3 tools/takeover_check.py OUTWorld OUTDIR` (de-64.3; `--trigger`: the chat trigger) |
+| A real-client check of more than 20 minutes | add `--beat N` (`mc_shot.py`, `takeover_check.py`): it beats the claim of ticket N every 10 minutes, so no run takes the ticket over (#5783) |
 
 ## Level 5 – in-game screenshot (before you ask the owner)
 

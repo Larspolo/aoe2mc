@@ -35,7 +35,8 @@ def test_main_makes_a_game_that_freezes_at_the_start(monkeypatch, tmp_path):
 def test_freeze_stops_the_timers_and_the_tick_triggers():
     game = FakeGame()
     run.freeze(game)
-    assert game.sent == ["tick freeze", "scoreboard players set #wait aoe_trig 1"]
+    assert game.sent == ["tick freeze", "scoreboard players set #wait aoe_trig 1",
+                         "scoreboard players set #a aoe_xs 1"]   # the XS script runs in the game program (#5689)
 
 
 def test_the_start_ends_the_wait_of_a_restart():

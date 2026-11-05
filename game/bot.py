@@ -38,6 +38,8 @@ import os
 import re
 import sys
 
+import numpy as np
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import ai  # noqa: E402
 import autoscout  # noqa: E402
@@ -183,15 +185,17 @@ class Bot:
         if self.sides[0] != (own, foe):                                # a new building: decide each tile again
             self.sides = ((own, foe), {})
         at = self.sides[1]
-        for t in sources.keys() - at.keys():
-            c = ((t[0] + 0.5) * T, (t[1] + 0.5) * T)
-            at[t] = min(math.dist(c, p) for p in own) <= min(math.dist(c, p) for p in foe)
+        near = lambda c, ps: np.sqrt((((c[:, None, :] - np.asarray(ps, float)[None]) ** 2).sum(-1)).min(1))  # noqa: E731
+        if new := sorted(sources.keys() - at.keys()):                  # arrays: the loops slowed the game loop (#5736)
+            c = (np.asarray(new, float) + 0.5) * T
+            at.update(zip(new, (near(c, own) <= near(c, foe)).tolist()))
         kept = {t: k for t, k in sources.items() if at[t]}
         if not far or any(k > 0 for k in kept.values()):
             return kept
-        half = max(min(math.dist(p, q) for q in foe) for p in own) / 2
-        beyond = {t: k for t, k in sources.items()
-                  if min(math.dist(((t[0] + 0.5) * T, (t[1] + 0.5) * T), q) for q in foe) >= half}
+        half = near(np.asarray(own, float), foe).max() / 2
+        tiles = list(sources)
+        ok = (near((np.asarray(tiles, float).reshape(-1, 2) + 0.5) * T, foe) >= half).tolist()
+        beyond = {t: sources[t] for t, o in zip(tiles, ok) if o}
         if any(k > 0 for k in beyond.values()):
             return beyond
         return {t: k for t, k in sources.items() if k > 0}             # no source left: the next one, near the foe too (#3545)
@@ -997,7 +1001,11 @@ class Bot:
         if not (res := NEAR.get(name)) or not (full := [t for t, k in self.sources(res).items() if k > 0]):
             return False
         T, drops = g.map.T, [c for d in g.map.drops.get(res, ()) for c in d]
-        return all(math.dist(((t[0] + 0.5) * T, (t[1] + 0.5) * T), c) > FAR * T for t in full for c in drops)
+        if not drops:
+            return True
+        # one array operation: the pairs in Python took 0.1 s per bot step and slowed the game loop (#5736)
+        a, b = (np.asarray(full, float) + 0.5) * T, np.asarray(drops, float)
+        return bool((((a[:, None, :] - b[None, :, :]) ** 2).sum(-1) > (FAR * T) ** 2).all())
 
     def walls(self, n, x):
         """Taunt 54 of the ally x: wall sites on the tiles between its two last live flares; 55: the wall ring around the

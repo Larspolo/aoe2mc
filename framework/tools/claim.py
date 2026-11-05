@@ -53,7 +53,7 @@ Parallel runs read the same `runs` counter of the status issue, so "every 5th ru
 the last review (`last_review` in the state comment of #1). A review with no change doubles the gap (50, 100, 200
 merged PRs), a change sets it back to 50 (`--reviewed`). `--roadmap` locks the roadmap review the same way, 100 merged
 PRs after `last_roadmap` or its newest lock ref (#3352: a write of the body can be lost), 30 while the refill has no
-source (#3741), or the merged count with no live run and no ready ticket (#851), or after 60 minutes with no merged PR. A gap counts
+source (#3741), or the merged count (at least 10, #5818) with no live run and no ready ticket (#851), or after 60 minutes with no merged PR. A gap counts
 merged PRs, not minutes: the speed of the project changes (#2039). The other times of this tool stay in seconds: a run that stopped
 merges nothing, so only the clock finds it.
 
@@ -85,6 +85,7 @@ OWNER_GAP = REVIEW_CONFIG.get("owner_gap", 20)   # the gap when an owner session
 ROADMAP = 100               # merged PRs between two reviews of steering/project/ROADMAP.md (#2039)
 ROADMAP_EARLY = 30          # the same while the refill has no source: R < N, each roadmap feature has an epic (#3741)
 ROADMAP_IDLE = 60           # minutes with no merged PR (or no live run): then the merged count is the gap (no run merges)
+ROADMAP_IDLE_MIN = 10       # the least merged count of that gap: 1 or 2 PRs change no feature (#5818: 5 reviews in 8 h)
 STATUS = CONFIG["status"]["issue"]   # the status issue: its state comment holds the last reviews
 # The times below find a run that stopped: a stopped run merges nothing, so they stay on the clock (#2039).
 STALE = 30 * 60             # seconds without a claim or beat: the run stopped (usage limit, crash)
@@ -386,7 +387,7 @@ def review_slot(kind, remote="origin", starved=None):
     is not due. For `--review`, `--roadmap` and `usage.due_reviews` (a due review is work of a deep run, #3560).
     starved: a function that is True when the refill has no source (default `starved`); the roadmap gap is then
     ROADMAP_EARLY, so that the queue does not run empty for 100 merged PRs (#3741). When no more PR merges
-    (`nothing_merges`) the gap is the merged count (at least 1): with no ready ticket no run merges, and the queue
+    (`nothing_merges`) the gap is the merged count (at least ROADMAP_IDLE_MIN): with no ready ticket no run merges, and the queue
     stopped at 27 of 30 (2026-10-31). It is read only in that window."""
     body = api(f"issues/{STATUS}")["body"] if on_github(remote) else ""
     state = agent_state(body)
@@ -397,8 +398,8 @@ def review_slot(kind, remote="origin", starved=None):
     if kind == "roadmap" and on_github(remote):
         last = max(filter(None, (last, last_lock(kind, remote))), default=None)
     merged = merged_since(last, gap, remote)
-    if kind == "roadmap" and merged < gap and (merged >= ROADMAP_EARLY or merged and nothing_merges(last, remote)) \
-            and (starved or refill_starved)():
+    if kind == "roadmap" and merged < gap and (merged >= ROADMAP_EARLY or merged >= ROADMAP_IDLE_MIN and
+                                               nothing_merges(last, remote)) and (starved or refill_starved)():
         gap = min(merged, ROADMAP_EARLY)
     if kind == "review" and OWNER_GAP <= merged < gap and owner_since(last, remote):
         gap = OWNER_GAP

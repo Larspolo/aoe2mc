@@ -1,32 +1,21 @@
 """The AoE2 achievements in the game program (#5279, epic #5277): grant(g, n, key) gives the advancement
 aoe2mc:<key> of data/achievements.jsonl (written by aoe2mc.advancement_files, #5278) to the Minecraft players of
 player n. Minecraft shows the toast and the chat line (/advancement grant). A bot (share set) has no Minecraft player.
-Events (the key "event" of a line): "win" or "win <CIV>" (cheats.over, each player with won(n)); "age <TECH>" with an
-optional "before" in game seconds (recap.aged, train.research). An optional "civ" (a key of game/data/civs.jsonl) and
-"mode" (a game mode of game/data/setup.jsonl, gather.has_mode) limit a line to that civilization and mode (#5281). "win all" needs the wins of earlier games: not here.
-"count:train" with "units" and "need" (#5280): the player trained `need` units of these names in this game
-(train.tick, at each trained unit: the count changes only there).
-"research <TECH>" (train.research, #5629), "build <BUILDING>" (build.grow: a complete own building), "autoscout"
-(autoscout.start), "train <UNIT> at <BUILDING>" (train.tick) and "win ai <level>" (cheats.over: a win while a bot of
-that bots.LEVELS name lost).
-"kill" with "killed" and "by" (#5640): the player killed a unit of "killed" with a unit of "by" (kills, once per tick: the
-kill log of the plugin, Kills.java). An item is a unit name, a group of civs.GROUPS, or groups joined by "+" (all of them).
-"count:gather" with "gather" and "need" (#5643): the player gathered `need` of "gather" in this game (gathered): a hunted
-animal name (gather.Gather.hunt: one at its death, when it leaves its carcass for the player), "FOLWARK" (the food of
-build.folwark), a "trickle" technology (its food, feitoria.tick) or "KESHIK" (its gold, spoils.attacks). An optional
-"age" counts only the amounts of the ages up to it (0: the Dark Age, build.ages).
-More events (#5642): "event" can be a list (any of them); an optional "villagers" needs that many live villagers
-(Golden Spurs). "count:build" with "buildings", "need" and an optional "by" (builder names): the player completed `need`
-buildings of these names in this game (gather.Gather.step; with "by": built by one of these units; the counts in a
-saved game: "build_counts"). "count:queue" with "units", "need" and "ages" (the highest age index, build.ages): one
-queue of the player has `need` of these units (train.queue). "policy": a policy change (train.research, the Athenians).
-The state of a win (#5644): "win homeless" (demolish.delete of the first own TOWN_CENTER of the scenario), "win only"
-with "units" (the player trained units in this game, all of these names) and "win ally" (an allied player, gather.allied).
-"destroy WONDER" with "before" in years (wonder.tick: an enemy wonder fell with less years left) and "lose site <BUILDING>"
-with "least", a part of 1 (demolish.unfound: an own site of at least that progress went).
-"count:kill" with "by", "need" and an optional "killed" and "age" (#5641): the player killed `need` units (of "killed")
-with units of "by" in this game, only while in the ages up to "age". The counts per line: vars(h)["kill_counts"], kept
-in a saved game."""
+The key "event" of a line names the event that grants it (a list: any of them). The optional keys of a line, their
+types and what they do: data/achievement_keys.jsonl. "civ" and "mode" limit a line to a civilization and a game mode
+(matches, #5281). "win all" needs the wins of earlier games: not here.
+The docstring of each function names its event kinds. A plain event name (`event`) is at its call:
+`grep -rn "achievements.event" game` (for example "research <TECH>" in train.research).
+
+Parallel tickets conflicted at the end of this text, in won, in killed and in the key tables of the tests (#5781). So a
+new achievement changes no shared line here:
+- a data line, and for a new key one line in data/achievement_keys.jsonl (the tests read it);
+- a new plain event: `achievements.event(g, h, "NAME")` at the place of the event;
+- a new test of a line at a win or a kill: a function `@on("win", KIND)` or `@on("kill", KIND)`, not a branch of won or
+  killed;
+- a new field of a Gather for a saved game: `field("NAME")` (SAVED, savegame.KEPT), not a line of savegame.py;
+- a new function: after the function that it is nearest to, not at the end of the file; its docstring names its event
+  kinds, not this text; its tests go into a new file tests/test_achievements_<topic>.py."""
 import functools
 import json
 import os
@@ -34,10 +23,42 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import civs  # noqa: E402
 
 PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "achievements.jsonl")
 ROWS = [json.loads(x) for x in open(PATH, encoding="utf-8") if x.strip()]
+ON = {}      # {source: {event kind: test (g, h, r, **at) -> bool}}: the lines of a win or a kill (on, run)
+SAVED = []   # the fields of a Gather that the achievements keep in a saved game (field, savegame.KEPT)
+
+
+def field(name):
+    """Register name as a field of a Gather that a saved game keeps (savegame.KEPT). Returns name."""
+    SAVED.append(name)
+    return name
+
+
+def on(source, kind):
+    """Register a test (g, h, r, **at) -> bool of the lines of event kind at the event source ("win": won, "kill":
+    killed). The line is granted when its civ and mode match and the test is true."""
+    def add(test):
+        ON.setdefault(source, {})[kind] = test
+        return test
+    return add
+
+
+def kinds(r):
+    e = r.get("event")
+    return e if isinstance(e, list) else [e]
+
+
+def run(source, g, h, **at):
+    """Grant to the player of Gather h (not a bot) each line whose event kind has a test of source that is true."""
+    if getattr(h, "share", None) or not hasattr(g, "command"):    # a bot, or a test double with no server
+        return
+    tests = ON.get(source, {})
+    for r in ROWS:
+        mine = [tests[k] for k in kinds(r) if k in tests]
+        if mine and matches(g, h, r) and any(test(g, h, r, **at) for test in mine):
+            grant(g, h.player, r["name"].lower())
 
 
 def grant(g, n, key):
@@ -51,25 +72,46 @@ def grant(g, n, key):
 
 def matches(g, h, r):
     """True when the civilization of the player of h and the game mode of g match the "civ" and "mode" keys of line r."""
+    import civs  # civs loads a rule table: savegame imports this module before the rule set (test_antiquity_data)
     if "civ" in r and not (hasattr(h, "data") and civs.real(h, h.player) == r["civ"]):
         return False
     return "mode" not in r or getattr(g, "mode", None) == r["mode"] or r["mode"] in getattr(g, "modes", ())
 
 
 def event(g, h, name, seconds=None):
-    """Grant each line whose event is `name` (and whose civ and mode match) to the player of Gather h (not a bot).
-    seconds: a value that must be under the "before" and at least the "least" of the line."""
+    """Grant each line whose event is `name` (and whose civ, mode and limits match) to the player of Gather h (not a
+    bot). seconds: the value of the event for the limits "before" and "least" (between)."""
     if getattr(h, "share", None) or not hasattr(g, "command"):    # a bot, or a test double with no server
         return
     for r in ROWS:
-        e = r.get("event")
-        if ((name in e if isinstance(e, list) else e == name) and (seconds is None or r.get("least", -1) <= seconds < r.get("before", float("inf")))
-                and len(getattr(h, "villagers", ())) >= r.get("villagers", 0) and matches(g, h, r)):
+        if name in kinds(r) and all(test(h, r, seconds) for test in LIMITS) and matches(g, h, r):
             grant(g, h.player, r["name"].lower())
 
 
+LIMITS = []   # the tests (h, r, seconds) -> bool of the line r of a plain event (limit, event)
+
+
+def limit(test):
+    """Register a test (h, r, seconds) -> bool that each line of a plain event must pass (a new optional key)."""
+    LIMITS.append(test)
+    return test
+
+
+@limit
+def between(h, r, seconds):
+    """"before" and "least" (#5644): the value is under "before" and at least "least": game seconds ("age <TECH>",
+    recap.aged), years left ("destroy WONDER", wonder.tick) or a part of 1 ("lose site <BUILDING>", demolish.unfound)."""
+    return seconds is None or r.get("least", -1) <= seconds < r.get("before", float("inf"))
+
+
+@limit
+def villagers(h, r, seconds):
+    """"villagers" (#5642): the player has that many live villagers (Golden Spurs)."""
+    return len(getattr(h, "villagers", ())) >= r.get("villagers", 0)
+
+
 def counted(g, kind, key, names, n):
-    """Grant each "count:<kind>" line of g (a Gather, not a bot) whose key has a name of names and whose need is n or less."""
+    """Grant each "count:<kind>" line of g (a Gather, not a bot) whose key has a name of names and whose need is n(r) or less."""
     if getattr(g, "share", None) or not hasattr(g, "command"):
         return
     for r in ROWS:
@@ -77,9 +119,14 @@ def counted(g, kind, key, names, n):
             grant(g, g.player, r["name"].lower())
 
 
+BUILT = field("build_counts")   # {building name, "<name> by <builder>": count} (#5642)
+
+
 def built(g, name, by=()):
-    """Count a complete own building name of g and its builder names by (gather.Gather.step), and grant the "count:build" lines."""
-    counts = vars(g).setdefault("build_counts", {})
+    """"count:build" with "buildings", "need" and an optional "by" (builder names, #5642): the player completed `need`
+    buildings of these names in this game. Count a complete own building name of g and its builder names by
+    (gather.Gather.step), and grant the lines."""
+    counts = vars(g).setdefault(BUILT, {})
     for k in {name, *(f"{name} by {b}" for b in set(by))}:
         counts[k] = counts.get(k, 0) + 1
     counted(g, "build", "buildings", [name], lambda r: sum(
@@ -87,38 +134,61 @@ def built(g, name, by=()):
 
 
 def queued(g, q, ages):
-    """Grant each "count:queue" line whose units are `need` times in the queue q of g, in an age up to its "ages"."""
+    """"count:queue" with "units", "need" and "ages" (the highest age index, build.ages; #5642): grant each line whose
+    units are `need` times in the queue q of g (train.queue), in an age up to its "ages"."""
     counted(g, "queue", "units", [e["name"] for e in q], lambda r: -1 if ages > r["ages"] else
             sum(e["name"] in r["units"] for e in q))
 
 
 def won(g, h, levels=()):
-    """The win of the player of h; levels: the difficulties of the bots that lost (#5629)."""
+    """The win of the player of h (cheats.over): "win", "win <CIV>" and "win ai <level>" (levels: the bots.LEVELS names
+    of the bots that lost, #5629), then the lines of the tests of source "win" (on)."""
+    import civs
     event(g, h, "win")
     if hasattr(h, "data") and (civ := civs.real(h, h.player)):
         event(g, h, f"win {civ}")
     for level in sorted(levels):
         event(g, h, f"win ai {level}")
-    if vars(h).get("homeless"):
-        event(g, h, "win homeless")
-    made = set(vars(h).get("train_counts", {}))
-    for r in ROWS:
-        if (r.get("event") == "win only" and made and made <= set(r["units"]) and not getattr(h, "share", None)
-                and hasattr(g, "command") and matches(g, h, r)):
-            grant(g, h.player, r["name"].lower())
+    run("win", g, h)
+
+
+HOMELESS = field("homeless")   # demolish.delete of the first own TOWN_CENTER of the scenario (#5644)
+
+
+@on("win", "win homeless")
+def homeless(g, h, r):
+    """"win homeless" (#5644): the player lost the first own TOWN_CENTER of the scenario (demolish.delete)."""
+    return bool(vars(h).get(HOMELESS))
+
+
+@on("win", "win only")
+def only(g, h, r):
+    """"win only" with "units" (#5644): the player trained units in this game, all of these names."""
+    made = set(vars(h).get(TRAINED, {}))
+    return bool(made) and made <= set(r["units"])
+
+
+@on("win", "win ally")
+def ally(g, h, r):
+    """"win ally" (#5644): the player has an allied player (gather.allied)."""
     import gather  # gather -> train -> this module
     players = getattr(h, "players", None) or {}
-    if any(int(m) != h.player and gather.allied(players, h.player, int(m)) for m in players):
-        event(g, h, "win ally")
+    return any(int(m) != h.player and gather.allied(players, h.player, int(m)) for m in players)
 
 
 def aged(g, name, seconds):
+    """"age <TECH>" with an optional "before" in game seconds (recap.aged, train.research; #5309)."""
     event(g, g, f"age {name}", seconds)
 
 
+TRAINED = field("train_counts")   # {unit name: count} (#5280)
+
+
 def trained(g, name, at=None):
-    """Grant the line "train <name> at <at>" (at: the building that trained it, #5629). Count a unit name that g (a Gather) trained, and grant each "count:train" line whose units reach its need."""
-    counts = vars(g).setdefault("train_counts", {})
+    """Grant the line "train <name> at <at>" (at: the building that trained it, #5629; train.tick). "count:train" with
+    "units" and "need" (#5280): count a unit name that g (a Gather) trained, and grant each line whose units reach its
+    need (the count changes only here)."""
+    counts = vars(g).setdefault(TRAINED, {})
     counts[name] = counts.get(name, 0) + 1
     if at:
         event(g, g, f"train {name} at {at}")
@@ -145,29 +215,37 @@ def unit_name(g, key):
 
 
 def member(name, items):
-    """True when unit name is one of items: a name, a group of civs.GROUPS, or groups joined by "+" (all of them).
-The state of a win (#5644): "win homeless" (demolish.delete of the first own TOWN_CENTER of the scenario), "win only"
-with "units" (the player trained units in this game, all of these names) and "win ally" (an allied player, gather.allied).
-"destroy WONDER" with "before" in years (wonder.tick: an enemy wonder fell with less years left) and "lose site <BUILDING>"
-with "least", a part of 1 (demolish.unfound: an own site of at least that progress went)."""
+    """True when unit name is one of items: a name, a group of civs.GROUPS, or groups joined by "+" (all of them)."""
+    import civs
     import combat  # combat -> gather -> train -> this module
     return name is not None and any(name == i or all(p in civs.GROUPS and civs.GROUPS[p](name, combat.stats(name))
                                                      for p in i.split("+")) for i in items)
 
 
 def killed(h, name, by):
-    """Grant each "kill" line whose "killed" has the killed unit name and whose "by" has the killer to the player of h."""
-    if getattr(h, "share", None) or not hasattr(h, "command"):
-        return
-    for r in ROWS:
-        if r.get("event") == "kill" and member(name, r["killed"]) and member(by, r["by"]) and matches(h, h, r):
-            grant(h, h.player, r["name"].lower())
-        elif (r.get("event") == "count:kill" and member(by, r["by"]) and ("killed" not in r or member(name, r["killed"]))
-              and matches(h, h, r) and ("age" not in r or ages(h) <= r["age"])):
-            counts = vars(h).setdefault("kill_counts", {})
-            counts[r["name"]] = counts.get(r["name"], 0) + 1
-            if counts[r["name"]] >= r["need"]:
-                grant(h, h.player, r["name"].lower())
+    """A kill of the unit name by the unit by of the player of h (kills): grant the lines of the tests of source "kill"
+    (on). An item of "killed" and "by" is a unit name, a group of civs.GROUPS, or groups joined by "+" (member)."""
+    run("kill", h, h, name=name, by=by)
+
+
+@on("kill", "kill")
+def one_kill(g, h, r, name, by):
+    """"kill" with "killed" and "by" (#5640): the player killed a unit of "killed" with a unit of "by"."""
+    return member(name, r["killed"]) and member(by, r["by"])
+
+
+KILLED = field("kill_counts")   # {line name: count} (#5641)
+
+
+@on("kill", "count:kill")
+def kill_count(g, h, r, name, by):
+    """"count:kill" with "by", "need" and an optional "killed" and "age" (#5641): the player killed `need` units (of
+    "killed") with units of "by" in this game, only while in the ages up to "age"."""
+    if not (member(by, r["by"]) and ("killed" not in r or member(name, r["killed"])) and ("age" not in r or ages(h) <= r["age"])):
+        return False
+    counts = vars(h).setdefault(KILLED, {})
+    counts[r["name"]] = counts.get(r["name"], 0) + 1
+    return counts[r["name"]] >= r["need"]
 
 
 def ages(h):
@@ -180,7 +258,7 @@ def kills(g):
     Kills.java) and give each kill of an enemy unit to the side of its killer. Gather.run, once per tick; no command
     when no line has the event "kill", or for a Gather with no player (a test of the loop). The bots read nothing: player 1
     reads for all sides."""
-    if getattr(g, "share", None) or not getattr(g, "player", None) or not any(r.get("event") in ("kill", "count:kill") for r in ROWS):
+    if getattr(g, "share", None) or not getattr(g, "player", None) or not any(k in ON.get("kill", {}) for r in ROWS for k in kinds(r)):
         return
     import build  # build -> gather -> train -> this module
     import gather
@@ -193,11 +271,27 @@ def kills(g):
             killed(h, unit_name(g, f[3]), unit_name(g, f[1]))
 
 
+def explored(g, n, count):
+    """"explore" with "tiles" and "part" (#5646; fog.minimap, no revealed map): grant each line whose map size "tiles"
+    n reaches (480: Ludicrous, game/data/per_names.jsonl) and whose "part" of the n x n tiles count explored reaches."""
+    if getattr(g, "share", None) or not hasattr(g, "command"):
+        return
+    for r in ROWS:
+        if r.get("event") == "explore" and n >= r["tiles"] and count >= r["part"] * n * n and matches(g, g, r):
+            grant(g, g.player, r["name"].lower())
+
+
+GATHERED = field("gather_counts")   # {"<what> <age index>": amount} (#5643)
+
+
 def gathered(g, what, amount=1):
-    """Count amount of what that the player of g (a Gather) gathered, per age, and grant each "count:gather" line of
-    what whose count reaches its need. The counts go into the save (savegame, "gather_counts")."""
+    """"count:gather" with "gather" and "need" and an optional "age" (#5643): count amount of what that the player of g
+    (a Gather) gathered, per age (0: the Dark Age, build.ages), and grant each line of what whose count of the ages up
+    to its "age" reaches its need. what: a hunted animal name (gather.Gather.hunt: one at its death, when it leaves its
+    carcass for the player), "FOLWARK" (the food of build.folwark), a "trickle" technology (its food, feitoria.tick) or
+    "KESHIK" (its gold, spoils.attacks)."""
     import build  # build -> gather -> train -> this module
-    counts = vars(g).setdefault("gather_counts", {})
+    counts = vars(g).setdefault(GATHERED, {})
     key = f"{what} {build.ages(g)}"
     counts[key] = counts.get(key, 0) + amount
     if getattr(g, "share", None) or not hasattr(g, "command"):

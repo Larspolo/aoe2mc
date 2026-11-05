@@ -695,6 +695,20 @@ def given_back(comments):
                         if line.startswith("Metrics:") and (m := re.match(r"Metrics: ticket #\d+ · [^·]+ · (none|blocked|needs-human) ·", line))))
 
 
+def back_causes(comments):
+    """(checks, repeats) of the run reports (#5782): the `checked` results (a check put its findings on the ticket,
+    which stays open by design, `report.md`), and {ticket: runs} of the tickets that 2 or more runs gave back or
+    checked. 6 of 18 given-back runs of 100 PRs were one check ticket (#5604): a repeat is the cost to look at."""
+    runs = Counter()
+    checks = 0
+    for c in comments:
+        for line in (c.get("body") or "").splitlines():
+            if m := re.match(r"Metrics: ticket #(\d+) · [^·]+ · (none|blocked|needs-human|checked) ·", line):
+                runs[int(m[1])] += 1
+                checks += m[2] == "checked"
+    return checks, {n: k for n, k in sorted(runs.items(), key=lambda x: (-x[1], x[0])) if k > 1}
+
+
 def pr_results(comments, prs):
     """The `pr #n` results of the `Metrics:` lines: (merged PRs, not merged PRs) by the present PR state (#902)."""
     merged = {p["number"] for p in prs if p.get("merged_at")}
@@ -811,6 +825,9 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
     out.append(f"Takeovers {e['takeovers']}, given back {sum(back.values())}"
                + (f" ({', '.join(f'{k} {v}' for k, v in sorted(back.items()))})" if back else "")
                + f", merge conflicts {e['conflicts']} (solved by Unconflict {e['solved']})")
+    checks, again = back_causes(status_comments)
+    out.append(f"Checks with findings {checks} · tickets given back or checked 2+ times: "
+               + (", ".join(f"#{n} {k}" for n, k in again.items()) or "0"))
     out.append(takeover_lines(takeovers(comments, status_comments, prs, since, runs=runs))[-1])
     if files_of:
         out.append(f"Files of the {len(files_of)} conflicted PRs (PRs): "

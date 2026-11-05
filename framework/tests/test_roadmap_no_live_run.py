@@ -6,7 +6,7 @@ import claim
 LAST = "2026-11-02T17:50:00Z"
 
 
-def slot(monkeypatch, merged=3, idle=5, live=0, starved=True):
+def slot(monkeypatch, merged=claim.ROADMAP_IDLE_MIN, idle=5, live=0, starved=True):
     monkeypatch.setattr(claim, "on_github", lambda remote="origin": True)
     monkeypatch.setattr(claim, "api", lambda path, *a, **k: {"body": ""})
     monkeypatch.setattr(claim, "agent_state", lambda body: {"last_roadmap": LAST})
@@ -29,4 +29,5 @@ def test_a_live_run_keeps_the_wait_for_its_merge(monkeypatch):
 
 def test_the_other_conditions_stay(monkeypatch):
     assert slot(monkeypatch, merged=0, live=0) is None               # no PR merged since the last roadmap review
+    assert slot(monkeypatch, merged=claim.ROADMAP_IDLE_MIN - 1, live=0) is None   # too few PRs for a change (#5818)
     assert slot(monkeypatch, live=0, starved=False) is None          # the refill has a source

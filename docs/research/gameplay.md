@@ -36,6 +36,8 @@ Units with `NoAI` that a controller moves cost much less. A controller must also
   tech trees in Minecraft. The nearest project to AoE2 gameplay. It shows that a full RTS needs a client mod.
   Sources: [modpackindex](https://www.modpackindex.com/mod/117424/reign-of-nether-boobcat-edition),
   [Modrinth (Better Edition)](https://modrinth.com/mod/reign-of-nether-better-edition).
+  Its setting "Hiding leaves" is not in aoe2mc: in the camera mode the player walks around a tree to see the units
+  under it, and selected units glow (owner decision A of #5511).
 - **MineFortress** (Fabric): a top-down camera and a village of "pawns" that the player commands.
   Source: [GitHub](https://github.com/NobleSkye/minefortress), [feed-the-mods](https://www.feed-the-mods.com/minefortress-rts-mod/).
 - **Villager Recruits** with an RTS map command addon (Forge): click-to-move, waypoints, attack orders,
@@ -636,3 +638,5 @@ Moved from `docs/LEARNINGS.md` (improve run, 2026-10-26).
 - In a live replay a joined player is in creative mode (force-gamemode), and the camera commands (`--camera`, `--follow`) act only on `@a[gamemode=spectator]`. A server check with `mc_shot.Client` must set spectator mode after the replay starts, from the replay thread (one RCON socket), for example in a wrapper of `game.batch` (#4770).
 - A change of the click path of `Gather` (`click`, `left`, `deselect`) also changes the server tests that click with a fake player (`-m mc`, for example `tests/test_build_at_once.py`): the quick CI does not run them, so run them before the push. #4710 moved the placement to the left click on Paper, and the night run was red (#5034).
 - To see the economy of the bot in `tools/play_check.py`, read its stderr minute lines (`Watch.step`: the villagers, the stock and the villager states of each player). `--log` writes only the villager events of the Gather of player 1 (#5559).
+- A takeover check: `tools/takeover_check.py` (#5702). `play()` after a takeover does not wait for the join: at `--speed 4` the game runs about 100 game seconds before the client loads. `Client.pick` aims from the height of the player: after a replay the player is in the air, so put it on the ground first (`Client.place`).
+- A building menu of `train.show` lists the queue row (slots `train.ROW` to `train.MORE - 1`, "Click: cancel 1") first, with the same names as the unit items ("Villager 49 %"). Find a menu item by its slot (`train.layout`, `takeover_check.unit_slot`), not by the first name match: a click on the queue row cancels a unit (#5812).

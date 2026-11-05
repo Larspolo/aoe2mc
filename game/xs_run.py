@@ -147,13 +147,20 @@ BUILTIN = {
 }
 
 
+def constants():
+    """{name: [type, value, const]} of the built-in constants of the XS API (game/data/xs_constants.jsonl, #5807)."""
+    import table
+    return {r["name"]: [t, convert(t, tuple(v) if t == "vector" else v), True]
+            for r in table.load("xs_constants.jsonl") for t, v in r.items() if t != "name"}
+
+
 class Xs:
     """One XS script: its globals, functions and rules. load(name) gives the text of an include file; out(text) shows
     the text of xsChatData; host maps the names of game functions to callables (a later ticket of #5119)."""
 
     def __init__(self, text, load=None, out=print, host=None, steps=STEPS, path=None):
         self.load, self.out, self.host, self.max_steps = load, out, host or {}, steps
-        self.globals, self.funcs, self.rules, self.statics = {}, {}, {}, {}
+        self.globals, self.funcs, self.rules, self.statics = constants(), {}, {}, {}
         self.warned, self.included, self.started = set(), set(), False
         self.now, self.current, self.steps, self.scopes = 0.0, None, 0, []
         self.read(xs.parse(text, path))
