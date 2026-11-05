@@ -301,6 +301,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *   aoe box <player> <x> <z> <dye>             draw the selection box from this corner to the look (#795, Border.java)
  *   aoe box-clear <player>                     end the border of the selection box
  *   aoe box-corner <player>                    the block X Z of the last far corner of the border (#3082, a check)
+ *   aoe drag <player>                          "Drag: X0 Z0 X1 Z1": the corners of the last held left click drag
+ *                                              (Drag.java, #5759), once; "Drag: none"
  *   aoego <x> <z>                              (no permission) the player goes to a view of an alert place of the
  *                                              own team (#1816, Alerts.go): the click of an attack alert line
  *   controls                                   (no permission) set the trigger score aoe_controls of the player to 1:
@@ -439,6 +441,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private final Camera cameraMode = new Camera();
     private final HuntGlow huntGlow = new HuntGlow(this);           // the switch "Highlight huntable animals" (#5509)                 // the floor and speed of the camera mode
     private final Border border = new Border();
+    private final Drag drag = new Drag(border, cameraMode);         // the selection box with a held left click (#5759)
     private final Sight sight = new Sight(minimap);                 // the edge of the line of sight (#3330)
 
     // b: x0 y0 z0 x1 y1 z1 of box; range: the blocks from the footprint that its arrows reach, 0: no attack (#1111)
@@ -1251,15 +1254,27 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         return o != null ? o : sb.registerNewObjective("aoe_menu", Criteria.DUMMY, Component.text("Menu"));
     }
 
-    private static boolean commandStick(ItemStack it) {
+    static boolean commandStick(ItemStack it) {
         return it != null && it.getType() == Material.CARROT_ON_A_STICK && !(it.hasItemMeta() && it.getItemMeta().hasItemName());
     }
 
-    private static void leftClick(Player p) {
+    static void leftClick(Player p) {
+        leftClick(p, 1);
+    }
+
+    /** A chosen building (score aoe_build above 0, game/build.py): a left press is a placement, never a drag (#5759). */
+    static boolean building(Player p) {
+        Objective o = Bukkit.getScoreboardManager().getMainScoreboard().getObjective("aoe_build");
+        return o != null && o.getScore(p.getName()).isScoreSet() && o.getScore(p.getName()).getScore() > 0;
+    }
+
+    /** Score aoe_left of p: 1 a click, 2 a drag of the selection box (Drag.java, #5759). */
+    static void leftClick(Player p, int score) {
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
         Objective o = sb.getObjective("aoe_left");
         (o != null ? o : sb.registerNewObjective("aoe_left", Criteria.DUMMY, Component.text("Left click")))
-                .getScore(p.getName()).setScore(1);
+                .getScore(p.getName()).setScore(score);
+        input(p);                                                      // Gather.wait_input (#5760)
     }
 
     /** Each input of a player (a click with the command stick, a menu click) sets the score aoe_input 1: Gather.wait_input
@@ -1411,8 +1426,11 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         if ((ev.getAction() == Action.LEFT_CLICK_AIR || ev.getAction() == Action.LEFT_CLICK_BLOCK)
                 && commandStick(ev.getPlayer().getInventory().getItemInMainHand())) {
             ev.setCancelled(true);                                     // creative mode: no broken block
-            leftClick(ev.getPlayer());
-            input(ev.getPlayer());
+            if (ev.getAction() == Action.LEFT_CLICK_AIR || building(ev.getPlayer())) {   // on a block, Drag decides
+                                                                       // (#5759); a chosen building places at once
+                drag.skip(ev.getPlayer());
+                leftClick(ev.getPlayer());
+            }
         } else if ((ev.getAction() == Action.RIGHT_CLICK_AIR || ev.getAction() == Action.RIGHT_CLICK_BLOCK)
                 && ev.getItem() != null && ev.getItem().getType() == Material.CARROT_ON_A_STICK) {
             input(ev.getPlayer());                                     // also a group item: aoe_use counts it (#5760)
@@ -1468,6 +1486,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskTimer(this, this::steer, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, ghost::tick, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, border::tick, 4L, 4L);
+        Bukkit.getScheduler().runTaskTimer(this, drag::tick, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, relationColors::tick, 20L, 20L);
         Bukkit.getScheduler().runTaskTimer(this, this::siege, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(this, this::carts, 1L, 1L);
@@ -1492,6 +1511,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(mapTable, this);
         Bukkit.getPluginManager().registerEvents(viewer, this);
         Bukkit.getPluginManager().registerEvents(cameraMode, this);
+        Bukkit.getPluginManager().registerEvents(drag, this);
         Bukkit.getPluginManager().registerEvents(huntGlow, this);
     }
 
@@ -1500,6 +1520,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         Entity from = ev.getDamager();
         if (from instanceof Player p && commandStick(p.getInventory().getItemInMainHand())) {
             ev.setCancelled(true);                                     // a left click on a unit deselects (#1788)
+            drag.skip(p);
             leftClick(p);
             input(p);                                                  // the select click of a unit: at once (#5760)
             return;
@@ -3451,6 +3472,9 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         }
         if (args.length >= 2 && args[0].equals("minimap")) {           // #1237, #1238, #1567
             return minimap.command(sender, args);
+        }
+        if (args.length == 2 && args[0].equals("drag")) {              // the corners of a left drag (#5759)
+            return drag.command(sender, players(sender, args[1]));
         }
         if (args.length >= 2 && args[0].startsWith("box")) {            // the border of the selection box (#795)
             return border.command(sender, args, players(sender, args[1]));

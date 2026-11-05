@@ -12,12 +12,8 @@ UNGARRISON = "7:oak_door:Ungarrison:Click: all units come out"
 
 
 def right_click(server, g):
-    """One right click of Steve (a stick use after the hold time, as in tests/test_garrison_game.py)."""
-    now = [0.0]
-    g.clock = lambda: now[0]
+    """One right click of Steve: on Paper an order at once (#5759)."""
     server.scores["aoe_use"] = 1
-    assert g.clicks() == []
-    now[0] = gather.HOLD
     for name in g.clicks():
         g.click(name)
 

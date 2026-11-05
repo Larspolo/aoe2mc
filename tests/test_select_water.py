@@ -42,14 +42,8 @@ def test_the_corners_of_the_box_are_on_the_water_surface():
     assert g.selected == set(SHIPS) and not g.corners
 
 
-def test_a_held_right_click_selects_the_ships_on_paper():
+def test_a_left_drag_selects_the_ships_on_paper():
     server, g = ships()
-    g.paper, now = True, [0.0]
-    g.clock = lambda: now[0]
-    wand(server, g, (16, 4))
-    wand(server, g, (16, 4))                                           # the held button: a second use
-    assert g.corners["Steve"] == (16, 4) and "Steve" in g.holds
-    aim(server, (12.5, 12.5), (22, 11))
-    now[0] = 1.0
-    g.release()
+    g.paper = True
+    g.drag_end("Steve", 16, 4, 22, 11)                                 # the corners of the plugin (Drag.java, #5759)
     assert g.selected == set(SHIPS)

@@ -64,6 +64,23 @@ final class Border {
         return true;
     }
 
+    /** Start the border of p at block (x, z) in color c (Drag.java, #5759). */
+    void start(Player p, int x, int z, Color c) {
+        boxes.put(p.getUniqueId(), new Box(x, z, c));
+    }
+
+    /** End the border of p. */
+    void clear(Player p) {
+        boxes.remove(p.getUniqueId());
+    }
+
+    /** The ground block under the look of p (the ray of tick), or null. */
+    static Block ground(Player p) {
+        var eye = p.getEyeLocation();
+        RayTraceResult r = p.getWorld().rayTraceBlocks(eye, eye.getDirection(), REACH, FluidCollisionMode.SOURCE_ONLY, true);
+        return r == null ? null : r.getHitBlock();
+    }
+
     /** Every few ticks: draw the border of each box to the block under the look of its player. */
     void tick() {
         for (var it = boxes.entrySet().iterator(); it.hasNext();) {
@@ -75,10 +92,7 @@ final class Border {
             }
             // The water surface (#2060) and the barriers are ground as in fleet.pick(); plants are not (#3082, as
             // Ghost.java): the ray of the world ignores the passable blocks, Player#rayTraceBlocks does not.
-            var eye = p.getEyeLocation();
-            RayTraceResult r = p.getWorld().rayTraceBlocks(eye, eye.getDirection(), REACH,
-                    FluidCollisionMode.SOURCE_ONLY, true);
-            Block b = r == null ? null : r.getHitBlock();
+            Block b = ground(p);
             if (b == null) {
                 continue;
             }
