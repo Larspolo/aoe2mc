@@ -978,7 +978,9 @@ def welcome(game):
     settings = getattr(game, "settings", {})
     if not settings.get("tutorial"):
         game.command("tellraw @a " + json.dumps(lang.text("aoe2mc.run.welcome_goal", settings.get("victory", "standard"), color="gray")))
-        game.command("tellraw @a " + json.dumps(lang.text("aoe2mc.run.welcome_first", color="gray")))
+        # Paper: the left click selects (#5759), vanilla: the right click
+        first = "aoe2mc.run.welcome_first_paper" if getattr(game, "kind", None) == "paper" else "aoe2mc.run.welcome_first"
+        game.command("tellraw @a " + json.dumps(lang.text(first, color="gray")))
     game.command("tellraw @a " + json.dumps(lang.text("aoe2mc.run.welcome_controls", color="gray",
                  click_event={"action": "run_command", "command": "/controls"})))
 
