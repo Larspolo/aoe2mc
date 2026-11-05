@@ -118,12 +118,34 @@ BUILTIN = {
     "sqrt": lambda r, x: math.sqrt(x),
     "tan": lambda r, x: math.tan(x),
     "vector": lambda r, x, y, z: vec((x, y, z)),
+    "xsArrayCreateBool": lambda r, size=-1, value=False, name="": r.array_create("bool", size, value, name),
+    "xsArrayCreateFloat": lambda r, size=-1, value=-1.0, name="": r.array_create("float", size, value, name),
+    "xsArrayCreateInt": lambda r, size=-1, value=-1, name="": r.array_create("int", size, value, name),
+    "xsArrayCreateString": lambda r, size=-1, value="", name="": r.array_create("string", size, value, name),
+    "xsArrayCreateVector": lambda r, size=-1, value=(-1.0, -1.0, -1.0), name="": r.array_create("vector", size, value, name),
+    "xsArrayGetBool": lambda r, a=-1, i=-1: r.array_get("bool", a, i),
+    "xsArrayGetFloat": lambda r, a=-1, i=-1: r.array_get("float", a, i),
+    "xsArrayGetInt": lambda r, a=-1, i=-1: r.array_get("int", a, i),
+    "xsArrayGetSize": lambda r, a=-1: r.array_size(a),
+    "xsArrayGetString": lambda r, a=-1, i=-1: r.array_get("string", a, i),
+    "xsArrayGetVector": lambda r, a=-1, i=-1: r.array_get("vector", a, i),
+    "xsArrayResizeBool": lambda r, a=-1, n=-1: r.array_resize("bool", a, n),
+    "xsArrayResizeFloat": lambda r, a=-1, n=-1: r.array_resize("float", a, n),
+    "xsArrayResizeInt": lambda r, a=-1, n=-1: r.array_resize("int", a, n),
+    "xsArrayResizeString": lambda r, a=-1, n=-1: r.array_resize("string", a, n),
+    "xsArrayResizeVector": lambda r, a=-1, n=-1: r.array_resize("vector", a, n),
+    "xsArraySetBool": lambda r, a=-1, i=-1, v=False: r.array_set("bool", a, i, v),
+    "xsArraySetFloat": lambda r, a=-1, i=-1, v=-1.0: r.array_set("float", a, i, v),
+    "xsArraySetInt": lambda r, a=-1, i=-1, v=-1: r.array_set("int", a, i, v),
+    "xsArraySetString": lambda r, a=-1, i=-1, v="": r.array_set("string", a, i, v),
+    "xsArraySetVector": lambda r, a=-1, i=-1, v=(-1.0, -1.0, -1.0): r.array_set("vector", a, i, v),
     "xsBreakPoint": lambda r: None,
     "xsCeilToInt": lambda r, x: int32(math.ceil(x)),
     "xsChatData": lambda r, msg, value=-1: r.out(msg.replace("%d", str(int32(value)))),
     "xsDisableRule": lambda r, name: r.enable(name, False),
     "xsDisableRuleGroup": lambda r, group: r.enable_group(group, False),
     "xsDisableSelf": lambda r: r.enable(r.current, False),
+    "xsDumpArrays": lambda r: r.dump_arrays(),
     "xsEnableRule": lambda r, name: r.enable(name, True),
     "xsEnableRuleGroup": lambda r, group: r.enable_group(group, True),
     "xsGetTime": lambda r: int32(r.now * 1000),
@@ -163,6 +185,7 @@ class Xs:
         self.globals, self.funcs, self.rules, self.statics = constants(), {}, {}, {}
         self.warned, self.included, self.started = set(), set(), False
         self.now, self.current, self.steps, self.scopes = 0.0, None, 0, []
+        self.arrays = []                         # the xsArray functions: id -> [type, name, values]
         self.read(xs.parse(text, path))
 
     def read(self, nodes):
@@ -193,6 +216,54 @@ class Xs:
             self.warned.add((what, name))
             print(f"XS script: unknown {what} {name}: skipped" if "error" not in what
                   else f"XS script: {what} in {name}: stopped", file=sys.stderr)
+
+    # -- the arrays (xsArrayCreateInt, ...): a bad id or index gives one warning line and the default value
+
+    def array(self, typ, a, i=None):
+        """The values of array a of type typ, or None (one warning line)."""
+        if not 0 <= a < len(self.arrays) or self.arrays[a][0] != typ:
+            self.warn(f"{typ} array", a)
+            return None
+        values = self.arrays[a][2]
+        if i is not None and not 0 <= i < len(values):
+            self.warn(f"index of array {a}", i)
+            return None
+        return values
+
+    def array_create(self, typ, size, value, name):
+        if size < 0:
+            self.warn("array size", size)
+            return -1
+        self.arrays.append([typ, name, [convert(typ, value)] * int(size)])
+        return len(self.arrays) - 1
+
+    def array_get(self, typ, a, i):
+        values = self.array(typ, a, i)
+        return DEFAULT[typ] if values is None else values[i]
+
+    def array_set(self, typ, a, i, v):
+        values = self.array(typ, a, i)
+        if values is None:
+            return False
+        values[i] = convert(typ, v)
+        return True
+
+    def array_resize(self, typ, a, n):
+        values = self.array(typ, a)
+        if values is None or n < 0:
+            return False
+        values[:] = values[:n] + [DEFAULT[typ]] * (n - len(values))
+        return True
+
+    def array_size(self, a):
+        if not 0 <= a < len(self.arrays):
+            self.warn("array", a)
+            return -1
+        return len(self.arrays[a][2])
+
+    def dump_arrays(self):
+        for a, (typ, name, values) in enumerate(self.arrays):
+            self.out(f"Array {a} {name} ({typ}, {len(values)}): " + ", ".join(text(v) for v in values))
 
     # -- the calls of the game program
 

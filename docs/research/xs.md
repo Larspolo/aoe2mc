@@ -65,6 +65,7 @@ timed rules. Scoreboards hold 32-bit integers, `scoreboard players operation` ha
 | `xsChatData` | `tellraw @a` with the text and a score component for `%d` | A `float` value shows its whole part |
 | `xsBreakPoint` | No command | — |
 | `xsGetGameTime` | `#now` / 20 | — |
+| `xsArrayCreate*`, `xsArrayGet*`, `xsArraySet*`, `xsArrayResize*`, `xsArrayGetSize`, `xsDumpArrays` (each type: Bool, Float, Int, String, Vector) | None | The game program only (`Xs.arrays`, #5838): an array is a list of values with an index that the script computes, and a vanilla score holds one number. A storage list could hold the values, but each get and set with a computed index needs a macro function, and a float or vector array has no score form. The converter keeps the warning line |
 | `xsTriggerVariable`, `xsSetTriggerVariable` | The score `#v<N> aoe_var` (the converted triggers use it, `trigger_files()`) | A literal N: one command. A computed N: a macro function |
 | `xsGetObjectCount` | `execute store result score ... if entity @e[tag=aoe2mc.p<P>,tag=aoe2mc.t<ID>,tag=!<MOUNT>]`, as `count_lines()` | A building is a block with no entity: it does not count (as "Count Units into Variable"). A computed P or ID: a macro function |
 | `xsGetObjectCountTotal` | As `xsGetObjectCount` | A vanilla world has no training queue and no construction site: the count of the done units |
@@ -74,6 +75,8 @@ timed rules. Scoreboards hold 32-bit integers, `scoreboard players operation` ha
 | `xsGetWorldTime`, `xsGetTurn` (#5839) | `#now` × 50 and `#now` (one turn per tick) | — |
 | `xsGetRandomNumber`, `xsGetRandomNumberLH`, `xsGetRandomNumberMax`, `xsGetMapName`, `xsGetPlayerName`, `xsGetPlayerInGame` (#5839) | None yet: `random value` gives other numbers than the seeded generator of A; the strings and the defeat state have no score | The game program only |
 | `xsAddRuntimeEvent`, `xsGetFunctionID`, `xsGetDataTypeSize`, `xsGetDifficulty`, `xsGetLocale`, `xsGetMapID`, `xsGetPlayerType` (#5839) | None | A and B: the warning line (the game program has no runtime events, no locale and no map ID) |
+| `xsGetObjectAttribute`, `xsGetObjectClass`, `xsGetObjectType`, `xsGetObjectName`, `xsGetDamageClassName`, `xsGetObjectAttributeName`, `xsGetPlayerAttributeName`, `xsTaskAmount`, `xsGetTaskAmount`, `xsResetTaskAmount` (#5842) | None: a vanilla world has no unit kind data and no task list | The game program only (`game/xs_host.py`) |
+| `xsTask`, `xsRemoveTask`, `xsModifyObjectTasks`, `xsModifyUnitTasks`, `xsObjectTaskAmount`, `xsUnitTaskAmount`, `xsGetObjectTaskCount`, `xsObjectHasAction`, `xsGetObjectCopyId`, `xsSetObjectDescription` (#5842) | None: the game program has no task list and no description of a unit kind (mob AI does the tasks) | No form: the warning line |
 | The rest of the game functions of the guide | A function that reads entities (a unit, a position) can get a selector in a later ticket | Until then: the game program only |
 | `abs`, `floor`, `ceil`, `round`, `xsCeilToInt` | Score operations on the fixed point value | — |
 | `sqrt`, `xsVectorLength`, `xsVectorNormalize`, `dist` | An integer square root by Newton steps (a fixed number of lines) | 0.001 |
