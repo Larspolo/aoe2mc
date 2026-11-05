@@ -70,6 +70,7 @@ timed rules. Scoreboards hold 32-bit integers, `scoreboard players operation` ha
 | `xsGetObjectCountTotal` | As `xsGetObjectCount` | A vanilla world has no training queue and no construction site: the count of the done units |
 | `xsGetPlayerCivilization` | A constant: the converter knows the civilization of each player | — |
 | `xsPlayerAttribute`, `xsSetPlayerAttribute`, `xsEffectAmount`, `xsGetPlayerNumberOfTechs` | None: a vanilla world has no stock, no attributes and no technologies (`resource_lines()` only stores the changes for the game program) | The game program only |
+| `xsCreateFile`, `xsOpenFile`, `xsCloseFile`, `xsWriteInt/Float/String/Vector`, `xsReadInt/Float/String/Vector`, `xsGetFilePosition`, `xsSetFilePosition`, `xsOffsetFilePosition`, `xsGetFileSize` | None: a datapack cannot write or read a binary file (#5845) | The game program only: the files `xs/<name>.xsdat` of the world (`xs_host.files`). A name with `/` or `..`: one warning line. `xsOffsetFilePosition` goes only forward |
 | The rest of the game functions of the guide | A function that reads entities (a unit, a position) can get a selector in a later ticket | Until then: the game program only |
 | `abs`, `floor`, `ceil`, `round`, `xsCeilToInt` | Score operations on the fixed point value | — |
 | `sqrt`, `xsVectorLength`, `xsVectorNormalize`, `dist` | An integer square root by Newton steps (a fixed number of lines) | 0.001 |
