@@ -70,6 +70,7 @@ timed rules. Scoreboards hold 32-bit integers, `scoreboard players operation` ha
 | `xsGetObjectCountTotal` | As `xsGetObjectCount` | A vanilla world has no training queue and no construction site: the count of the done units |
 | `xsGetPlayerCivilization` | A constant: the converter knows the civilization of each player | — |
 | `xsPlayerAttribute`, `xsSetPlayerAttribute`, `xsEffectAmount`, `xsGetPlayerNumberOfTechs` | None: a vanilla world has no stock, no attributes and no technologies (`resource_lines()` only stores the changes for the game program) | The game program only |
+| The unit reads of #5837: `xsDoesUnitExist`, `xsGetPlayerNumberOfObjects`, `xsGetUnitAttributeHeld`, `xsGetUnitCivName`, `xsGetUnitClass`, `xsGetUnitCopyId`, `xsGetUnitHitpoints`, `xsGetUnitName`, `xsGetUnitObjectId`, `xsGetUnitOwner`, `xsGetUnitPosition`, `xsIsObjectValid` | None now: a vanilla world has no map of XS id -> entity (the game program keeps it: `xs_host.ids`). A later form: a tag `aoe2mc.r<ref>` on each start entity and `execute if entity` / `data get entity` | The game program only |
 | The rest of the game functions of the guide | A function that reads entities (a unit, a position) can get a selector in a later ticket | Until then: the game program only |
 | `abs`, `floor`, `ceil`, `round`, `xsCeilToInt` | Score operations on the fixed point value | — |
 | `sqrt`, `xsVectorLength`, `xsVectorNormalize`, `dist` | An integer square root by Newton steps (a fixed number of lines) | 0.001 |

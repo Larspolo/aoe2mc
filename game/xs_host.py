@@ -4,6 +4,11 @@
 Minecraft feature: the scenario variables stay scores of `aoe_var` (the datapack triggers read them); the resources stay
 in the stock of `Gather`. XS itself has no Minecraft feature (#5610). An unknown player or attribute gives one warning
 line and 0, as an unknown name (`Xs.warn`), and the script goes on.
+The unit ids (#5837): a start object keeps the reference ID of the scenario ("ref" of aoe2mc.json), so the IDs of the
+editor in a script name the same objects; a new object takes the next ID above all start IDs, and an ID is never given
+again (the model of record.Recorder). The map key -> ID is on the main Gather (`xs_ids`, `xs_top`: one ID space for all
+sides), and the saved game keeps it (savegame.OPTIONAL). The keys are those of per.standing: a unit UUID, the building
+target UUID. The state of a unit comes from its entity (Health, Pos) or the score aoe_hp of a building, not a copy.
 """
 import os
 import re
@@ -22,6 +27,36 @@ def civ_id(name):
     as tools/dat_compare.civ_ids), else 0."""
     from AoE2ScenarioParser.datasets.object_support import Civilization
     return next((i for i, c in enumerate(Civilization) if c.name == name), 0)
+
+
+def ids(g):
+    """{key: XS id} of the objects of g, made at the first call (the start objects of aoe2mc.json, the module doc)."""
+    import combat
+    if "xs_ids" not in vars(g):
+        objs = g.data.get("objects", [])
+        keys = [(combat.target_uuid(o["footprint"]) if o["kind"] == "building" and "footprint" in o else o.get("uuid"),
+                 o.get("ref")) for o in objs]
+        g.xs_ids = {k: ref for k, ref in keys if k and ref is not None}
+        g.xs_top = max((o.get("ref") or 0 for o in objs), default=0)
+        for k, ref in keys:
+            if k and ref is None and k not in g.xs_ids:
+                g.xs_top += 1
+                g.xs_ids[k] = g.xs_top
+    return g.xs_ids
+
+
+def objects(g):
+    """[(XS id, Gather, key, game name)] of the standing objects of all sides; a new object gets the next id."""
+    import per
+    known, out = ids(g), []
+    for x in [g, *(b.g for b in getattr(g, "bots", ()))]:
+        names = {u["uuid"]: u["name"] for u in x.units if "uuid" in u}
+        for key, name, _ in per.standing(x):
+            if key not in known:
+                g.xs_top += 1
+                known[key] = g.xs_top
+            out.append((known[key], x, key, names.get(key, name)))
+    return out
 
 
 def host(g):
@@ -84,11 +119,69 @@ def host(g):
     def techs(player):
         return len(x.techs) if (x := side(player)) else 0
 
-    return {"xsGetGameTime": lambda: int(recap.game_time(g)),
+    def unit(uid):
+        """(Gather, key, game name) of the unit id, or None with one warning."""
+        hit = next(((x, k, n) for i, x, k, n in objects(g) if i == int(uid)), None)
+        if hit is None:
+            warn("unit", uid)
+        return hit
+
+    def type_id(uid):
+        import record
+        return record.types().get(u[2], -1) if (u := unit(uid)) else -1
+
+    def hitpoints(uid):
+        if (u := unit(uid)) is None:
+            return -1.0
+        x, key, _ = u
+        if key in getattr(x, "forts", ()):                             # a building: its score (bot.hp)
+            m = re.search(r" has (-?\d+) ", x.command(f"scoreboard players get {key} aoe_hp") or "")
+        else:
+            import gather
+            m = re.search(gather.NUMBER, (x.command(f"data get entity {key} Health") or "").rsplit(":", 1)[-1])
+        return float(m[1]) if m else -1.0
+
+    def position(uid):
+        """The tiles (x, y) of the unit and 0: the units walk on the ground (per "point-z")."""
+        if (u := unit(uid)) and (p := u[0].positions([u[1]]).get(u[1])) is not None:
+            return (p[0] / u[0].map.T, p[2] / u[0].map.T, 0.0)
+        return (-1.0, -1.0, -1.0)
+
+    def held(uid, a):
+        v = u[0].villagers.get(u[1]) if (u := unit(uid)) else None
+        return float(v.load) if v and v.load and 0 <= int(a) < len(aoe2mc.STORES) and aoe2mc.STORES[int(a)] == v.res \
+            else 0.0
+
+    def civ_name(uid, localized=False):
+        import civs
+        return (civs.real(g, u[0].player) or "").replace("_", " ").title() if (u := unit(uid)) else ""
+
+    def unit_name(uid, internal=False):
+        if (u := unit(uid)) is None:
+            return ""
+        return u[2] if internal else u[2].replace("_", " ").capitalize()
+
+    def unit_class(uid):
+        import per
+        return per.klass(u[2]) if (u := unit(uid)) else -1
+
+    return {"xsDoesUnitExist": lambda uid: any(i == int(uid) for i, *_ in objects(g)),
+            "xsGetGameTime": lambda: int(recap.game_time(g)),
             "xsGetObjectCount": count,
             "xsGetObjectCountTotal": lambda player, unit: count(player, unit, True),
             "xsGetPlayerCivilization": civilization,
+            "xsGetPlayerNumberOfObjects": lambda player: sum(x is side(player) for _, x, _, _ in objects(g)),
             "xsGetPlayerNumberOfTechs": techs,
+            "xsGetUnitAttributeHeld": held,
+            "xsGetUnitCivName": civ_name,
+            "xsGetUnitClass": unit_class,
+            "xsGetUnitCopyId": type_id,
+            "xsGetUnitHitpoints": hitpoints,
+            "xsGetUnitName": unit_name,
+            "xsGetUnitObjectId": type_id,
+            "xsGetUnitOwner": lambda uid: u[0].player if (u := unit(uid)) else -1,
+            "xsGetUnitPosition": position,
+            "xsIsObjectValid": lambda oid, player=-1: int(oid) in aoe2mc.object_kinds(),
             "xsPlayerAttribute": attribute,
             "xsSetPlayerAttribute": set_attribute,
             "xsSetTriggerVariable": set_variable,

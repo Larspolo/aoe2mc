@@ -440,6 +440,19 @@ def best(kind, name):
     return rid if score else None
 
 
+def standing(x, down=False):
+    """[(key, game name, status)] of the objects of the Gather x that stand (the AI runtime and XS ids, #5837): the key
+    is the UUID of a unit or of the building target (combat.target_uuid); status 2 is ready, 0 a site under
+    construction, 4 a fallen start building (only with down)."""
+    import combat
+    import ruins
+    rows = [(combat.target_uuid(o["footprint"]), o["name"], 4 if ruins.fallen(x, o) else 2) for o in x.data["objects"]
+            if o["kind"] == "building" and o["player"] == x.player and "footprint" in o and (down or not ruins.fallen(x, o))]
+    rows += [(combat.target_uuid([s["footprint"][i] for i in (0, 2, 1, 3)]), s["name"], 2 if s.get("done") else 0)
+             for s in x.sites if s.get("player", x.player) == x.player]
+    return rows + [(u, "VILLAGER_MALE", 2) for u in x.villagers] + [(u, n, 2) for u, n in x.soldiers.items()]
+
+
 def klass(name):
     """The AoE2 class id of a game name (airef "ClassId"), -1 for no known class."""
     c = best("class", name)
@@ -2180,13 +2193,7 @@ class Script:
         site under construction (airef "ObjectStatus"); down: also the fallen start buildings (status 4, ruins.fallen).
         The key is the UUID of a unit or of the building target (combat.target_uuid). A new object gets the next id, and
         an id is never given again."""
-        import combat
-        import ruins
-        rows = [(combat.target_uuid(o["footprint"]), o["name"], 4 if ruins.fallen(x, o) else 2) for o in x.data["objects"]
-                if o["kind"] == "building" and o["player"] == x.player and "footprint" in o and (down or not ruins.fallen(x, o))]
-        rows += [(combat.target_uuid([s["footprint"][i] for i in (0, 2, 1, 3)]), s["name"], 2 if s.get("done") else 0)
-                 for s in x.sites if s.get("player", x.player) == x.player]
-        rows += [(u, "VILLAGER_MALE", 2) for u in x.villagers] + [(u, n, 2) for u, n in x.soldiers.items()]
+        rows = standing(x, down)
         for key, _, _ in rows:
             if key not in self.ids:
                 self.ids[key], self.next_id = self.next_id, self.next_id + 1

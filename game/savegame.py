@@ -35,6 +35,7 @@ OPTIONAL = ("auto", "auto_by",                                         # the aut
             "challenge_enemy",                                         # the enemy fleet of Naval Battle (#3909)
             "free_trained",                                            # the free units of a castle: Cuman Mercenaries (#4330)
             "risers",                                                  # the units that rise where a Konnik died: train.fell (#4471)
+            "xs_ids", "xs_top",                                        # the XS unit ids: xs_host.ids (#5837)
             *achievements.SAVED,                                       # the counts of the achievements: achievements.field (#5781)
             "limit_left", "policy", "rates", "relic_timer", "reseeds", "switches", "upgraded", "wonder_shown", "wonders",   # only on a
             "wonders_gone")                                            # Gather that has them (#2324; the policy: #2515)
