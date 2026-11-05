@@ -79,6 +79,7 @@ Read it before a change of `aoe2mc.py`, `buildings.py`, the scenarios or a world
 - The RMS control words of the game: the parser of goto-bus-stop (gist `cb59e5f0ae03ec12c3800f120c16eef3`, `parser.js`) is a good model: separate `if` and random stacks, `/*` `*/` are counted words (nested comments), a dead `if` branch skips `percent_chance` (#4692).
 - A scenario layout from a hex dump of the owner: decode one full record field by field and check its length against the stride of the dump before you add a field; a test builder that writes the same guess passes and hides the error (#5209 added an i32 that is the end of the victory data, #5316).
 - A new test file: run `ls tests/test_<topic>.py` before the Write. `test_rms_object_zones.py` existed (#3858), and the Write replaced its 4 tests with no error (#5737).
+- A field of AoE2ScenarioParser that the format of the file does not have raises `UnsupportedAttributeError`, not `AttributeError`: `getattr(obj, name, default)` does not catch it. Use `try`/`except UnsupportedAttributeError` (#5830).
 
 ## Game program code
 

@@ -443,12 +443,41 @@ def apply_layers(terrain, layer, terrain_names):
     return terrain
 
 
+PARSER_PROPS = {}   # (class, field) -> its attribute before AoE2ScenarioParser disabled the field (reset_parser_links)
+
+
+def reset_parser_links():
+    """Give the parser classes their fields back. AoE2ScenarioParser disables a field that the format of a file does not
+    have (script_name before 1.40) on the class, and the field stays disabled for each later file of the process
+    (its TODO in RetrieverObjectLink.overwrite_unsupported_properties): a 1.48 file after a 1.36 file failed (#5830)."""
+    from AoE2ScenarioParser.objects.aoe2_object import AoE2Object
+    classes, todo = [], [AoE2Object]
+    while todo:
+        classes.append(c := todo.pop())
+        todo += c.__subclasses__()
+    links = [k for c in classes for g in vars(c).get("_link_list", ()) for k in getattr(g, "group", [g])]
+    names = {k.name for k in links}
+    for c in classes:
+        for n in names:
+            v = vars(c).get(n)
+            if "overwrite_unsupported_properties" not in getattr(getattr(v, "fget", None), "__qualname__", ""):
+                PARSER_PROPS.setdefault((c, n), v)          # the field as the class defines it (None: not in the class)
+            elif (c, n) in PARSER_PROPS:
+                if PARSER_PROPS[c, n] is None:
+                    delattr(c, n)
+                else:
+                    setattr(c, n, PARSER_PROPS[c, n])
+    for k in links:
+        k.disabled = False
+
+
 def read_scenario(path):
     from AoE2ScenarioParser.datasets.terrains import TerrainId
     from AoE2ScenarioParser.datasets.trigger_lists import ColorMood, SecondaryGameMode, VictoryCondition
     from AoE2ScenarioParser.exceptions.asp_exceptions import UnsupportedAttributeError
     from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
+    reset_parser_links()                              # the fields that an earlier file of another format disabled
     with contextlib.redirect_stdout(io.StringIO()):   # the parser prints a lot of status text
         scn = AoE2DEScenario.from_file(path)
 
@@ -546,7 +575,10 @@ def read_scenario(path):
     mood = mm.map_color_mood                 # a ColorMood, or a string that the parser does not know (#1594)
     texts["ai_files"] = {f.ai_file_name.replace("\\", "/"): f.ai_file for f in   # the files of (load ...) (#5798)
                          getattr(scn.sections.get("Files"), "ai_files", None) or () if f.ai_file_name}
-    texts["xs_name"] = getattr(scn.xs_manager, "script_name", "") or ""   # a file of the AoE2 profile (#5122)
+    try:                                     # a file of the AoE2 profile (#5122); since format 1.40 (#5830)
+        texts["xs_name"] = scn.xs_manager.script_name or ""
+    except UnsupportedAttributeError:
+        texts["xs_name"] = ""
     texts["mood"] = (getattr(mood, "name", None) or str(mood or "DEFAULT")).upper()
     om = scn.option_manager                  # the tab "Global Victory" for the scenario mode (#2566, run.VICTORIES)
     win = VictoryCondition(om.victory_condition).name.lower().replace("_", "-") \
