@@ -449,7 +449,7 @@ public final class AoePlugin extends JavaPlugin implements Listener {
     private record Building(Stats stats, String box, int max, int[] b, double range, double min) {}
 
     final Map<UUID, Building> buildings = new HashMap<>();
-    private static final String BUILDING = "aoe2mc.building";   // the tag of a target slime (combat.building)
+    static final String BUILDING = "aoe2mc.building";   // the tag of a target slime (combat.building)
     private final Map<UUID, Integer> arrows = new HashMap<>();       // the arrows of a shot of a building (#1113)
     private final Map<UUID, double[]> fortPass = new HashMap<>();    // blocks past the range, damage part (Svan Towers, #4282)
     private final Map<UUID, Wear> wear = new HashMap<>();             // the damage stage of a building and its blocks (#1522)

@@ -1,5 +1,6 @@
 package aoe2mc;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,16 +9,24 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Animals;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.scoreboard.Team;
+import org.bukkit.util.BoundingBox;
+
+import net.kyori.adventure.text.Component;
 
 import io.papermc.paper.event.player.PlayerArmSwingEvent;
 
@@ -39,6 +48,7 @@ final class Drag implements Listener {
                                                                      // client swings each 3 ticks or less, a real drag)
     static final long FIRST = 20;                                    // ticks: the client sends the second swing up to
                                                                      // 18 ticks after the press (real client, #5759)
+    static final long MARKS = 2;                                     // ticks between the marks of the box (#5761)
     private final Map<UUID, Hold> holds = new HashMap<>();
     private final Map<UUID, Long> skips = new HashMap<>();           // a click on the air or a unit: not a drag
     private final Map<UUID, int[]> done = new HashMap<>();           // the corners of the last drag of each player
@@ -100,6 +110,10 @@ final class Drag implements Listener {
             var e = it.next();
             Hold h = e.getValue();
             if (now - h.last() <= (h.held() ? GAP : FIRST)) {
+                Player p = h.held() && now % MARKS == 0 ? Bukkit.getPlayer(e.getKey()) : null;
+                if (p != null) {
+                    marks(p, h);
+                }
                 continue;
             }
             it.remove();
@@ -117,6 +131,41 @@ final class Drag implements Listener {
             AoePlugin.leftClick(p, 2);
         }
     }
+
+    /**
+     * The marks of the units that the box will select (#5761): one particle above each, only to p (spawnParticle), and
+     * the count in its action bar. The rule of game/gather.py Gather.drag_end: the own units (AoePlugin.side) whose feet
+     * are in the blocks of the box, not garrisoned; military units win over villagers, herdable animals come last.
+     * No RCON command: the plugin finds them alone, so the click delay of #5760 stays.
+     */
+    private void marks(Player p, Hold h) {
+        Block b = Border.ground(p);
+        String own = AoePlugin.side(p);
+        if (b == null || own == null) {
+            return;
+        }
+        BoundingBox box = new BoundingBox(Math.min(h.x(), b.getX()), p.getWorld().getMinHeight(), Math.min(h.z(), b.getZ()),
+                Math.max(h.x(), b.getX()) + 1, p.getWorld().getMaxHeight(), Math.max(h.z(), b.getZ()) + 1);
+        List<Entity> soldiers = new ArrayList<>(), villagers = new ArrayList<>(), herd = new ArrayList<>();
+        for (Entity e : p.getWorld().getNearbyEntities(box)) {
+            if (!(e instanceof Mob) || !e.getPassengers().isEmpty() || !box.contains(e.getLocation().toVector())
+                    || !own.equals(AoePlugin.side(e)) || e.getScoreboardTags().contains(GARRISONED)
+                    || e.getScoreboardTags().contains(AoePlugin.BUILDING)) {
+                continue;                                            // a horse with a rider: the rider counts
+            }
+            (e.getType() == EntityType.VILLAGER ? villagers : e instanceof Animals ? herd : soldiers).add(e);
+        }
+        List<Entity> pick = !soldiers.isEmpty() ? soldiers : !villagers.isEmpty() ? villagers : herd;
+        for (Entity e : pick) {
+            p.spawnParticle(Particle.END_ROD, e.getLocation().add(0, e.getHeight() + 0.5, 0), 1, 0, 0, 0, 0);
+        }
+        String key = pick == soldiers ? "aoe2mc.hints.count_military" : pick == villagers ? "aoe2mc.hints.count_villager"
+                : "aoe2mc.gather.selected";                          // the texts of game/hints.count (resource pack)
+        p.sendActionBar(Component.translatable(key + (pick != herd && pick.size() != 1 ? "_many" : ""),
+                Component.text(pick.size())));
+    }
+
+    static final String GARRISONED = "aoe2mc.garrisoned";            // aoe2mc.GARRISONED: no click selects it (#807)
 
     /** aoe drag PLAYER: "Drag: X0 Z0 X1 Z1", the corner blocks of the last drag (once), or "Drag: none". */
     boolean command(CommandSender sender, List<Player> players) {
