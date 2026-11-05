@@ -30,7 +30,7 @@ def test_an_idle_hour_makes_the_review_due_at_the_merged_count(monkeypatch):
 
 
 def test_a_refill_with_a_source_does_not_get_the_idle_review(monkeypatch):
-    assert slot(monkeypatch, [10], 10 + claim.ROADMAP_IDLE, starved=False) == (None, claim.ROADMAP, True)
+    assert slot(monkeypatch, [10] * claim.ROADMAP_IDLE_MIN, 10 + claim.ROADMAP_IDLE, starved=False) == (None, claim.ROADMAP, True)
 
 
 def test_no_merged_pr_since_the_last_review_waits(monkeypatch):
