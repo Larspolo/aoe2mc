@@ -70,6 +70,10 @@ timed rules. Scoreboards hold 32-bit integers, `scoreboard players operation` ha
 | `xsGetObjectCountTotal` | As `xsGetObjectCount` | A vanilla world has no training queue and no construction site: the count of the done units |
 | `xsGetPlayerCivilization` | A constant: the converter knows the civilization of each player | — |
 | `xsPlayerAttribute`, `xsSetPlayerAttribute`, `xsEffectAmount`, `xsGetPlayerNumberOfTechs` | None: a vanilla world has no stock, no attributes and no technologies (`resource_lines()` only stores the changes for the game program) | The game program only |
+| `xsGetMapWidth`, `xsGetMapHeight`, `xsGetMapSeed`, `xsGetNumPlayers`, `xsGetMapTileAttribute` (literal x, y), `xsGetContextPlayer`, `xsSetContextPlayer`, `xsGetWorldPlayerId`, `xsGetHandicapMultiplier` (#5839) | Constants: the converter knows the map, the players and the side of the script | A computed tile: the game program only |
+| `xsGetWorldTime`, `xsGetTurn` (#5839) | `#now` × 50 and `#now` (one turn per tick) | — |
+| `xsGetRandomNumber`, `xsGetRandomNumberLH`, `xsGetRandomNumberMax`, `xsGetMapName`, `xsGetPlayerName`, `xsGetPlayerInGame` (#5839) | None yet: `random value` gives other numbers than the seeded generator of A; the strings and the defeat state have no score | The game program only |
+| `xsAddRuntimeEvent`, `xsGetFunctionID`, `xsGetDataTypeSize`, `xsGetDifficulty`, `xsGetLocale`, `xsGetMapID`, `xsGetPlayerType` (#5839) | None | A and B: the warning line (the game program has no runtime events, no locale and no map ID) |
 | The rest of the game functions of the guide | A function that reads entities (a unit, a position) can get a selector in a later ticket | Until then: the game program only |
 | `abs`, `floor`, `ceil`, `round`, `xsCeilToInt` | Score operations on the fixed point value | — |
 | `sqrt`, `xsVectorLength`, `xsVectorNormalize`, `dist` | An integer square root by Newton steps (a fixed number of lines) | 0.001 |

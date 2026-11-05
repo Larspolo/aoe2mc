@@ -8,6 +8,9 @@ line and 0, as an unknown name (`Xs.warn`), and the script goes on.
 import os
 import re
 import sys
+import zlib
+
+import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import aoe2mc  # noqa: E402
@@ -29,6 +32,9 @@ def host(g):
     import recap  # recap imports gather: import it late
     import train
     warned = set()
+    data = getattr(g, "data", None) or {}
+    seed = zlib.crc32(f"{data.get('map_size')}-{len(data.get('objects', ()))}".encode())   # the map, not the clock
+    rng, context = np.random.default_rng(seed), [g.player]
 
     def warn(what, value):
         if (what, value) not in warned:
@@ -36,7 +42,7 @@ def host(g):
             print(f"XS script: unknown {what} {value}: skipped", file=sys.stderr)
 
     def side(player):
-        x = {s.player: s for s in [g, *(b.g for b in getattr(g, "bots", ()))]}.get(int(player))
+        x = {s.player: s for s in [g, *(b.g for b in getattr(g, "bots", ()))]}.get(who(player))   # -1: the context
         if x is None:
             warn("player", player)
         return x
@@ -84,12 +90,56 @@ def host(g):
     def techs(player):
         return len(x.techs) if (x := side(player)) else 0
 
-    return {"xsGetGameTime": lambda: int(recap.game_time(g)),
+    def size():
+        return int(data.get("map_size") or 0)
+
+    def tile(x, y, a):
+        rows = data.get({0: "terrain", 1: "elevation"}.get(int(a), ""))   # 0: terrain, 1: elevation (a choice)
+        if rows is None:
+            warn("tile attribute", a)
+            return -1
+        if not (0 <= int(y) < len(rows) and 0 <= int(x) < len(row := rows[int(y)].split())):
+            return -1
+        return int(row[int(x)])
+
+    def who(player=-1):
+        return context[0] if int(player) == -1 else int(player)
+
+    def player_data(player):
+        return data.get("players", {}).get(str(who(player)))
+
+    def map_name(extension=False):
+        lobby = data.get("lobby", {})
+        name = lobby.get("scenario") or lobby.get("script") or ""
+        return name if extension else os.path.splitext(name)[0]
+
+    def in_game(player):
+        x = side(player)
+        return bool(x) and not getattr(x, "lost", False)
+
+    return {"xsGetContextPlayer": lambda: context[0],
+            "xsGetGameTime": lambda: int(recap.game_time(g)),
+            "xsGetHandicapMultiplier": lambda player=-1: 1.0,           # the game program has no handicap
+            "xsGetMapHeight": size,
+            "xsGetMapName": map_name,
+            "xsGetMapSeed": lambda: int(seed & 0x7FFFFFFF),
+            "xsGetMapTileAttribute": tile,
+            "xsGetMapWidth": size,
+            "xsGetNumPlayers": lambda: len(data.get("players", {})) + 1,   # with gaia, as AoE2
             "xsGetObjectCount": count,
             "xsGetObjectCountTotal": lambda player, unit: count(player, unit, True),
             "xsGetPlayerCivilization": civilization,
+            "xsGetPlayerInGame": in_game,
+            "xsGetPlayerName": lambda player=-1: (player_data(player) or {}).get("name", f"Player {who(player)}"),
             "xsGetPlayerNumberOfTechs": techs,
+            "xsGetRandomNumber": lambda: int(rng.integers(0, 32768)),
+            "xsGetRandomNumberLH": lambda low, high: int(rng.integers(int(low), max(int(high), int(low) + 1))),
+            "xsGetRandomNumberMax": lambda m: int(rng.integers(0, max(int(m), 1))),
+            "xsGetTurn": lambda: int(recap.game_time(g) * 20),          # one turn per Minecraft tick (a choice)
+            "xsGetWorldPlayerId": who,
+            "xsGetWorldTime": lambda: int(recap.game_time(g) * 1000),   # milliseconds
             "xsPlayerAttribute": attribute,
+            "xsSetContextPlayer": lambda player: context.__setitem__(0, int(player)),
             "xsSetPlayerAttribute": set_attribute,
             "xsSetTriggerVariable": set_variable,
             "xsTriggerVariable": variable}
