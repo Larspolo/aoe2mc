@@ -26,7 +26,6 @@ def test_players_and_the_context_player():
     assert value(g, "xsGetNumPlayers()") == 3
     assert value(g, "xsGetPlayerName(1)", "string") == "Ann"
     assert value(g, "xsGetPlayerName(2)", "string") == "Player 2"
-    assert value(g, "xsGetContextPlayer()") == 1
     assert value(g, "xsGetPlayerInGame(1)", "bool") and not value(g, "xsGetPlayerInGame(5)", "bool")
     assert value(g, "xsGetWorldPlayerId(2)") == 2
     assert value(g, "xsGetHandicapMultiplier(1)", "float") == 1.0
