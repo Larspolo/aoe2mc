@@ -649,7 +649,7 @@ def stuck(tickets, tips, now, limit=STALE):
     return out
 
 
-AGENT_BRANCH = re.compile(r"^(agent/|claude/|ccr-)")   # the prefixes that Automerge merges (`automerge.yml`, #3383)
+AGENT_BRANCH = re.compile(r"^(agent/|claude/|ccr-|claim/)")   # the prefixes that Automerge merges (`automerge.yml`, #3383)
 
 
 def stuck_lines(found, pulls, checks):
