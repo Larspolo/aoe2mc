@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "%s o'yinchi %s davriga o'tadi."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Buzilish xaritani chetidan markazigacha %s ichida egallaydi. U ichidagi barcha birlik va binolarni yo'q qiladi."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Men hozir u yerga %s qura olmayman."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Men bu birlikni tayyorlay olmayman: unga bino yo'q."}
+{"name": "aoe2mc.bot.flare_two", "text": "Devor uchun ikki joyga yorug'lik qo'ying."}
+{"name": "aoe2mc.bot.no_flare", "text": "Men yorug'lik ko'rmayapman."}
+{"name": "aoe2mc.bot.no_market", "text": "Menda bozor yo'q: soliq yubora olmayman."}
+{"name": "aoe2mc.bot.no_onager", "text": "Menda onager yo'q."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Devor uchun resurs yetarli emas."}
+{"name": "aoe2mc.bot.no_water", "text": "Shahar yonida suv yo'q: dengiz flotini qura olmayman."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Mening onagerlarim daraxt kesa olmaydi."}
+{"name": "aoe2mc.build.cost", "text": "Resurs yetarli emas: %s narxi %s."}
+{"name": "aoe2mc.build.flat", "text": "%s tekis yerda turishi kerak."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s o'z devorining 4 ta plitkasida to'g'ri chiziq bo'ylab yoki 3 ta diagonal plitkada turishi kerak."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Qurish: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s qirg'oqda, suv ustida turishi kerak."}
+{"name": "aoe2mc.build.space", "text": "Bu yerda %s uchun joy yo'q."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Resurs yetarli emas: %s ta plitka, %s narxi %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: devorning oxirini o'ng tugma bilan bosing."}
+{"name": "aoe2mc.build.water", "text": "%s suvda turishi kerak."}
+{"name": "aoe2mc.camera.fov", "text": "Tez kamera ushlagan narsani silkitadi. Uni to'xtatish uchun Sozlamalar > Maxsus imkoniyatlar bo'limida View Bobbing qiymatini OFF holatiga qo'ying. Kamera ko'rinishni kengaytiradi va xaritaning ko'proq qismini ko'rsatadi. Oddiy ko'rinishni saqlash uchun Sozlamalar > Maxsus imkoniyatlar bo'limida FOV Effects qiymatini 0 % qiling."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: o'chirilgan"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: yoqilgan, tezlik x%s. Shift + o'ng tugma: keyingi tezlik."}
+{"name": "aoe2mc.camera.speed", "text": "Kamera tezligi: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Dushmanning barcha birliklarini yenging va kam birlik yo'qotib qo'ying"}
+{"name": "aoe2mc.challenge.booming", "text": "100 ta aholi tayyorlang va Imperiya davriga o'ting"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Qal'a davriga o'ting va dushman hujumlariga bardosh bering"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Dushmanning qal'asini vayron qiling"}
+{"name": "aoe2mc.challenge.early-economy", "text": "200 oziq-ovqat, 200 yog'och, 100 oltin va 200 tosh yig'ing, 21 ta aholi tayyorlang, yog'och lagerini va tegirmonni qurdiring, Feodal davriga o'ting"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "27 ta aholi tayyorlang, 5 ta uy qurdiring va Qal'a davriga o'ting"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Dushmanning oltita to'lqinini yenging"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s birlik yo'qotildi, bronza medalgacha: %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s birlik yo'qotildi, oltin medalgacha: %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s birlik yo'qotildi, medal yo'q"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s birlik yo'qotildi, kumush medalgacha: %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronza medal"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Oltin medal"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Kumush medal"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Dushmanning barcha harbiy kemalarini yo'q qiling"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Medal yo'q"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Dushmanning 5 ta aholisini o'ldiring"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "%s ichida bronza medal"}
+{"name": "aoe2mc.challenge.time_gold", "text": "%s ichida oltin medal"}
+{"name": "aoe2mc.challenge.time_silver", "text": "%s ichida kumush medal"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis o'chirilgan"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis yoqilgan"}
+{"name": "aoe2mc.cheat.beyond", "text": "Texnologiyalar: 256 tagacha tadqiqot"}
+{"name": "aoe2mc.cheat.cpu", "text": "Aholi chegarasi: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Tuman: o'chirilgan"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Tuman: yoqilgan"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Texnologiyalar bepul"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Ulashish — g'amxo'rlik: daromadingiz ittifoqchilaringizga boradi"}
+{"name": "aoe2mc.cheat.wonders", "text": "Siz tabiatni boshqarasiz: %s hayvon"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Faqat ittifoqchilar qoldi: ittifoqlar tugaydi. Oxirgi tirik qolgan o'yinchi g'alaba qozonadi."}
+{"name": "aoe2mc.conquest.defeated", "text": "O'yinchi %s mag'lub bo'ldi."}
+{"name": "aoe2mc.controls.attack", "text": "Hujum: harbiy birliklarni tanlang, so'ng dushman ustiga o'ng tugma bilan bosing."}
+{"name": "aoe2mc.controls.build", "text": "Qurish: aholini tanlang, qurish menyusi uchun o'ng tugma bilan bosing, binoni tanlang, so'ng yerni chap tugma bilan bosing. Shift + chap tugma: ko'proq qurish. O'ng tugma: bekor qilish."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: Kamera buyumi (tezkor tugma 2) bilan o'ng tugma: xarita ustida tez uchasiz. Shift + o'ng tugma: keyingi tezlik. Yana o'ng tugma: pastga tushasiz."}
+{"name": "aoe2mc.controls.garrison", "text": "Garnizon: birliklarni tanlang, so'ng o'z binongizga o'ng tugma. Uning menyusi ularni chiqaradi. Shahar markazi menyusi: Qo'ng'iroqni chalish."}
+{"name": "aoe2mc.controls.gather", "text": "Yig'ish: aholini tanlang, so'ng daraxt, meva butasi, kon yoki ekinga o'ng tugma."}
+{"name": "aoe2mc.controls.goto", "text": "Borish: Borish kompasi (tezkor tugma 3) bilan o'ng tugma: shahar markazlaringiz, boshqaruv guruhlaringiz va keyingi bo'sh aholi menyusi."}
+{"name": "aoe2mc.controls.groups", "text": "Boshqaruv guruhlari: birliklarni tanlang, guruh buyumini oling (tezkor tugmalar 5-9) va Shift + o'ng tugma bilan tanlovni saqlang. O'ng tugma: guruhni tanlash."}
+{"name": "aoe2mc.controls.head", "text": "Boshqaruv (tayoqchani ushlab turing; harakat paneli keyingi qadamni ko'rsatadi):"}
+{"name": "aoe2mc.controls.menu", "text": "O'yin menyusi: O'yin menyusi kitobi bilan o'ng tugma (tezkor tugma 4): diplomatiya va soliq, yorug'lik, saqlash, pauza va texnologiya daraxti."}
+{"name": "aoe2mc.controls.move", "text": "Ko'chish: tanlangan birliklar bilan yerni o'ng tugma bilan bosing."}
+{"name": "aoe2mc.controls.research", "text": "Tadqiqot va davrga o'tish: o'z binongizga o'ng tugma va uning menyusidagi texnologiyani yoki keyingi davrni bosing."}
+{"name": "aoe2mc.controls.select", "text": "Tanlash: birlikni chap tugma bilan bosing. Chap tugmani bosib turing va yerni ko'ring: tanlash qutisi. O'ng tugma: buyruq bering."}
+{"name": "aoe2mc.controls.train", "text": "Tayyorlash: o'z binongizga (shahar markazi, kazarma ...) o'ng tugma va uning menyusidagi birlikni bosing."}
+{"name": "aoe2mc.defeat", "text": "Mag'lubiyat"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Ittifoqchi"}
+{"name": "aoe2mc.diplomacy.changed", "text": "O'yinchi %s sizga bo'lgan munosabatini o'zgartirdi: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Dushman"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Betaraf"}
+{"name": "aoe2mc.diplomacy.speed", "text": "O'yinchi %s o'yin tezligini %s ga o'rnatdi."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "O'yinchi %s, %s %s o'yinchi %s ga yubordi."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Yorug'lik, %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Ergashish: o'z birligingizni bosing"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Qo'riqlash: o'z birligingiz yoki binongizni bosing"}
+{"name": "aoe2mc.gaia.joins", "text": "%s sizga qo'shiladi."}
+{"name": "aoe2mc.garrison.all_back", "text": "Hammasi ishga qaytadi"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Qo'ng'iroq chalindi: %s aholi boshpana izlaydi"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Aholi tanlanmagan."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Sizda aholi yo'q."}
+{"name": "aoe2mc.garrison.out", "text": "%s birlik chiqdi"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s aholi boshpana izlaydi"}
+{"name": "aoe2mc.gather.act_attack", "text": "hujum"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "qurish menyusi"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garnizon"}
+{"name": "aoe2mc.gather.act_gather", "text": "yig'ish"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ov"}
+{"name": "aoe2mc.gather.act_move", "text": "ko'chish"}
+{"name": "aoe2mc.gather.act_select", "text": "tanlash"}
+{"name": "aoe2mc.gather.act_select_type", "text": "shu turdagi hammasini tanlash"}
+{"name": "aoe2mc.gather.act_trade", "text": "savdo"}
+{"name": "aoe2mc.gather.act_train", "text": "tayyorlash"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Hujum: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Tanlash qutisi: bekor qilindi"}
+{"name": "aoe2mc.gather.bush", "text": "Meva butasi"}
+{"name": "aoe2mc.gather.carcass", "text": "Murdar"}
+{"name": "aoe2mc.gather.corner", "text": "Tanlash qutisi: boshqa burchakni bosing"}
+{"name": "aoe2mc.gather.enemy", "text": "Dushman %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Dushman binosi"}
+{"name": "aoe2mc.gather.farm", "text": "Ekin"}
+{"name": "aoe2mc.gather.ground", "text": "Yer"}
+{"name": "aoe2mc.gather.group", "text": "Guruh %s: %s birlik"}
+{"name": "aoe2mc.gather.group_saved", "text": "Guruh %s: %s birlik saqlandi"}
+{"name": "aoe2mc.gather.mine", "text": "%s koni"}
+{"name": "aoe2mc.gather.paused", "text": "O'yin to'xtatilgan."}
+{"name": "aoe2mc.gather.point", "text": "%s · O'ng tugma: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Navbatdagi ekish: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Tanlangan: %s birlik"}
+{"name": "aoe2mc.gather.tree", "text": "Daraxt"}
+{"name": "aoe2mc.hill.holds", "text": "O'yinchi %s monumentni ushlab turibdi."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Yerga hujum: yerni o'ng tugma bilan bosing"}
+{"name": "aoe2mc.hints.attack_move", "text": "Hujum-yurish: yerni o'ng tugma bilan bosing"}
+{"name": "aoe2mc.hints.building", "text": "%s qurish: yerni o'ng tugma bilan bosing · Shift + o'ng tugma: ko'proq qurish · Bekor qilish: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: qurish uchun chap tugma · Shift: ko'proq qurish · O'ng tugma: bekor qilish"}
+{"name": "aoe2mc.hints.corner", "text": "Tanlash qutisi: boshqa burchakni o'ng tugma bilan bosing"}
+{"name": "aoe2mc.hints.count_military", "text": "%s harbiy birlik"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s harbiy birlik"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s aholi"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s aholi"}
+{"name": "aoe2mc.hints.deselect", "text": "Bo'sh quti: tanlovni bekor qilish"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Chap tugma: tanlovni bekor qilish"}
+{"name": "aoe2mc.hints.follow", "text": "Ergashish: o'z yoki ittifoqchi birlikni o'ng tugma bilan bosing"}
+{"name": "aoe2mc.hints.guard", "text": "Qo'riqlash: o'z yoki ittifoqchi birlik yoki binoni o'ng tugma bilan bosing"}
+{"name": "aoe2mc.hints.military", "text": "%s · O'ng tugma: dushmanga hujum, pozitsiya menyusi · %s"}
+{"name": "aoe2mc.hints.none", "text": "Chap tugma: birlikni tanlash · Chap tugmani bosib turish: tanlash qutisi"}
+{"name": "aoe2mc.hints.none_wand", "text": "O'ng tugma: birlikni tanlash · Tayoqcha: tanlash qutisi"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrul: yerni o'ng tugma bilan bosing"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · O'ng tugma: yig'ish, qurish, qurish menyusi · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s tayyor"}
+{"name": "aoe2mc.lobby.you_play", "text": "Siz %s o'ynaysiz."}
+{"name": "aoe2mc.monk.converts", "text": "Rohib %s ni aylantiradi."}
+{"name": "aoe2mc.monk.dies", "text": "%s o'ladi (Bid'at)."}
+{"name": "aoe2mc.pause.continued", "text": "O'yinchi %s o'yinni davom ettirdi."}
+{"name": "aoe2mc.pause.paused", "text": "O'yinchi %s o'yinni to'xtatdi."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "%s jamoasi (o'rtacha reyting %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "O'yin tugadi. Natijalarni ko'rish uchun qo'lingizdagi Xulosa kitobini o'ng tugma bilan bosing. O'yin dasturini konsolda Ctrl-C bilan to'xtating."}
+{"name": "aoe2mc.relic_victory.all", "text": "O'yinchi %s barcha muqaddas buyumlarni ushlab turibdi."}
+{"name": "aoe2mc.relic_victory.lost", "text": "O'yinchi %s muqaddas buyumni yo'qotdi."}
+{"name": "aoe2mc.repair.no_resources", "text": "%s ni tiklash uchun resurs yetarli emas."}
+{"name": "aoe2mc.replay.army", "text": "Harbiy kuch: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", tugagandagi harbiy kuch: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", yo'qotildi: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Qurish tartibi:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garnizon %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | %s %s olib yuradi"}
+{"name": "aoe2mc.replay.eco_build", "text": "qurish %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "oziq-ovqat %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "oltin %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "bo'sh %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "tosh %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "yog'och %s"}
+{"name": "aoe2mc.replay.flare", "text": "Yorug'lik"}
+{"name": "aoe2mc.replay.game_ends", "text": "O'yin tugaydi"}
+{"name": "aoe2mc.replay.game_time", "text": "O'yin vaqti %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · garnizon %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Harbiy %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Aholi %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Resurs %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Aholi birligi %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s monumentni ushlab turdi: Tepalik shohi g'alabasi, %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s hujum %s/%s himoya%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift ni ikki marta bosing: tomoshabin ko'rinishi (bloklar orqali uchish). Tezkor panelning buyumlariga o'ng tugma: qayta ijro boshqaruvi."}
+{"name": "aoe2mc.replay.king_died", "text": ": Shoh %s da vafot etdi. Shohni o'ldirish: o'yinchi chiqib ketadi."}
+{"name": "aoe2mc.replay.king_killed", "text": "Shoh %s da o'ldirildi"}
+{"name": "aoe2mc.replay.live_jump", "text": "Jonli qayta ijro: sakrash o'yindan orqada turgan kechikishgacha to'xtaydi."}
+{"name": "aoe2mc.replay.lost", "text": "Yo'qotildi: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " monumentni %s da ushlab turibdi."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monument, %s yil qoldi"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monument, %s yil qoldi"}
+{"name": "aoe2mc.replay.no_camera", "text": "Bu yozuvda o'yinchining kamerasi yo'q."}
+{"name": "aoe2mc.replay.now", "text": " hozir"}
+{"name": "aoe2mc.replay.out", "text": "%s chiqib ketdi"}
+{"name": "aoe2mc.replay.players", "text": "O'yinchilar"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " muqaddas buyumni monastirga olib boradi va g'alaba qozonadi."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Qayta ijro tugadi"}
+{"name": "aoe2mc.replay.research", "text": " %s ni tadqiq qiladi"}
+{"name": "aoe2mc.replay.resigns", "text": "%s taslim bo'ldi"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Sakrash uchun server qayta ishga tushadi: qayta ulaning."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Binolar %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Iqtisod %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Harbiy %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Texnologiyalar %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Jami %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "qal'alar %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "sotib oldi %s, sotdi %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "muqaddas buyumlar %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "mo''jizalar %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Sarflangan:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Qurish %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Iqt. %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Harbiy %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Texnologiya %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": tayyorlangan aholi %s, yig'ilgan %s, aholining bo'sh vaqti %s, markazning bo'sh vaqti %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": monumentni ushlab turadi (Tepalik shohi)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monument g'alabasi %s (Tepalik shohi)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": tayyorlangan harbiy birlik %s, yo'qotilgan birlik %s, yo'qotilgan bino %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": shoh o'ldirildi %s (Shohni yo'q qilish)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": g'alaba qozonadi, monastirdagi muqaddas buyum %s (Muqaddas buyumni olish)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sSoliq yuborildi %s, qabul qilindi %s, aholi cho'qqisi %s (taxm.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": shahar markazi yo'qotildi %s (To'satdan o'lim)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, texnologiyalar %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": mo''jiza taymeri %s dan, tugaydi %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Xulosa (taxm.)"}
+{"name": "aoe2mc.replay.task_building", "text": "qurish"}
+{"name": "aoe2mc.replay.task_following", "text": "ergashish"}
+{"name": "aoe2mc.replay.task_food", "text": "oziq-ovqat yig'ish"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "garnizonda"}
+{"name": "aoe2mc.replay.task_gold", "text": "oltin yig'ish"}
+{"name": "aoe2mc.replay.task_guarding", "text": "qo'riqlash"}
+{"name": "aoe2mc.replay.task_idle", "text": "bo'sh"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrul"}
+{"name": "aoe2mc.replay.task_resources", "text": "resurs yig'ish"}
+{"name": "aoe2mc.replay.task_stone", "text": "tosh yig'ish"}
+{"name": "aoe2mc.replay.task_walking", "text": "yurish"}
+{"name": "aoe2mc.replay.task_wood", "text": "yog'och yig'ish"}
+{"name": "aoe2mc.replay.team", "text": "Jamoa %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Kamonchi %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Kamonchi zirhi %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Tashish %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Otliq zirh %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Ekin %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Oltin %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Piyoda zirh %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Dastgoh %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Yaqin jang %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Tosh %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Yog'och %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Qal'a"}
+{"name": "aoe2mc.replay.tl_king", "text": "Shoh o'ldirildi"}
+{"name": "aoe2mc.replay.tl_military", "text": "1-harbiy: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Muqaddas buyum"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Taslim bo'ldi"}
+{"name": "aoe2mc.replay.town_fell", "text": ": shahar markazi %s da quladi. To'satdan o'lim: o'yinchi chiqib ketadi."}
+{"name": "aoe2mc.replay.town_lost", "text": "Shahar markazi %s da yo'qotildi"}
+{"name": "aoe2mc.replay.training", "text": "Tayyorlash: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitet:"}
+{"name": "aoe2mc.replay.up_counts", "text": "iqtisod %s · Universitet %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " %s da mo''jiza qurdi."}
+{"name": "aoe2mc.replay_input.fight", "text": "Jang: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s birlik"}
+{"name": "aoe2mc.replay_input.fights", "text": "Katta janglar:"}
+{"name": "aoe2mc.replay_input.help", "text": "Qayta ijro: tezkor paneldagi buyumlarga o'ng tugma yoki bosing: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Egallash: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s birlik)"}
+{"name": "aoe2mc.replay_input.vs", "text": " qarshi "}
+{"name": "aoe2mc.resource.food", "text": "oziq-ovqat"}
+{"name": "aoe2mc.resource.gold", "text": "oltin"}
+{"name": "aoe2mc.resource.stone", "text": "tosh"}
+{"name": "aoe2mc.resource.wood", "text": "yog'och"}
+{"name": "aoe2mc.run.back", "text": "%s qaytib keldi"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampaniya tugadi"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: oddiy xabar hammaga, /tm MATN ittifoqchilarga, /msg ISM MATN bitta odamga."}
+{"name": "aoe2mc.run.left_bot", "text": "%s chiqib ketdi: bot o'yinchi %s ni o'ynaydi"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Stsenariy %s boshlanadi. Qayta ulaning."}
+{"name": "aoe2mc.run.starts_in", "text": "O'yin %s ichida boshlanadi"}
+{"name": "aoe2mc.run.wait_ready", "text": "\"O'yinchingizni tanlang\" oynasini oching va \"Tayyor\" tugmasini bosing"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Barcha boshqaruv: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Birinchi qadam: boshqaruv tayoqchasini ushlab, aholilardan biriga o'ng tugma bosing."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Birinchi qadam: boshqaruv tayoqchasini ushlab, aholilardan biriga chap tugma bosing."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Maqsad: o'yinni yutish. G'alaba sozlamasi: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "O'yin saqlandi: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s birlik chiqdi"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Avtomatik razvedka"}
+{"name": "aoe2mc.stance.formation", "text": "Tuzilma: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Hech bir birlik yerga hujum qila olmaydi"}
+{"name": "aoe2mc.stance.unpack", "text": "Avval Tebetni oching"}
+{"name": "aoe2mc.train.active", "text": "%s faol."}
+{"name": "aoe2mc.train.rally", "text": "Yig'ilish nuqtasi uchun yerni o'ng tugma bilan bosing."}
+{"name": "aoe2mc.train.researched", "text": "%s tadqiq qilindi."}
+{"name": "aoe2mc.transport.out", "text": "%s birlik chiqdi"}
+{"name": "aoe2mc.treaty.ended", "text": "Shartnoma tugadi: o'yinchilar endi hujum qilishlari mumkin."}
+{"name": "aoe2mc.treaty.refuse", "text": "Shartnoma: %s gacha hujum qila olmaysiz."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Shartnoma: bu o'yinda hujum qila olmaysiz."}
+{"name": "aoe2mc.treaty.start", "text": "Shartnoma: %s gacha hech bir o'yinchi boshqa o'yinchiga hujum qila olmaydi."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Shartnoma: bu o'yinda hech bir o'yinchi boshqa o'yinchiga hujum qila olmaydi."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Kazarma quring: tanlangan aholiga o'ng tugma, kazarmani tanlang va joylashtiring. Tezkor panel ustidagi harakat paneli qayerga qo'yish kerakligini ko'rsatadi."}
+{"name": "aoe2mc.tutorial.camera", "text": "Kamera bilan xaritani tez ko'ring: \"Kamera\" buyumi bilan o'ng tugma, yuring, keyin yana o'ng tugma."}
+{"name": "aoe2mc.tutorial.camp", "text": "Xarita o'rtasidagi dushman lagerini yo'q qiling: jangchilaringizni tanlang va binoni o'ng tugma bilan bosing. Yuqoridagi boss paneli qadamni ko'rsatadi."}
+{"name": "aoe2mc.tutorial.camps", "text": "Daraxt yoniga yog'och lagerini, meva butasi yoniga tegirmonni quring. O'ng tomondagi yon panel ularning narxini yog'och bilan ko'rsatadi."}
+{"name": "aoe2mc.tutorial.complete", "text": "Dars tugadi. Keyingi: botga qarshi o'yin o'ynang: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Dars tugadi"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Feodal davriga o'ting: shahar markazingizga o'ng tugma va Feodal davrni tanlang. O'ng paneldagi oziq-ovqatingizni ko'rsatadi."}
+{"name": "aoe2mc.tutorial.food", "text": "100 oziq-ovqat yig'ing: aholini meva butasiga yuboring. O'ng paneldagi oziq-ovqatingizni ko'rsatadi."}
+{"name": "aoe2mc.tutorial.house", "text": "Uy quring: tanlangan aholiga o'ng tugma, uyni tanlang va joylashtiring. Tezkor panel ustidagi harakat paneli qayerga qo'yish kerakligini ko'rsatadi."}
+{"name": "aoe2mc.tutorial.militia", "text": "3 ta Militsiya tayyorlang: kazarmangizga o'ng tugma va militsiyani tanlang. O'ng paneldagi oziq-ovqat va oltinni ko'rsatadi."}
+{"name": "aoe2mc.tutorial.raid", "text": "Dushman aholingizga hujum qilmoqda! Chatdagi qizil ogohlantirish chizig'ini bosing va o'sha yerga boring, so'ng militsiyani tanlab, dushman ustiga o'ng tugma bosing. Yuqoridagi boss paneli tanlangan birlikning salomatligini ko'rsatadi."}
+{"name": "aoe2mc.tutorial.select", "text": "Aholini tanlang: boshqaruv tayoqchasi bilan aholilardan biriga chap tugma bosing. Yuqoridagi boss paneli tanlangan birlikni, tezkor panel ustidagi harakat paneli keyingi harakatni ko'rsatadi."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Qadam bajarildi"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Qadam %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "MASLAHAT: kazarma piyoda askarlarni tayyorlaydi. Piyoda askar arzon va binolarga qarshi yaxshi."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "MASLAHAT: barcha birliklaringiz bilan birga hujum qiling. Kichik guruh zarar yetkazishdan oldin o'ladi."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "MASLAHAT: yetkazib berish binolarini resurslar yoniga quring, shunda aholi qisqa yo'l bosadi."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "MASLAHAT: keyingi davr yangi binolar, birliklar va texnologiyalarni ochadi. Davrga o'tayotganda aholini ishda saqlang."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "MASLAHAT: tegirmon yonidagi meva butalari oziq-ovqatning xavfsiz boshlanishi. Keyinroq ekinlar oziq-ovqat beradi."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "MASLAHAT: uy 5 ta aholi uchun joy beradi. Yon paneldagi aholiga qarang va to'lib qolishidan oldin uy quring."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "MASLAHAT: resurs bo'lganda binoda 15 tagacha birlikni navbatga qo'yish mumkin."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "MASLAHAT: AoE2 da qo'ng'iroq aholini markazga qaytaradi. Dushman shahringizga hujum qilsa, uni chaling."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "MASLAHAT: o'ng paneldagi Bo'sh qatori ishsiz aholini sanaydi. Ularga ish bering."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "MASLAHAT: dastlabki davrlarda doim aholi tayyorlang. Ko'p aholi ko'proq resurs beradi."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "MASLAHAT: yetkazib berish binosi yoniga joylashgan aholi tezroq yig'adi. Daraxt yoniga yog'och lageri quring."}
+{"name": "aoe2mc.tutorial.villager", "text": "Aholi tayyorlang: shahar markaziga o'ng tugma va aholini tanlang. O'ng paneldagi narxini oziq-ovqat bilan ko'rsatadi."}
+{"name": "aoe2mc.tutorial.wood", "text": "50 yog'och yig'ing: aholini tanlang va daraxtga o'ng tugma bosing. O'ng paneldagi yog'ochingizni ko'rsatadi."}
+{"name": "aoe2mc.victory", "text": "G'alaba"}
+{"name": "aoe2mc.wonder.built", "text": "O'yinchi %s mo''jiza qurdi."}
+{"name": "aoe2mc.wonder.destroyed", "text": "O'yinchi %s ning mo''jizasi yo'q qilindi."}
