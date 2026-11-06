@@ -215,7 +215,7 @@ def network_address():
         return "127.0.0.1"
 
 
-def pack_source(path, host=False):
+def pack_source(path, host=False, address=None, port=0):
     """The source of the world pack path for the players: the release link when the app bundle (sys.frozen) has
     RELEASE (the workflow bundles.yml writes it on a tag) and the world pack has the SHA-1 of the release pack; else
     the local PackServer (#2740). A world of another version has another pack: the client refuses a wrong SHA-1."""
@@ -223,15 +223,16 @@ def pack_source(path, host=False):
     release = json.load(open(RELEASE)) if getattr(sys, "frozen", False) and os.path.isfile(RELEASE) else {}
     if release.get("tag") and release.get("sha1") == sha1:
         return ReleasePack(RELEASE_URL.format(tag=release["tag"]), sha1)
-    return PackServer(path, host)
+    return PackServer(path, host, address, port)
 
 
 class PackServer:
     """Serve only the resource pack of the world over HTTP on 127.0.0.1 (#2740): the Minecraft server does not host
     it, it sends only the URL and the SHA-1 to each player who joins."""
 
-    def __init__(self, path, host=False):
-        """host: listen on all addresses and give the URL of the network address (--host, #5891)."""
+    def __init__(self, path, host=False, address=None, port=0):
+        """host: listen on all addresses and give the URL of the network address (--host, #5891). address: the
+        address of the URL that the friends use (--address, #5914); port: a fixed port to forward (0: a free port)."""
         import http.server
         data = open(path, "rb").read()
         self.sha1 = hashlib.sha1(data).hexdigest()
@@ -249,8 +250,9 @@ class PackServer:
             def log_message(h, *args):
                 pass
 
-        self.http = http.server.ThreadingHTTPServer(("0.0.0.0" if host else "127.0.0.1", 0), Handler)   # port 0: free
-        self.url = f"http://{network_address() if host else '127.0.0.1'}:{self.http.server_address[1]}/resources.zip"
+        self.http = http.server.ThreadingHTTPServer(("0.0.0.0" if host else "127.0.0.1", port), Handler)  # 0: free
+        name = (address or network_address()) if host else "127.0.0.1"
+        self.url = f"http://{name}:{self.http.server_address[1]}/resources.zip"
         threading.Thread(target=self.http.serve_forever, daemon=True).start()
 
     def stop(self):
@@ -337,6 +339,7 @@ class Game:
         self.world, self.version, self.timeout, self.kind = os.path.abspath(world), version, timeout, server
         self.wait, self.host = wait, False                # host: open to the network (--host, #5891)
         self.invite, self.offline = (), False             # --invite, --offline: the white-list of a network game (#5892)
+        self.address, self.fixed = None, None             # --address, --port: a game over the internet (#5914)
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
         self.sides = {}
@@ -357,7 +360,7 @@ class Game:
         self.usercache = None if os.path.exists(cache) else cache
         self.folder = tempfile.mkdtemp(dir=mc_check.workdir())
         if getattr(self, "port", None) is None:      # a restart keeps the ports: the players join again (#979)
-            self.port, self.game_port = mc_check.free_port(), mc_check.free_port()
+            self.port, self.game_port = mc_check.free_port(), self.fixed or mc_check.free_port()
         password = secrets.token_hex(16)
         with open(os.path.join(self.folder, "eula.txt"), "w") as f:
             f.write("eula=true\n")
@@ -365,7 +368,8 @@ class Game:
             os.makedirs(os.path.join(self.folder, "plugins"), exist_ok=True)
             shutil.copy(p, os.path.join(self.folder, "plugins", "aoe2mc-plugin.jar"))
         path = pack_file(self.world)
-        self.pack = pack_source(path, self.host) if path else None
+        # --port N: the pack port is N + 1, so that the host forwards two fixed ports (#5914)
+        self.pack = pack_source(path, self.host, self.address, self.fixed + 1 if self.fixed else 0) if path else None
         with open(os.path.join(self.folder, "server.properties"), "w") as f:
             f.write(properties(self.game_port, self.port, password, self.pack, self.host, self.offline))
         if self.kind == "paper":
@@ -1008,7 +1012,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}, multiplayer, direct connection).\n"
           f"{len(g.villagers)} villagers of player 1. " + START_HINT, file=sys.stderr)
     if getattr(game, "host", False):                 # the address for the friends on the network (#5891)
-        print(f"Join the server {network_address()}:{game.game_port} (other computers on the network).\n"
+        print(f"Join the server {game.address or network_address()}:{game.game_port} (other computers on the network).\n"
               + invite_line(game.invite), file=sys.stderr)
     if people > 1:                                   # this console only: a person gets it in the chat on the join (#3555)
         print(CHAT_HINT, file=sys.stderr)
@@ -1620,6 +1624,10 @@ def main(argv=None, scenario=None):
                     "work rate (default 100)")
     ap.add_argument("--host", action="store_true", help="--play: open the game to the network: friends on the same "
                     "network join on the address that the program prints (#5891)")
+    ap.add_argument("--address", metavar="HOST", help="--host: the address that the friends use (the public address "
+                    "of the router or the VPN address); the join line and the resource pack URL use it (#5914)")
+    ap.add_argument("--port", type=int, metavar="N", help="--host: the fixed game port N (TCP); the resource pack "
+                    "uses port N+1: forward both ports in the router (default: a free port at each start)")
     ap.add_argument("--invite", metavar="NAME,...", help="--host: the Minecraft names that can join (the white-list, "
                     "#5892); include your own name")
     ap.add_argument("--offline", action="store_true", help="--host: no Minecraft login check (a network with no "
@@ -1692,7 +1700,9 @@ def main(argv=None, scenario=None):
         restore(os.path.join(a.load, "world"), a.world)
     ctrl_c()
     game = Game(a.world, a.version, server=a.server)
-    game.host = a.host
+    game.host, game.address, game.fixed = a.host, a.address, a.port
+    if (a.address or a.port) and not a.host:
+        sys.exit("--address and --port need --host")
     game.invite, game.offline = invite_names(a.host, a.invite, a.offline), a.offline
     game.wait = a.play and not a.replay              # freeze at the start, as play(wait=...) below (#3974)
     if a.seats:                                      # co-op (#3489): one person for each seat
