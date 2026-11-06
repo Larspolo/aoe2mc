@@ -142,6 +142,7 @@ KEPT = (                                                               # the fie
 JOB = ("state", "load", "res", "job", "lap", "prey", "task")                # fields of a gather.Villager, as they are
 BOT = ("time", "charged", "attack", "foe", "difficulty")               # fields of a bot.Bot, as they are (#2325, #4022)
 SETTINGS = (                                                           # run.py options (#2325, #2409): one per line,
+    "address",
     "ai_difficulty",                                                   # in alphabetical order (parallel tickets add)
     "all_techs",
     "antiquity",
@@ -157,9 +158,13 @@ SETTINGS = (                                                           # run.py 
     "full_tech_tree",
     "handicap",
     "hidden_civs",
+    "host",
+    "invite",
     "mode",
+    "offline",
     "people",
     "pop_limit",
+    "port",
     "regicide",
     "resources",
     "reveal",
