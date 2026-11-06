@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Spiller %s går videre til %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Korrupsjonen tar kartet fra kanten til midten på %s. Den ødelegger alle enheter og bygninger i det."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Jeg kan ikke bygge et %s der nå."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Jeg kan ikke trene den enheten: jeg har ingen bygning for den."}
+{"name": "aoe2mc.bot.flare_two", "text": "Plasser to signaler for muren."}
+{"name": "aoe2mc.bot.no_flare", "text": "Jeg ser ingen signal."}
+{"name": "aoe2mc.bot.no_market", "text": "Jeg har ingen marked: jeg kan ikke sende hyllest."}
+{"name": "aoe2mc.bot.no_onager", "text": "Jeg har ingen onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Jeg har ikke nok ressurser til en mur."}
+{"name": "aoe2mc.bot.no_water", "text": "Jeg har ikke vann nær byen min: jeg kan ikke bygge en flåte."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Onagerne mine kan ikke hogge trær."}
+{"name": "aoe2mc.build.cost", "text": "Ikke nok ressurser: et %s koster %s."}
+{"name": "aoe2mc.build.flat", "text": "%s må stå på flatt underlag."}
+{"name": "aoe2mc.build.gate_spot", "text": "Et %s må stå på 4 felt av en egen mur i en rett linje, eller på 3 diagonale felt."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Bygg: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Et %s må stå på vann ved kysten."}
+{"name": "aoe2mc.build.space", "text": "Det er ingen plass til %s her."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Ikke nok ressurser: %s felt av %s koster %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: høyreklikk på enden av muren."}
+{"name": "aoe2mc.build.water", "text": "Et %s må stå på vannet."}
+{"name": "aoe2mc.camera.fov", "text": "Det raske kameraet får det holdte objektet til å svinge. For å holde det stille, sett Innstillinger > Tilgjengelighet > Vis bevegelse til AV. Kameraet gjør også utsikten bredere, slik at mer av kartet vises. For å beholde den normale utsikten, sett Innstillinger > Tilgjengelighet > FOV-effekter til 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: av"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: på, fart x%s. Shift + høyreklikk: neste fart."}
+{"name": "aoe2mc.camera.speed", "text": "Kamerafart: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Beseir alle fiendens enheter og mist få enheter"}
+{"name": "aoe2mc.challenge.booming", "text": "Tren 100 landsbyboere og gå videre til keisertiden"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Gå videre til borgtiden og overlev fiendens angrep"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Ødelegg fiendens borg"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Samle 200 mat, 200 tre, 100 gull og 200 stein, tren 21 landsbyboere, bygg en tømmerleir og en mølle, og gå videre til føydaltiden"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Tren 27 landsbyboere, bygg 5 hus og gå videre til borgtiden"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Beseir alle seks fiendtlige bølger"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s enheter tapt, bronse opp til %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s enheter tapt, gull opp til %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s enheter tapt, ingen medalje"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s enheter tapt, sølv opp til %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronsemedalje"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Gullmedalje"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Sølvmedalje"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Ødelegg alle fiendens krigsskip"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Ingen medalje"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Drep 5 fiendtlige landsbyboere"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronsemedalje på %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Gullmedalje på %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Sølvmedalje på %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Skjold av"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Skjold på"}
+{"name": "aoe2mc.cheat.beyond", "text": "Teknologier: opptil 256 forskninger"}
+{"name": "aoe2mc.cheat.cpu", "text": "Befolkningsgrense: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Krigens tåke: av"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Krigens tåke: på"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Teknologier er gratis"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Deling er omsorg: inntekten din går til alliertene dine"}
+{"name": "aoe2mc.cheat.wonders", "text": "Du styrer naturen: %s dyr"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Bare allierte er igjen: alliansene avsluttes. Den siste levende spilleren vinner."}
+{"name": "aoe2mc.conquest.defeated", "text": "Spiller %s er beseiret."}
+{"name": "aoe2mc.controls.attack", "text": "Angrep: velg militære enheter, og høyreklikk deretter på en fiende."}
+{"name": "aoe2mc.controls.build", "text": "Bygg: velg landsbyboere, høyreklikk på dem for byggemenyen, velg en bygning, og venstreklikk deretter på bakken. Shift + venstreklikk: plasser flere. Høyreklikk: avbryt."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: høyreklikk med kikkerten Kamera (hurtigtast 2 på hurtiglinjen): du går raskt høyt over kartet. Shift + høyreklikk: neste fart. Høyreklikk igjen: du flyr ned."}
+{"name": "aoe2mc.controls.garrison", "text": "Garnison: velg enheter, og høyreklikk deretter på din egen bygning. Menyen slipper dem ut. Rådhusmeny: Ring bykirkeklokken."}
+{"name": "aoe2mc.controls.gather", "text": "Samle: velg landsbyboere, og høyreklikk deretter på et tre, en bærbusk, en gruve eller en åker."}
+{"name": "aoe2mc.controls.goto", "text": "Gå til: høyreklikk med kompasset Gå til (hurtigtast 3 på hurtiglinjen): en meny med rådhusene dine, kontrollgruppene dine og neste ledige landsbyboer."}
+{"name": "aoe2mc.controls.groups", "text": "Kontrollgrupper: velg enheter, ta et gruppeobjekt (hurtigtastene 5 til 9), og Shift + høyreklikk for å lagre utvalget. Høyreklikk: velg gruppen."}
+{"name": "aoe2mc.controls.head", "text": "Kontroller (hold gulrot på en stav; handlingslinjen viser neste steg):"}
+{"name": "aoe2mc.controls.menu", "text": "Spillmeny: høyreklikk med boken Spillmeny (hurtigtast 4 på hurtiglinjen): diplomati og hyllest, signal, lagre, pause og teknologitreet."}
+{"name": "aoe2mc.controls.move", "text": "Flytt: med et utvalg, høyreklikk på bakken."}
+{"name": "aoe2mc.controls.research", "text": "Forsk og gå videre i tidsalder: høyreklikk på din egen bygning, og klikk på en teknologi eller neste tidsalder i menyen."}
+{"name": "aoe2mc.controls.select", "text": "Velg: venstreklikk på en enhet. Hold venstreklikk og se over bakken: en utvalgsboks. Høyreklikk: gi ordre."}
+{"name": "aoe2mc.controls.train", "text": "Tren: høyreklikk på din egen bygning (rådhus, kaserne ...) og klikk på en enhet i menyen."}
+{"name": "aoe2mc.defeat", "text": "Nederlag"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Allierte"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Spiller %s endret holdningen sin til deg: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Fiende"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Nøytral"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Spiller %s satte spillfarten til %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Spiller %s sendte %s %s til spiller %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Signal ved %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Følg: klikk på en egen enhet"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Vakt: klikk på en egen enhet eller bygning"}
+{"name": "aoe2mc.gaia.joins", "text": "En %s slutter seg til deg."}
+{"name": "aoe2mc.garrison.all_back", "text": "Alle tilbake til arbeidet"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Klokken ringer: %s landsbyboere søker ly"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Ingen landsbyboer er valgt."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Du har ingen landsbyboere."}
+{"name": "aoe2mc.garrison.out", "text": "%s enheter kom ut"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s landsbyboere søker ly"}
+{"name": "aoe2mc.gather.act_attack", "text": "angrep"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "byggemeny"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garnison"}
+{"name": "aoe2mc.gather.act_gather", "text": "samle"}
+{"name": "aoe2mc.gather.act_hunt", "text": "jakt"}
+{"name": "aoe2mc.gather.act_move", "text": "flytt"}
+{"name": "aoe2mc.gather.act_select", "text": "velg"}
+{"name": "aoe2mc.gather.act_select_type", "text": "velg alle av typen"}
+{"name": "aoe2mc.gather.act_trade", "text": "handel"}
+{"name": "aoe2mc.gather.act_train", "text": "tren"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Angrep: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Utvalgsboks: avbrutt"}
+{"name": "aoe2mc.gather.bush", "text": "Bærbusk"}
+{"name": "aoe2mc.gather.carcass", "text": "Kadaver"}
+{"name": "aoe2mc.gather.corner", "text": "Utvalgsboks: klikk på det andre hjørnet"}
+{"name": "aoe2mc.gather.enemy", "text": "Fiendens %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Fiendtlig bygning"}
+{"name": "aoe2mc.gather.farm", "text": "Åker"}
+{"name": "aoe2mc.gather.ground", "text": "Bakke"}
+{"name": "aoe2mc.gather.group", "text": "Gruppe %s: %s enheter"}
+{"name": "aoe2mc.gather.group_saved", "text": "Gruppe %s: %s enheter lagret"}
+{"name": "aoe2mc.gather.mine", "text": "%s gruve"}
+{"name": "aoe2mc.gather.paused", "text": "Spillet er satt på pause."}
+{"name": "aoe2mc.gather.point", "text": "%s · Høyreklikk: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Ventende gjensåinger: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Valgt: %s enheter"}
+{"name": "aoe2mc.gather.tree", "text": "Tre"}
+{"name": "aoe2mc.hill.holds", "text": "Spiller %s holder monumentet."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Angrip bakken: høyreklikk på bakken"}
+{"name": "aoe2mc.hints.attack_move", "text": "Angrepsbevegelse: høyreklikk på bakken"}
+{"name": "aoe2mc.hints.building", "text": "Plasser %s: høyreklikk på bakken · Shift + høyreklikk: plasser flere · Avbryt: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: venstreklikk for å plassere · Shift: plasser flere · Høyreklikk: avbryt"}
+{"name": "aoe2mc.hints.corner", "text": "Utvalgsboks: høyreklikk på det andre hjørnet"}
+{"name": "aoe2mc.hints.count_military", "text": "%s militær enhet"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s militære enheter"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s landsbyboer"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s landsbyboere"}
+{"name": "aoe2mc.hints.deselect", "text": "Tom boks: fjern valg"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Venstreklikk: fjern valg"}
+{"name": "aoe2mc.hints.follow", "text": "Følg: høyreklikk på en egen eller allitert enhet"}
+{"name": "aoe2mc.hints.guard", "text": "Vakt: høyreklikk på en egen eller allitert enhet eller bygning"}
+{"name": "aoe2mc.hints.military", "text": "%s · Høyreklikk: angrip en fiende, holdningsmeny · %s"}
+{"name": "aoe2mc.hints.none", "text": "Venstreklikk: velg en enhet · Hold venstreklikk: utvalgsboks"}
+{"name": "aoe2mc.hints.none_wand", "text": "Høyreklikk: velg en enhet · Tryllestav: utvalgsboks"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrulje: høyreklikk på bakken"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Høyreklikk: samle, bygg, byggemeny · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s klare"}
+{"name": "aoe2mc.lobby.you_play", "text": "Du spiller %s."}
+{"name": "aoe2mc.monk.converts", "text": "En munk omvender %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s dør (kjetteri)."}
+{"name": "aoe2mc.pause.continued", "text": "Spiller %s fortsatte spillet."}
+{"name": "aoe2mc.pause.paused", "text": "Spiller %s satte spillet på pause."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Lag %s (gjennomsnittlig rating %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Spillet er over. Høyreklikk på oppsummeringsboken i hånden for å se resultatene. Stopp spillprogrammet med Ctrl-C i konsollen."}
+{"name": "aoe2mc.relic_victory.all", "text": "Spiller %s holder alle relikviene."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Spiller %s mistet en relikvie."}
+{"name": "aoe2mc.repair.no_resources", "text": "Ikke nok ressurser til å reparere %s."}
+{"name": "aoe2mc.replay.army", "text": "Hær: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", hær til slutt: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", tapt: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Byggerekkefølge:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garnison %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | bærer %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "bygg %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "mat %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "gull %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "ledig %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "stein %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "tre %s"}
+{"name": "aoe2mc.replay.flare", "text": "Signal"}
+{"name": "aoe2mc.replay.game_ends", "text": "Spillet slutter"}
+{"name": "aoe2mc.replay.game_time", "text": "Spilletid %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · garnison %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Bef %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Lbo %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s holdt monumentet: seier som Kongen av haugen ved %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s angrep %s/%s rustning%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Dobbeltrykk på Shift: tilskuervisning (fly gjennom blokker). Høyreklikk på objektene i hurtiglinjen: avspillingskontroll."}
+{"name": "aoe2mc.replay.king_died", "text": ": kongen døde ved %s. Kongemord: spilleren er ute."}
+{"name": "aoe2mc.replay.king_killed", "text": "Konge drept ved %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Direkte avspilling: hoppet stopper ved forsinkelsen bak spillet."}
+{"name": "aoe2mc.replay.lost", "text": "Tapt: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " holder monumentet ved %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monument, %s år igjen"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monument, %s år igjen"}
+{"name": "aoe2mc.replay.no_camera", "text": "Denne opptaket har ikke kamera for sin spiller."}
+{"name": "aoe2mc.replay.now", "text": " nå"}
+{"name": "aoe2mc.replay.out", "text": "%s er ute"}
+{"name": "aoe2mc.replay.players", "text": "Spillere"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " tar relikvien til et kloster og vinner."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Avspillingen er over"}
+{"name": "aoe2mc.replay.research", "text": " forsker %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s gir opp"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Serveren starter på nytt for hoppet tilbake: koble til igjen."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Bygninger %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Økonomi %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Militær %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Teknologier %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Totalt %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "borger %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "kjøpt %s, solgt %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relikvier %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "underverk %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Brukt:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Bygg %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Øk %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tek %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": landsbyboere trent %s, samlet %s, ledig tid for landsbyboere %s, ledig tid for rådhuset %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": holder monumentet (Kongen av haugen)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monument vunnet %s (Kongen av haugen)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": militære enheter trent %s, enheter tapt %s, bygninger tapt %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": konge drept %s (Kongemord)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": vinner, relikvie i et kloster %s (Erobre relikvien)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %shyllest sendt %s, mottatt %s, høyeste antall landsbyboere %s (anslått)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": rådhus tapt %s (Plutselig død)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, teknologier %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": underverkets tidtaker fra %s, slutter %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Oppsummering (anslått)"}
+{"name": "aoe2mc.replay.task_building", "text": "bygger"}
+{"name": "aoe2mc.replay.task_following", "text": "følger"}
+{"name": "aoe2mc.replay.task_food", "text": "samler mat"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "i garnison"}
+{"name": "aoe2mc.replay.task_gold", "text": "samler gull"}
+{"name": "aoe2mc.replay.task_guarding", "text": "vakter"}
+{"name": "aoe2mc.replay.task_idle", "text": "ledig"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patruljerer"}
+{"name": "aoe2mc.replay.task_resources", "text": "samler ressurser"}
+{"name": "aoe2mc.replay.task_stone", "text": "samler stein"}
+{"name": "aoe2mc.replay.task_walking", "text": "går"}
+{"name": "aoe2mc.replay.task_wood", "text": "samler tre"}
+{"name": "aoe2mc.replay.team", "text": "Lag %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Bueskytter %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Bueskytterrustning %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Bærekapasitet %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Rytterrustning %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Åker %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Gull %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Infanterirustning %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Vevstol %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Nærkamp %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Stein %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Tre %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Borg"}
+{"name": "aoe2mc.replay.tl_king", "text": "Konge drept"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. militære enhet: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relikvie"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Gir opp"}
+{"name": "aoe2mc.replay.town_fell", "text": ": rådhuset falt ved %s. Plutselig død: spilleren er ute."}
+{"name": "aoe2mc.replay.town_lost", "text": "Rådhus tapt ved %s"}
+{"name": "aoe2mc.replay.training", "text": "Trener: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitet:"}
+{"name": "aoe2mc.replay.up_counts", "text": "økonomi %s · Universitet %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " bygde et underverk ved %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Kamp: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s enheter"}
+{"name": "aoe2mc.replay_input.fights", "text": "Store kamper:"}
+{"name": "aoe2mc.replay_input.help", "text": "Avspilling: høyreklikk på objektene i hurtiglinjen, eller klikk: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Ta over: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s enheter)"}
+{"name": "aoe2mc.replay_input.vs", "text": " mot "}
+{"name": "aoe2mc.resource.food", "text": "mat"}
+{"name": "aoe2mc.resource.gold", "text": "gull"}
+{"name": "aoe2mc.resource.stone", "text": "stein"}
+{"name": "aoe2mc.resource.wood", "text": "tre"}
+{"name": "aoe2mc.run.back", "text": "%s er tilbake"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampanjen er fullført"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: en vanlig linje går til alle, /tm TEKST til alliertene dine, /msg NAVN TEKST til én person."}
+{"name": "aoe2mc.run.left_bot", "text": "%s forlot: en bot spiller spiller %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenarioet %s starter. Koble til igjen."}
+{"name": "aoe2mc.run.starts_in", "text": "Spillet starter om %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Åpne \"Velg spilleren din\" og klikk på \"Klar\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Alle kontroller: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Første steg: hold kommandostaven og høyreklikk på en av landsbyboerne dine."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Første steg: hold kommandostaven og venstreklikk på en av landsbyboerne dine."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Mål: vinn spillet. Seierinnstilling: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Spillet er lagret: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s enheter kom ut"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Automatisk speiding"}
+{"name": "aoe2mc.stance.formation", "text": "Formasjon: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ingen enhet kan angripe bakken"}
+{"name": "aoe2mc.stance.unpack", "text": "Pakk ut trebuchetten først"}
+{"name": "aoe2mc.train.active", "text": "%s er aktiv."}
+{"name": "aoe2mc.train.rally", "text": "Høyreklikk på bakken for samlingspunktet."}
+{"name": "aoe2mc.train.researched", "text": "%s er forsket."}
+{"name": "aoe2mc.transport.out", "text": "%s enheter kom ut"}
+{"name": "aoe2mc.treaty.ended", "text": "Traktaten er over: spillere kan angripe nå."}
+{"name": "aoe2mc.treaty.refuse", "text": "Traktat: du kan ikke angripe før %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Traktat: du kan ikke angripe i dette spillet."}
+{"name": "aoe2mc.treaty.start", "text": "Traktat: ingen spiller kan angripe en annen spiller før %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Traktat: ingen spiller kan angripe en annen spiller i dette spillet."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Bygg en kaserne: høyreklikk på en valgt landsbyboer, velg kasernen og plasser den. Handlingslinjen over hurtiglinjen viser hvor du skal plassere den."}
+{"name": "aoe2mc.tutorial.camera", "text": "Beveg deg raskt over kartet: høyreklikk med objektet \"Kamera\", gå, og høyreklikk deretter med det igjen."}
+{"name": "aoe2mc.tutorial.camp", "text": "Ødelegg den fiendtlige leiren midt på kartet: velg Milits-enhetene dine og høyreklikk på en bygning. Bossfeltet øverst viser steget."}
+{"name": "aoe2mc.tutorial.camps", "text": "Bygg en tømmerleir ved trærne og en mølle ved bærbuskene. Sidepanelet til høyre viser hva de koster."}
+{"name": "aoe2mc.tutorial.complete", "text": "Opplæringen er fullført. Neste: spill et spill mot boten: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Opplæring fullført"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Gå videre til føydaltiden: høyreklikk på rådhuset ditt og velg føydaltiden. Sidepanelet til høyre viser maten din."}
+{"name": "aoe2mc.tutorial.food", "text": "Samle 100 mat: send en landsbyboer til bærbuskene. Sidepanelet til høyre viser maten din."}
+{"name": "aoe2mc.tutorial.house", "text": "Bygg et hus: høyreklikk på en valgt landsbyboer, velg huset og plasser det. Handlingslinjen over hurtiglinjen viser hvor du skal plassere det."}
+{"name": "aoe2mc.tutorial.militia", "text": "Tren 3 Milits: høyreklikk på kasernen din og velg militsen. Sidepanelet til høyre viser maten og gullet ditt."}
+{"name": "aoe2mc.tutorial.raid", "text": "Fienden angriper landsbyboerne dine! Klikk på den røde varselen i chatten for å gå dit, velg deretter Milits-enhetene dine og høyreklikk på fiendene. Bossfeltet øverst viser helsen til den valgte enheten."}
+{"name": "aoe2mc.tutorial.select", "text": "Velg en landsbyboer: venstreklikk på en av landsbyboerne dine med kommandostaven. Bossfeltet øverst viser den valgte enheten, handlingslinjen over hurtiglinjen viser neste handling."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Steg fullført"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Steg %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIPS: kasernen trener infanteri. Infanteri er billig og godt mot bygninger."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIPS: angrip med alle enhetene dine samlet. En liten gruppe dør før den kan gjøre skade."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIPS: bygg leveringsbygningene nær ressursene, slik at landsbyboerne går en kort vei."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIPS: neste tidsalder låser opp nye bygninger, enheter og teknologier. La landsbyboerne jobbe mens du går videre."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIPS: bærbusker nær en mølle er en trygg start på mat. Senere gir åkrer mat som ikke tar slutt."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIPS: et hus gir plass til 5 flere i befolkningen. Se på befolkningen i sidepanelet og bygg hus før den er full."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIPS: du kan sette opp til 15 enheter i kø i en bygning når du har ressursene."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIPS: i AoE2 sender klokken landsbyboerne inn i rådhuset. Ring med den når fienden herjer i byen din."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIPS: linjen Ledig i sidepanelet til høyre teller landsbyboerne dine uten arbeid. Gi dem arbeid."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIPS: tren landsbyboere hele tiden i de første tidsalderne. Flere landsbyboere gir flere ressurser."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIPS: landsbyboere samler raskere nær en leveringsbygning. Bygg en tømmerleir ved siden av trærne."}
+{"name": "aoe2mc.tutorial.villager", "text": "Tren en landsbyboer: høyreklikk på rådhuset ditt og velg landsbyboeren. Sidepanelet til høyre viser maten den koster."}
+{"name": "aoe2mc.tutorial.wood", "text": "Samle 50 tre: velg en landsbyboer og høyreklikk på et tre. Sidepanelet til høyre viser treet ditt."}
+{"name": "aoe2mc.victory", "text": "Seier"}
+{"name": "aoe2mc.wonder.built", "text": "Spiller %s bygde et underverk."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Underverket til spiller %s er ødelagt."}

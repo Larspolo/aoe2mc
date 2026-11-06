@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Spelare %s avancerar till %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Korruptionen tar kartan från kanten till mitten på %s. Den förstör alla enheter och byggnader i den."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Jag kan inte bygga en %s där just nu."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Jag kan inte träna den enheten: jag har ingen byggnad för den."}
+{"name": "aoe2mc.bot.flare_two", "text": "Placera två signaler för muren."}
+{"name": "aoe2mc.bot.no_flare", "text": "Jag ser ingen signal."}
+{"name": "aoe2mc.bot.no_market", "text": "Jag har ingen marknad: jag kan inte skicka hyllning."}
+{"name": "aoe2mc.bot.no_onager", "text": "Jag har ingen onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Jag har inte tillräckligt med resurser för en mur."}
+{"name": "aoe2mc.bot.no_water", "text": "Jag har inget vatten nära min stad: jag kan inte bygga en flotta."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Mina onagrar kan inte hugga träd."}
+{"name": "aoe2mc.build.cost", "text": "Inte tillräckligt med resurser: en %s kostar %s."}
+{"name": "aoe2mc.build.flat", "text": "%s måste stå på plan mark."}
+{"name": "aoe2mc.build.gate_spot", "text": "En %s måste stå på 4 rutor av en egen mur i rak linje, eller på 3 diagonala rutor."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Bygg: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "En %s måste stå på vatten nära stranden."}
+{"name": "aoe2mc.build.space", "text": "Det finns ingen plats för %s här."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Inte tillräckligt med resurser: %s rutor av %s kostar %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: högerklicka på änden av muren."}
+{"name": "aoe2mc.build.water", "text": "En %s måste stå på vattnet."}
+{"name": "aoe2mc.camera.fov", "text": "Den snabba kameran får det hållna föremålet att svaja. För att hålla det stilla, ställ Alternativ > Tillgänglighet > Visa gungning till AV. Kameran gör också vyn bredare, så mer av kartan syns. För att behålla den normala vyn, ställ Alternativ > Tillgänglighet > FOV-effekter till 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: av"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: på, hastighet x%s. Skift + högerklick: nästa hastighet."}
+{"name": "aoe2mc.camera.speed", "text": "Kamerahastighet: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Besegra alla fiendens enheter och förlora få enheter"}
+{"name": "aoe2mc.challenge.booming", "text": "Träna 100 byborna och gå upp till kejsartiden"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Gå upp till slottstiden och överlev fiendens attacker"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Förstör fiendens slott"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Samla 200 mat, 200 trä, 100 guld och 200 sten, träna 21 byborna, bygg ett timmerläger och en kvarn, och gå upp till feodaltiden"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Träna 27 byborna, bygg 5 hus och gå upp till slottstiden"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Besegra alla sex fiendevågor"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s enheter förlorade, brons upp till %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s enheter förlorade, guld upp till %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s enheter förlorade, ingen medalj"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s enheter förlorade, silver upp till %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronsmedalj"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Guldmedalj"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Silvermedalj"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Förstör alla fiendens krigsfartyg"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Ingen medalj"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Döda 5 fiendens byborna"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronsmedalj på %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Guldmedalj på %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Silvermedalj på %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Skydd av"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Skydd på"}
+{"name": "aoe2mc.cheat.beyond", "text": "Teknologier: upp till 256 forskningar"}
+{"name": "aoe2mc.cheat.cpu", "text": "Befolkningsgräns: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Krigets dimma: av"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Krigets dimma: på"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Teknologier är gratis"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Att dela är att bry sig: din inkomst går till dina allierade"}
+{"name": "aoe2mc.cheat.wonders", "text": "Du styr naturen: %s djur"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Bara allierade är kvar: allianserna upphör. Den sista levande spelaren vinner."}
+{"name": "aoe2mc.conquest.defeated", "text": "Spelare %s är besegrad."}
+{"name": "aoe2mc.controls.attack", "text": "Anfall: välj militära enheter och högerklicka sedan på en fiende."}
+{"name": "aoe2mc.controls.build", "text": "Bygg: välj byborna, högerklicka på dem för byggmenyn, välj en byggnad och vänsterklicka sedan på marken. Skift + vänsterklick: placera fler. Högerklick: avbryt."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: högerklicka med kikaren Kamera (snabbtangent 2 i hotbaren): du går snabbt högt över kartan. Skift + högerklick: nästa hastighet. Högerklicka igen: du flyger ner."}
+{"name": "aoe2mc.controls.garrison", "text": "Garnison: välj enheter och högerklicka sedan på din egen byggnad. Dess meny släpper ut dem. Stadshusmeny: Ring stadsklockan."}
+{"name": "aoe2mc.controls.gather", "text": "Samla: välj byborna och högerklicka sedan på ett träd, en bärbuske, en gruva eller en åker."}
+{"name": "aoe2mc.controls.goto", "text": "Gå till: högerklicka med kompassen Gå till (snabbtangent 3 i hotbaren): en meny med dina stadshus, dina kontrollgrupper och nästa lediga byman."}
+{"name": "aoe2mc.controls.groups", "text": "Kontrollgrupper: välj enheter, ta ett gruppföremål (snabbtangenterna 5 till 9) och Skift + högerklick för att spara urvalet. Högerklick: välj gruppen."}
+{"name": "aoe2mc.controls.head", "text": "Kontroller (håll morot på pinne; åtgärdsfältet visar nästa steg):"}
+{"name": "aoe2mc.controls.menu", "text": "Spelmeny: högerklicka med boken Spelmeny (snabbtangent 4 i hotbaren): diplomati och hyllning, signal, spara, paus och teknologiträdet."}
+{"name": "aoe2mc.controls.move", "text": "Flytta: med ett urval, högerklicka på marken."}
+{"name": "aoe2mc.controls.research", "text": "Forska och gå upp i tidsålder: högerklicka på din egen byggnad och klicka på en teknologi eller nästa tidsålder i dess meny."}
+{"name": "aoe2mc.controls.select", "text": "Välj: vänsterklicka på en enhet. Håll vänsterklick och titta över marken: en urvalsruta. Högerklick: ge order."}
+{"name": "aoe2mc.controls.train", "text": "Träna: högerklicka på din egen byggnad (stadshus, kasern ...) och klicka på en enhet i dess meny."}
+{"name": "aoe2mc.defeat", "text": "Förlust"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Allierad"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Spelare %s ändrade sin inställning till dig: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Fiende"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutral"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Spelare %s ställde in spelhastigheten på %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Spelare %s skickade %s %s till spelare %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Signal vid %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Följ: klicka på en egen enhet"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Vakta: klicka på en egen enhet eller byggnad"}
+{"name": "aoe2mc.gaia.joins", "text": "En %s ansluter sig till dig."}
+{"name": "aoe2mc.garrison.all_back", "text": "Alla tillbaka till arbetet"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Stadsklockan ringer: %s byborna söker skydd"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Ingen byman är vald."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Du har inga byborna."}
+{"name": "aoe2mc.garrison.out", "text": "%s enheter kom ut"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s byborna söker skydd"}
+{"name": "aoe2mc.gather.act_attack", "text": "anfall"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "byggmeny"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garnison"}
+{"name": "aoe2mc.gather.act_gather", "text": "samla"}
+{"name": "aoe2mc.gather.act_hunt", "text": "jaga"}
+{"name": "aoe2mc.gather.act_move", "text": "flytta"}
+{"name": "aoe2mc.gather.act_select", "text": "välj"}
+{"name": "aoe2mc.gather.act_select_type", "text": "välj alla av typen"}
+{"name": "aoe2mc.gather.act_trade", "text": "handla"}
+{"name": "aoe2mc.gather.act_train", "text": "träna"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Anfall: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Urvalsruta: avbruten"}
+{"name": "aoe2mc.gather.bush", "text": "Bärbuske"}
+{"name": "aoe2mc.gather.carcass", "text": "Kadaver"}
+{"name": "aoe2mc.gather.corner", "text": "Urvalsruta: klicka på det andra hörnet"}
+{"name": "aoe2mc.gather.enemy", "text": "Fiendens %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Fiendens byggnad"}
+{"name": "aoe2mc.gather.farm", "text": "Åker"}
+{"name": "aoe2mc.gather.ground", "text": "Mark"}
+{"name": "aoe2mc.gather.group", "text": "Grupp %s: %s enheter"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grupp %s: %s enheter sparade"}
+{"name": "aoe2mc.gather.mine", "text": "%s gruva"}
+{"name": "aoe2mc.gather.paused", "text": "Spelet är pausat."}
+{"name": "aoe2mc.gather.point", "text": "%s · Högerklick: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Köade omsåningar: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Valda: %s enheter"}
+{"name": "aoe2mc.gather.tree", "text": "Träd"}
+{"name": "aoe2mc.hill.holds", "text": "Spelare %s håller monumentet."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Anfall mark: högerklicka på marken"}
+{"name": "aoe2mc.hints.attack_move", "text": "Anfallsrörelse: högerklicka på marken"}
+{"name": "aoe2mc.hints.building", "text": "Placera %s: högerklicka på marken · Skift + högerklick: placera fler · Avbryt: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: vänsterklicka för att placera · Skift: placera fler · Högerklick: avbryt"}
+{"name": "aoe2mc.hints.corner", "text": "Urvalsruta: högerklicka på det andra hörnet"}
+{"name": "aoe2mc.hints.count_military", "text": "%s militär enhet"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s militära enheter"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s byman"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s byborna"}
+{"name": "aoe2mc.hints.deselect", "text": "Tom ruta: avmarkera"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Vänsterklick: avmarkera"}
+{"name": "aoe2mc.hints.follow", "text": "Följ: högerklicka på en egen eller allierad enhet"}
+{"name": "aoe2mc.hints.guard", "text": "Vakta: högerklicka på en egen eller allierad enhet eller byggnad"}
+{"name": "aoe2mc.hints.military", "text": "%s · Högerklick: anfall en fiende, hållningsmeny · %s"}
+{"name": "aoe2mc.hints.none", "text": "Vänsterklick: välj en enhet · Håll vänsterklick: urvalsruta"}
+{"name": "aoe2mc.hints.none_wand", "text": "Högerklick: välj en enhet · Trollstav: urvalsruta"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrull: högerklicka på marken"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Högerklick: samla, bygg, byggmeny · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s klara"}
+{"name": "aoe2mc.lobby.you_play", "text": "Du spelar %s."}
+{"name": "aoe2mc.monk.converts", "text": "En munk omvandlar %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s dör (kätteri)."}
+{"name": "aoe2mc.pause.continued", "text": "Spelare %s fortsatte spelet."}
+{"name": "aoe2mc.pause.paused", "text": "Spelare %s pausade spelet."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Lag %s (medelrankning %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Spelet är slut. Högerklicka på sammanfattningsboken i handen för att se resultaten. Stoppa spelprogrammet med Ctrl-C i dess konsol."}
+{"name": "aoe2mc.relic_victory.all", "text": "Spelare %s håller alla reliker."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Spelare %s förlorade en relik."}
+{"name": "aoe2mc.repair.no_resources", "text": "Inte tillräckligt med resurser för att reparera %s."}
+{"name": "aoe2mc.replay.army", "text": "Armé: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", armé i slutet: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", förlorade: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Byggordning:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garnison %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | bär %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "bygg %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "mat %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "guld %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "overksam %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "sten %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "trä %s"}
+{"name": "aoe2mc.replay.flare", "text": "Signal"}
+{"name": "aoe2mc.replay.game_ends", "text": "Spelet slutar"}
+{"name": "aoe2mc.replay.game_time", "text": "Speltid %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · garnison %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Bef %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Byb %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s höll monumentet: Kung av kullen-seger vid %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s anfall %s/%s pansar%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Dubbeltryck på Skift: åskådarvy (flyg genom block). Högerklicka på hotbarens föremål: uppspelningskontroll."}
+{"name": "aoe2mc.replay.king_died", "text": ": kungen dog vid %s. Kungsmord: spelaren är ute."}
+{"name": "aoe2mc.replay.king_killed", "text": "Kung dödad vid %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Live-uppspelning: hoppet stannar vid fördröjningen bakom spelet."}
+{"name": "aoe2mc.replay.lost", "text": "Förlorade: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " håller monumentet vid %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monument, %s år kvar"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monument, %s år kvar"}
+{"name": "aoe2mc.replay.no_camera", "text": "Den här inspelningen har ingen kamera för sin spelare."}
+{"name": "aoe2mc.replay.now", "text": " nu"}
+{"name": "aoe2mc.replay.out", "text": "%s är ute"}
+{"name": "aoe2mc.replay.players", "text": "Spelare"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " tar relikten till ett kloster och vinner."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Uppspelningen slutade"}
+{"name": "aoe2mc.replay.research", "text": " forskar %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s ger upp"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Servern startar om för hoppet tillbaka: anslut igen."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Byggnader %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekonomi %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Militär %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Teknologier %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Totalt %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "slott %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "köpt %s, sålt %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "reliker %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "underverk %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Använt:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Bygg %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eko %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tek %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": byborna tränade %s, samlade %s, overksam tid för byborna %s, overksam tid för stadshuset %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": håller monumentet (Kung av kullen)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monument vunnet %s (Kung av kullen)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": militära enheter tränade %s, enheter förlorade %s, byggnader förlorade %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": kung dödad %s (Kungsmord)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": vinner, relik i ett kloster %s (Ta relikten)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %shyllning skickad %s, mottagen %s, högsta antal byborna %s (uppskattat)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": stadshuset förlorat %s (Plötslig död)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, teknologier %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": underverkets timer från %s, slutar %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Sammanfattning (uppskattad)"}
+{"name": "aoe2mc.replay.task_building", "text": "bygger"}
+{"name": "aoe2mc.replay.task_following", "text": "följer"}
+{"name": "aoe2mc.replay.task_food", "text": "samlar mat"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "i garnison"}
+{"name": "aoe2mc.replay.task_gold", "text": "samlar guld"}
+{"name": "aoe2mc.replay.task_guarding", "text": "vaktar"}
+{"name": "aoe2mc.replay.task_idle", "text": "overksam"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrullerar"}
+{"name": "aoe2mc.replay.task_resources", "text": "samlar resurser"}
+{"name": "aoe2mc.replay.task_stone", "text": "samlar sten"}
+{"name": "aoe2mc.replay.task_walking", "text": "går"}
+{"name": "aoe2mc.replay.task_wood", "text": "samlar trä"}
+{"name": "aoe2mc.replay.team", "text": "Lag %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Bågskytt %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Bågskyttepansar %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Bärkapacitet %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Kavalleripansar %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Åker %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Guld %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Infanteripansar %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Vävstol %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Närstrid %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Sten %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Trä %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Slott"}
+{"name": "aoe2mc.replay.tl_king", "text": "Kung dödad"}
+{"name": "aoe2mc.replay.tl_military", "text": "1:a militära enheten: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relik"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Ger upp"}
+{"name": "aoe2mc.replay.town_fell", "text": ": stadshuset föll vid %s. Plötslig död: spelaren är ute."}
+{"name": "aoe2mc.replay.town_lost", "text": "Stadshuset förlorat vid %s"}
+{"name": "aoe2mc.replay.training", "text": "Tränar: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitet:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekonomi %s · Universitet %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " byggde ett underverk vid %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Strid: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s enheter"}
+{"name": "aoe2mc.replay_input.fights", "text": "Stora strider:"}
+{"name": "aoe2mc.replay_input.help", "text": "Uppspelning: högerklicka på föremålen i din hotbar, eller klicka: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Ta över: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s enheter)"}
+{"name": "aoe2mc.replay_input.vs", "text": " mot "}
+{"name": "aoe2mc.resource.food", "text": "mat"}
+{"name": "aoe2mc.resource.gold", "text": "guld"}
+{"name": "aoe2mc.resource.stone", "text": "sten"}
+{"name": "aoe2mc.resource.wood", "text": "trä"}
+{"name": "aoe2mc.run.back", "text": "%s är tillbaka"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampanjen är klar"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chatt: en vanlig rad går till alla, /tm TEXT till dina allierade, /msg NAMN TEXT till en person."}
+{"name": "aoe2mc.run.left_bot", "text": "%s lämnade: en bot spelar spelare %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenariot %s startar. Anslut igen."}
+{"name": "aoe2mc.run.starts_in", "text": "Spelet startar om %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Öppna \"Välj din spelare\" och klicka på \"Klar\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Alla kontroller: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Första steget: håll kommandopinnen och högerklicka på en av dina byborna."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Första steget: håll kommandopinnen och vänsterklicka på en av dina byborna."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Mål: vinn spelet. Inställning för seger: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Spelet sparades: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s enheter kom ut"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Automatisk spaning"}
+{"name": "aoe2mc.stance.formation", "text": "Formation: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ingen enhet kan anfalla marken"}
+{"name": "aoe2mc.stance.unpack", "text": "Packa upp trebuchet först"}
+{"name": "aoe2mc.train.active", "text": "%s är aktiv."}
+{"name": "aoe2mc.train.rally", "text": "Högerklicka på marken för samlingspunkten."}
+{"name": "aoe2mc.train.researched", "text": "%s är beforskad."}
+{"name": "aoe2mc.transport.out", "text": "%s enheter kom ut"}
+{"name": "aoe2mc.treaty.ended", "text": "Fördraget är slut: spelare kan anfalla nu."}
+{"name": "aoe2mc.treaty.refuse", "text": "Fördrag: du kan inte anfalla före %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Fördrag: du kan inte anfalla i det här spelet."}
+{"name": "aoe2mc.treaty.start", "text": "Fördrag: ingen spelare kan anfalla en annan spelare före %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Fördrag: ingen spelare kan anfalla en annan spelare i det här spelet."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Bygg en kasern: högerklicka på en vald byman, välj kasernen och placera den. Åtgärdsfältet ovanför hotbaren visar var du ska placera den."}
+{"name": "aoe2mc.tutorial.camera", "text": "Rör dig snabbt över kartan: högerklicka med föremålet \"Kamera\", gå, och högerklicka sedan med det igen."}
+{"name": "aoe2mc.tutorial.camp", "text": "Förstör fiendens läger i mitten av kartan: välj dina Milismän och högerklicka på en byggnad. Bossfältet högst upp visar steget."}
+{"name": "aoe2mc.tutorial.camps", "text": "Bygg ett timmerläger nära träden och en kvarn nära bärbuskarna. Sidofältet till höger visar vad de kostar i trä."}
+{"name": "aoe2mc.tutorial.complete", "text": "Genomgången är klar. Nästa: spela ett spel mot boten: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Genomgång klar"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Gå upp till feodaltiden: högerklicka på ditt stadshus och välj feodaltiden. Sidofältet till höger visar din mat."}
+{"name": "aoe2mc.tutorial.food", "text": "Samla 100 mat: skicka en byman till bärbuskarna. Sidofältet till höger visar din mat."}
+{"name": "aoe2mc.tutorial.house", "text": "Bygg ett hus: högerklicka på en vald byman, välj huset och placera det. Åtgärdsfältet ovanför hotbaren visar var du ska placera det."}
+{"name": "aoe2mc.tutorial.militia", "text": "Träna 3 Milismän: högerklicka på din kasern och välj milisen. Sidofältet till höger visar din mat och ditt guld."}
+{"name": "aoe2mc.tutorial.raid", "text": "Fienden anfaller dina byborna! Klicka på den röda varningsraden i chatten för att gå dit, välj sedan dina Milismän och högerklicka på fienderna. Bossfältet högst upp visar hälsan hos den valda enheten."}
+{"name": "aoe2mc.tutorial.select", "text": "Välj en byman: vänsterklicka på en av dina byborna med kommandopinnen. Bossfältet högst upp visar den valda enheten, åtgärdsfältet ovanför hotbaren visar nästa åtgärd."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Steg klart"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Steg %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIPS: kasernen tränar infanteri. Infanteri är billigt och bra mot byggnader."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIPS: anfall med alla dina enheter tillsammans. En liten grupp dör innan den kan göra skada."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIPS: bygg lämningsbyggnaderna nära resurserna, så att byborna går en kort väg."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIPS: nästa tidsålder låser upp nya byggnader, enheter och teknologier. Låt byborna arbeta medan du går vidare."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIPS: bärbuskar nära en kvarn är en säker start på mat. Senare ger åkrar mat som inte tar slut."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIPS: ett hus ger plats för 5 fler i befolkningen. Titta på befolkningen i sidofältet och bygg hus innan den är full."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIPS: du kan köa upp till 15 enheter i en byggnad när du har resurserna."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIPS: i AoE2 skickar stadsklockan byborna in i stadshuset. Ring den när fienden plundrar din stad."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIPS: raden Overksam i sidofältet till höger räknar dina byborna utan arbete. Ge dem arbete."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIPS: träna byborna hela tiden i de första tidsåldrarna. Fler byborna ger mer resurser."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIPS: byborna samlar snabbare nära en lämningsbyggnad. Bygg ett timmerläger bredvid träden."}
+{"name": "aoe2mc.tutorial.villager", "text": "Träna en byman: högerklicka på ditt stadshus och välj byman. Sidofältet till höger visar den mat den kostar."}
+{"name": "aoe2mc.tutorial.wood", "text": "Samla 50 trä: välj en byman och högerklicka på ett träd. Sidofältet till höger visar ditt trä."}
+{"name": "aoe2mc.victory", "text": "Seger"}
+{"name": "aoe2mc.wonder.built", "text": "Spelare %s byggde ett underverk."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Underverket för spelare %s är förstört."}
