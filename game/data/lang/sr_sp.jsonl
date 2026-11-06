@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Igrač %s prelazi u %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Pokvarenost zauzima mapu od ivice prema sredini za %s. Uništava sve jedinice i zgrade u njoj."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ovde sada ne mogu da izgradim %s."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ne mogu da obučim tu jedinicu: nemam zgradu za nju."}
+{"name": "aoe2mc.bot.flare_two", "text": "Postavi dve signalne rakete za zid."}
+{"name": "aoe2mc.bot.no_flare", "text": "Ne vidim signalnu raketu."}
+{"name": "aoe2mc.bot.no_market", "text": "Nemam pijacu: ne mogu da šaljem danak."}
+{"name": "aoe2mc.bot.no_onager", "text": "Nemam onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Nemam dovoljno resursa za zid."}
+{"name": "aoe2mc.bot.no_water", "text": "Nemam vodu blizu svog grada: ne mogu da izgradim mornaricu."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Moji onageri ne mogu da seku drveće."}
+{"name": "aoe2mc.build.cost", "text": "Nedovoljno resursa: %s košta %s."}
+{"name": "aoe2mc.build.flat", "text": "%s mora da stoji na ravnom tlu."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s mora da stoji na 4 polja sopstvenog zida u ravnoj liniji ili na 3 dijagonalna polja."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Gradnja: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s mora da stoji na vodi uz obalu."}
+{"name": "aoe2mc.build.space", "text": "Ovde nema mesta za %s."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Nedovoljno resursa: %s polja za %s koštaju %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: desno klikni kraj zida."}
+{"name": "aoe2mc.build.water", "text": "%s mora da stoji na vodi."}
+{"name": "aoe2mc.camera.fov", "text": "Brza kamera čini da predmet u ruci njiše. Da bi ostao miran, podesi Opcije > Podešavanja pristupačnosti > Njihanje prikaza na ISKLJUČENO. Kamera takođe čini pogled širim, što prikazuje više mape. Za normalan pogled podesi Opcije > Podešavanja pristupačnosti > Efekti FOV na 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: isključena"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: uključena, brzina x%s. Shift + desni klik: sledeća brzina."}
+{"name": "aoe2mc.camera.speed", "text": "Brzina kamere: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Porazi sve neprijateljske jedinice i izgubi malo jedinica"}
+{"name": "aoe2mc.challenge.booming", "text": "Obuči 100 seljaka i pređi u Carsko doba"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Pređi u Doba dvorca i preživi neprijateljske napade"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Uništi neprijateljski dvorac"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Skupi 200 hrane, 200 drveta, 100 zlata i 200 kamena, obuči 21 seljaka, izgradi logorište i mlin i pređi u Feudalno doba"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Obuči 27 seljaka, izgradi 5 kuća i pređi u Doba dvorca"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Porazi svih šest neprijateljskih talasa"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "Izgubljeno jedinica: %s, bronzana medalja do %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "Izgubljeno jedinica: %s, zlatna medalja do %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "Izgubljeno jedinica: %s, bez medalje"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "Izgubljeno jedinica: %s, srebrna medalja do %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronzana medalja"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Zlatna medalja"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Srebrna medalja"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Uništi sve neprijateljske ratne brodove"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Bez medalje"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Ubij 5 neprijateljskih seljaka"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronzana medalja u %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Zlatna medalja u %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Srebrna medalja u %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Štit isključen"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Štit uključen"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tehnologije: do 256 istraživanja"}
+{"name": "aoe2mc.cheat.cpu", "text": "Granica stanovništva: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Ratna magla: isključena"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Ratna magla: uključena"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Tehnologije su besplatne"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Deljenje je briga: tvoj prihod ide tvojim saveznicima"}
+{"name": "aoe2mc.cheat.wonders", "text": "Ti kontrolišeš prirodu: %s životinja"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Ostali su samo saveznici: savezi prestaju. Pobeđuje poslednji živi igrač."}
+{"name": "aoe2mc.conquest.defeated", "text": "Igrač %s je poražen."}
+{"name": "aoe2mc.controls.attack", "text": "Napad: izaberi vojne jedinice, pa desno klikni neprijatelja."}
+{"name": "aoe2mc.controls.build", "text": "Gradnja: izaberi seljake, desno klikni na njih za meni gradnje, izaberi zgradu, pa levo klikni na tlo. Shift + levi klik: postavi više. Desni klik: otkaži."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: desno klikni špijunku Kamera (taster 2 u traci): brzo hodaš visoko iznad mape. Shift + desni klik: sledeća brzina. Ponovo desni klik: spuštaš se."}
+{"name": "aoe2mc.controls.garrison", "text": "Posada: izaberi jedinice, pa desno klikni svoju zgradu. Njen meni ih pušta napolje. Meni gradskog centra: Zvoni gradsko zvono."}
+{"name": "aoe2mc.controls.gather", "text": "Skupljanje: izaberi seljake, pa desno klikni drvo, žbun s bobicama, rudnik ili polje."}
+{"name": "aoe2mc.controls.goto", "text": "Idi na: desno klikni kompas Idi na (taster 3 u traci): meni tvojih gradskih centara, tvojih grupa i sledećeg besposlenog seljaka."}
+{"name": "aoe2mc.controls.groups", "text": "Grupe jedinica: izaberi jedinice, uzmi predmet grupe (tasteri 5 do 9) i Shift + desni klik za čuvanje izbora. Desni klik: izaberi grupu."}
+{"name": "aoe2mc.controls.head", "text": "Kontrole (drži štap s šargarepom; traka radnji pokazuje sledeći korak):"}
+{"name": "aoe2mc.controls.menu", "text": "Meni igre: desno klikni knjigu Meni igre (taster 4 u traci): diplomatija i danak, signalna raketa, čuvanje, pauza i stablo tehnologija."}
+{"name": "aoe2mc.controls.move", "text": "Kretanje: uz izbor, desno klikni tlo."}
+{"name": "aoe2mc.controls.research", "text": "Istraživanje i prelazak u novo doba: desno klikni svoju zgradu i klikni tehnologiju ili sledeće doba u njenom meniju."}
+{"name": "aoe2mc.controls.select", "text": "Izbor: levo klikni jedinicu. Drži levi klik i pređi preko tla: okvir za izbor. Desni klik: davanje naredbi."}
+{"name": "aoe2mc.controls.train", "text": "Obuka: desno klikni svoju zgradu (gradski centar, kasarna ...) i klikni jedinicu u njenom meniju."}
+{"name": "aoe2mc.defeat", "text": "Poraz"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Saveznik"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Igrač %s je promenio svoj stav prema tebi: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Neprijatelj"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutralan"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Igrač %s je podesio brzinu igre na %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Igrač %s je poslao %s %s igraču %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: signalna raketa na %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Prati: klikni svoju jedinicu"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Čuvaj: klikni svoju jedinicu ili zgradu"}
+{"name": "aoe2mc.gaia.joins", "text": "%s ti se pridružuje."}
+{"name": "aoe2mc.garrison.all_back", "text": "Svi nazad na posao"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Gradsko zvono zvoni: %s seljaka traži sklonište"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Nijedan seljak nije izabran."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Nemaš seljaka."}
+{"name": "aoe2mc.garrison.out", "text": "%s jedinica je izašlo"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s seljaka traži sklonište"}
+{"name": "aoe2mc.gather.act_attack", "text": "napadni"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "meni gradnje"}
+{"name": "aoe2mc.gather.act_garrison", "text": "posada"}
+{"name": "aoe2mc.gather.act_gather", "text": "skupljaj"}
+{"name": "aoe2mc.gather.act_hunt", "text": "lovi"}
+{"name": "aoe2mc.gather.act_move", "text": "kreći se"}
+{"name": "aoe2mc.gather.act_select", "text": "izaberi"}
+{"name": "aoe2mc.gather.act_select_type", "text": "izaberi sve te vrste"}
+{"name": "aoe2mc.gather.act_trade", "text": "trguj"}
+{"name": "aoe2mc.gather.act_train", "text": "obuči"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Napad: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Okvir za izbor: otkazan"}
+{"name": "aoe2mc.gather.bush", "text": "Žbun s bobicama"}
+{"name": "aoe2mc.gather.carcass", "text": "Leš"}
+{"name": "aoe2mc.gather.corner", "text": "Okvir za izbor: klikni drugi ugao"}
+{"name": "aoe2mc.gather.enemy", "text": "Neprijateljski %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Neprijateljska zgrada"}
+{"name": "aoe2mc.gather.farm", "text": "Polje"}
+{"name": "aoe2mc.gather.ground", "text": "Tlo"}
+{"name": "aoe2mc.gather.group", "text": "Grupa %s: %s jedinica"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grupa %s: %s jedinica sačuvano"}
+{"name": "aoe2mc.gather.mine", "text": "%s rudnik"}
+{"name": "aoe2mc.gather.paused", "text": "Igra je pauzirana."}
+{"name": "aoe2mc.gather.point", "text": "%s · Desni klik: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Ponovna setva u redu: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Izabrano: %s jedinica"}
+{"name": "aoe2mc.gather.tree", "text": "Drvo"}
+{"name": "aoe2mc.hill.holds", "text": "Igrač %s drži spomenik."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Napad na tlo: desno klikni tlo"}
+{"name": "aoe2mc.hints.attack_move", "text": "Napadno kretanje: desno klikni tlo"}
+{"name": "aoe2mc.hints.building", "text": "Postavi %s: desno klikni tlo · Shift + desni klik: postavi više · Otkaz: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: levo klikni za postavljanje · Shift: postavi više · Desni klik: otkaži"}
+{"name": "aoe2mc.hints.corner", "text": "Okvir za izbor: desno klikni drugi ugao"}
+{"name": "aoe2mc.hints.count_military", "text": "%s vojna jedinica"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s vojnih jedinica"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s seljak"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s seljaka"}
+{"name": "aoe2mc.hints.deselect", "text": "Prazan okvir: poništi izbor"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Levi klik: poništi izbor"}
+{"name": "aoe2mc.hints.follow", "text": "Prati: desno klikni svoju ili saveznu jedinicu"}
+{"name": "aoe2mc.hints.guard", "text": "Čuvaj: desno klikni svoju ili saveznu jedinicu ili zgradu"}
+{"name": "aoe2mc.hints.military", "text": "%s · Desni klik: napadni neprijatelja, meni stava · %s"}
+{"name": "aoe2mc.hints.none", "text": "Levi klik: izaberi jedinicu · Drži levi klik: okvir za izbor"}
+{"name": "aoe2mc.hints.none_wand", "text": "Desni klik: izaberi jedinicu · Štapić: okvir za izbor"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrola: desno klikni tlo"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Desni klik: skupljaj, gradi, meni gradnje · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s spremno"}
+{"name": "aoe2mc.lobby.you_play", "text": "Igraš %s."}
+{"name": "aoe2mc.monk.converts", "text": "Monah preobraća %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s umire (jeres)."}
+{"name": "aoe2mc.pause.continued", "text": "Igrač %s je nastavio igru."}
+{"name": "aoe2mc.pause.paused", "text": "Igrač %s je pauzirao igru."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Tim %s (prosečan rejting %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Igra je završena. Desno klikni knjigu Rezime u ruci za rezultate. Zaustavi program igre sa Ctrl-C u njegovoj konzoli."}
+{"name": "aoe2mc.relic_victory.all", "text": "Igrač %s drži sve relikvije."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Igrač %s je izgubio relikviju."}
+{"name": "aoe2mc.repair.no_resources", "text": "Nedovoljno resursa za popravku: %s."}
+{"name": "aoe2mc.replay.army", "text": "Vojska: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", vojska na kraju: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", izgubljeno: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Redosled gradnje:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · posada %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | nosi %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "gradnja %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "hrana %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "zlato %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "besposlen %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "kamen %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "drvo %s"}
+{"name": "aoe2mc.replay.flare", "text": "Signalna raketa"}
+{"name": "aoe2mc.replay.game_ends", "text": "Igra se završava"}
+{"name": "aoe2mc.replay.game_time", "text": "Vreme igre %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · posada %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Voj %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Stan %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Sel %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s je držao spomenik: pobeda Kralja brda u %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s napad %s/%s oklop%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Dvaput pritisni Shift: pogled posmatrača (letiš kroz blokove). Desni klik predmeta u traci: upravljanje reprizom."}
+{"name": "aoe2mc.replay.king_died", "text": ": Kralj je umro u %s. Ubistvo kralja: igrač je isključen."}
+{"name": "aoe2mc.replay.king_killed", "text": "Kralj ubijen u %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Repriza uživo: skok staje na kašnjenju iza igre."}
+{"name": "aoe2mc.replay.lost", "text": "Izgubljeno: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " drži spomenik u %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: spomenik, preostala %s godina"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: spomenik, preostalo %s godina"}
+{"name": "aoe2mc.replay.no_camera", "text": "Ovaj snimak nema kameru svog igrača."}
+{"name": "aoe2mc.replay.now", "text": " sada"}
+{"name": "aoe2mc.replay.out", "text": "%s je isključen"}
+{"name": "aoe2mc.replay.players", "text": "Igrači"}
+{"name": "aoe2mc.replay.range", "text": " d%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " nosi relikviju u manastir i pobeđuje."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Repriza je završena"}
+{"name": "aoe2mc.replay.research", "text": " istražuje %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s se predaje"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Server se ponovo pokreće za skok nazad: pridruži mu se ponovo."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Zgrade %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Privreda %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Vojska %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tehnologije %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Ukupno %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "dvorci %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "kupljeno %s, prodato %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relikvije %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "čuda %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Potrošeno:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Gradnja %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Privr. %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Voj. %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Teh. %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": obučenih seljaka %s, skupljeno %s, vreme besposlenih seljaka %s, vreme besposlenog gradskog centra %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": drži spomenik (Kralj brda)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": osvojen spomenik %s (Kralj brda)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": obučenih vojnih jedinica %s, izgubljenih jedinica %s, izgubljenih zgrada %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": ubijenih kraljeva %s (Ubistvo kralja)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": pobede, relikvija u manastiru %s (Osvajanje relikvije)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sdanak poslat %s, primljen %s, najveći broj seljaka %s (proc.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": izgubljen gradski centar %s (Iznenadna smrt)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tehnologije %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": tajmer čuda od %s, završava se %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Rezime (proc.)"}
+{"name": "aoe2mc.replay.task_building", "text": "gradi"}
+{"name": "aoe2mc.replay.task_following", "text": "prati"}
+{"name": "aoe2mc.replay.task_food", "text": "skuplja hranu"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "u posadi"}
+{"name": "aoe2mc.replay.task_gold", "text": "skuplja zlato"}
+{"name": "aoe2mc.replay.task_guarding", "text": "čuva"}
+{"name": "aoe2mc.replay.task_idle", "text": "besposlen"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrolira"}
+{"name": "aoe2mc.replay.task_resources", "text": "skuplja resurse"}
+{"name": "aoe2mc.replay.task_stone", "text": "skuplja kamen"}
+{"name": "aoe2mc.replay.task_walking", "text": "hoda"}
+{"name": "aoe2mc.replay.task_wood", "text": "skuplja drvo"}
+{"name": "aoe2mc.replay.team", "text": "Tim %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Strelac %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Oklop strelaca %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Nošenje %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Oklop konjice %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Polje %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Zlato %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Oklop pešadije %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Razboj %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Blizu %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Kamen %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Drvo %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Dvorac"}
+{"name": "aoe2mc.replay.tl_king", "text": "Kralj ubijen"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. vojska: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relikvija"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Predaja"}
+{"name": "aoe2mc.replay.town_fell", "text": ": gradski centar je pao u %s. Iznenadna smrt: igrač je isključen."}
+{"name": "aoe2mc.replay.town_lost", "text": "Gradski centar izgubljen u %s"}
+{"name": "aoe2mc.replay.training", "text": "Obuka: %s"}
+{"name": "aoe2mc.replay.university", "text": "Univerzitet:"}
+{"name": "aoe2mc.replay.up_counts", "text": "privreda %s · Univerzitet %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " je izgradio čudo u %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Borba: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s jedinica"}
+{"name": "aoe2mc.replay_input.fights", "text": "Velike borbe:"}
+{"name": "aoe2mc.replay_input.help", "text": "Repriza: desno klikni predmete u traci ili klikni: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Preuzmi: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s jedinica)"}
+{"name": "aoe2mc.replay_input.vs", "text": " protiv "}
+{"name": "aoe2mc.resource.food", "text": "hrana"}
+{"name": "aoe2mc.resource.gold", "text": "zlato"}
+{"name": "aoe2mc.resource.stone", "text": "kamen"}
+{"name": "aoe2mc.resource.wood", "text": "drvo"}
+{"name": "aoe2mc.run.back", "text": "%s je ponovo ovde"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampanja je završena"}
+{"name": "aoe2mc.run.chat_hint", "text": "Ćaskanje: običan red ide svima, /tm TEKST tvojim saveznicima, /msg IME TEKST jednoj osobi."}
+{"name": "aoe2mc.run.left_bot", "text": "%s je otišao: bot igra za igrača %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenario %s počinje. Pridruži se ponovo."}
+{"name": "aoe2mc.run.starts_in", "text": "Igra počinje za %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Otvori \"Izaberi svog igrača\" i klikni \"Spreman\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Sve kontrole: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Prvi korak: drži štap s šargarepom i desno klikni jednog od svojih seljaka."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Prvi korak: drži štap s šargarepom i levo klikni jednog od svojih seljaka."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Cilj: pobedi u igri. Podešavanje pobede: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Igra je sačuvana: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s jedinica je izašlo"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Automatsko izviđanje"}
+{"name": "aoe2mc.stance.formation", "text": "Formacija: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Nijedna jedinica ne može da napadne tlo"}
+{"name": "aoe2mc.stance.unpack", "text": "Prvo raspakuj trebuchet"}
+{"name": "aoe2mc.train.active", "text": "%s je aktivan."}
+{"name": "aoe2mc.train.rally", "text": "Desno klikni tlo za tačku okupljanja."}
+{"name": "aoe2mc.train.researched", "text": "%s je istraženo."}
+{"name": "aoe2mc.transport.out", "text": "%s jedinica je izašlo"}
+{"name": "aoe2mc.treaty.ended", "text": "Ugovor je istekao: igrači sada mogu da napadaju."}
+{"name": "aoe2mc.treaty.refuse", "text": "Ugovor: ne možeš da napadneš pre %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Ugovor: ne možeš da napadneš u ovoj igri."}
+{"name": "aoe2mc.treaty.start", "text": "Ugovor: nijedan igrač ne može da napadne drugog igrača pre %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Ugovor: nijedan igrač ne može da napadne drugog igrača u ovoj igri."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Izgradi kasarnu: desno klikni na izabranog seljaka, izaberi kasarnu i postavi je. Traka radnji iznad trake predmeta kaže ti gde da je postaviš."}
+{"name": "aoe2mc.tutorial.camera", "text": "Brzo se kreći preko mape: desno klikni predmet \"Kamera\", hodaj, pa ponovo desno klikni s njim."}
+{"name": "aoe2mc.tutorial.camp", "text": "Uništi neprijateljski logor na sredini mape: izaberi svoje milicije i desno klikni zgradu. Traka bossa na vrhu pokazuje korak."}
+{"name": "aoe2mc.tutorial.camps", "text": "Izgradi logorište blizu drveća i mlin blizu bobica. Bočna traka desno pokazuje koliko drveta koštaju."}
+{"name": "aoe2mc.tutorial.complete", "text": "Vodič je završen. Sledeće: igraj protiv bota: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Vodič završen"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Pređi u Feudalno doba: desno klikni svoj gradski centar i izaberi Feudalno doba. Bočna traka desno pokazuje tvoju hranu."}
+{"name": "aoe2mc.tutorial.food", "text": "Skupi 100 hrane: pošalji seljaka na bobice. Bočna traka desno pokazuje tvoju hranu."}
+{"name": "aoe2mc.tutorial.house", "text": "Izgradi kuću: desno klikni na izabranog seljaka, izaberi kuću i postavi je. Traka radnji iznad trake predmeta kaže ti gde da je postaviš."}
+{"name": "aoe2mc.tutorial.militia", "text": "Obuči 3 milicije: desno klikni svoju kasarnu i izaberi miliciju. Bočna traka desno pokazuje tvoju hranu i zlato."}
+{"name": "aoe2mc.tutorial.raid", "text": "Neprijatelj napada tvoje seljake! Klikni crvenu liniju upozorenja u ćaskanju da ideš tamo, zatim izaberi svoje milicije i desno klikni neprijatelje. Traka bossa na vrhu pokazuje zdravlje izabrane jedinice."}
+{"name": "aoe2mc.tutorial.select", "text": "Izaberi seljaka: levo klikni jednog od svojih seljaka sa štapom s šargarepom. Traka bossa na vrhu pokazuje izabranu jedinicu, a traka radnji iznad trake predmeta pokazuje sledeću radnju."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Korak završen"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Korak %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "SAVET: kasarna obučava pešadiju. Pešadija je jeftina i dobra protiv zgrada."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "SAVET: napadaj sa svim jedinicama zajedno. Mala grupa pogine pre nego što nanese štetu."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "SAVET: gradi zgrade za odlaganje blizu resursa, da seljaci hodaju kratko."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "SAVET: sledeće doba otključava nove zgrade, jedinice i tehnologije. Drži seljake na poslu dok prelaziš u novo doba."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "SAVET: bobice blizu mlina su siguran početak hrane. Kasnije polja daju hranu koja ne prestaje."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "SAVET: kuća daje mesta za 5 stanovnika više. Pogledaj stanovništvo u bočnoj traci i gradi kuće pre nego što se napuni."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "SAVET: u zgradi možeš staviti u red do 15 jedinica kad imaš resurse."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "SAVET: u Age of Empires II gradsko zvono šalje seljake u gradski centar. Zazvoni kad neprijatelj napadne tvoj grad."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "SAVET: red Besposleni u bočnoj traci broji tvoje seljake bez posla. Daj im posao."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "SAVET: u prvim dobima obučavaj seljake stalno. Više seljaka daje više resursa."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "SAVET: seljaci brže skupljaju blizu zgrade za odlaganje. Izgradi logorište pored drveća."}
+{"name": "aoe2mc.tutorial.villager", "text": "Obuči seljaka: desno klikni svoj gradski centar i izaberi seljaka. Bočna traka desno pokazuje hranu koju košta."}
+{"name": "aoe2mc.tutorial.wood", "text": "Skupi 50 drveta: izaberi seljaka i desno klikni drvo. Bočna traka desno pokazuje tvoje drvo."}
+{"name": "aoe2mc.victory", "text": "Pobeda"}
+{"name": "aoe2mc.wonder.built", "text": "Igrač %s je izgradio čudo."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Čudo igrača %s je uništeno."}
