@@ -52,6 +52,7 @@ Platform choice: docs/research/gameplay.md (#135). Paper (#433, #434) adds path 
 converted worlds stay vanilla, and tools/mc_check.py checks them with the vanilla server.
 """
 import argparse
+import collections
 import contextlib
 import glob
 import hashlib
@@ -81,6 +82,7 @@ from rcon import Rcon  # noqa: E402
 # A chat line starts with "<name>", not with a name. Paper 26.3 writes "System chat: " and color codes (#1310).
 JOINED = re.compile(r"[/ ]INFO\]: (?:System chat: )?(?:\x1b\[[0-9;]*m)?(\w{1,16})(?:\x1b\[[0-9;]*m)? joined the game"
                     r"(?:\x1b\[0m)?$")                # Paper 26.3: the name in its own color (#3566)
+LEFT = re.compile(JOINED.pattern.replace(" joined the game", " left the game"))   # a leave (rejoin.py, #5893)
 PAPER = os.path.join(os.path.dirname(mc_check.CACHE), "paper")       # ~/.cache/aoe2mc/paper/VERSION/
 FILL = "https://fill.papermc.io/v3/projects/paper/versions"
 AGENT = {"User-Agent": "aoe2mc (https://github.com/Larspolo/aoe2mc)"}   # the Paper API refuses Python-urllib (403)
@@ -299,6 +301,7 @@ class Game:
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
         self.sides = {}
+        self.drops, self.left = collections.deque(), frozenset()   # leaves and joins for the game loop (rejoin, #5893)
         import units  # a world with the resource pack: own armor and weapons (#2742, #2744)
         units.ASSETS = pack_file(self.world) is not None
 
@@ -364,6 +367,23 @@ class Game:
                 self.command(f"op {m.group(1)}")
                 self.joined = {*self.joined, m.group(1)}
                 self.side(m.group(1))
+                if m.group(1) in self.left:            # a person who left joins again: the bot stops (#5893)
+                    self.left = self.left - {m.group(1)}
+                    self.drops.append(("back", m.group(1)))
+            elif m := LEFT.search(line):
+                self.leave(m.group(1))
+
+    def leave(self, name):
+        """Minecraft player name left (#5893). In the lobby (before the start) its seat is free again. After the start
+        a bot plays its AoE2 player until it joins again: the game loop does it (rejoin.tick), not this log thread."""
+        self.joined = self.joined - {name}
+        if getattr(self, "wait", False):
+            self.ready = self.ready - {name}
+            self.sides = {k: n for k, n in self.sides.items() if k != name}
+            self.placed = getattr(self, "placed", frozenset()) - {name}
+        elif name in self.sides:
+            self.left = {*self.left, name}
+            self.drops.append(("left", name))
 
     def side(self, name):
         """Put Minecraft player name on the team of its AoE2 player in a game of more people (decision #1308, option
