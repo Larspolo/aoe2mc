@@ -10,6 +10,10 @@ The comment mentions the owner (`@` and `owner` of `agent.toml`) and says exactl
 session, or only in the status report. When the auto mode denies an action (for example closing an issue), do not send
 it through another tool: add `needs-human` to that issue and comment the evidence and the action. When the owner did
 it, remove the label.
+Ask once for a series (#6010): when the cause also blocks other open tickets (the same parent epic or series, the
+same missing host, file or answer), ask only on this ticket N, and add the line `Depends on: #N` to the body of each
+other ticket. Step 5 then skips them until N closes (#5954, #5956, #5953: three runs and three owner questions for one
+blocked host).
 
 ## Close an issue
 
