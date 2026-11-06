@@ -788,6 +788,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if unknown := sorted(set(settings) - set(SETTINGS)):
         raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
     settings = mode_defaults({**SETTINGS, **settings})
+    if not settings["tutorial"]:                     # the world keeps the bar of a stopped tutorial game (#5883)
+        import tutorial
+        game.command(f"bossbar remove {tutorial.BAR}")
 
     players = max(getattr(game, "seats", ()), default=people)   # --seats: fewer players than people (#3489)
 
