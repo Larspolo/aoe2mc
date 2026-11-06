@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "השחקן %s מתקדם ל%s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: השחיתות כובשת את המפה מהגבול אל המרכז תוך %s. היא הורסת את כל היחידות והמבנים שבתוכה."}
+{"name": "aoe2mc.bot.cannot_build", "text": "אני לא יכול לבנות שם %s עכשיו."}
+{"name": "aoe2mc.bot.cannot_train", "text": "אני לא יכול לאמן את היחידה הזאת: אין לי מבנה בשביל זה."}
+{"name": "aoe2mc.bot.flare_two", "text": "שים שני סמנים לחומה."}
+{"name": "aoe2mc.bot.no_flare", "text": "אני לא רואה סמן."}
+{"name": "aoe2mc.bot.no_market", "text": "אין לי שוק: אני לא יכול לשלוח מס."}
+{"name": "aoe2mc.bot.no_onager", "text": "אין לי אונאגר."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "אין לי מספיק משאבים לחומה."}
+{"name": "aoe2mc.bot.no_water", "text": "אין לי מים ליד העיר שלי: אני לא יכול לבנות צי."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "האונאגרים שלי לא יכולים לכרות עצים."}
+{"name": "aoe2mc.build.cost", "text": "אין מספיק משאבים: %s עולה %s."}
+{"name": "aoe2mc.build.flat", "text": "%s חייב לעמוד על קרקע ישרה."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s חייב לעמוד על 4 ריבועים של חומה שלך בקו ישר, או על 3 ריבועים באלכסון."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "בנייה: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s חייב לעמוד על המים ליד החוף."}
+{"name": "aoe2mc.build.space", "text": "אין מקום ל%s כאן."}
+{"name": "aoe2mc.build.tiles_cost", "text": "אין מספיק משאבים: %s ריבועים של %s עולים %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: לחץ לחיצה ימנית על קצה החומה."}
+{"name": "aoe2mc.build.water", "text": "%s חייב לעמוד על המים."}
+{"name": "aoe2mc.camera.fov", "text": "המצלמה המהירה גורמת לפריט שביד להתנדנד. כדי שיישאר נייח, הגדר אפשרויות > הגדרות נגישות > נדנוד תצוגה לכבוי. המצלמה גם הופכת את התצוגה לרחבה יותר, כך שרואים יותר מהמפה. כדי לשמור על התצוגה הרגילה, הגדר אפשרויות > הגדרות נגישות > אפקטי FOV ל-0 %."}
+{"name": "aoe2mc.camera.off", "text": "מצלמה: כבויה"}
+{"name": "aoe2mc.camera.on", "text": "מצלמה: פעילה, מהירות x%s. Shift + לחיצה ימנית: המהירות הבאה."}
+{"name": "aoe2mc.camera.speed", "text": "מהירות המצלמה: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "הבס את כל יחידות האויב ואבד מעט יחידות"}
+{"name": "aoe2mc.challenge.booming", "text": "אמן 100 כפריים והתקדם לעידן האימפריאלי"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "התקדם לעידן הטירה ושרוד את התקפות האויב"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "השמד את טירת האויב"}
+{"name": "aoe2mc.challenge.early-economy", "text": "אסוף 200 מזון, 200 עץ, 100 זהב ו-200 אבן, אמן 21 כפריים, בנה מחנה כורתי עצים וטחנה, והתקדם לעידן הפיאודלי"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "אמן 27 כפריים, בנה 5 בתים והתקדם לעידן הטירה"}
+{"name": "aoe2mc.challenge.land-battle", "text": "הבס את שישת גלי האויב"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "אבדו %s יחידות, מדליית ברונזה עד %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "אבדו %s יחידות, מדליית זהב עד %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "אבדו %s יחידות, אין מדליה"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "אבדו %s יחידות, מדליית כסף עד %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "מדליית ברונזה"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "מדליית זהב"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "מדליית כסף"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "השמד את כל ספינות הקרב של האויב"}
+{"name": "aoe2mc.challenge.no_medal", "text": "אין מדליה"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "הרוג 5 כפריים של האויב"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "מדליית ברונזה ב-%s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "מדליית זהב ב-%s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "מדליית כסף ב-%s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "מגן כבוי"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "מגן פעיל"}
+{"name": "aoe2mc.cheat.beyond", "text": "טכנולוגיות: עד 256 מחקרים"}
+{"name": "aoe2mc.cheat.cpu", "text": "מגבלת אוכלוסייה: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "ערפל מלחמה: כבוי"}
+{"name": "aoe2mc.cheat.fog_on", "text": "ערפל מלחמה: פעיל"}
+{"name": "aoe2mc.cheat.free_techs", "text": "הטכנולוגיות חינמיות"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "לחלוק זה לדאוג: ההכנסה שלך הולכת לבני בריתך"}
+{"name": "aoe2mc.cheat.wonders", "text": "אתה שולט בטבע: %s חיות"}
+{"name": "aoe2mc.conquest.allies_end", "text": "נשארו רק בעלי ברית: הברית מסתיימת. השחקן האחרון שנשאר בחיים מנצח."}
+{"name": "aoe2mc.conquest.defeated", "text": "השחקן %s הובס."}
+{"name": "aoe2mc.controls.attack", "text": "תקיפה: בחר יחידות צבאיות, ואז לחיצה ימנית על אויב."}
+{"name": "aoe2mc.controls.build", "text": "בנייה: בחר כפריים, לחץ עליהם לחיצה ימנית לתפריט הבנייה, בחר מבנה, ואז לחיצה שמאלית על הקרקע. Shift + לחיצה שמאלית: הנח עוד. לחיצה ימנית: ביטול."}
+{"name": "aoe2mc.controls.camera", "text": "מצלמה: לחץ לחיצה ימנית עם משקפת המצלמה (מקש סרגל 2): אתה טס מהר מעל המפה. Shift + לחיצה ימנית: המהירות הבאה. לחיצה ימנית שוב: אתה יורד."}
+{"name": "aoe2mc.controls.garrison", "text": "חיל מצב: בחר יחידות, ואז לחיצה ימנית על המבנה שלך. התפריט שלו מוציא אותן. תפריט מרכז העיר: הצלצל בפעמון העיר."}
+{"name": "aoe2mc.controls.gather", "text": "איסוף: בחר כפריים, ואז לחיצה ימנית על עץ, שיח פירות, מכרה או משק."}
+{"name": "aoe2mc.controls.goto", "text": "עבור אל: לחץ לחיצה ימנית עם המצפן עבור אל (מקש סרגל 3): תפריט של מרכזי העיר שלך, קבוצות הבקרה שלך והכפרי הבטל הבא."}
+{"name": "aoe2mc.controls.groups", "text": "קבוצות בקרה: בחר יחידות, קח פריט קבוצה (מקשי סרגל 5 עד 9) ו-Shift + לחיצה ימנית כדי לשמור את הבחירה. לחיצה ימנית: בחירת הקבוצה."}
+{"name": "aoe2mc.controls.head", "text": "בקרה (החזק את הגזר על המקל; שורת הפעולה מראה את הצעד הבא):"}
+{"name": "aoe2mc.controls.menu", "text": "תפריט המשחק: לחץ לחיצה ימנית עם הספר תפריט המשחק (מקש סרגל 4): דיפלומטיה ומס, סמן, שמירה, השהיה ועץ הטכנולוגיות."}
+{"name": "aoe2mc.controls.move", "text": "תנועה: עם בחירה, לחיצה ימנית על הקרקע."}
+{"name": "aoe2mc.controls.research", "text": "מחקר והתקדמות עידן: לחיצה ימנית על המבנה שלך, ואז לחיצה על טכנולוגיה או על העידן הבא בתפריט שלו."}
+{"name": "aoe2mc.controls.select", "text": "בחירה: לחיצה שמאלית על יחידה. החזק את הלחיצה השמאלית וגרור על הקרקע: תיבת בחירה. לחיצה ימנית: מתן פקודות."}
+{"name": "aoe2mc.controls.train", "text": "אימון: לחיצה ימנית על המבנה שלך (מרכז העיר, מחנה האימונים ...) ואז לחיצה על יחידה בתפריט שלו."}
+{"name": "aoe2mc.defeat", "text": "תבוסה"}
+{"name": "aoe2mc.diplomacy.ally", "text": "בעל ברית"}
+{"name": "aoe2mc.diplomacy.changed", "text": "השחקן %s שינה את עמדתו כלפיך: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "אויב"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "ניטרלי"}
+{"name": "aoe2mc.diplomacy.speed", "text": "השחקן %s קבע את מהירות המשחק ל-%s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "השחקן %s שלח %s %s לשחקן %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: סמן ב-%s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "מעקב: לחץ על יחידה שלך"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "שמירה: לחץ על יחידה או מבנה שלך"}
+{"name": "aoe2mc.gaia.joins", "text": "%s מצטרף אליך."}
+{"name": "aoe2mc.garrison.all_back", "text": "כולם חוזרים לעבודה"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "פעמון העיר מצלצל: %s כפריים מחפשים מחסה"}
+{"name": "aoe2mc.garrison.no_villager", "text": "לא נבחר כפרי."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "אין לך כפריים."}
+{"name": "aoe2mc.garrison.out", "text": "יצאו %s יחידות"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s כפריים מחפשים מחסה"}
+{"name": "aoe2mc.gather.act_attack", "text": "תקיפה"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "תפריט בנייה"}
+{"name": "aoe2mc.gather.act_garrison", "text": "חיל מצב"}
+{"name": "aoe2mc.gather.act_gather", "text": "איסוף"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ציד"}
+{"name": "aoe2mc.gather.act_move", "text": "תנועה"}
+{"name": "aoe2mc.gather.act_select", "text": "בחירה"}
+{"name": "aoe2mc.gather.act_select_type", "text": "בחר את כל מסוג זה"}
+{"name": "aoe2mc.gather.act_trade", "text": "מסחר"}
+{"name": "aoe2mc.gather.act_train", "text": "אימון"}
+{"name": "aoe2mc.gather.attack_siege", "text": "תקיפה: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "תיבת בחירה: בוטלה"}
+{"name": "aoe2mc.gather.bush", "text": "שיח פירות"}
+{"name": "aoe2mc.gather.carcass", "text": "פגר"}
+{"name": "aoe2mc.gather.corner", "text": "תיבת בחירה: לחץ על הפינה השנייה"}
+{"name": "aoe2mc.gather.enemy", "text": "%s של אויב"}
+{"name": "aoe2mc.gather.enemy_building", "text": "מבנה אויב"}
+{"name": "aoe2mc.gather.farm", "text": "משק"}
+{"name": "aoe2mc.gather.ground", "text": "קרקע"}
+{"name": "aoe2mc.gather.group", "text": "קבוצה %s: %s יחידות"}
+{"name": "aoe2mc.gather.group_saved", "text": "קבוצה %s: נשמרו %s יחידות"}
+{"name": "aoe2mc.gather.mine", "text": "מכרה %s"}
+{"name": "aoe2mc.gather.paused", "text": "המשחק מושהה."}
+{"name": "aoe2mc.gather.point", "text": "%s · לחיצה ימנית: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "זריעות חוזרות בתור: %s"}
+{"name": "aoe2mc.gather.selected", "text": "נבחרו: %s יחידות"}
+{"name": "aoe2mc.gather.tree", "text": "עץ"}
+{"name": "aoe2mc.hill.holds", "text": "השחקן %s מחזיק במונומנט."}
+{"name": "aoe2mc.hints.attack_ground", "text": "תקיפת קרקע: לחיצה ימנית על הקרקע"}
+{"name": "aoe2mc.hints.attack_move", "text": "תקיפה בתנועה: לחיצה ימנית על הקרקע"}
+{"name": "aoe2mc.hints.building", "text": "הנח את %s: לחיצה ימנית על הקרקע · Shift + לחיצה ימנית: הנח עוד · ביטול: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: לחיצה שמאלית להנחה · Shift: הנח עוד · לחיצה ימנית: ביטול"}
+{"name": "aoe2mc.hints.corner", "text": "תיבת בחירה: לחיצה ימנית על הפינה השנייה"}
+{"name": "aoe2mc.hints.count_military", "text": "יחידה צבאית %s"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s יחידות צבאיות"}
+{"name": "aoe2mc.hints.count_villager", "text": "כפרי %s"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s כפריים"}
+{"name": "aoe2mc.hints.deselect", "text": "תיבה ריקה: ביטול בחירה"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "לחיצה שמאלית: ביטול בחירה"}
+{"name": "aoe2mc.hints.follow", "text": "מעקב: לחיצה ימנית על יחידה שלך או של בעל ברית"}
+{"name": "aoe2mc.hints.guard", "text": "שמירה: לחיצה ימנית על יחידה או מבנה שלך או של בעל ברית"}
+{"name": "aoe2mc.hints.military", "text": "%s · לחיצה ימנית: תקיפת אויב, תפריט עמדה · %s"}
+{"name": "aoe2mc.hints.none", "text": "לחיצה שמאלית: בחירת יחידה · החזק לחיצה שמאלית: תיבת בחירה"}
+{"name": "aoe2mc.hints.none_wand", "text": "לחיצה ימנית: בחירת יחידה · מקל: תיבת בחירה"}
+{"name": "aoe2mc.hints.patrol", "text": "סיור: לחיצה ימנית על הקרקע"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · לחיצה ימנית: איסוף, בנייה, תפריט בנייה · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s מוכנים"}
+{"name": "aoe2mc.lobby.you_play", "text": "אתה משחק כ-%s."}
+{"name": "aoe2mc.monk.converts", "text": "נזיר ממיר את ה%s."}
+{"name": "aoe2mc.monk.dies", "text": "ה%s מת (כפירה)."}
+{"name": "aoe2mc.pause.continued", "text": "השחקן %s המשיך את המשחק."}
+{"name": "aoe2mc.pause.paused", "text": "השחקן %s השהה את המשחק."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "קבוצה %s (דירוג ממוצע %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "המשחק הסתיים. לחץ לחיצה ימנית על ספר הסיכום שביד כדי לראות את התוצאות. עצור את תוכנית המשחק עם Ctrl-C בקונסולה שלה."}
+{"name": "aoe2mc.relic_victory.all", "text": "השחקן %s מחזיק בכל השרידים."}
+{"name": "aoe2mc.relic_victory.lost", "text": "השחקן %s איבד שריד."}
+{"name": "aoe2mc.repair.no_resources", "text": "אין מספיק משאבים לתיקון %s."}
+{"name": "aoe2mc.replay.army", "text": "צבא: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", צבא בסוף: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", אבד: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "סדר בנייה:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · חיל מצב %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | נושא %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "בנייה %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "מזון %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "זהב %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "בטלה %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "אבן %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "עץ %s"}
+{"name": "aoe2mc.replay.flare", "text": "סמן"}
+{"name": "aoe2mc.replay.game_ends", "text": "המשחק מסתיים"}
+{"name": "aoe2mc.replay.game_time", "text": "זמן משחק %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · חיל מצב %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "צבא %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "אוכ׳ %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "משאבים %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "כפרים %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s החזיק במונומנט: ניצחון «מלך הגבעה» ב-%s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | תקיפה %s %s/%s שריון%s"}
+{"name": "aoe2mc.replay.join_help", "text": "לחץ Shift פעמיים: תצוגת צופה (טיסה דרך בלוקים). לחיצה ימנית על פריטי הסרגל: בקרת שידור חוזר."}
+{"name": "aoe2mc.replay.king_died", "text": ": המלך נהרג ב-%s. רצח מלך: השחקן יוצא מהמשחק."}
+{"name": "aoe2mc.replay.king_killed", "text": "המלך נהרג ב-%s"}
+{"name": "aoe2mc.replay.live_jump", "text": "שידור חוזר חי: הקפיצה עוצרת בעיכוב שמאחורי המשחק."}
+{"name": "aoe2mc.replay.lost", "text": "אבד: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " מחזיק במונומנט ב-%s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: מונומנט, נותרה שנה %s"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: מונומנט, נותרו %s שנים"}
+{"name": "aoe2mc.replay.no_camera", "text": "לשידור חוזר זה אין מצלמה של השחקן שלו."}
+{"name": "aoe2mc.replay.now", "text": " עכשיו"}
+{"name": "aoe2mc.replay.out", "text": "%s יצא מהמשחק"}
+{"name": "aoe2mc.replay.players", "text": "שחקנים"}
+{"name": "aoe2mc.replay.range", "text": " טווח %s"}
+{"name": "aoe2mc.replay.relic_won", "text": " לוקח את השריד למנזר ומנצח."}
+{"name": "aoe2mc.replay.replay_ended", "text": "השידור החוזר הסתיים"}
+{"name": "aoe2mc.replay.research", "text": " חוקר %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s מוותר"}
+{"name": "aoe2mc.replay.restart_jump", "text": "השרת מופעל מחדש לקפיצה לאחור: התחבר אליו שוב."}
+{"name": "aoe2mc.replay.share_buildings", "text": "מבנים %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "כלכלה %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "צבא %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "טכנולוגיות %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "סה״כ %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "טירות %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "קנה %s, מכר %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "שרידים %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "פלאים %s, "}
+{"name": "aoe2mc.replay.spent", "text": "הוצא:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "בנייה %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "כלכלה %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "צבא %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "טכנולוגיה %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": כפרים שאומנו %s, נאספו %s, זמן בטלה של כפרים %s, זמן בטלה של מרכז העיר %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": מחזיק במונומנט («מלך הגבעה»)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": המונומנט נוצח %s («מלך הגבעה»)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": יחידות צבא שאומנו %s, יחידות שאבדו %s, מבנים שאבדו %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": מלכים שנהרגו %s («רצח מלך»)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": ניצחונות, שריד במנזר %s («לכידת שריד»)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sמס שנשלח %s, התקבל %s, שיא כפרים %s (משוער)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": מרכז העיר אבד %s («מוות פתאומי»)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, טכנולוגיות %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": טיימר הפלא מ-%s, מסתיים %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "סיכום (משוער)"}
+{"name": "aoe2mc.replay.task_building", "text": "בונה"}
+{"name": "aoe2mc.replay.task_following", "text": "עוקב"}
+{"name": "aoe2mc.replay.task_food", "text": "אוסף מזון"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "בחיל מצב"}
+{"name": "aoe2mc.replay.task_gold", "text": "אוסף זהב"}
+{"name": "aoe2mc.replay.task_guarding", "text": "שומר"}
+{"name": "aoe2mc.replay.task_idle", "text": "בטלה"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "מסייר"}
+{"name": "aoe2mc.replay.task_resources", "text": "אוסף משאבים"}
+{"name": "aoe2mc.replay.task_stone", "text": "אוסף אבן"}
+{"name": "aoe2mc.replay.task_walking", "text": "הולך"}
+{"name": "aoe2mc.replay.task_wood", "text": "אוסף עץ"}
+{"name": "aoe2mc.replay.team", "text": "קבוצה %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "קשתים %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "שריון קשתים %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "נשיאה %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "שריון פרשים %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "משק %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "זהב %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "שריון חי״ר %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "נול %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "קרב מגע %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "אבן %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "עץ %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "טירה"}
+{"name": "aoe2mc.replay.tl_king", "text": "המלך נהרג"}
+{"name": "aoe2mc.replay.tl_military", "text": "צבא ראשון: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "שריד"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "מוותר"}
+{"name": "aoe2mc.replay.town_fell", "text": ": מרכז העיר נפל ב-%s. מוות פתאומי: השחקן יוצא מהמשחק."}
+{"name": "aoe2mc.replay.town_lost", "text": "מרכז העיר אבד ב-%s"}
+{"name": "aoe2mc.replay.training", "text": "אימון: %s"}
+{"name": "aoe2mc.replay.university", "text": "אוניברסיטה:"}
+{"name": "aoe2mc.replay.up_counts", "text": "כלכלה %s · אוניברסיטה %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " בנה פלא ב-%s."}
+{"name": "aoe2mc.replay_input.fight", "text": "קרב: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s יחידות"}
+{"name": "aoe2mc.replay_input.fights", "text": "קרבות גדולים:"}
+{"name": "aoe2mc.replay_input.help", "text": "שידור חוזר: לחיצה ימנית על פריטי הסרגל, או לחיצה: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "השתלטות: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s יחידות)"}
+{"name": "aoe2mc.replay_input.vs", "text": " נגד "}
+{"name": "aoe2mc.resource.food", "text": "מזון"}
+{"name": "aoe2mc.resource.gold", "text": "זהב"}
+{"name": "aoe2mc.resource.stone", "text": "אבן"}
+{"name": "aoe2mc.resource.wood", "text": "עץ"}
+{"name": "aoe2mc.run.back", "text": "%s חזר"}
+{"name": "aoe2mc.run.campaign_complete", "text": "הקמפיין הושלם"}
+{"name": "aoe2mc.run.chat_hint", "text": "צ'אט: שורה רגילה הולכת לכולם, /tm טקסט לבעלי בריתך, /msg שם טקסט לאדם אחד."}
+{"name": "aoe2mc.run.left_bot", "text": "%s עזב: בוט משחק בתור השחקן %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "התרחיש %s מתחיל. התחבר שוב."}
+{"name": "aoe2mc.run.starts_in", "text": "המשחק מתחיל בעוד %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "פתח את «בחר את השחקן שלך» ולחץ על «מוכן»"}
+{"name": "aoe2mc.run.welcome_controls", "text": "כל הבקרות: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "צעד ראשון: החזק את מקל הפקודות ולחץ לחיצה ימנית על אחד הכפריים שלך."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "צעד ראשון: החזק את מקל הפקודות ולחץ לחיצה שמאלית על אחד הכפריים שלך."}
+{"name": "aoe2mc.run.welcome_goal", "text": "מטרה: לנצח במשחק. הגדרת ניצחון: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "המשחק נשמר: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "יצאו %s יחידות"}
+{"name": "aoe2mc.stance.auto_scout", "text": "סיור אוטומטי"}
+{"name": "aoe2mc.stance.formation", "text": "מערך: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "אף יחידה לא יכולה לתקוף את הקרקע"}
+{"name": "aoe2mc.stance.unpack", "text": "קודם פרוס את הטרבוקט"}
+{"name": "aoe2mc.train.active", "text": "%s פעיל."}
+{"name": "aoe2mc.train.rally", "text": "לחיצה ימנית על הקרקע לנקודת התכנסות."}
+{"name": "aoe2mc.train.researched", "text": "%s נחקר."}
+{"name": "aoe2mc.transport.out", "text": "יצאו %s יחידות"}
+{"name": "aoe2mc.treaty.ended", "text": "ההסכם הסתיים: השחקנים יכולים לתקוף עכשיו."}
+{"name": "aoe2mc.treaty.refuse", "text": "הסכם: אינך יכול לתקוף לפני %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "הסכם: אינך יכול לתקוף במשחק הזה."}
+{"name": "aoe2mc.treaty.start", "text": "הסכם: אף שחקן לא יכול לתקוף שחקן אחר לפני %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "הסכם: אף שחקן לא יכול לתקוף שחקן אחר במשחק הזה."}
+{"name": "aoe2mc.tutorial.barracks", "text": "בנה מחנה אימונים: לחיצה ימנית על כפרי שנבחר, בחר את מחנה האימונים והנח אותו. שורת הפעולה מעל הסרגל אומרת לך איפה להניח אותו."}
+{"name": "aoe2mc.tutorial.camera", "text": "טוס מהר מעל המפה: לחץ לחיצה ימנית עם הפריט «מצלמה», לך, ואז לחץ לחיצה ימנית איתו שוב."}
+{"name": "aoe2mc.tutorial.camp", "text": "השמד את מחנה האויב במרכז המפה: בחר את המיליציה שלך ולחץ לחיצה ימנית על מבנה. שורת הבוס למעלה מראה את הצעד."}
+{"name": "aoe2mc.tutorial.camps", "text": "בנה מחנה כורתי ליד העצים וטחנה ליד שיחי הפירות. הסרגל הצדדי מימין מראה את העץ שהם עולים."}
+{"name": "aoe2mc.tutorial.complete", "text": "המדריך הושלם. הבא: שחק משחק נגד הבוט: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "המדריך הושלם"}
+{"name": "aoe2mc.tutorial.feudal", "text": "התקדם לעידן הפיאודלי: לחיצה ימנית על מרכז העיר שלך ובחר את העידן הפיאודלי. הסרגל הצדדי מימין מראה את המזון שלך."}
+{"name": "aoe2mc.tutorial.food", "text": "אסוף 100 מזון: שלח כפרי לשיחי הפירות. הסרגל הצדדי מימין מראה את המזון שלך."}
+{"name": "aoe2mc.tutorial.house", "text": "בנה בית: לחיצה ימנית על כפרי שנבחר, בחר את הבית והנח אותו. שורת הפעולה מעל הסרגל אומרת לך איפה להניח אותו."}
+{"name": "aoe2mc.tutorial.militia", "text": "אמן 3 מיליציונרים: לחיצה ימנית על מחנה האימונים שלך ובחר במיליציונר. הסרגל הצדדי מימין מראה את המזון והזהב שלך."}
+{"name": "aoe2mc.tutorial.raid", "text": "האויב תוקף את הכפריים שלך! לחץ על שורת האזעקה האדומה בצ'אט כדי ללכת לשם, ואז בחר את המיליציה שלך ולחץ לחיצה ימנית על האויבים. שורת הבוס למעלה מראה את הבריאות של היחידה שנבחרה."}
+{"name": "aoe2mc.tutorial.select", "text": "בחר כפרי: לחיצה שמאלית על אחד הכפריים שלך עם מקל הפקודות. שורת הבוס למעלה מראה את היחידה שנבחרה, שורת הפעולה מעל הסרגל מראה את הפעולה הבאה."}
+{"name": "aoe2mc.tutorial.step_done", "text": "הצעד הושלם"}
+{"name": "aoe2mc.tutorial.step_of", "text": "צעד %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "טיפ: מחנה האימונים מאמן חי״ר. חי״ר זול וטוב נגד מבנים."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "טיפ: תקוף עם כל היחידות שלך יחד. קבוצה קטנה נהרגת לפני שהיא מספיקה לגרום נזק."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "טיפ: בנה את מבני ההפקדה ליד המשאבים, כדי שהכפריים ילכו מרחק קצר."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "טיפ: העידן הבא פותח מבנים, יחידות וטכנולוגיות חדשים. השאר את הכפריים בעבודה בזמן שאתה מתקדם."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "טיפ: שיחי פירות ליד טחנה הם התחלה בטוחה למזון. מאוחר יותר, משקים נותנים מזון שלא נגמר."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "טיפ: בית נותן מקום ל-5 תושבים נוספים. הסתכל על האוכלוסייה בסרגל הצדדי ובנה בתים לפני שהיא מלאה."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "טיפ: אפשר להעמיד עד 15 יחידות בתור במבנה כשיש לך את המשאבים."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "טיפ: ב-AoE2 פעמון העיר שולח את הכפריים למרכז העיר. צלצל בו כשהאויב פושט על העיר שלך."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "טיפ: שורת הבטלה בסרגל הצדדי מימין סופרת את הכפריים שלך בלי עבודה. תן להם עבודה."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "טיפ: אמן כפריים כל הזמן בעידנים הראשונים. יותר כפריים נותנים יותר משאבים."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "טיפ: כפריים אוספים מהר יותר ליד מבנה הפקדה. בנה מחנה כורתי ליד העצים."}
+{"name": "aoe2mc.tutorial.villager", "text": "אמן כפרי: לחיצה ימנית על מרכז העיר שלך ובחר את הכפרי. הסרגל הצדדי מימין מראה את המזון שהוא עולה."}
+{"name": "aoe2mc.tutorial.wood", "text": "אסוף 50 עץ: בחר כפרי ולחץ לחיצה ימנית על עץ. הסרגל הצדדי מימין מראה את העץ שלך."}
+{"name": "aoe2mc.victory", "text": "ניצחון"}
+{"name": "aoe2mc.wonder.built", "text": "השחקן %s בנה פלא."}
+{"name": "aoe2mc.wonder.destroyed", "text": "הפלא של השחקן %s נהרס."}
