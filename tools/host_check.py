@@ -34,6 +34,7 @@ import run  # noqa: E402
 
 A, B, E = "alice", "bob", "eve"
 LINE = re.compile(r"Join the server (\S+):(\d+) \(other computers on the network\)\.")
+STOP_REFUSED = re.compile(r"Unknown or incomplete command|permission", re.I)
 REFUSED = re.compile(rf"\b{E}\b.*white-?list|white-?list.*\b{E}\b", re.I)
 
 
@@ -63,15 +64,19 @@ class Client(mc_shot.Client):
         return super().__exit__(*exc)
 
 
-def result(line, port, pack_url, pack_gets, team, refused, eve_on, errors):
+def result(line, port, pack_url, pack_gets, team, refused, eve_on, errors, ops):
     """{point: (ok, detail)} of the check. line: the (ADDRESS, PORT) of the printed line or None; pack_gets: the
-    client addresses of the pack downloads; refused: the server log lines of the refusal of eve."""
+    client addresses of the pack downloads; refused: the server log lines of the refusal of eve; ops: (the server
+    still runs after the /stop of bob, the chat lines of bob after /stop, after /controls)."""
     addr = line[0] if line else None
     out = {"the address line": (bool(line) and addr not in ("localhost", "127.0.0.1") and line[1] == str(port),
                                 f"{line} (game port {port})"),
            "the pack URL is on the network address": (bool(addr) and f"//{addr}:" in (pack_url or ""), pack_url),
            "bob loads the pack on the network address": (addr in pack_gets, f"downloads from {sorted(set(pack_gets))}"),
            "bob plays player 2": ("passed" in team, team),
+           "bob cannot /stop the server": (ops[0] and any(STOP_REFUSED.search(x) for x in ops[1]),
+                                           f"server {'up' if ops[0] else 'stopped'}; " + "; ".join(ops[1][:2])),
+           "bob gets /controls": (bool(ops[2]), "; ".join(ops[2][:3])),
            "eve cannot join": (bool(refused) and not eve_on, "; ".join(refused[:2]) or f"no refusal, online {eve_on}"),
            "no server errors": (not errors, "; ".join(e[:200] for e in errors[:5]))}
     return {k: (bool(ok), d) for k, (ok, d) in out.items()}
@@ -101,7 +106,7 @@ def drive(games, a, report, tee):
         line = m.groups() if m else None
         with Client(game.game_port, game.version, name=A, world=a.copy, host="localhost") as ca:
             ca.wait_join(lambda: online(A))
-            with Client(game.game_port, game.version, name=B, world=a.copy,
+            with Client(game.game_port, game.version, name=B, world=a.copy, chat=True,
                                 host=line[0] if line else "127.0.0.1") as cb:
                 cb.wait_join(lambda: online(B))
                 while not getattr(game, "wait", False):
@@ -111,6 +116,21 @@ def drive(games, a, report, tee):
                     time.sleep(0.5)
                 time.sleep(3)
                 team = game.command(f"execute if entity @a[name={B},team=p2]")
+                cb.wait_loaded(game)
+                said = []
+                for c in ("/stop", "/controls"):                           # a friend has op level 2 (#5925)
+                    before = len(rejoin_check.chat_of(cb))
+                    cb.key("t")
+                    time.sleep(1)
+                    cb.xdo("type", "--delay", "50", c)
+                    cb.key("Return")
+                    time.sleep(4)
+                    said.append(rejoin_check.chat_of(cb)[before:])
+                try:
+                    up = online(B)
+                except Exception:                                          # the /stop of bob stopped the server
+                    up = False
+                ops = (up, *said)
                 with Client(game.game_port, game.version, name=E, world=a.copy,
                                     host=line[0] if line else "127.0.0.1") as ce:
                     t, refused, eve_on = time.time(), [], False
@@ -124,7 +144,7 @@ def drive(games, a, report, tee):
         log = game.server.log
         errors = [x for x in log if rejoin_check.ERROR.search(x) and not rejoin_check.OFFLINE.search(x)]
         report.update(result(line, game.game_port, getattr(game.pack, "url", None), gets, team, refused, eve_on,
-                             errors))
+                             errors, ops))
     except Exception:
         traceback.print_exc()
     finally:

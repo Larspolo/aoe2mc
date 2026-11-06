@@ -286,12 +286,15 @@ def properties(game_port, rcon_port, password, pack=None, host=False, offline=Fa
     A missing white-list becomes "true" in 26.3: then no player can join (#285). Each player is an operator
     (op_joined): the output of RCON and console commands (the "fill" of a falling building) must not go to its chat (#1799).
     host: listen on all addresses (`--host`, #5891). Paper binds RCON to server-ip too: the program still connects
-    to 127.0.0.1, which "all addresses" includes.
+    to 127.0.0.1, which "all addresses" includes. The operators of a host game get level 2 (the game controls,
+    /trigger, /tp): the level 3 and 4 commands stay in the console of the host (#5925).
     pack: the PackServer of the world (#2740) or its ReleasePack (#2741). The units have no vanilla look without it: the player must accept it."""
     extra = (f"resource-pack={pack.url}\nresource-pack-sha1={pack.sha1}\nrequire-resource-pack=true\n"
              f"resource-pack-prompt={json.dumps({'text': PROMPT})}\n") if pack else ""
     online = "true" if host and not offline else "false"
     white = "white-list=true\nenforce-whitelist=true\n" if host else "white-list=false\n"
+    if host:                                         # a friend (operator) cannot /stop, /op, /whitelist, /kick (#5925)
+        white += "op-permission-level=2\n"
     return extra + (f"online-mode={online}\nserver-ip={'' if host else '127.0.0.1'}\nserver-port={game_port}\n{white}"
             f"enable-rcon=true\nrcon.port={rcon_port}\nrcon.password={password}\n"
             "spawn-protection=0\nmax-tick-time=-1\nenable-query=false\nbroadcast-rcon-to-ops=false\n"
