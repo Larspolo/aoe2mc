@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Играчот %s напредува во %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Корупцијата го зафаќа картата од работ до центарот за %s. Таа ги уништува сите единици и згради во неа."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Сега не можам да изградам %s таму."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Не можам да ја обучам таа единица: немам зграда за неа."}
+{"name": "aoe2mc.bot.flare_two", "text": "Поставете два сигнала за ѕидот."}
+{"name": "aoe2mc.bot.no_flare", "text": "Не гледам сигнал."}
+{"name": "aoe2mc.bot.no_market", "text": "Немам пазар: не можам да испраќам данок."}
+{"name": "aoe2mc.bot.no_onager", "text": "Немам онагер."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Немам доволно ресурси за ѕид."}
+{"name": "aoe2mc.bot.no_water", "text": "Немам вода близу мојот град: не можам да изградам флота."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Моите онагери не можат да сечат дрвја."}
+{"name": "aoe2mc.build.cost", "text": "Нема доволно ресурси: %s чини %s."}
+{"name": "aoe2mc.build.flat", "text": "%s мора да стои на рамен терен."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s мора да стои на 4 плочки од сопствен ѕид во права линија или на 3 дијагонални плочки."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Изгради: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s мора да стои во вода покрај брегот."}
+{"name": "aoe2mc.build.space", "text": "Нема простор за %s овде."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Нема доволно ресурси: %s плочки од %s чини %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: кликнете со десното копче на крајот на ѕидот."}
+{"name": "aoe2mc.build.water", "text": "%s мора да стои на водата."}
+{"name": "aoe2mc.camera.fov", "text": "Брзата камера предизвикува лелеање на предметот во рака. За да стои мирно, поставете Опции > Поставки за пристапност > View Bobbing на OFF. Камерата исто така го проширува погледот, па се гледа повеќе од картата. За да го задржите обичниот поглед, поставете Опции > Поставки за пристапност > FOV Effects на 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Камера: исклучена"}
+{"name": "aoe2mc.camera.on", "text": "Камера: вклучена, брзина x%s. Shift и десно копче: следна брзина."}
+{"name": "aoe2mc.camera.speed", "text": "Брзина на камерата: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Поразете ги сите непријателски единици и изгубете малку единици"}
+{"name": "aoe2mc.challenge.booming", "text": "Обучете 100 селани и напредувајте во Империјалната ера"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Напредувајте во Замочката ера и преживејте непријателските напади"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Уништете непријателски замок"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Собрете 200 храна, 200 дрво, 100 злато и 200 камен, обучете 21 селанец, изградете логорување за дрво и мелница и напредувајте во Феудалната ера"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Обучете 27 селани, изградете 5 куќи и напредувајте во Замочката ера"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Поразете ги сите шест непријателски бранови"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "Изгубени %s единици, бронзен медал до %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "Изгубени %s единици, златен медал до %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "Изгубени %s единици, без медал"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "Изгубени %s единици, сребрен медал до %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Бронзен медал"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Златен медал"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Сребрен медал"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Уништете ги сите непријателски воени бродови"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Без медал"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Убијте 5 непријателски селани"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Бронзен медал за %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Златен медал за %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Сребрен медал за %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis исклучен"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis вклучен"}
+{"name": "aoe2mc.cheat.beyond", "text": "Технологии: до 256 истражувања"}
+{"name": "aoe2mc.cheat.cpu", "text": "Ограничување на население: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Магла на војната: исклучена"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Магла на војната: вклучена"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Технологиите се бесплатни"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Споделувањето е грижа: вашиот приход оди кон сојузниците"}
+{"name": "aoe2mc.cheat.wonders", "text": "Ја контролирате природата: %s животни"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Останаа само сојузници: сојузите завршуваат. Последниот жив играч победува."}
+{"name": "aoe2mc.conquest.defeated", "text": "Играчот %s е поразен."}
+{"name": "aoe2mc.controls.attack", "text": "Напад: изберете воени единици, па кликнете со десното копче на непријател."}
+{"name": "aoe2mc.controls.build", "text": "Градење: изберете селани, кликнете ги со десното копче за менито за градење, изберете зграда, па кликнете со левото копче на земјата. Shift + лево копче: постави повеќе. Десно копче: откажи."}
+{"name": "aoe2mc.controls.camera", "text": "Камера: кликнете со десното копче со далекуводот Камера (брз клавиш 2): брзо летате високо над картата. Shift и десно копче: следна брзина. Десно копче повторно: летате надолу."}
+{"name": "aoe2mc.controls.garrison", "text": "Гарнизон: изберете единици, па кликнете со десното копче на своја зграда. Нејзиното мени ги пушта надвор. Мени на градскиот центар: Ѕвони со градското ѕвоно."}
+{"name": "aoe2mc.controls.gather", "text": "Собирање: изберете селани, па кликнете со десното копче на дрво, грмушка со боровинки, рудник или фарма."}
+{"name": "aoe2mc.controls.goto", "text": "Оди до: кликнете со десното копче со компасот Оди до (брз клавиш 3): мени со вашите градски центри, контролни групи и следниот подзафатен селанец."}
+{"name": "aoe2mc.controls.groups", "text": "Контролни групи: изберете единици, земете предмет за група (брзи клавиши 5 до 9) и Shift + десно копче за да го зачувате изборот. Десно копче: избери група."}
+{"name": "aoe2mc.controls.head", "text": "Контроли (држете морков на стап; лентата за дејства го покажува следниот чекор):"}
+{"name": "aoe2mc.controls.menu", "text": "Мени на играта: кликнете со десното копче со книгата Мени на играта (брз клавиш 4): дипломатија и данок, сигнал, зачувување, пауза и дрво на технологии."}
+{"name": "aoe2mc.controls.move", "text": "Движење: со избор, кликнете со десното копче на земјата."}
+{"name": "aoe2mc.controls.research", "text": "Истражување и напредување во ера: кликнете со десното копче на своја зграда и изберете технологија или следна ера во нејзиното мени."}
+{"name": "aoe2mc.controls.select", "text": "Избор: кликнете со левото копче на единица. Држете го левото копче и влечете преку земјата: поле за избор. Десно копче: давајте наредби."}
+{"name": "aoe2mc.controls.train", "text": "Обука: кликнете со десното копче на своја зграда (градски центар, касарна ...) и изберете единица во нејзиното мени."}
+{"name": "aoe2mc.defeat", "text": "Пораз"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Сојузник"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Играчот %s го промени својот став кон вас: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Непријател"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Неутрален"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Играчот %s ја постави брзината на играта на %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Играчот %s испрати %s %s до играчот %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Сигнал кај %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Следи: кликнете на своја единица"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Чувај: кликнете на своја единица или зграда"}
+{"name": "aoe2mc.gaia.joins", "text": "Се придружува %s кон вас."}
+{"name": "aoe2mc.garrison.all_back", "text": "Сите назад на работа"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Ѕвони градското ѕвоно: %s селани бараат засолниште"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Нема избран селанец."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Немате селани."}
+{"name": "aoe2mc.garrison.out", "text": "Излегоа %s единици"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s селани бараат засолниште"}
+{"name": "aoe2mc.gather.act_attack", "text": "напади"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "мени за градење"}
+{"name": "aoe2mc.gather.act_garrison", "text": "гарнизон"}
+{"name": "aoe2mc.gather.act_gather", "text": "собирај"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ловај"}
+{"name": "aoe2mc.gather.act_move", "text": "движи"}
+{"name": "aoe2mc.gather.act_select", "text": "избери"}
+{"name": "aoe2mc.gather.act_select_type", "text": "избери ги сите од видот"}
+{"name": "aoe2mc.gather.act_trade", "text": "тргувај"}
+{"name": "aoe2mc.gather.act_train", "text": "обучи"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Напад: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Поле за избор: откажано"}
+{"name": "aoe2mc.gather.bush", "text": "Грмушка со боровинки"}
+{"name": "aoe2mc.gather.carcass", "text": "Труп"}
+{"name": "aoe2mc.gather.corner", "text": "Поле за избор: кликнете на другиот агол"}
+{"name": "aoe2mc.gather.enemy", "text": "Непријателски %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Непријателска зграда"}
+{"name": "aoe2mc.gather.farm", "text": "Фарма"}
+{"name": "aoe2mc.gather.ground", "text": "Земја"}
+{"name": "aoe2mc.gather.group", "text": "Група %s: %s единици"}
+{"name": "aoe2mc.gather.group_saved", "text": "Група %s: зачувани %s единици"}
+{"name": "aoe2mc.gather.mine", "text": "%s рудник"}
+{"name": "aoe2mc.gather.paused", "text": "Играта е паузирана."}
+{"name": "aoe2mc.gather.point", "text": "%s · Десно копче: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Сеидби во ред: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Избрани: %s единици"}
+{"name": "aoe2mc.gather.tree", "text": "Дрво"}
+{"name": "aoe2mc.hill.holds", "text": "Играчот %s го држи споменикот."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Напад на земја: кликнете со десното копче на земјата"}
+{"name": "aoe2mc.hints.attack_move", "text": "Напад во движење: кликнете со десното копче на земјата"}
+{"name": "aoe2mc.hints.building", "text": "Поставете го %s: кликнете со десното копче на земјата · Shift + десно копче: постави повеќе · Откажи: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: кликнете со левото копче за да поставите · Shift: постави повеќе · Десно копче: откажи"}
+{"name": "aoe2mc.hints.corner", "text": "Поле за избор: кликнете со десното копче на другиот агол"}
+{"name": "aoe2mc.hints.count_military", "text": "%s воена единица"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s воени единици"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s селанец"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s селани"}
+{"name": "aoe2mc.hints.deselect", "text": "Празно поле: откажи избор"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Лево копче: откажи избор"}
+{"name": "aoe2mc.hints.follow", "text": "Следи: кликнете со десното копче на своја или сојузничка единица"}
+{"name": "aoe2mc.hints.guard", "text": "Чувај: кликнете со десното копче на своја или сојузничка единица или зграда"}
+{"name": "aoe2mc.hints.military", "text": "%s · Десно копче: напади непријател, мени за став · %s"}
+{"name": "aoe2mc.hints.none", "text": "Лево копче: избери единица · Држете го левото копче: поле за избор"}
+{"name": "aoe2mc.hints.none_wand", "text": "Десно копче: избери единица · Стап: поле за избор"}
+{"name": "aoe2mc.hints.patrol", "text": "Патрола: кликнете со десното копче на земјата"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Десно копче: собирај, гради, мени за градење · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s подготвени"}
+{"name": "aoe2mc.lobby.you_play", "text": "Вие играте: %s."}
+{"name": "aoe2mc.monk.converts", "text": "Монах го преобратува %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s умира (Ерес)."}
+{"name": "aoe2mc.pause.continued", "text": "Играчот %s ја продолжи играта."}
+{"name": "aoe2mc.pause.paused", "text": "Играчот %s ја паузира играта."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Тим %s (просечен рејтинг %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Играта заврши. Кликнете со десното копче на Книгата за преглед во раката за да ги видите резултатите. Запрете ја програмата за играта со Ctrl-C во нејзината конзола."}
+{"name": "aoe2mc.relic_victory.all", "text": "Играчот %s ги држи сите реликвии."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Играчот %s изгуби реликвија."}
+{"name": "aoe2mc.repair.no_resources", "text": "Нема доволно ресурси за поправка на %s."}
+{"name": "aoe2mc.replay.army", "text": "Војска: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", војска на крајот: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", изгубени: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Редослед на градење:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · гарнизон %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | носи %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "гради %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "храна %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "злато %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "подзафатен %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "камен %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "дрво %s"}
+{"name": "aoe2mc.replay.flare", "text": "Сигнал"}
+{"name": "aoe2mc.replay.game_ends", "text": "Играта завршува"}
+{"name": "aoe2mc.replay.game_time", "text": "Игровно време %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · гарнизон %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Вој %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Нас %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Рес %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Сел %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s го држеше споменикот: победа на Кралот на ридот во %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s напад %s/%s оклоп%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Двапати притиснете Shift: поглед на гледач (летате низ блокови). Десно копче на предметите од лентата: контрола на повторувањето."}
+{"name": "aoe2mc.replay.king_died", "text": ": кралот загина во %s. Убиство на кралот: играчот е надвор."}
+{"name": "aoe2mc.replay.king_killed", "text": "Кралот убиен во %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Директно повторување: скокот запира на задоцнувањето зад играта."}
+{"name": "aoe2mc.replay.lost", "text": "Изгубено: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " го држи споменикот во %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: споменик, останува %s година"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: споменик, остануваат %s години"}
+{"name": "aoe2mc.replay.no_camera", "text": "Овој запис нема камера на својот играч."}
+{"name": "aoe2mc.replay.now", "text": " сега"}
+{"name": "aoe2mc.replay.out", "text": "%s е надвор"}
+{"name": "aoe2mc.replay.players", "text": "Играчи"}
+{"name": "aoe2mc.replay.range", "text": " д%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " ја носи реликвијата до манастир и победува."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Повторувањето заврши"}
+{"name": "aoe2mc.replay.research", "text": " истражува %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s се предава"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Серверот се рестартира за скокот назад: повторно влезете."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Згради %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Економија %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Војска %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Технологии %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Вкупно %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "замоци %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "купено %s, продадено %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "реликвии %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "чуда %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Потрошено:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Градба %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Ек %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Вој %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Тех %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": обучени селани %s, собрани %s, време на подзафатеност на селаните %s, време на подзафатеност на градскиот центар %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": го држи споменикот (Крал на ридот)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": споменикот освоен %s (Крал на ридот)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": обучени воени единици %s, изгубени единици %s, изгубени згради %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": убиен крал %s (Убиство на кралот)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": победи, реликвија во манастир %s (Освојување на реликвијата)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sданокот испратен %s, примен %s, врвна бројка на селани %s (проц.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": изгубен градски центар %s (Ненадејна смрт)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, технологии %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": тајмер на чудото од %s, завршува %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Резиме (проц.)"}
+{"name": "aoe2mc.replay.task_building", "text": "гради"}
+{"name": "aoe2mc.replay.task_following", "text": "следи"}
+{"name": "aoe2mc.replay.task_food", "text": "собира храна"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "во гарнизон"}
+{"name": "aoe2mc.replay.task_gold", "text": "собира злато"}
+{"name": "aoe2mc.replay.task_guarding", "text": "чува"}
+{"name": "aoe2mc.replay.task_idle", "text": "подзафатен"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "патролира"}
+{"name": "aoe2mc.replay.task_resources", "text": "собира ресурси"}
+{"name": "aoe2mc.replay.task_stone", "text": "собира камен"}
+{"name": "aoe2mc.replay.task_walking", "text": "оди"}
+{"name": "aoe2mc.replay.task_wood", "text": "собира дрво"}
+{"name": "aoe2mc.replay.team", "text": "Тим %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Стрелец %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Оклоп на стрелци %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Носење %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Оклоп на коњаници %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Фарма %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Злато %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Оклоп на пешадија %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Разбој %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Блиска борба %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Камен %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Дрво %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Замок"}
+{"name": "aoe2mc.replay.tl_king", "text": "Убиен крал"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. војска: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Реликвија"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Се предава"}
+{"name": "aoe2mc.replay.town_fell", "text": ": градскиот центар падна во %s. Ненадејна смрт: играчот е надвор."}
+{"name": "aoe2mc.replay.town_lost", "text": "Изгубен градски центар во %s"}
+{"name": "aoe2mc.replay.training", "text": "Обука: %s"}
+{"name": "aoe2mc.replay.university", "text": "Универзитет:"}
+{"name": "aoe2mc.replay.up_counts", "text": "економија %s · Универзитет %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " изгради чудо во %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Борба: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s единици"}
+{"name": "aoe2mc.replay_input.fights", "text": "Големи борби:"}
+{"name": "aoe2mc.replay_input.help", "text": "Повторување: кликнете со десното копче на предметите од лентата или кликнете: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Преземи: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s единици)"}
+{"name": "aoe2mc.replay_input.vs", "text": " против "}
+{"name": "aoe2mc.resource.food", "text": "храна"}
+{"name": "aoe2mc.resource.gold", "text": "злато"}
+{"name": "aoe2mc.resource.stone", "text": "камен"}
+{"name": "aoe2mc.resource.wood", "text": "дрво"}
+{"name": "aoe2mc.run.back", "text": "%s се врати"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Кампањата е завршена"}
+{"name": "aoe2mc.run.chat_hint", "text": "Разговор: обична линија оди до сите, /tm ТЕКСТ до вашите сојузници, /msg ИМЕ ТЕКСТ до една личност."}
+{"name": "aoe2mc.run.left_bot", "text": "%s отиде: бот игра за играчот %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Сценариото %s почнува. Влезте повторно."}
+{"name": "aoe2mc.run.starts_in", "text": "Играта почнува за %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Отворете „Изберете го вашиот играч“ и кликнете на „Подготвен“"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Сите контроли: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Прв чекор: држете го стапот за команди и кликнете со десното копче на еден од вашите селани."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Прв чекор: држете го стапот за команди и кликнете со левото копче на еден од вашите селани."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Цел: победете во играта. Поставка за победа: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Играта е зачувана: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "Излегоа %s единици"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Автоматско извидување"}
+{"name": "aoe2mc.stance.formation", "text": "Формација: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ниедна единица не може да го напаѓа теренот"}
+{"name": "aoe2mc.stance.unpack", "text": "Прво распакувајте го Трибушетот"}
+{"name": "aoe2mc.train.active", "text": "%s е активен."}
+{"name": "aoe2mc.train.rally", "text": "Кликнете со десното копче на земјата за точката на собирање."}
+{"name": "aoe2mc.train.researched", "text": "%s е истражено."}
+{"name": "aoe2mc.transport.out", "text": "Излегоа %s единици"}
+{"name": "aoe2mc.treaty.ended", "text": "Договорот заврши: играчите сега можат да напаѓаат."}
+{"name": "aoe2mc.treaty.refuse", "text": "Договор: не можете да напаѓате пред %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Договор: не можете да напаѓате во оваа игра."}
+{"name": "aoe2mc.treaty.start", "text": "Договор: ниеден играч не може да напаѓа друг играч пред %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Договор: ниеден играч не може да напаѓа друг играч во оваа игра."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Изградете касарна: кликнете со десното копче на избран селанец, изберете ја касарната и поставете ја. Лентата за дејства над лентата со брзи клавиши ви кажува каде да ја поставите."}
+{"name": "aoe2mc.tutorial.camera", "text": "Брзо движете се по картата: кликнете со десното копче со предметот „Камера“, одете, па пак кликнете со десното копче со него."}
+{"name": "aoe2mc.tutorial.camp", "text": "Уништете го непријателскиот логор во центарот на картата: изберете ги вашите Милиција и кликнете со десното копче на зграда. Горната лента на шефот ја покажува фазата."}
+{"name": "aoe2mc.tutorial.camps", "text": "Изградете логорување за дрво блиску до дрвјата и мелница блиску до боровинките. Бочната лента десно ја покажува цената во дрво."}
+{"name": "aoe2mc.tutorial.complete", "text": "Туторијалот е завршен. Следно: играјте против ботот: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Туторијалот е завршен"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Напредувајте во Феудалната ера: кликнете со десното копче на вашиот градски центар и изберете Феудална ера. Бочната лента десно ја покажува вашата храна."}
+{"name": "aoe2mc.tutorial.food", "text": "Собирајте 100 храна: испратете селанец до боровинките. Бочната лента десно ја покажува вашата храна."}
+{"name": "aoe2mc.tutorial.house", "text": "Изградете куќа: кликнете со десното копче на избран селанец, изберете куќа и поставете ја. Лентата за дејства над лентата со брзи клавиши ви кажува каде да ја поставите."}
+{"name": "aoe2mc.tutorial.militia", "text": "Обучете 3 Милиција: кликнете со десното копче на вашата касарна и изберете милиција. Бочната лента десно ја покажува вашата храна и злато."}
+{"name": "aoe2mc.tutorial.raid", "text": "Непријателот ги напаѓа вашите селани! Кликнете на црвената линија за тревога во разговорот за да отидете таму, па изберете ги вашите Милиција и кликнете со десното копче на непријателите. Горната лента на шефот ја покажува животот на избраната единица."}
+{"name": "aoe2mc.tutorial.select", "text": "Изберете селанец: кликнете со левото копче на еден од вашите селани со стапот за команди. Горната лента на шефот ја покажува избраната единица, а лентата за дејства над лентата со брзи клавиши ја покажува следната акција."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Чекор завршен"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Чекор %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "СОВЕТ: касарната обучува пешадија. Пешадијата е евтина и добра против зградите."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "СОВЕТ: напаѓајте со сите ваши единици заедно. Мала група умира пред да направи штета."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "СОВЕТ: градете зградите за предавање блиску до ресурсите, за селаните да одат кратко растојание."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "СОВЕТ: следната ера отклучува нови згради, единици и технологии. Држете ги селаните на работа додека напредувате."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "СОВЕТ: боровинките близу мелница се безбеден почеток на храната. Подоцна, фармите даваат храна што не свршува."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "СОВЕТ: куќата дава простор за 5 нови жители. Погледнете ги жителите во бочната лента и градете куќи пред да се наполни."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "СОВЕТ: кога имате ресурси, можете да ставите до 15 единици во ред во зграда."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "СОВЕТ: во AoE2 градското ѕвоно ги праќа селаните во градскиот центар. Ѕвонете го кога непријателот го напаѓа вашиот град."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "СОВЕТ: редот Подзафатени во бочната лента десно ги брои вашите селани без работа. Дајте им работа."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "СОВЕТ: обучувајте селани постојано во првите ери. Повеќе селани даваат повеќе ресурси."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "СОВЕТ: селаните собираат побрзо близу зграда за предавање. Изградете логорување за дрво до дрвјата."}
+{"name": "aoe2mc.tutorial.villager", "text": "Обучете селанец: кликнете со десното копче на вашиот градски центар и изберете селанец. Бочната лента десно ја покажува колку храна чини."}
+{"name": "aoe2mc.tutorial.wood", "text": "Собирајте 50 дрво: изберете селанец и кликнете со десното копче на дрво. Бочната лента десно ја покажува вашето дрво."}
+{"name": "aoe2mc.victory", "text": "Победа"}
+{"name": "aoe2mc.wonder.built", "text": "Играчот %s изгради чудо."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Чудото на играчот %s е уништено."}
