@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "שפּילער %s גייט אַוועק צו די %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: די קאָרופּציע נעמט די מאַפּע פֿון איר גרענעץ ביז צו איר צענטער אין %s. זי פֿאַרניכטעט אַלע אײניקייטן און געבײדעס דערין."}
+{"name": "aoe2mc.bot.cannot_build", "text": "איך קען אַצינד נישט בויען אַ %s דאָרט."}
+{"name": "aoe2mc.bot.cannot_train", "text": "איך קען די אײניקייט נישט טרענירן: איך האָב נישט קיין געבײדע פֿאַר איר."}
+{"name": "aoe2mc.bot.flare_two", "text": "שטעל צוויי פֿלער פֿאַר דער מאַור."}
+{"name": "aoe2mc.bot.no_flare", "text": "איך זע קיין פֿלער נישט."}
+{"name": "aoe2mc.bot.no_market", "text": "איך האָב נישט קיין מאַרק: איך קען נישט שיקן טריבוט."}
+{"name": "aoe2mc.bot.no_onager", "text": "איך האָב נישט קיין אָנאַגער."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "איך האָב נישט גענוג רעסורסן פֿאַר אַ מאַור."}
+{"name": "aoe2mc.bot.no_water", "text": "איך האָב נישט קיין וואַסער לעבן מײַן שטאָט: איך קען נישט בויען אַ פֿלאָט."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "מײַנע אָנאַגערס קענען נישט שניידן ביימער."}
+{"name": "aoe2mc.build.cost", "text": "נישט גענוג רעסורסן: אַ %s קאָסט %s."}
+{"name": "aoe2mc.build.flat", "text": "דער %s מוז שטיין אויף פֿלאַכן באָדן."}
+{"name": "aoe2mc.build.gate_spot", "text": "אַ %s מוז גיין אויף 4 פּלעצן פֿון אַ מײַן מאַור אין אַ גלאַטער ליניע, אָדער אויף 3 דיאַגאָנאַלע פּלעצן."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "בויען: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "אַ %s מוז שטיין אויף וואַסער נעבן דעם ברעג."}
+{"name": "aoe2mc.build.space", "text": "קיין פּלאַץ פֿאַר דעם %s דאָ."}
+{"name": "aoe2mc.build.tiles_cost", "text": "נישט גענוג רעסורסן: %s פּלעצן פֿון %s קאָסטן %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: קלינק רעכטס אויף דעם ענד פֿון דער מאַור."}
+{"name": "aoe2mc.build.water", "text": "אַ %s מוז שטיין אויף דעם וואַסער."}
+{"name": "aoe2mc.camera.fov", "text": "די שנעלע קאַמערע מאַכט דעם אײַנגעהאַלטענעם איטעם שװינגען. כּדי עס זאָל בלײַבן רויִק, שטעלט אײַן Options > Accessibility Settings > View Bobbing אויף OFF. די קאַמערע מאַכט אויך דעם בליק ברייטער, וואָס ווײַזט מער פֿון דער מאַפּע. כּדי צו האַלטן דעם נאָרמאַלן בליק, שטעלט אײַן Options > Accessibility Settings > FOV Effects אויף 0 %."}
+{"name": "aoe2mc.camera.off", "text": "קאַמערע: אויס"}
+{"name": "aoe2mc.camera.on", "text": "קאַמערע: אָן, שנעלקייט x%s. Shift רעכטס קלינק: די נאָכשטע שנעלקייט."}
+{"name": "aoe2mc.camera.speed", "text": "קאַמערע־שנעלקייט: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "שלאָג אַלע פֿײַנטלעכע אײניקייטן און פֿאַרלויר ווייניק אײניקייטן"}
+{"name": "aoe2mc.challenge.booming", "text": "טרענירט 100 דאָרפֿער און גייט אַוועק צו דער ימפּעריאַל־עפּאָכע"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "גייט אַוועק צו דער שלאָס־עפּאָכע און איבערלעבט די פֿײַנטלעכע אָנפֿאַלן"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "חרוב דאָס פֿײַנטלעכע שלאָס"}
+{"name": "aoe2mc.challenge.early-economy", "text": "זאַמלט 200 עסן, 200 האָלץ, 100 גאָלד און 200 שטיין, טרענירט 21 דאָרפֿער, בויט אַ האָלץ־לאַגער און אַ מיל, און גייט אַוועק צו דער פֿײַדאַל־עפּאָכע"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "טרענירט 27 דאָרפֿער, בויט 5 הײַזער און גייט אַוועק צו דער שלאָס־עפּאָכע"}
+{"name": "aoe2mc.challenge.land-battle", "text": "שלאָג אַלע זעקס פֿײַנטלעכע כוואַליעס"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s אײניקייטן פֿאַרלוירן, ברונזענע מעדאַל ביז %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s אײניקייטן פֿאַרלוירן, גאָלדענע מעדאַל ביז %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s אײניקייטן פֿאַרלוירן, קיין מעדאַל נישט"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s אײניקייטן פֿאַרלוירן, זילבערנע מעדאַל ביז %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "ברונזענע מעדאַל"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "גאָלדענע מעדאַל"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "זילבערנע מעדאַל"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "חרוב אַלע פֿײַנטלעכע קריגסשיפֿן"}
+{"name": "aoe2mc.challenge.no_medal", "text": "קיין מעדאַל נישט"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "הרוג 5 פֿײַנטלעכע דאָרפֿער"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "ברונזענע מעדאַל אין %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "גאָלדענע מעדאַל אין %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "זילבערנע מעדאַל אין %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "אײגיס אויס"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "אײגיס אָן"}
+{"name": "aoe2mc.cheat.beyond", "text": "טעכנאָלאָגיעס: ביז 256 פֿאָרשונגען"}
+{"name": "aoe2mc.cheat.cpu", "text": "באַפֿעלקערונג־גרענעץ: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "נעפּל פֿון מלחמה: אויס"}
+{"name": "aoe2mc.cheat.fog_on", "text": "נעפּל פֿון מלחמה: אָן"}
+{"name": "aoe2mc.cheat.free_techs", "text": "טעכנאָלאָגיעס זענען פֿריי"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "טיילן איז ליבע: דײַן האַכנאָסע גײט צו דײַנע פֿרײַנד"}
+{"name": "aoe2mc.cheat.wonders", "text": "דו קאָנטראָלירסט די נאַטור: %s כײַע"}
+{"name": "aoe2mc.conquest.allies_end", "text": "עס בלײַבן בלױז פֿרײַנד: די בונדן ענדיקן זיך. דער לעצטער לעבעדיקער שפּילער געווינט."}
+{"name": "aoe2mc.conquest.defeated", "text": "שפּילער %s איז באַזיגט."}
+{"name": "aoe2mc.controls.attack", "text": "אָנגריף: קלײַב אויס מיליטערישע אײניקייטן, און קלינק רעכטס אויף אַ פֿײַנט."}
+{"name": "aoe2mc.controls.build", "text": "בויען: קלײַב אויס דאָרפֿער, קלינק רעכטס אויף זיי פֿאַר דעם בויען־מענו, קלײַב אויס אַ געבײַדע, און דערנאָך קלינק לינקס אויף דער ערד. Shift + קלינק לינקס: בויען מער. קלינק רעכטס: אָפּשטעלן."}
+{"name": "aoe2mc.controls.camera", "text": "קאַמערע: קלינק רעכטס מיט דעם שפּיגל־גלאָז קאַמערע (קנעפּל 2): איר גייט שנעל הויך איבער דער מאַפּע. Shift קלינק רעכטס: די נאָכשטע שנעלקייט. נאָך אַ מאָל קלינק רעכטס: איר פֿליט אַראָפּ."}
+{"name": "aoe2mc.controls.garrison", "text": "גאַרניזאָן: קלײַב אויס אײניקייטן, און קלינק רעכטס אויף אײַער אייגן געבײַדע. זײַן מענו לאָזט זיי אַרויס. טאַון־סענטער־מענו: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "זאַמלען: קלײַב אויס דאָרפֿער, און קלינק רעכטס אויף אַ בוים, אַ פֿרוכט־בוש, אַ גרוב אָדער אַ פֿעלד."}
+{"name": "aoe2mc.controls.goto", "text": "גיין צו: קלינק רעכטס מיט דעם קאָמפּאַס גיין צו (קנעפּל 3): אַ מענו פֿון אײַערע טאַון־סענטערס, אײַערע קאָנטראָל־גרופּעס און דעם נאָכשטן אומבאַשעפֿטיקטן דאָרפֿער."}
+{"name": "aoe2mc.controls.groups", "text": "קאָנטראָל־גרופּעס: קלײַב אויס אײניקייטן, נעם אַ גרופּע־אײַטעם (קנעפּלעך 5 ביז 9), און Shift + קלינק רעכטס צו שפּאָרן די אויסקלײַבונג. קלינק רעכטס: קלײַב אויס די גרופּע."}
+{"name": "aoe2mc.controls.head", "text": "קאָנטראָלן (האַלט די קאָרעט אויף אַ שטעקן; די אַקציע־שטיק ווײַזט דעם נאָכשטן שריט):"}
+{"name": "aoe2mc.controls.menu", "text": "שפּיל־מענו: קלינק רעכטס מיט דעם בוך שפּיל־מענו (קנעפּל 4): דיפּלאָמאַטיע און טריבוט, פֿלער, שפּאָרן, פּויזע און דער טעכנאָלאָגיע־בוים."}
+{"name": "aoe2mc.controls.move", "text": "באַוועגן: מיט אַ אויסקלײַבונג, קלינק רעכטס אויף דער ערד."}
+{"name": "aoe2mc.controls.research", "text": "פֿאָרשן און אַ נײַע עפּאָכע: קלינק רעכטס אויף אײַער אייגן געבײַדע און קלינק אויף אַ טעכנאָלאָגיע אָדער די נאָכשטע עפּאָכע אין איר מענו."}
+{"name": "aoe2mc.controls.select", "text": "אויסקלײַבן: קלינק לינקס אויף אַ אײניקייט. האַלט קלינק לינקס און קוק איבער דער ערד: אַ קעסטל פֿון אויסקלײַבונג. קלינק רעכטס: געבן באַפֿעלן."}
+{"name": "aoe2mc.controls.train", "text": "טרענירן: קלינק רעכטס אויף אײַער אייגן געבײַדע (טאַון־סענטער, קאַזאַרמע ...) און קלינק אויף אַ אײניקייט אין זײַן מענו."}
+{"name": "aoe2mc.defeat", "text": "באַזיג"}
+{"name": "aoe2mc.diplomacy.ally", "text": "פֿרײַנד"}
+{"name": "aoe2mc.diplomacy.changed", "text": "שפּילער %s האָט געענדערט זײַן שטעלונג צו דיר: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "פֿײַנט"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "נײַטראַל"}
+{"name": "aoe2mc.diplomacy.speed", "text": "שפּילער %s האָט געשטעלט די שפּיל־שנעלקייט אויף %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "שפּילער %s האָט געשיקט %s %s צו שפּילער %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: פֿלער ביי %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "נאָכגיין: קלינק אויף אַ אײַגענע אײניקייט"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "היטן: קלינק אויף אַ אײַגענע אײניקייט אָדער געבײַדע"}
+{"name": "aoe2mc.gaia.joins", "text": "אַ %s קומט צו דיר."}
+{"name": "aoe2mc.garrison.all_back", "text": "אַלע צוריק צו דער אַרבעט"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "די שטאָט־גלאָק קלינגט: %s דאָרפֿער זוכן אַ באַשיצונג"}
+{"name": "aoe2mc.garrison.no_villager", "text": "קיין דאָרפֿער איז נישט אויסגעקליבן."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "דו האָסט קיין דאָרפֿער נישט."}
+{"name": "aoe2mc.garrison.out", "text": "%s אײניקייטן זענען אַרויס"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s דאָרפֿער זוכן אַ באַשיצונג"}
+{"name": "aoe2mc.gather.act_attack", "text": "אָנגריף"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "בויען־מענו"}
+{"name": "aoe2mc.gather.act_garrison", "text": "גאַרניזאָן"}
+{"name": "aoe2mc.gather.act_gather", "text": "זאַמלען"}
+{"name": "aoe2mc.gather.act_hunt", "text": "יאָגן"}
+{"name": "aoe2mc.gather.act_move", "text": "באַוועגן"}
+{"name": "aoe2mc.gather.act_select", "text": "אויסקלײַבן"}
+{"name": "aoe2mc.gather.act_select_type", "text": "קלײַב אויס אַלע פֿון דעם טיפּ"}
+{"name": "aoe2mc.gather.act_trade", "text": "האַנדלען"}
+{"name": "aoe2mc.gather.act_train", "text": "טרענירן"}
+{"name": "aoe2mc.gather.attack_siege", "text": "אָנגריף: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "אויסקלײַבונג־קעסטל: אָפּגעשטעלט"}
+{"name": "aoe2mc.gather.bush", "text": "בערי־בוש"}
+{"name": "aoe2mc.gather.carcass", "text": "קאַרקאַס"}
+{"name": "aoe2mc.gather.corner", "text": "אויסקלײַבונג־קעסטל: קלינק אויף דעם צווייטן ווינקל"}
+{"name": "aoe2mc.gather.enemy", "text": "פֿײַנט %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "פֿײַנטלעכע געבײַדע"}
+{"name": "aoe2mc.gather.farm", "text": "פֿעלד"}
+{"name": "aoe2mc.gather.ground", "text": "ערד"}
+{"name": "aoe2mc.gather.group", "text": "גרופּע %s: %s אײניקייטן"}
+{"name": "aoe2mc.gather.group_saved", "text": "גרופּע %s: %s אײניקייטן געשפּאָרט"}
+{"name": "aoe2mc.gather.mine", "text": "%s גרוב"}
+{"name": "aoe2mc.gather.paused", "text": "דער שפּיל איז אָנגעהאַלטן."}
+{"name": "aoe2mc.gather.point", "text": "%s · קלינק רעכטס: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "צוגעשטעלטע זאָמען: %s"}
+{"name": "aoe2mc.gather.selected", "text": "אויסגעקליבן: %s אײניקייטן"}
+{"name": "aoe2mc.gather.tree", "text": "בוים"}
+{"name": "aoe2mc.hill.holds", "text": "שפּילער %s האַלט דעם מאָנומענט."}
+{"name": "aoe2mc.hints.attack_ground", "text": "אָנגריף אויף דער ערד: קלינק רעכטס אויף דער ערד"}
+{"name": "aoe2mc.hints.attack_move", "text": "אָנגריף־באַוועגונג: קלינק רעכטס אויף דער ערד"}
+{"name": "aoe2mc.hints.building", "text": "שטעל דעם %s: קלינק רעכטס אויף דער ערד · Shift + קלינק רעכטס: שטעל מער · אָפּשטעלן: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: קלינק לינקס צו שטעלן · Shift: שטעל מער · קלינק רעכטס: אָפּשטעלן"}
+{"name": "aoe2mc.hints.corner", "text": "אויסקלײַבונג־קעסטל: קלינק רעכטס אויף דעם צווייטן ווינקל"}
+{"name": "aoe2mc.hints.count_military", "text": "%s מיליטערישע אײניקייט"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s מיליטערישע אײניקייטן"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s דאָרפֿער"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s דאָרפֿער"}
+{"name": "aoe2mc.hints.deselect", "text": "לײדיק קעסטל: אָפּקלײַבן"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "קלינק לינקס: אָפּקלײַבן"}
+{"name": "aoe2mc.hints.follow", "text": "נאָכגיין: קלינק רעכטס אויף אַ אײַגענע אָדער אַלײִירטע אײניקייט"}
+{"name": "aoe2mc.hints.guard", "text": "היטן: קלינק רעכטס אויף אַ אײַגענע אָדער אַלײִירטע אײניקייט אָדער געבײַדע"}
+{"name": "aoe2mc.hints.military", "text": "%s · קלינק רעכטס: אָנגריפֿן אַ פֿײַנט, שטעלונג־מענו · %s"}
+{"name": "aoe2mc.hints.none", "text": "קלינק לינקס: קלײַב אויס אַ אײניקייט · האַלט קלינק לינקס: אויסקלײַבונג־קעסטל"}
+{"name": "aoe2mc.hints.none_wand", "text": "קלינק רעכטס: קלײַב אויס אַ אײניקייט · שטעקן: אויסקלײַבונג־קעסטל"}
+{"name": "aoe2mc.hints.patrol", "text": "פּאַטראָל: קלינק רעכטס אויף דער ערד"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · קלינק רעכטס: זאַמלען, בויען, בויען־מענו · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s גרייט"}
+{"name": "aoe2mc.lobby.you_play", "text": "דו שפּילסט %s."}
+{"name": "aoe2mc.monk.converts", "text": "אַ מאָנך קאָנווערטירט דעם %s."}
+{"name": "aoe2mc.monk.dies", "text": "דער %s שטאַרבט (קעצערײַ)."}
+{"name": "aoe2mc.pause.continued", "text": "שפּילער %s האָט פֿאָרגעזעצט דעם שפּיל."}
+{"name": "aoe2mc.pause.paused", "text": "שפּילער %s האָט אָנגעהאַלטן דעם שפּיל."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "מאַנשאַפֿט %s (דורכשניטלעכער רייטינג %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "דער שפּיל איז פֿאַרענדיקט. קלינק רעכטס אויף דעם רעקאַפּ־בוך אין דײַן האַנט צו זען די רעזולטאַטן. האַלט די שפּיל־פּראָגראַם מיט Ctrl-C אין איר קאָנסאָל."}
+{"name": "aoe2mc.relic_victory.all", "text": "שפּילער %s האַלט אַלע רעליקוויעס."}
+{"name": "aoe2mc.relic_victory.lost", "text": "שפּילער %s האָט פֿאַרלוירן אַ רעליקװיע."}
+{"name": "aoe2mc.repair.no_resources", "text": "נישט גענוג רעסורסן צו רעפּאַרירן דעם %s."}
+{"name": "aoe2mc.replay.army", "text": "אַרמיי: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", אַרמיי אין סוף: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", פֿאַרלוירן: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "בויען־סדר:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · גאַרניזאָן %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | טראָגט %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "בויען %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "עסן %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "גאָלד %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "אומבאַשעפֿטיקט %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "שטיין %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "האָלץ %s"}
+{"name": "aoe2mc.replay.flare", "text": "פֿלער"}
+{"name": "aoe2mc.replay.game_ends", "text": "דער שפּיל ענדיקט זיך"}
+{"name": "aoe2mc.replay.game_time", "text": "שפּיל־צײַט %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · גאַרניזאָן %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "מיל %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "פּאָפּ %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "רעס %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "דאָרף %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s האָט אָנגעהאַלטן דעם מאָנומענט: קעניג פֿונם באַרג־נצחון ביי %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s אָנגריף %s/%s אַרמ%s"}
+{"name": "aoe2mc.replay.join_help", "text": "צווייטע Shift: צוקוקער־בליק (פֿליען דורך בלאָקן). קלינק רעכטס אויף די האָטבאַר־אײַטעמס: ריפּליי־קאָנטראָל."}
+{"name": "aoe2mc.replay.king_died", "text": ": דער מלך איז געשטאָרבן ביי %s. רעגיסייד: דער שפּילער איז אַרויס."}
+{"name": "aoe2mc.replay.king_killed", "text": "מלך דערהרגעט ביי %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "לעבעדיקער ריפּליי: דער שפּרונג שטופּט זיך ביים פֿאַרציע הינטער דעם שפּיל."}
+{"name": "aoe2mc.replay.lost", "text": "פֿאַרלוירן: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " האַלט דעם מאָנומענט ביי %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: מאָנומענט, %s יאָר בלײַבט"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: מאָנומענט, %s יאָר בלײַבן"}
+{"name": "aoe2mc.replay.no_camera", "text": "דער ריקאָרד האָט נישט קיין קאַמערע פֿון זײַן שפּילער."}
+{"name": "aoe2mc.replay.now", "text": " איצט"}
+{"name": "aoe2mc.replay.out", "text": "%s איז אַרויס"}
+{"name": "aoe2mc.replay.players", "text": "שפּילער"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " נעמט די רעליקװיע צו אַ מאָנאַסטיר און געווינט."}
+{"name": "aoe2mc.replay.replay_ended", "text": "ריפּליי איז געענדיקט"}
+{"name": "aoe2mc.replay.research", "text": " פֿאָרשט %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s גיט אויף"}
+{"name": "aoe2mc.replay.restart_jump", "text": "דער סערווער שטאַרט אָן פֿאַר דעם שפּרונג צוריק: פאַרבינד זיך נאָך אַ מאָל."}
+{"name": "aoe2mc.replay.share_buildings", "text": "געבײַדעס %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "עקאָנאָמיע %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "מיליטער %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "טעכנאָלאָגיעס %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "צונױפֿגענומען %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "שלאָסן %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "געקױפֿט %s, פֿאַרקױפֿט %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "רעליקװיעס %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "װוּנדערן %s, "}
+{"name": "aoe2mc.replay.spent", "text": "אױסגעגעבן:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "בויען %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "עקאָ %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "מיל %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "טעכ %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": דאָרפֿער טרענירט %s, אײַנגעזאַמלט %s, דאָרפֿער־אומבאַשעפֿטיקונג־צײַט %s, טאַון־סענטער־אומבאַשעפֿטיקונג־צײַט %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": האַלט דעם מאָנומענט (קעניג פֿונם באַרג)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": מאָנומענט געוואָנען %s (קעניג פֿונם באַרג)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": מיליטערישע אײניקייטן טרענירט %s, פֿאַרלוירן אײניקייטן %s, פֿאַרלוירן געבײַדעס %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": מלך דערהרגעט %s (רעגיסייד)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": געװינט, רעליקװיע אין אַ מאָנאַסטיר %s (נעם די רעליקװיע)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stribut געשיקט %s, באַקומען %s, דאָרפֿער־הײך %s (געשעצט)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": טאַון־סענטער פֿאַרלוירן %s (פּלוצלינג־טויט)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, טעכנאָלאָגיעס %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": װוּנדער־טיימער פֿון %s, ענדיקט זיך %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "צונױפֿפֿאַסונג (געשעצט)"}
+{"name": "aoe2mc.replay.task_building", "text": "בויען"}
+{"name": "aoe2mc.replay.task_following", "text": "נאָכגיין"}
+{"name": "aoe2mc.replay.task_food", "text": "זאַמלען עסן"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "אין גאַרניזאָן"}
+{"name": "aoe2mc.replay.task_gold", "text": "זאַמלען גאָלד"}
+{"name": "aoe2mc.replay.task_guarding", "text": "היטן"}
+{"name": "aoe2mc.replay.task_idle", "text": "אומבאַשעפֿטיקט"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "פּאַטראָלירן"}
+{"name": "aoe2mc.replay.task_resources", "text": "זאַמלען רעסורסן"}
+{"name": "aoe2mc.replay.task_stone", "text": "זאַמלען שטיין"}
+{"name": "aoe2mc.replay.task_walking", "text": "גיין"}
+{"name": "aoe2mc.replay.task_wood", "text": "זאַמלען האָלץ"}
+{"name": "aoe2mc.replay.team", "text": "מאַנשאַפֿט %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "בויגנשיצער %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "בויגנשיצער פּאַנצער %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "טראָגן %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "רײַטער־פּאַנצער %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "פֿעלד %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "גאָלד %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "פֿוסיק־פּאַנצער %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "װעבשטול %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "נאָענט־קאַמף %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "שטיין %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "האָלץ %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "שלאָס"}
+{"name": "aoe2mc.replay.tl_king", "text": "מלך דערהרגעט"}
+{"name": "aoe2mc.replay.tl_military", "text": "1ער מיליטער: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "רעליקװיע"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "גיט אויף"}
+{"name": "aoe2mc.replay.town_fell", "text": ": דער טאַון־סענטער איז געפֿאַלן ביי %s. פּלוצלינג־טויט: דער שפּילער איז אַרויס."}
+{"name": "aoe2mc.replay.town_lost", "text": "טאַון־סענטער פֿאַרלוירן ביי %s"}
+{"name": "aoe2mc.replay.training", "text": "טרענירן: %s"}
+{"name": "aoe2mc.replay.university", "text": "אוניווערסיטעט:"}
+{"name": "aoe2mc.replay.up_counts", "text": "עקאָנאָמיע %s · אוניווערסיטעט %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " האָט געבויט אַ װוּנדער ביי %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "קאַמף: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s אײניקייטן"}
+{"name": "aoe2mc.replay_input.fights", "text": "גרויסע קעמפֿן:"}
+{"name": "aoe2mc.replay_input.help", "text": "ריפּליי: קלינק רעכטס אויף די אײַטעמס אין דײַן האָטבאַר, אָדער קלינק: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "איבערנעמען: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s אײניקייטן)"}
+{"name": "aoe2mc.replay_input.vs", "text": " קעגן "}
+{"name": "aoe2mc.resource.food", "text": "עסן"}
+{"name": "aoe2mc.resource.gold", "text": "גאָלד"}
+{"name": "aoe2mc.resource.stone", "text": "שטיין"}
+{"name": "aoe2mc.resource.wood", "text": "האָלץ"}
+{"name": "aoe2mc.run.back", "text": "%s איז צוריק"}
+{"name": "aoe2mc.run.campaign_complete", "text": "קאַמפּאַניע פֿאַרענדיקט"}
+{"name": "aoe2mc.run.chat_hint", "text": "צאַט: אַ נאָרמאַלע שורה גײט צו אַלעמען, /tm TEXT צו דײַנע פֿרײַנד, /msg NAME TEXT צו איין מענטש."}
+{"name": "aoe2mc.run.left_bot", "text": "%s איז אַרויס: אַ באָט שפּילט שפּילער %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "סצענאַריום %s הײבט זיך אָן. פֿאַרבינד זיך נאָך אַ מאָל."}
+{"name": "aoe2mc.run.starts_in", "text": "דער שפּיל הײבט זיך אָן אין %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "עפֿן \"Choose your player\" און קלינק אויף \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "אַלע קאָנטראָלן: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "דער ערשטער שריט: האַלט דעם קאָמאַנד־שטעקן און קלינק רעכטס אויף איינעם פֿון דײַנע דאָרפֿער."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "דער ערשטער שריט: האַלט דעם קאָמאַנד־שטעקן און קלינק לינקס אויף איינעם פֿון דײַנע דאָרפֿער."}
+{"name": "aoe2mc.run.welcome_goal", "text": "ציל: געווינען דעם שפּיל. װיקטאָרי־איינשטעלונג: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "דער שפּיל איז געשפּאָרט: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s אײניקייטן זענען אַרויס"}
+{"name": "aoe2mc.stance.auto_scout", "text": "אויטאָ־סקאָוט"}
+{"name": "aoe2mc.stance.formation", "text": "פֿאָרמאַציע: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "קיין אײניקייט קען נישט אָנגריפֿן די ערד"}
+{"name": "aoe2mc.stance.unpack", "text": "פּאַק אויס דעם טרעבוշעט ערשט"}
+{"name": "aoe2mc.train.active", "text": "%s איז אַקטיוו."}
+{"name": "aoe2mc.train.rally", "text": "קלינק רעכטס אויף דער ערד פֿאַר דעם זאַמלפּונקט."}
+{"name": "aoe2mc.train.researched", "text": "%s איז פֿאָרשט."}
+{"name": "aoe2mc.transport.out", "text": "%s אײניקייטן זענען אַרויס"}
+{"name": "aoe2mc.treaty.ended", "text": "דער טרעטי האָט זיך געענדיקט: שפּילער קענען אַצינד אָנגריפֿן."}
+{"name": "aoe2mc.treaty.refuse", "text": "טרעטי: דו קענסט נישט אָנגריפֿן פֿאַר %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "טרעטי: דו קענסט נישט אָנגריפֿן אין דעם שפּיל."}
+{"name": "aoe2mc.treaty.start", "text": "טרעטי: קיין שפּילער קען נישט אָנגריפֿן אַן אנדער שפּילער פֿאַר %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "טרעטי: קיין שפּילער קען נישט אָנגריפֿן אַן אנדער שפּילער אין דעם שפּיל."}
+{"name": "aoe2mc.tutorial.barracks", "text": "בויען אַ קאַזאַרמע: קלינק רעכטס אויף אַ אויסגעקליבן דאָרפֿער, קלײַב די קאַזאַרמע און שטעל זי אַװעק. די אַקציע־שטיק איבער דער האָטבאַר װײַזט דיר װוּ צו שטעלן."}
+{"name": "aoe2mc.tutorial.camera", "text": "באַװעג זיך שנעל איבער דער מאַפּע: קלינק רעכטס מיטן \"Camera\"־אײַטעם, גײ, און קלינק װידער רעכטס מיט אים."}
+{"name": "aoe2mc.tutorial.camp", "text": "חרוב דאָס פֿײַנטלעכע לאַגער אין דער מיטע פֿון דער מאַפּע: קלײַב דײַן Militia און קלינק רעכטס אויף אַ געבײַדע. די באָס־שטיק אױבן װײַזט דעם שריט."}
+{"name": "aoe2mc.tutorial.camps", "text": "בויען אַ האָלץ־לאַגער לעבן די ביימער און אַ מיל לעבן די בערי. די זײַטיקע שטיק אױף דער רעכטער זײַט װײַזט דעם האָלץ װאָס זײ קאָסטן."}
+{"name": "aoe2mc.tutorial.complete", "text": "דער טוטאָריאַל איז פֿאַרענדיקט. ווײַטער: שפּיל קעגן דעם באָט: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "טוטאָריאַל פֿאַרענדיקט"}
+{"name": "aoe2mc.tutorial.feudal", "text": "גיי צו דער פֿײַדאַל־עפּאָכע: קלינק רעכטס אויף דײַן טאַון־סענטער און קלײַב די פֿײַדאַל־עפּאָכע. די זײַטיקע שטיק אױף דער רעכטער זײַט װײַזט דײַן עסן."}
+{"name": "aoe2mc.tutorial.food", "text": "זאַמל 100 עסן: שיק אַ דאָרפֿער צו די בערי. די זײַטיקע שטיק אױף דער רעכטער זײַט װײַזט דײַן עסן."}
+{"name": "aoe2mc.tutorial.house", "text": "בויען אַ הױז: קלינק רעכטס אויף אַ אויסגעקליבן דאָרפֿער, קלײַב דאָס הױז און שטעל עס אַװעק. די אַקציע־שטיק איבער דער האָטבאַר װײַזט דיר װוּ צו שטעלן."}
+{"name": "aoe2mc.tutorial.militia", "text": "טרענירט 3 Militia: קלינק רעכטס אויף דײַן קאַזאַרמע און קלײַב די מיליטיע. די זײַטיקע שטיק אױף דער רעכטער זײַט װײַזט דײַן עסן און גאָלד."}
+{"name": "aoe2mc.tutorial.raid", "text": "די פֿײַנט אָנגרײַפֿט דײַנע דאָרפֿער! קלינק אויף די רויטע װאַרענונג־שורה אין דעם צאַט צו גיין דאָרטן, קלײַב דײַן Militia און קלינק רעכטס אויף די פֿײַנט. די באָס־שטיק אױבן װײַזט די געזונטהײט פֿון דער אויסגעקליבענער אײניקייט."}
+{"name": "aoe2mc.tutorial.select", "text": "קלײַב אויס אַ דאָרפֿער: קלינק לינקס אויף איינעם פֿון דײַנע דאָרפֿער מיטן קאָמאַנד־שטעקן. די באָס־שטיק אױבן װײַזט די אויסגעקליבענע אײניקייט, די אַקציע־שטיק איבער דער האָטבאַר װײַזט די נאָכשטע אַקציע."}
+{"name": "aoe2mc.tutorial.step_done", "text": "שריט געטאָן"}
+{"name": "aoe2mc.tutorial.step_of", "text": "שריט %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIP: די קאַזאַרמע טרענירט פֿוסיק. פֿוסיק איז בילליק און גוט קעגן געבײַדעס."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIP: אָנגריף מיט אַלע דײַנע אײניקייטן צוזאַמען. אַ קליין גרופּע שטאַרבט איידער זי קען שאָדן טאָן."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIP: בויען די אַװעקלײגן־געבײַדעס לעבן די רעסורסן, כּדי די דאָרפֿער זאָלן גיין אַ קורצן וועג."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIP: די נאָכשטע עפּאָכע אָפּשליסט נײַע געבײַדעס, אײניקייטן און טעכנאָלאָגיעס. היט די דאָרפֿער בײַ דער אַרבעט, בשעת דו גײסט פֿאָרויס."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIP: בערי לעבן אַ מיל זענען אַ זיכערער אָנהײב פֿון עסן. שפּעטער געבן פֿעלדער עסן װאָס װערט נישט פֿאַרענדיקט."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIP: אַ הױז גיט פּלאַץ פֿאַר 5 מער באַפֿעלקערונג. קוק די באַפֿעלקערונג אין דער זײַטיקער שטיק און בויען הײַזער פֿאַר עס װערט פֿול."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIP: מע קען שטעלן ביז 15 אײניקייטן אין אַ געבײַדע, װען מע האָט די רעסורסן."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIP: אין AoE2 שיקט די שטאָט־גלאָק די דאָרפֿער אין טאַון־סענטער. קלינג עס, װען דער פֿײַנט אָנגרײַפֿט דיין שטאָט."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIP: די Idle־שורה פֿון דער זײַטיקער שטיק צײלט דײַנע דאָרפֿער אָן אַרבעט. גיב זיי אַרבעט."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIP: טרענירט דאָרפֿער שטענדיק אין די ערשטע עפּאָכעס. מער דאָרפֿער גיבן מער רעסורסן."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIP: דאָרפֿער זאַמלען שנעלער לעבן אַ אַװעקלײגן־געבײַדע. בויען אַ האָלץ־לאַגער לעבן די ביימער."}
+{"name": "aoe2mc.tutorial.villager", "text": "טרענירן אַ דאָרפֿער: קלינק רעכטס אויף דײַן טאַון־סענטער און קלײַב דעם דאָרפֿער. די זײַטיקע שטיק אױף דער רעכטער זײַט װײַזט דעם עסן װאָס עס קאָסט."}
+{"name": "aoe2mc.tutorial.wood", "text": "זאַמל 50 האָלץ: קלײַב אַ דאָרפֿער און קלינק רעכטס אויף אַ בוים. די זײַטיקע שטיק אױף דער רעכטער זײַט װײַזט דײַן האָלץ."}
+{"name": "aoe2mc.victory", "text": "נצחון"}
+{"name": "aoe2mc.wonder.built", "text": "שפּילער %s האָט געבויט אַ װוּנדער."}
+{"name": "aoe2mc.wonder.destroyed", "text": "דאָס װוּנדער פֿון שפּילער %s איז חרובֿ."}

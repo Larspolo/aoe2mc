@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Jtak'in %s ya'el ta %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: ta %s ya'i ta yo'on ta yo'on ti ch'ulel, ya'el sk'opon ti jlumal. Ya'i ta jtom mi ch'ay ti krem ya'el."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Mu xk'an ta xtam ta xchi'iy %s ja'uk'."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Mu xk'an ta xchamel ja' ti k'ob: mu jna'an jna."}
+{"name": "aoe2mc.bot.flare_two", "text": "A'ti ch'ay ta kanal ti k'ax."}
+{"name": "aoe2mc.bot.no_flare", "text": "Mu jk'eltik ti k'ax."}
+{"name": "aoe2mc.bot.no_market", "text": "Mu jna'an tianguis: mu xk'an ta xk'ojol ja' ti jkuentas."}
+{"name": "aoe2mc.bot.no_onager", "text": "Mu jna'an onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Mu xnup ti jbu'ul ta xtam pared."}
+{"name": "aoe2mc.bot.no_water", "text": "Mu jna'an ja' ta jlumal: mu xk'an ta xchi'iy barco."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Ti jonager mu xk'an ta xk'ux te."}
+{"name": "aoe2mc.build.cost", "text": "Mu xnup ti jbu'ul: %s ti'ik'ot %s."}
+{"name": "aoe2mc.build.flat", "text": "Ti %s ta jun lum k'al."}
+{"name": "aoe2mc.build.gate_spot", "text": "Ti %s ta ch'ilel ta 4 ti pared ti ko'ol ta jun sb'ej, o ta 3 ti k'opil ta bik'it."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Ta chi'iy: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Ti %s ta ja' ta yo'on ti ja' ch'ulel."}
+{"name": "aoe2mc.build.space", "text": "Mu jna'an lugar ti %s ti'ine."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Mu xnup ti jbu'ul: %s ti'ik'ot %s ti'ik'ot %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: ka'iy ta k'ob ti yo'on pared."}
+{"name": "aoe2mc.build.water", "text": "Ti %s ta ja'."}
+{"name": "aoe2mc.camera.fov", "text": "Ti kamara bu ya'i ti yo'on ti k'uk'. Ta jsa'bat, ta Options > Accessibility Settings > View Bobbing ta OFF. Ti kamara yu'un ya'el mas ti jlumal. Ta jsa'bat ti jun ch'ay, ta Options > Accessibility Settings > FOV Effects ta 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamara: mu"}
+{"name": "aoe2mc.camera.on", "text": "Kamara: ya'el, x%s ti jk'ak'al. Shift + k'ob: ch'ay ti jk'ak'al."}
+{"name": "aoe2mc.camera.speed", "text": "Jk'ak'al ti kamara: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Ta jtam ti jsoltak ti k'ob, ta mu xkom ti jbu'ul"}
+{"name": "aoe2mc.challenge.booming", "text": "Ta xchamel 100 krem, ta jtam ta Imperial Age"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Ta jtam ta Castle Age, ta xkoltik ti jtak'in ti jsoltak"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Ta xk'ax ti castillo ti jsoltak"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Ta xk'ux 200 ti ko', 200 ti te, 100 ti oro ti 200 ti piedra, ta xchamel 21 krem, ta xchi'iy aserradero ti te, ta xchi'iy molino, ta jtam ta Feudal Age"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Ta xchamel 27 krem, ta xchi'iy 5 ti na, ta jtam ta Castle Age"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Ta xk'ax ti jo' ti jsoltak ti k'ob"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s ti jtak'in mu xkom, ti bronce medalla ta %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s ti jtak'in mu xkom, ti oro medalla ta %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s ti jtak'in mu xkom, mu medalla"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s ti jtak'in mu xkom, ti plata medalla ta %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronce medalla"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Oro medalla"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Plata medalla"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Ta xk'ax ti jbarco ti jsoltak"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Mu medalla"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Ta xk'am 5 ti krem ti jsoltak"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronce medalla ta %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Oro medalla ta %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Plata medalla ta %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis mu"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis ya'el"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tekn'ologia: ta 256 ti jk'ak'al"}
+{"name": "aoe2mc.cheat.cpu", "text": "Jmul ti krem: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Ti ch'in: mu"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Ti ch'in: ya'el"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Ti tekn'ologia mu xk'an ta xchi'iy"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Ti jsa'tik ti jk'ux: ti jbu'ul ta jun ta jtakin"}
+{"name": "aoe2mc.cheat.wonders", "text": "Ta jk'ux ti jlumal: %s ti animal"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Mu xkom ti jtakinal: mu xk'an ti jtakinal. Ti ta bu ya'el ti jbiluk ya'el ta jtak'in."}
+{"name": "aoe2mc.conquest.defeated", "text": "Ti jtak'in %s mu xkom."}
+{"name": "aoe2mc.controls.attack", "text": "Ta jsoltak: ch'ay ti soltaro, ta k'ob ti kontrario."}
+{"name": "aoe2mc.controls.build", "text": "Ta chi'iy: ch'ay ti krem, ta k'ob ti krem ta menu, ch'ay ti na, ta ch'ay k'ob ti lum. Shift + k'ob ti ch'ay: ta chi'iy mas. K'ob: xk'an."}
+{"name": "aoe2mc.controls.camera", "text": "Kamara: ta k'ob ti kamara ti telescopio (ti jbu'ul 2): ta xk'ux ta jk'ak'al ta ch'ulel. Shift + k'ob: ch'ay ti jk'ak'al. K'ob ta jun: ta xlaj ta lum."}
+{"name": "aoe2mc.controls.garrison", "text": "Ta ch'ay: ch'ay ti krem, ta k'ob ti na. Ti menu ti na yu'un xk'ux ti krem. Menu ti jnaj ti campana: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "Ta xk'ux: ch'ay ti krem, ta k'ob ti te, ti fruta, ti mina o ti milpa."}
+{"name": "aoe2mc.controls.goto", "text": "Ta xk'ux: ta k'ob ti brújula Go to (ti jbu'ul 3): menu ti jnaj, ti jgrupo, ti jtak'in krem ti mu k'ax."}
+{"name": "aoe2mc.controls.groups", "text": "Ti jgrupo: ch'ay ti krem, ch'ay ti jbu'ul grupo (ti jbu'ul 5 ta 9) ta Shift + k'ob ta k'ob. K'ob: ch'ay ti grupo."}
+{"name": "aoe2mc.controls.head", "text": "Ti jtak'in (ta jun ti tzet ti zanahoria; ti jbar ti k'op xk'an ti jbu'ul):"}
+{"name": "aoe2mc.controls.menu", "text": "Menu ti jtak'in: ta k'ob ti libro Game menu (ti jbu'ul 4): ti diplomacia ta ch'ay, ti k'ax, ti jsa'tik, ti pausa ta ti arbol ti tekn'ologia."}
+{"name": "aoe2mc.controls.move", "text": "Ta xa'ik: ta ch'ay ti krem, ta k'ob ti lum."}
+{"name": "aoe2mc.controls.research", "text": "Ta xk'op ta jbik'it: ta k'ob ti na yu'un ta k'ob ti tekn'ologia o ti jbik'it ta menu."}
+{"name": "aoe2mc.controls.select", "text": "Ta ch'ay: ta k'ob ti jun krem. Ta ch'ay ta lum: ta xch'ay ti cuadro. K'ob: ta xk'ux ti jk'op."}
+{"name": "aoe2mc.controls.train", "text": "Ta xchamel: ta k'ob ti na yu'un (ti campana, ti cuartel ...) ta k'ob ti krem ta menu."}
+{"name": "aoe2mc.defeat", "text": "Mu xkom"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Jtak'in"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Ti jtak'in %s ta xch'ay ti jpostura yu'un: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Kontrario"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Mu ta jtak'in"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Ti jtak'in %s ta xk'ot ti jk'ak'al ti jk'op: %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Ti jtak'in %s ta xk'ux %s %s ti jtak'in %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: K'ax ta %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Ta xk'ux: ta k'ob ti jpartido krem"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Ta ch'ay: ta k'ob ti jpartido krem o ti na"}
+{"name": "aoe2mc.gaia.joins", "text": "Jun %s ta xk'ot ta jtakin."}
+{"name": "aoe2mc.garrison.all_back", "text": "Mu xk'ux ti jsoltak, ti jmul ta xa'ik"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Ti campana ta xch'ay: %s krem ta xch'ay ta jk'ak'al"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Mu jun krem ti ya'i."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Mu krem ti jtak'in."}
+{"name": "aoe2mc.garrison.out", "text": "%s ti jmul ta xa'ik"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s krem ta xch'ay ta jk'ak'al"}
+{"name": "aoe2mc.gather.act_attack", "text": "ta xk'ax"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menu ti chi'iy"}
+{"name": "aoe2mc.gather.act_garrison", "text": "ta ch'ay na"}
+{"name": "aoe2mc.gather.act_gather", "text": "ta xk'ux"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ta xk'ux ti animal"}
+{"name": "aoe2mc.gather.act_move", "text": "ta xa'ik"}
+{"name": "aoe2mc.gather.act_select", "text": "ta ch'ay"}
+{"name": "aoe2mc.gather.act_select_type", "text": "ta ch'ay mu xkom ti ch'ay"}
+{"name": "aoe2mc.gather.act_trade", "text": "ta xchi'iy trato"}
+{"name": "aoe2mc.gather.act_train", "text": "ta xchamel"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Ta xk'ax: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Cuadro ti ch'ay: ta xlaj"}
+{"name": "aoe2mc.gather.bush", "text": "Ti jbej tzajal"}
+{"name": "aoe2mc.gather.carcass", "text": "Ti jcadáver"}
+{"name": "aoe2mc.gather.corner", "text": "Cuadro ti ch'ay: ta k'ob ti jun ch'ul ti junlaj"}
+{"name": "aoe2mc.gather.enemy", "text": "Ti kontrario %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Ti kontrario na"}
+{"name": "aoe2mc.gather.farm", "text": "Milpa"}
+{"name": "aoe2mc.gather.ground", "text": "Lum"}
+{"name": "aoe2mc.gather.group", "text": "Grupo %s: %s ti jsoltak"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grupo %s: %s ti jsoltak ta xk'ot ta jk'ak'al"}
+{"name": "aoe2mc.gather.mine", "text": "Mina %s"}
+{"name": "aoe2mc.gather.paused", "text": "Ti jk'ak'al ta xlaj."}
+{"name": "aoe2mc.gather.point", "text": "%s · Ta k'ob: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Ti jlaj ti jsa'tik: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Ta ch'ay: %s ti jsoltak"}
+{"name": "aoe2mc.gather.tree", "text": "Te"}
+{"name": "aoe2mc.hill.holds", "text": "Ti jtak'in %s ta xk'ot ti monumento."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Ta xk'ax ti lum: ta k'ob ti lum"}
+{"name": "aoe2mc.hints.attack_move", "text": "Ta xk'ax ta xa'ik: ta k'ob ti lum"}
+{"name": "aoe2mc.hints.building", "text": "Ta chi'iy %s: ta k'ob ti lum · Shift + k'ob: ta chi'iy mas · Ta xlaj: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: ta k'ob ta chi'iy · Shift: ta chi'iy mas · K'ob: ta xlaj"}
+{"name": "aoe2mc.hints.corner", "text": "Cuadro ti ch'ay: ta k'ob ti junlaj ch'ul"}
+{"name": "aoe2mc.hints.count_military", "text": "%s ti jsoltak"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s ti jsoltak"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s krem"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s krem"}
+{"name": "aoe2mc.hints.deselect", "text": "Mu k'op cuadro: ta xk'ot ti ch'ay"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "K'ob ti tzet: ta xk'ot ti ch'ay"}
+{"name": "aoe2mc.hints.follow", "text": "Ta xk'ux: ta k'ob ti jtak'in o ti jpartido krem"}
+{"name": "aoe2mc.hints.guard", "text": "Ta ch'ay: ta k'ob ti jtak'in o ti jpartido krem o na"}
+{"name": "aoe2mc.hints.military", "text": "%s · Ta k'ob: ta xk'ax ti kontrario, menu ti postura · %s"}
+{"name": "aoe2mc.hints.none", "text": "K'ob: ch'ay ti krem · Ta k'ob ta tzet: cuadro ti ch'ay"}
+{"name": "aoe2mc.hints.none_wand", "text": "K'ob: ch'ay ti krem · Varita: cuadro ti ch'ay"}
+{"name": "aoe2mc.hints.patrol", "text": "Ta xa'ik: ta k'ob ti lum"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · K'ob: ta xk'ux, ta chi'iy, menu ti chi'iy · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s ta xlaj"}
+{"name": "aoe2mc.lobby.you_play", "text": "Ta xtam %s."}
+{"name": "aoe2mc.monk.converts", "text": "Ti jmonje ta xchi'iy ti %s."}
+{"name": "aoe2mc.monk.dies", "text": "Ti %s ta xchamel (Herejía)."}
+{"name": "aoe2mc.pause.continued", "text": "Ti jtak'in %s ta xk'ot ti jk'op."}
+{"name": "aoe2mc.pause.paused", "text": "Ti jtak'in %s ta xlaj ti jk'op."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Ti jgrupo %s (ti jtzajal ti jtak'in %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Ti jk'op ta xlaj. Ta k'ob ti libro Recap ti ta jk'ob: ta ch'ay ti resultado. Ta ch'ay ti programa: Ctrl-C."}
+{"name": "aoe2mc.relic_victory.all", "text": "Ti jtak'in %s ta xk'ot ti tzajal ti jrelic."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Ti jtak'in %s ta xk'ot jun relic ta jlaj."}
+{"name": "aoe2mc.repair.no_resources", "text": "Mu xnup ti jbu'ul ta xk'ojol ti %s."}
+{"name": "aoe2mc.replay.army", "text": "Ti soltaro: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", ti soltaro ta xlaj: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", ta xlaj: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Ti orden ti chi'iy:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · ta ch'ay na %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | ta xk'ot %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "ta chi'iy %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "ko' %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "oro %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "mu xk'ux %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "piedra %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "te %s"}
+{"name": "aoe2mc.replay.flare", "text": "K'ax"}
+{"name": "aoe2mc.replay.game_ends", "text": "Ti jk'op ta xk'ot ta jk'ak'al"}
+{"name": "aoe2mc.replay.game_time", "text": "Ti jtiempo ti jk'op %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · ta ch'ay na %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Sol %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Krem %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Ti jk'ux %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Kr %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s ta xk'ot ti monumento: ti jtak'in ti Rey del Cerro ta %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atk %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift ta ch'ay ta junlaj: ta vista ti espectador (ta xa'ik ta bloques). Ta k'ob ti tzet ti hotbar: ta ch'ay ti replay."}
+{"name": "aoe2mc.replay.king_died", "text": ": ti rey ta xchamel ta %s. Regicidio: ti jtak'in mu xkom."}
+{"name": "aoe2mc.replay.king_killed", "text": "Ti rey ta xk'ax ta %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Replay ta lum: ti jump ta xtzaj ta delay ti jk'op."}
+{"name": "aoe2mc.replay.lost", "text": "Ta xlaj: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " ta xk'ot ti monumento ta %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monumento, %s ti jav ti ch'ul"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monumento, %s ti jav ti ch'ul"}
+{"name": "aoe2mc.replay.no_camera", "text": "Ti registro ti mu xk'an ti kamara ti jtak'in."}
+{"name": "aoe2mc.replay.now", "text": " ya'iy"}
+{"name": "aoe2mc.replay.out", "text": "%s mu xkom"}
+{"name": "aoe2mc.replay.players", "text": "Ti jtak'in"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " ta xk'ot ti relic ta monasterio ta xk'ot ti jtak'in."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Ti replay ta xlaj"}
+{"name": "aoe2mc.replay.research", "text": " ta xk'ot %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s ta xk'ot ti jbu'ul"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Ti servidor ta xk'ot ti jump: ta xk'ot ta ch'ay ta junlaj."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Ti na %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ti jk'ux %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Ti soltaro %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tekn'ologia %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Mul %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "castillos %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "ta xchi'iy %s, ta xk'ux %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relics %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "maravillas %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Ta xk'ux:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Chi'iy %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Jk'ux %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Sol %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tekn'ologia %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": ta xchamel krem %s, ta xk'ux %s, ti krem mu xk'ux ti jtiempo %s, ti na mu xk'ux ti jtiempo %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": ta xk'ot ti monumento (Rey del Cerro)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": ta xk'ot ti monumento %s (Rey del Cerro)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": ta xchamel soltaro %s, ta xlaj ti jsoltak %s, ta xlaj na %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": ta xk'ax ti rey %s (Regicidio)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": ta xk'ot, relic ta monasterio %s (Ta xk'ot relic)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stributo ta xk'ux %s, ta xk'ot %s, ti jmul krem %s (est.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": ta xlaj ti na ti campana %s (Muerte súbita)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tekn'ologia %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": ti jtiempo ti maravilla desde %s, ta xlaj %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Ti jlaj (est.)"}
+{"name": "aoe2mc.replay.task_building", "text": "ta chi'iy"}
+{"name": "aoe2mc.replay.task_following", "text": "ta xa'ik"}
+{"name": "aoe2mc.replay.task_food", "text": "ta xk'ux ko'"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "ta ch'ay na"}
+{"name": "aoe2mc.replay.task_gold", "text": "ta xk'ux oro"}
+{"name": "aoe2mc.replay.task_guarding", "text": "ta ch'ay"}
+{"name": "aoe2mc.replay.task_idle", "text": "mu xk'ux"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "ta xa'ik"}
+{"name": "aoe2mc.replay.task_resources", "text": "ta xk'ux ti jk'ux"}
+{"name": "aoe2mc.replay.task_stone", "text": "ta xk'ux piedra"}
+{"name": "aoe2mc.replay.task_walking", "text": "ta xa'ik"}
+{"name": "aoe2mc.replay.task_wood", "text": "ta xk'ux te"}
+{"name": "aoe2mc.replay.team", "text": "Ti jgrupo %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Arquero %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armadura de arquero %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Ta xk'ot %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armadura de caballería %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Milpa %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Oro %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armadura de infantería %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Telar %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Cuerpo a cuerpo %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Piedra %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Te %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castillo"}
+{"name": "aoe2mc.replay.tl_king", "text": "Ti rey ta xk'ax"}
+{"name": "aoe2mc.replay.tl_military", "text": "1er soltaro: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relic"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Ta xk'ot ti jbu'ul"}
+{"name": "aoe2mc.replay.town_fell", "text": ": ta xlaj ti na ti campana ta %s. Muerte súbita: ti jtak'in mu xkom."}
+{"name": "aoe2mc.replay.town_lost", "text": "Ta xlaj ti na ti campana ta %s"}
+{"name": "aoe2mc.replay.training", "text": "Ta xchamel: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universidad:"}
+{"name": "aoe2mc.replay.up_counts", "text": "jk'ux %s · Universidad %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " ta xchi'iy maravilla ta %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Ta k'ax: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s ti jsoltak"}
+{"name": "aoe2mc.replay_input.fights", "text": "Ta k'ax ti mas:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: ta k'ob ti tzet ta hotbar, o ta k'ob: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Ta xk'ot: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s ti jsoltak)"}
+{"name": "aoe2mc.replay_input.vs", "text": " ta k'ax "}
+{"name": "aoe2mc.resource.food", "text": "ko'"}
+{"name": "aoe2mc.resource.gold", "text": "oro"}
+{"name": "aoe2mc.resource.stone", "text": "piedra"}
+{"name": "aoe2mc.resource.wood", "text": "te"}
+{"name": "aoe2mc.run.back", "text": "%s ta xk'ot"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Ti jcampaña ta xlaj"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: jun ti tzet ta xk'ot ta mul, /tm TEXT ta jtakinal, /msg NAME TEXT ta jun krem."}
+{"name": "aoe2mc.run.left_bot", "text": "%s ta xlaj: jun bot ta xtam ti jtak'in %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Ti escenario %s ta xk'ot. Ta xk'ot ta junlaj."}
+{"name": "aoe2mc.run.starts_in", "text": "Ti jk'op ta xk'ot ta %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Ta ch'ay \"Choose your player\" ta k'ob \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Ti jk'ak'al ti jtak'in: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Ti jbu'ul ti jk'ak'al: ta ch'ay ti tzet ti zanahoria, ta k'ob jun ti krem."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Ti jbu'ul ti jk'ak'al: ta ch'ay ti tzet ti zanahoria, ta k'ob jun ti krem."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Ti jk'ak'al: ta xk'ot ti jk'op. Ti jk'ak'al ti jk'op: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Ta xk'ot ti jk'op: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s ti jsoltak ta xa'ik"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Ta xk'ux ti jbu'ul"}
+{"name": "aoe2mc.stance.formation", "text": "Formación: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Mu jun ti jsoltak ta xk'ax ti lum"}
+{"name": "aoe2mc.stance.unpack", "text": "Ta xk'ot ti trebuchet ta junlaj"}
+{"name": "aoe2mc.train.active", "text": "%s ta xk'ot."}
+{"name": "aoe2mc.train.rally", "text": "Ta k'ob ti lum ti punto ti reunión."}
+{"name": "aoe2mc.train.researched", "text": "%s ta xk'ot ti tekn'ologia."}
+{"name": "aoe2mc.transport.out", "text": "%s ti jsoltak ta xa'ik"}
+{"name": "aoe2mc.treaty.ended", "text": "Ti tratado ta xlaj: ti jtak'in ta xk'ax ta xa'ik."}
+{"name": "aoe2mc.treaty.refuse", "text": "Tratado: mu xk'ax ta jun ti jtak'in ta xa'ik %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Tratado: mu xk'ax ta jun ti jtak'in ta ti jk'op ti."}
+{"name": "aoe2mc.treaty.start", "text": "Tratado: mu xk'ax ta jun ti jtak'in ta jun ti jtak'in ta xa'ik %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Tratado: mu xk'ax ta jun ti jtak'in ta jun ti jtak'in ta ti jk'op ti."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Ta chi'iy cuartel: ta k'ob jun krem ti ya'i, ta ch'ay ti cuartel ta chi'iy. Ti barra ta lum ti jtzajal ta xa'ik."}
+{"name": "aoe2mc.tutorial.camera", "text": "Ta xa'ik ta lum: ta k'ob ti \"Camera\" ti tzet, ta xa'ik, ta k'ob ta junlaj."}
+{"name": "aoe2mc.tutorial.camp", "text": "Ta xk'ax ti campamento ti kontrario ta chi'iy ti lum: ta ch'ay ti Militia, ta k'ob ti na."}
+{"name": "aoe2mc.tutorial.camps", "text": "Ta chi'iy aserradero ta te, molino ta xk'ot ti tzajal. Ti barra ta lum ti jtzajal ti te."}
+{"name": "aoe2mc.tutorial.complete", "text": "Ti tutorial ta xlaj. Ti jbu'ul: ta xk'ux ti jk'op ta bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Ti tutorial ta xlaj"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Ta jtam ta Feudal Age: ta k'ob ti krem ti na campana ta k'ob ti Feudal Age. Ti barra ta lum ti jtzajal ti ko'."}
+{"name": "aoe2mc.tutorial.food", "text": "Ta xk'ux 100 ti ko': ta xa'ik jun krem ta ti tzajal. Ti barra ta lum ti jtzajal ti ko'."}
+{"name": "aoe2mc.tutorial.house", "text": "Ta chi'iy jna: ta k'ob jun krem ti ya'i, ta k'ob ti jna ta chi'iy. Ti barra ta lum ti jtzajal ta xa'ik."}
+{"name": "aoe2mc.tutorial.militia", "text": "Ta xchamel 3 Militia: ta k'ob ti cuartel, ta k'ob ti militia. Ti barra ta lum ti jtzajal ti ko' ti oro."}
+{"name": "aoe2mc.tutorial.raid", "text": "Ti kontrario ta xk'ax ti krem! Ta k'ob ti línea ti rojo ta chat, ta xa'ik, ta ch'ay ti Militia ta k'ob ti kontrario. Ti barra ta lum ti jtzajal ti vida ti jsoltak."}
+{"name": "aoe2mc.tutorial.select", "text": "Ta ch'ay jun krem: ta k'ob jun ti krem ti tzet ti zanahoria. Ti barra ta lum ti jtzajal ti jsoltak."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Ti jbu'ul ta xlaj"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Ti jbu'ul %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIP: ti cuartel ta xchamel ti infantería. Ti infantería ta mu jk'ux ta xk'ax ti na."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIP: ta xk'ax ta jun ti jsoltak. Jun ti jtzajal ta xlaj mu xk'ux ta xk'ax."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIP: ta chi'iy ti na ta ch'ul ti jk'ux, inic ti krem ta xa'ik."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIP: ti jbu'ul ti jbu'ul ta xk'ot ti na, ti krem ti jsoltak. Ta xk'ux ti krem ta xa'ik."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIP: ti tzajal ta jmolino ta xk'ot ko' mu xlaj. Ti milpa ta xk'ot ko' mu xlaj."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIP: ti jna ta xk'ot ti lugar ti 5 krem. Ta ch'ay ti jk'op ti krem ta chi'iy ti jna."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIP: ta xa'ik ti 15 jsoltak ta na ti jk'ux."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIP: ti campana ta xch'ay ti krem ta ti na campana. Ta xk'ux ti campana ti kontrario ta xk'ax ta jtam."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIP: ti línea ti Idle ta k'ob ti krem mu xk'ux. Ta xk'ux ti jbu'ul."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIP: ta xchamel krem ta ti jbu'ul. Mas krem, mas ti jk'ux."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIP: ti krem ta xk'ux mas ta ti na yu'un ti jk'ux. Ta chi'iy aserradero ta jtzajal ti te."}
+{"name": "aoe2mc.tutorial.villager", "text": "Ta xchamel krem: ta k'ob ti na campana ta k'ob ti krem. Ti barra ta lum ti jtzajal ti ko' ta xk'ux."}
+{"name": "aoe2mc.tutorial.wood", "text": "Ta xk'ux 50 ti te: ta ch'ay jun krem ta k'ob ti te. Ti barra ta lum ti jtzajal ti te."}
+{"name": "aoe2mc.victory", "text": "Ta xk'ot"}
+{"name": "aoe2mc.wonder.built", "text": "Ti jtak'in %s ta xchi'iy maravilla."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Ti maravilla ti jtak'in %s ta xlaj."}
