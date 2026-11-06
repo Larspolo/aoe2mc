@@ -1,0 +1,314 @@
+{"name": "aoe2mc.age_up", "text": "Người chơi %s tiến lên %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Sự Thối Rữa chiếm bản đồ từ biên vào tâm trong %s. Nó phá hủy mọi đơn vị và công trình trong đó."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Bây giờ tôi không thể xây %s ở đó."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Tôi không thể huấn luyện đơn vị đó: tôi không có công trình cho nó."}
+{"name": "aoe2mc.bot.flare_two", "text": "Hãy bắn pháo hiệu hai chỗ cho tường."}
+{"name": "aoe2mc.bot.no_flare", "text": "Tôi không thấy pháo hiệu."}
+{"name": "aoe2mc.bot.no_market", "text": "Tôi không có chợ: tôi không thể gửi cống nạp."}
+{"name": "aoe2mc.bot.no_onager", "text": "Tôi không có onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Tôi không đủ tài nguyên cho tường."}
+{"name": "aoe2mc.bot.no_water", "text": "Tôi không có nước gần thị trấn: tôi không thể xây hải quân."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Máy bắn đá onager của tôi không thể chặt cây."}
+{"name": "aoe2mc.build.cost", "text": "Không đủ tài nguyên: một %s tốn %s."}
+{"name": "aoe2mc.build.flat", "text": "%s phải đứng trên đất bằng."}
+{"name": "aoe2mc.build.gate_spot", "text": "Một %s phải đặt trên 4 ô tường của mình theo đường thẳng, hoặc trên 3 ô chéo."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Xây: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Một %s phải đứng trên nước cạnh bờ."}
+{"name": "aoe2mc.build.space", "text": "Không có chỗ cho %s ở đây."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Không đủ tài nguyên: %s ô %s tốn %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: nhấp chuột phải vào đầu kia của tường."}
+{"name": "aoe2mc.build.water", "text": "Một %s phải đứng trên mặt nước."}
+{"name": "aoe2mc.camera.fov", "text": "Camera nhanh làm vật phẩm đang cầm lắc lư. Để giữ yên, đặt Options > Accessibility Settings > View Bobbing thành OFF. Camera cũng làm góc nhìn rộng hơn, hiện nhiều bản đồ hơn. Để giữ góc nhìn bình thường, đặt Options > Accessibility Settings > FOV Effects thành 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Camera: tắt"}
+{"name": "aoe2mc.camera.on", "text": "Camera: bật, tốc độ x%s. Shift chuột phải: tốc độ tiếp theo."}
+{"name": "aoe2mc.camera.speed", "text": "Tốc độ camera: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Đánh bại tất cả đơn vị địch và mất ít đơn vị"}
+{"name": "aoe2mc.challenge.booming", "text": "Huấn luyện 100 dân làng và tiến lên Thời đại Đế quốc"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Tiến lên Thời đại Lâu đài và sống sót qua các cuộc tấn công của địch"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Phá hủy lâu đài địch"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Thu thập 200 lương thực, 200 gỗ, 100 vàng và 200 đá, huấn luyện 21 dân làng, xây trại gỗ và cối xay, và tiến lên Thời đại Phong kiến"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Huấn luyện 27 dân làng, xây 5 ngôi nhà và tiến lên Thời đại Lâu đài"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Đánh bại cả sáu đợt quân địch"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "Mất %s đơn vị, huy chương đồng đến %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "Mất %s đơn vị, huy chương vàng đến %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "Mất %s đơn vị, không có huy chương"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "Mất %s đơn vị, huy chương bạc đến %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Huy chương đồng"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Huy chương vàng"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Huy chương bạc"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Phá hủy tất cả tàu chiến địch"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Không có huy chương"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Giết 5 dân làng địch"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Huy chương đồng trong %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Huy chương vàng trong %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Huy chương bạc trong %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis tắt"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis bật"}
+{"name": "aoe2mc.cheat.beyond", "text": "Công nghệ: tối đa 256 nghiên cứu"}
+{"name": "aoe2mc.cheat.cpu", "text": "Giới hạn dân số: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Sương mù chiến tranh: tắt"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Sương mù chiến tranh: bật"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Công nghệ miễn phí"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Chia sẻ là quan tâm: thu nhập của bạn đến đồng minh"}
+{"name": "aoe2mc.cheat.wonders", "text": "Bạn điều khiển thiên nhiên: %s động vật"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Chỉ còn lại đồng minh: liên minh kết thúc. Người chơi cuối cùng còn sống sẽ thắng."}
+{"name": "aoe2mc.conquest.defeated", "text": "Người chơi %s đã bị đánh bại."}
+{"name": "aoe2mc.controls.attack", "text": "Tấn công: chọn đơn vị quân sự, rồi nhấp chuột phải vào kẻ địch."}
+{"name": "aoe2mc.controls.build", "text": "Xây: chọn dân làng, nhấp chuột phải vào họ để mở menu xây, chọn một công trình, rồi nhấp chuột trái vào mặt đất. Shift + chuột trái: đặt thêm. Chuột phải: hủy."}
+{"name": "aoe2mc.controls.camera", "text": "Camera: nhấp chuột phải với ống nhòm Camera (phím 2): bạn đi nhanh trên cao bản đồ. Shift chuột phải: tốc độ tiếp theo. Nhấp chuột phải lần nữa: bạn bay xuống."}
+{"name": "aoe2mc.controls.garrison", "text": "Đồn trú: chọn đơn vị, rồi nhấp chuột phải vào công trình của bạn. Menu của nó cho họ ra. Menu nhà chính: Rung chuông thị trấn."}
+{"name": "aoe2mc.controls.gather", "text": "Thu thập: chọn dân làng, rồi nhấp chuột phải vào cây, bụi quả, mỏ hoặc ruộng."}
+{"name": "aoe2mc.controls.goto", "text": "Đi đến: nhấp chuột phải với la bàn Đi đến (phím 3): menu các nhà chính, nhóm điều khiển và dân làng rảnh tiếp theo."}
+{"name": "aoe2mc.controls.groups", "text": "Nhóm điều khiển: chọn đơn vị, cầm một vật phẩm nhóm (phím 5 đến 9) và Shift + chuột phải để lưu lựa chọn. Chuột phải: chọn nhóm."}
+{"name": "aoe2mc.controls.head", "text": "Điều khiển (cầm cần câu cà rốt; thanh hành động hiện bước tiếp theo):"}
+{"name": "aoe2mc.controls.menu", "text": "Menu trò chơi: nhấp chuột phải với sách Menu trò chơi (phím 4): ngoại giao và cống nạp, pháo hiệu, lưu, tạm dừng và cây công nghệ."}
+{"name": "aoe2mc.controls.move", "text": "Di chuyển: khi đã chọn, nhấp chuột phải vào mặt đất."}
+{"name": "aoe2mc.controls.research", "text": "Nghiên cứu và lên đời: nhấp chuột phải vào công trình của bạn và nhấp một công nghệ hoặc thời đại tiếp theo trong menu."}
+{"name": "aoe2mc.controls.select", "text": "Chọn: nhấp chuột trái vào một đơn vị. Giữ chuột trái và nhìn khắp mặt đất: khung chọn. Chuột phải: ra lệnh."}
+{"name": "aoe2mc.controls.train", "text": "Huấn luyện: nhấp chuột phải vào công trình của bạn (nhà chính, trại lính ...) và nhấp một đơn vị trong menu."}
+{"name": "aoe2mc.defeat", "text": "Thất bại"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Đồng minh"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Người chơi %s đã đổi thái độ với bạn: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Kẻ địch"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Trung lập"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Người chơi %s đặt tốc độ trò chơi thành %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Người chơi %s đã gửi %s %s cho người chơi %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Pháo hiệu tại %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Theo sau: nhấp vào một đơn vị của mình"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Canh gác: nhấp vào một đơn vị hoặc công trình của mình"}
+{"name": "aoe2mc.gaia.joins", "text": "Một %s gia nhập bạn."}
+{"name": "aoe2mc.garrison.all_back", "text": "Tất cả trở lại làm việc"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Chuông thị trấn rung: %s dân làng tìm nơi trú ẩn"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Không có dân làng nào được chọn."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Bạn không có dân làng."}
+{"name": "aoe2mc.garrison.out", "text": "%s đơn vị đã ra ngoài"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s dân làng tìm nơi trú ẩn"}
+{"name": "aoe2mc.gather.act_attack", "text": "tấn công"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menu xây"}
+{"name": "aoe2mc.gather.act_garrison", "text": "đồn trú"}
+{"name": "aoe2mc.gather.act_gather", "text": "thu thập"}
+{"name": "aoe2mc.gather.act_hunt", "text": "săn"}
+{"name": "aoe2mc.gather.act_move", "text": "di chuyển"}
+{"name": "aoe2mc.gather.act_select", "text": "chọn"}
+{"name": "aoe2mc.gather.act_select_type", "text": "chọn tất cả cùng loại"}
+{"name": "aoe2mc.gather.act_trade", "text": "buôn bán"}
+{"name": "aoe2mc.gather.act_train", "text": "huấn luyện"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Tấn công: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Khung chọn: đã hủy"}
+{"name": "aoe2mc.gather.bush", "text": "Bụi quả mọng"}
+{"name": "aoe2mc.gather.carcass", "text": "Xác thú"}
+{"name": "aoe2mc.gather.corner", "text": "Khung chọn: nhấp vào góc kia"}
+{"name": "aoe2mc.gather.enemy", "text": "%s địch"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Công trình địch"}
+{"name": "aoe2mc.gather.farm", "text": "Ruộng"}
+{"name": "aoe2mc.gather.ground", "text": "Mặt đất"}
+{"name": "aoe2mc.gather.group", "text": "Nhóm %s: %s đơn vị"}
+{"name": "aoe2mc.gather.group_saved", "text": "Nhóm %s: đã lưu %s đơn vị"}
+{"name": "aoe2mc.gather.mine", "text": "Mỏ %s"}
+{"name": "aoe2mc.gather.paused", "text": "Trò chơi đang tạm dừng."}
+{"name": "aoe2mc.gather.point", "text": "%s · Chuột phải: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Gieo lại đang chờ: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Đã chọn: %s đơn vị"}
+{"name": "aoe2mc.gather.tree", "text": "Cây"}
+{"name": "aoe2mc.hill.holds", "text": "Người chơi %s giữ tượng đài."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Tấn công mặt đất: nhấp chuột phải vào mặt đất"}
+{"name": "aoe2mc.hints.attack_move", "text": "Tấn công khi di chuyển: nhấp chuột phải vào mặt đất"}
+{"name": "aoe2mc.hints.building", "text": "Đặt %s: nhấp chuột phải vào mặt đất · Shift + chuột phải: đặt thêm · Hủy: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: chuột trái để đặt · Shift: đặt thêm · Chuột phải: hủy"}
+{"name": "aoe2mc.hints.corner", "text": "Khung chọn: nhấp chuột phải vào góc kia"}
+{"name": "aoe2mc.hints.count_military", "text": "%s đơn vị quân sự"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s đơn vị quân sự"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s dân làng"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s dân làng"}
+{"name": "aoe2mc.hints.deselect", "text": "Khung trống: bỏ chọn"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Chuột trái: bỏ chọn"}
+{"name": "aoe2mc.hints.follow", "text": "Theo sau: nhấp chuột phải vào đơn vị của mình hoặc đồng minh"}
+{"name": "aoe2mc.hints.guard", "text": "Canh gác: nhấp chuột phải vào đơn vị hoặc công trình của mình hoặc đồng minh"}
+{"name": "aoe2mc.hints.military", "text": "%s · Chuột phải: tấn công kẻ địch, menu tư thế · %s"}
+{"name": "aoe2mc.hints.none", "text": "Chuột trái: chọn đơn vị · Giữ chuột trái: khung chọn"}
+{"name": "aoe2mc.hints.none_wand", "text": "Chuột phải: chọn một đơn vị · Đũa: khung chọn"}
+{"name": "aoe2mc.hints.patrol", "text": "Tuần tra: nhấp chuột phải vào mặt đất"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Chuột phải: thu thập, xây, menu xây · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s sẵn sàng"}
+{"name": "aoe2mc.lobby.you_play", "text": "Bạn chơi %s."}
+{"name": "aoe2mc.monk.converts", "text": "Một thầy tu cải đạo %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s chết (Dị giáo)."}
+{"name": "aoe2mc.pause.continued", "text": "Người chơi %s đã tiếp tục trò chơi."}
+{"name": "aoe2mc.pause.paused", "text": "Người chơi %s đã tạm dừng trò chơi."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Đội %s (xếp hạng trung bình %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Trò chơi đã kết thúc. Nhấp chuột phải vào sách Recap trong tay để xem kết quả. Dừng chương trình trò chơi bằng Ctrl-C trong console của nó."}
+{"name": "aoe2mc.relic_victory.all", "text": "Người chơi %s giữ tất cả thánh tích."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Người chơi %s đã mất một thánh tích."}
+{"name": "aoe2mc.repair.no_resources", "text": "Không đủ tài nguyên để sửa %s."}
+{"name": "aoe2mc.replay.army", "text": "Quân đội: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", quân đội lúc kết thúc: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", đã mất: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Thứ tự xây:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · đồn trú %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | mang %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "xây %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "lương thực %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "vàng %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "rảnh %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "đá %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "gỗ %s"}
+{"name": "aoe2mc.replay.flare", "text": "Pháo hiệu"}
+{"name": "aoe2mc.replay.game_ends", "text": "Trò chơi kết thúc"}
+{"name": "aoe2mc.replay.game_time", "text": "Thời gian trò chơi %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · đồn trú %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Quân %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Dân số %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "TN %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Dân %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s đã giữ tượng đài: chiến thắng Vua Ngọn Đồi lúc %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s công %s/%s giáp%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Nhấn Shift hai lần: chế độ khán giả (bay xuyên khối). Nhấp chuột phải vào vật phẩm trên thanh nóng: điều khiển phát lại."}
+{"name": "aoe2mc.replay.king_died", "text": ": Nhà vua chết lúc %s. Regicide: người chơi bị loại."}
+{"name": "aoe2mc.replay.king_killed", "text": "Nhà vua bị giết lúc %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Phát lại trực tiếp: lần nhảy dừng ở độ trễ sau trò chơi."}
+{"name": "aoe2mc.replay.lost", "text": "Đã mất: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " giữ tượng đài lúc %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: tượng đài, còn %s năm"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: tượng đài, còn %s năm"}
+{"name": "aoe2mc.replay.no_camera", "text": "Bản ghi này không có camera của người chơi đó."}
+{"name": "aoe2mc.replay.now", "text": " bây giờ"}
+{"name": "aoe2mc.replay.out", "text": "%s bị loại"}
+{"name": "aoe2mc.replay.players", "text": "Người chơi"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " mang thánh tích đến tu viện và chiến thắng."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Phát lại đã kết thúc"}
+{"name": "aoe2mc.replay.research", "text": " nghiên cứu %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s đầu hàng"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Máy chủ khởi động lại để nhảy lùi: hãy tham gia lại."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Công trình %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Kinh tế %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Quân sự %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Công nghệ %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Tổng %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "lâu đài %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "đã mua %s, đã bán %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "thánh tích %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "kỳ quan %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Đã tiêu:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Xây %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Kinh tế %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Quân %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Công nghệ %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": dân làng đã huấn luyện %s, đã thu thập %s, thời gian dân làng rảnh %s, thời gian nhà chính rảnh %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": giữ tượng đài (Vua Ngọn Đồi)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": thắng tượng đài %s (Vua Ngọn Đồi)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": đơn vị quân sự đã huấn luyện %s, đơn vị đã mất %s, công trình đã mất %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Nhà vua bị giết %s (Regicide)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": thắng, thánh tích trong tu viện %s (Chiếm Thánh Tích)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %scống nạp đã gửi %s, đã nhận %s, dân làng cao nhất %s (ước tính)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": mất nhà chính %s (Sudden Death)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, công nghệ %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": đồng hồ kỳ quan từ %s, kết thúc %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Tóm tắt (ước tính)"}
+{"name": "aoe2mc.replay.task_building", "text": "đang xây"}
+{"name": "aoe2mc.replay.task_following", "text": "đang theo sau"}
+{"name": "aoe2mc.replay.task_food", "text": "đang thu thập lương thực"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "đang đồn trú"}
+{"name": "aoe2mc.replay.task_gold", "text": "đang thu thập vàng"}
+{"name": "aoe2mc.replay.task_guarding", "text": "đang canh gác"}
+{"name": "aoe2mc.replay.task_idle", "text": "rảnh"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "đang tuần tra"}
+{"name": "aoe2mc.replay.task_resources", "text": "đang thu thập tài nguyên"}
+{"name": "aoe2mc.replay.task_stone", "text": "đang thu thập đá"}
+{"name": "aoe2mc.replay.task_walking", "text": "đang đi bộ"}
+{"name": "aoe2mc.replay.task_wood", "text": "đang thu thập gỗ"}
+{"name": "aoe2mc.replay.team", "text": "Đội %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Cung thủ %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Giáp cung thủ %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Mang vác %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Giáp kỵ binh %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Ruộng %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Vàng %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Giáp bộ binh %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Khung cửi %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Cận chiến %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Đá %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Gỗ %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Lâu đài"}
+{"name": "aoe2mc.replay.tl_king", "text": "Nhà vua bị giết"}
+{"name": "aoe2mc.replay.tl_military", "text": "Quân sự đầu tiên: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Thánh tích"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Đầu hàng"}
+{"name": "aoe2mc.replay.town_fell", "text": ": nhà chính sụp đổ lúc %s. Sudden Death: người chơi bị loại."}
+{"name": "aoe2mc.replay.town_lost", "text": "Mất nhà chính lúc %s"}
+{"name": "aoe2mc.replay.training", "text": "Huấn luyện: %s"}
+{"name": "aoe2mc.replay.university", "text": "Đại học:"}
+{"name": "aoe2mc.replay.up_counts", "text": "kinh tế %s · Đại học %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " đã xây kỳ quan lúc %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Chiến: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s đơn vị"}
+{"name": "aoe2mc.replay_input.fights", "text": "Trận lớn:"}
+{"name": "aoe2mc.replay_input.help", "text": "Phát lại: nhấp chuột phải vào vật phẩm trên thanh nóng, hoặc nhấp: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Tiếp quản: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s đơn vị)"}
+{"name": "aoe2mc.replay_input.vs", "text": " đấu "}
+{"name": "aoe2mc.resource.food", "text": "lương thực"}
+{"name": "aoe2mc.resource.gold", "text": "vàng"}
+{"name": "aoe2mc.resource.stone", "text": "đá"}
+{"name": "aoe2mc.resource.wood", "text": "gỗ"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Chiến dịch hoàn thành"}
+{"name": "aoe2mc.run.chat_hint", "text": "Trò chuyện: một dòng bình thường gửi đến tất cả, /tm TEXT cho đồng minh, /msg NAME TEXT cho một người."}
+{"name": "aoe2mc.run.scenario_starts", "text": "Kịch bản %s bắt đầu. Hãy tham gia lại."}
+{"name": "aoe2mc.run.starts_in", "text": "Trò chơi bắt đầu sau %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Mở \"Choose your player\" và nhấp \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Tất cả điều khiển: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Bước đầu: cầm gậy chỉ huy và nhấp chuột phải vào một dân làng của bạn."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Bước đầu: cầm gậy chỉ huy và nhấp chuột trái vào một dân làng của bạn."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Mục tiêu: thắng trò chơi. Thiết lập chiến thắng: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Đã lưu trò chơi: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s đơn vị đã ra ngoài"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Tự động trinh sát"}
+{"name": "aoe2mc.stance.formation", "text": "Đội hình: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Không đơn vị nào có thể tấn công mặt đất"}
+{"name": "aoe2mc.stance.unpack", "text": "Hãy tháo lắp Máy bắn đá trước"}
+{"name": "aoe2mc.train.active", "text": "%s đang hoạt động."}
+{"name": "aoe2mc.train.rally", "text": "Nhấp chuột phải vào mặt đất để đặt điểm tập hợp."}
+{"name": "aoe2mc.train.researched", "text": "%s đã được nghiên cứu."}
+{"name": "aoe2mc.transport.out", "text": "%s đơn vị đã ra ngoài"}
+{"name": "aoe2mc.treaty.ended", "text": "Hiệp ước đã kết thúc: người chơi có thể tấn công ngay."}
+{"name": "aoe2mc.treaty.refuse", "text": "Hiệp ước: bạn không thể tấn công trước %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Hiệp ước: bạn không thể tấn công trong trò chơi này."}
+{"name": "aoe2mc.treaty.start", "text": "Hiệp ước: không người chơi nào có thể tấn công người chơi khác trước %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Hiệp ước: không người chơi nào có thể tấn công người chơi khác trong trò chơi này."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Xây trại lính: nhấp chuột phải vào dân làng đã chọn, chọn trại lính và đặt nó. Thanh hành động trên thanh nóng cho biết chỗ đặt."}
+{"name": "aoe2mc.tutorial.camera", "text": "Di chuyển nhanh trên bản đồ: nhấp chuột phải với vật phẩm \"Camera\", đi bộ, rồi nhấp chuột phải với nó lần nữa."}
+{"name": "aoe2mc.tutorial.camp", "text": "Phá hủy trại địch ở giữa bản đồ: chọn Dân quân và nhấp chuột phải vào một công trình. Thanh boss ở trên hiện bước."}
+{"name": "aoe2mc.tutorial.camps", "text": "Xây trại gỗ gần cây và cối xay gần bụi quả. Thanh bên phải hiện số gỗ chúng tốn."}
+{"name": "aoe2mc.tutorial.complete", "text": "Hướng dẫn đã hoàn thành. Tiếp theo: chơi một trận với bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Hướng dẫn hoàn thành"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Tiến lên Thời đại Phong kiến: nhấp chuột phải vào nhà chính và chọn Thời đại Phong kiến. Thanh bên phải hiện lương thực của bạn."}
+{"name": "aoe2mc.tutorial.food", "text": "Thu thập 100 lương thực: gửi một dân làng đến bụi quả. Thanh bên phải hiện lương thực của bạn."}
+{"name": "aoe2mc.tutorial.house", "text": "Xây một ngôi nhà: nhấp chuột phải vào dân làng đã chọn, chọn ngôi nhà và đặt nó. Thanh hành động trên thanh nóng cho biết chỗ đặt."}
+{"name": "aoe2mc.tutorial.militia", "text": "Huấn luyện 3 Dân quân: nhấp chuột phải vào trại lính và chọn dân quân. Thanh bên phải hiện lương thực và vàng của bạn."}
+{"name": "aoe2mc.tutorial.raid", "text": "Kẻ địch tấn công dân làng của bạn! Nhấp vào dòng cảnh báo đỏ trong chat để đến đó, rồi chọn Dân quân và nhấp chuột phải vào kẻ địch. Thanh boss ở trên hiện máu của đơn vị đã chọn."}
+{"name": "aoe2mc.tutorial.select", "text": "Chọn một dân làng: nhấp chuột phải vào một dân làng của bạn bằng gậy chỉ huy. Thanh boss ở trên hiện đơn vị đã chọn, thanh hành động trên thanh nóng hiện hành động tiếp theo."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Bước đã xong"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Bước %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "MẸO: trại lính huấn luyện bộ binh. Bộ binh rẻ và mạnh khi đánh công trình."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "MẸO: tấn công với tất cả đơn vị cùng nhau. Một nhóm nhỏ chết trước khi gây sát thương."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "MẸO: xây công trình nộp tài nguyên gần tài nguyên để dân làng đi đường ngắn."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "MẸO: thời đại tiếp theo mở khóa công trình, đơn vị và công nghệ mới. Giữ dân làng làm việc khi bạn tiến lên."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "MẸO: bụi quả gần cối xay là khởi đầu lương thực an toàn. Sau này, ruộng cho lương thực không bao giờ hết."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "MẸO: một ngôi nhà cho thêm chỗ cho 5 dân số. Xem dân số ở thanh bên và xây nhà trước khi đầy."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "MẸO: bạn có thể xếp hàng tối đa 15 đơn vị trong một công trình khi có đủ tài nguyên."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "MẸO: trong AoE2 chuông thị trấn đưa dân làng vào nhà chính. Hãy rung nó khi kẻ địch đột kích thị trấn."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "MẸO: dòng Idle của thanh bên phải đếm dân làng không có việc. Hãy giao việc cho họ."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "MẸO: luôn huấn luyện dân làng trong các thời đại đầu. Nhiều dân làng hơn cho nhiều tài nguyên hơn."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "MẸO: dân làng thu thập nhanh hơn gần công trình nộp tài nguyên. Hãy xây trại gỗ cạnh cây."}
+{"name": "aoe2mc.tutorial.villager", "text": "Huấn luyện một dân làng: nhấp chuột phải vào nhà chính và chọn dân làng. Thanh bên phải hiện lương thực nó tốn."}
+{"name": "aoe2mc.tutorial.wood", "text": "Thu thập 50 gỗ: chọn một dân làng và nhấp chuột phải vào một cây. Thanh bên phải hiện số gỗ của bạn."}
+{"name": "aoe2mc.victory", "text": "Chiến thắng"}
+{"name": "aoe2mc.wonder.built", "text": "Người chơi %s đã xây một kỳ quan."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Kỳ quan của người chơi %s đã bị phá hủy."}

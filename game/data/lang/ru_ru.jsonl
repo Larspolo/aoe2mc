@@ -1,0 +1,314 @@
+{"name": "aoe2mc.age_up", "text": "Игрок %s переходит в %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Королевская битва: Порча захватывает карту от края к центру за %s. Она уничтожает все юниты и здания в ней."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Сейчас я не могу построить там %s."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Я не могу обучить этот юнит: у меня нет для него здания."}
+{"name": "aoe2mc.bot.flare_two", "text": "Подайте сигнал в двух местах для стены."}
+{"name": "aoe2mc.bot.no_flare", "text": "Я не вижу сигнала."}
+{"name": "aoe2mc.bot.no_market", "text": "У меня нет рынка: я не могу отправить дань."}
+{"name": "aoe2mc.bot.no_onager", "text": "У меня нет онагра."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Мне не хватает ресурсов на стену."}
+{"name": "aoe2mc.bot.no_water", "text": "У моего города нет воды: я не могу построить флот."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Мои онагры не могут рубить деревья."}
+{"name": "aoe2mc.build.cost", "text": "Недостаточно ресурсов: %s стоит %s."}
+{"name": "aoe2mc.build.flat", "text": "%s должен стоять на ровной земле."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s ставится на 4 клетки своей стены по прямой линии или на 3 диагональные клетки."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Строить: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s должен стоять на воде у берега."}
+{"name": "aoe2mc.build.space", "text": "Здесь нет места для: %s."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Недостаточно ресурсов: %s клеток %s стоят %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: нажмите ПКМ на конец стены."}
+{"name": "aoe2mc.build.water", "text": "%s должен стоять на воде."}
+{"name": "aoe2mc.camera.fov", "text": "Быстрая камера раскачивает предмет в руке. Чтобы он не качался, выберите Настройки > Спец. возможности > Покачивание камеры: ВЫКЛ. Камера также расширяет обзор и показывает больше карты. Чтобы оставить обычный обзор, выберите Настройки > Спец. возможности > Эффекты FOV: 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Камера: выкл."}
+{"name": "aoe2mc.camera.on", "text": "Камера: вкл., скорость x%s. Shift + ПКМ: следующая скорость."}
+{"name": "aoe2mc.camera.speed", "text": "Скорость камеры: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Победите все вражеские юниты и потеряйте мало юнитов"}
+{"name": "aoe2mc.challenge.booming", "text": "Обучите 100 крестьян и перейдите в Имперскую эпоху"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Перейдите в Замковую эпоху и переживите атаки врага"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Уничтожьте вражеский замок"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Соберите 200 пищи, 200 дерева, 100 золота и 200 камня, обучите 21 крестьянина, постройте лесопилку и мельницу и перейдите в Феодальную эпоху"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Обучите 27 крестьян, постройте 5 домов и перейдите в Замковую эпоху"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Отразите все шесть волн врага"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "Потеряно юнитов: %s, бронзовая медаль до %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "Потеряно юнитов: %s, золотая медаль до %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "Потеряно юнитов: %s, без медали"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "Потеряно юнитов: %s, серебряная медаль до %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Бронзовая медаль"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Золотая медаль"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Серебряная медаль"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Уничтожьте все вражеские военные корабли"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Без медали"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Убейте 5 вражеских крестьян"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Бронзовая медаль за %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Золотая медаль за %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Серебряная медаль за %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Эгида выкл."}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Эгида вкл."}
+{"name": "aoe2mc.cheat.beyond", "text": "Технологии: до 256 исследований"}
+{"name": "aoe2mc.cheat.cpu", "text": "Лимит населения: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Туман войны: выкл."}
+{"name": "aoe2mc.cheat.fog_on", "text": "Туман войны: вкл."}
+{"name": "aoe2mc.cheat.free_techs", "text": "Технологии бесплатны"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Делиться — значит заботиться: ваш доход идёт союзникам"}
+{"name": "aoe2mc.cheat.wonders", "text": "Вы управляете природой: %s животных"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Остались только союзники: союзы распадаются. Побеждает последний живой игрок."}
+{"name": "aoe2mc.conquest.defeated", "text": "Игрок %s побеждён."}
+{"name": "aoe2mc.controls.attack", "text": "Атака: выберите военные юниты, затем ПКМ по врагу."}
+{"name": "aoe2mc.controls.build", "text": "Строительство: выберите крестьян, ПКМ по ним для меню строительства, выберите здание, затем ЛКМ по земле. Shift + ЛКМ: поставить ещё. ПКМ: отмена."}
+{"name": "aoe2mc.controls.camera", "text": "Камера: ПКМ подзорной трубой Камера (клавиша 2): вы быстро идёте высоко над картой. Shift + ПКМ: следующая скорость. Снова ПКМ: вы спускаетесь."}
+{"name": "aoe2mc.controls.garrison", "text": "Гарнизон: выберите юниты, затем ПКМ по своему зданию. Его меню выпускает их. Меню городского центра: Набат."}
+{"name": "aoe2mc.controls.gather", "text": "Сбор: выберите крестьян, затем ПКМ по дереву, ягодному кусту, руднику или ферме."}
+{"name": "aoe2mc.controls.goto", "text": "Перейти: ПКМ компасом Перейти (клавиша 3): меню ваших городских центров, групп и следующего бездельника."}
+{"name": "aoe2mc.controls.groups", "text": "Группы: выберите юниты, возьмите предмет группы (клавиши 5–9) и Shift + ПКМ, чтобы сохранить выделение. ПКМ: выбрать группу."}
+{"name": "aoe2mc.controls.head", "text": "Управление (держите удочку с морковкой; панель действий показывает следующий шаг):"}
+{"name": "aoe2mc.controls.menu", "text": "Меню игры: ПКМ книгой Меню игры (клавиша 4): дипломатия и дань, сигнал, сохранение, пауза и дерево технологий."}
+{"name": "aoe2mc.controls.move", "text": "Движение: с выделением нажмите ПКМ по земле."}
+{"name": "aoe2mc.controls.research", "text": "Исследования и эпохи: ПКМ по своему зданию и выберите технологию или следующую эпоху в его меню."}
+{"name": "aoe2mc.controls.select", "text": "Выбор: левый клик по юниту. Удерживайте левую кнопку и ведите взгляд по земле: рамка выбора. Правый клик: приказы."}
+{"name": "aoe2mc.controls.train", "text": "Обучение: ПКМ по своему зданию (городской центр, казармы ...) и выберите юнит в его меню."}
+{"name": "aoe2mc.defeat", "text": "Поражение"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Союзник"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Игрок %s изменил отношение к вам: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Враг"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Нейтральный"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Игрок %s установил скорость игры: %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Игрок %s отправил %s %s игроку %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: сигнал в %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Следовать: нажмите на свой юнит"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Охранять: нажмите на свой юнит или здание"}
+{"name": "aoe2mc.gaia.joins", "text": "%s присоединяется к вам."}
+{"name": "aoe2mc.garrison.all_back", "text": "Все за работу"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Звучит набат: %s крестьян ищут укрытие"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Крестьянин не выбран."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "У вас нет крестьян."}
+{"name": "aoe2mc.garrison.out", "text": "Вышло юнитов: %s"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s крестьян ищут укрытие"}
+{"name": "aoe2mc.gather.act_attack", "text": "атаковать"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "меню строительства"}
+{"name": "aoe2mc.gather.act_garrison", "text": "гарнизон"}
+{"name": "aoe2mc.gather.act_gather", "text": "собирать"}
+{"name": "aoe2mc.gather.act_hunt", "text": "охотиться"}
+{"name": "aoe2mc.gather.act_move", "text": "идти"}
+{"name": "aoe2mc.gather.act_select", "text": "выбрать"}
+{"name": "aoe2mc.gather.act_select_type", "text": "выбрать всех этого типа"}
+{"name": "aoe2mc.gather.act_trade", "text": "торговать"}
+{"name": "aoe2mc.gather.act_train", "text": "обучить"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Атака: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Рамка выделения: отменена"}
+{"name": "aoe2mc.gather.bush", "text": "Ягодный куст"}
+{"name": "aoe2mc.gather.carcass", "text": "Туша"}
+{"name": "aoe2mc.gather.corner", "text": "Рамка выделения: нажмите на другой угол"}
+{"name": "aoe2mc.gather.enemy", "text": "Враг: %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Вражеское здание"}
+{"name": "aoe2mc.gather.farm", "text": "Ферма"}
+{"name": "aoe2mc.gather.ground", "text": "Земля"}
+{"name": "aoe2mc.gather.group", "text": "Группа %s: %s юнитов"}
+{"name": "aoe2mc.gather.group_saved", "text": "Группа %s: сохранено %s юнитов"}
+{"name": "aoe2mc.gather.mine", "text": "Рудник: %s"}
+{"name": "aoe2mc.gather.paused", "text": "Игра на паузе."}
+{"name": "aoe2mc.gather.point", "text": "%s · ПКМ: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Пересев в очереди: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Выбрано: %s юнитов"}
+{"name": "aoe2mc.gather.tree", "text": "Дерево"}
+{"name": "aoe2mc.hill.holds", "text": "Игрок %s удерживает монумент."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Атака земли: ПКМ по земле"}
+{"name": "aoe2mc.hints.attack_move", "text": "Атака с движением: ПКМ по земле"}
+{"name": "aoe2mc.hints.building", "text": "Поставьте %s: ПКМ по земле · Shift + ПКМ: поставить ещё · Отмена: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: ЛКМ, чтобы поставить · Shift: поставить ещё · ПКМ: отмена"}
+{"name": "aoe2mc.hints.corner", "text": "Рамка выделения: ПКМ по другому углу"}
+{"name": "aoe2mc.hints.count_military", "text": "%s военный юнит"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s военных юнитов"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s крестьянин"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s крестьян"}
+{"name": "aoe2mc.hints.deselect", "text": "Пустая рамка: снять выделение"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "ЛКМ: снять выделение"}
+{"name": "aoe2mc.hints.follow", "text": "Следовать: ПКМ по своему или союзному юниту"}
+{"name": "aoe2mc.hints.guard", "text": "Охранять: ПКМ по своему или союзному юниту или зданию"}
+{"name": "aoe2mc.hints.military", "text": "%s · ПКМ: атаковать врага, меню стойки · %s"}
+{"name": "aoe2mc.hints.none", "text": "Левый клик: выбрать юнита · Удерживать левую кнопку: рамка выбора"}
+{"name": "aoe2mc.hints.none_wand", "text": "ПКМ: выбрать юнит · Жезл: рамка выделения"}
+{"name": "aoe2mc.hints.patrol", "text": "Патруль: ПКМ по земле"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · ПКМ: собирать, строить, меню строительства · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s готовы"}
+{"name": "aoe2mc.lobby.you_play", "text": "Вы играете за %s."}
+{"name": "aoe2mc.monk.converts", "text": "Монах обращает: %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s погибает (Ересь)."}
+{"name": "aoe2mc.pause.continued", "text": "Игрок %s продолжил игру."}
+{"name": "aoe2mc.pause.paused", "text": "Игрок %s поставил игру на паузу."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Команда %s (средний рейтинг %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Игра окончена. Нажмите ПКМ книгой Итоги в руке, чтобы увидеть результаты. Остановите программу игры клавишами Ctrl-C в её консоли."}
+{"name": "aoe2mc.relic_victory.all", "text": "Игрок %s владеет всеми реликвиями."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Игрок %s потерял реликвию."}
+{"name": "aoe2mc.repair.no_resources", "text": "Недостаточно ресурсов для ремонта: %s."}
+{"name": "aoe2mc.replay.army", "text": "Армия: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", армия в конце: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", потери: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Порядок стройки:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · гарнизон %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | несёт %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "стройка %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "пища %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "золото %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "простой %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "камень %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "дерево %s"}
+{"name": "aoe2mc.replay.flare", "text": "Сигнал"}
+{"name": "aoe2mc.replay.game_ends", "text": "Игра окончена"}
+{"name": "aoe2mc.replay.game_time", "text": "Время игры %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · гарнизон %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Воен %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Нас %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Рес %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Кр %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s удержал монумент: победа «Царь горы» в %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s атк %s/%s брн%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Двойной Shift: режим наблюдателя (полёт сквозь блоки). ПКМ по предметам панели: управление записью."}
+{"name": "aoe2mc.replay.king_died", "text": ": Король погиб в %s. Цареубийство: игрок выбывает."}
+{"name": "aoe2mc.replay.king_killed", "text": "Король убит в %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Живая запись: перемотка останавливается на задержке от игры."}
+{"name": "aoe2mc.replay.lost", "text": "Потери: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " удерживает монумент в %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: монумент, осталось лет: %s"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: монумент, осталось лет: %s"}
+{"name": "aoe2mc.replay.no_camera", "text": "В этой записи нет камеры её игрока."}
+{"name": "aoe2mc.replay.now", "text": " сейчас"}
+{"name": "aoe2mc.replay.out", "text": "%s выбывает"}
+{"name": "aoe2mc.replay.players", "text": "Игроки"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " относит реликвию в монастырь и побеждает."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Запись окончена"}
+{"name": "aoe2mc.replay.research", "text": " исследует %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s сдаётся"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Сервер перезапускается для перемотки назад: зайдите снова."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Здания %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Экономика %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Армия %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Технологии %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Всего %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "замки %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "куплено %s, продано %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "реликвии %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "чудеса %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Потрачено:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Стройка %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Экон %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Воен %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Техн %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": обучено крестьян %s, собрано %s, простой крестьян %s, простой ГЦ %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": удерживает монумент (Царь горы)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": монумент взят %s (Царь горы)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": обучено военных %s, потеряно юнитов %s, потеряно зданий %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Король убит %s (Цареубийство)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": побеждает, реликвия в монастыре %s (Захват реликвии)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sдань отправлена %s, получена %s, пик крестьян %s (оценка)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": городской центр потерян %s (Внезапная смерть)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, технологий %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": таймер чуда с %s, конец %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Итоги (оценка)"}
+{"name": "aoe2mc.replay.task_building", "text": "строит"}
+{"name": "aoe2mc.replay.task_following", "text": "следует"}
+{"name": "aoe2mc.replay.task_food", "text": "собирает пищу"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "в гарнизоне"}
+{"name": "aoe2mc.replay.task_gold", "text": "добывает золото"}
+{"name": "aoe2mc.replay.task_guarding", "text": "охраняет"}
+{"name": "aoe2mc.replay.task_idle", "text": "бездельничает"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "патрулирует"}
+{"name": "aoe2mc.replay.task_resources", "text": "собирает ресурсы"}
+{"name": "aoe2mc.replay.task_stone", "text": "добывает камень"}
+{"name": "aoe2mc.replay.task_walking", "text": "идёт"}
+{"name": "aoe2mc.replay.task_wood", "text": "рубит дерево"}
+{"name": "aoe2mc.replay.team", "text": "Команда %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Лучники %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Броня лучников %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Переноска %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Броня конницы %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Ферма %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Золото %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Броня пехоты %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Ткачество %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Ближний бой %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Камень %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Дерево %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Замок"}
+{"name": "aoe2mc.replay.tl_king", "text": "Король убит"}
+{"name": "aoe2mc.replay.tl_military", "text": "1-й военный: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Реликвия"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Сдаётся"}
+{"name": "aoe2mc.replay.town_fell", "text": ": городской центр пал в %s. Внезапная смерть: игрок выбывает."}
+{"name": "aoe2mc.replay.town_lost", "text": "Городской центр потерян в %s"}
+{"name": "aoe2mc.replay.training", "text": "Обучение: %s"}
+{"name": "aoe2mc.replay.university", "text": "Университет:"}
+{"name": "aoe2mc.replay.up_counts", "text": "экономика %s · Университет %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " построил чудо в %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Бой: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s юнитов"}
+{"name": "aoe2mc.replay_input.fights", "text": "Крупные бои:"}
+{"name": "aoe2mc.replay_input.help", "text": "Запись: ПКМ по предметам на панели или нажмите: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Взять управление: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s юнитов)"}
+{"name": "aoe2mc.replay_input.vs", "text": " против "}
+{"name": "aoe2mc.resource.food", "text": "пища"}
+{"name": "aoe2mc.resource.gold", "text": "золото"}
+{"name": "aoe2mc.resource.stone", "text": "камень"}
+{"name": "aoe2mc.resource.wood", "text": "дерево"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Кампания пройдена"}
+{"name": "aoe2mc.run.chat_hint", "text": "Чат: обычная строка идёт всем, /tm ТЕКСТ союзникам, /msg ИМЯ ТЕКСТ одному игроку."}
+{"name": "aoe2mc.run.scenario_starts", "text": "Сценарий %s начинается. Зайдите снова."}
+{"name": "aoe2mc.run.starts_in", "text": "Игра начнётся через %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Откройте «Выберите игрока» и нажмите «Готов»"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Всё управление: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Первый шаг: возьмите командный жезл и нажмите ПКМ по одному из своих крестьян."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Первый шаг: возьмите командный жезл и нажмите ЛКМ по одному из своих крестьян."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Цель: выиграть игру. Условие победы: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Игра сохранена: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "Вышло юнитов: %s"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Авторазведка"}
+{"name": "aoe2mc.stance.formation", "text": "Строй: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ни один юнит не может атаковать землю"}
+{"name": "aoe2mc.stance.unpack", "text": "Сначала разверните требушет"}
+{"name": "aoe2mc.train.active", "text": "%s активен."}
+{"name": "aoe2mc.train.rally", "text": "ПКМ по земле для точки сбора."}
+{"name": "aoe2mc.train.researched", "text": "%s исследовано."}
+{"name": "aoe2mc.transport.out", "text": "Вышло юнитов: %s"}
+{"name": "aoe2mc.treaty.ended", "text": "Договор окончен: игроки теперь могут атаковать."}
+{"name": "aoe2mc.treaty.refuse", "text": "Договор: вы не можете атаковать до %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Договор: вы не можете атаковать в этой игре."}
+{"name": "aoe2mc.treaty.start", "text": "Договор: ни один игрок не может атаковать другого до %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Договор: ни один игрок не может атаковать другого в этой игре."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Постройте казармы: нажмите ПКМ по выбранному крестьянину, выберите казармы и поставьте их. Панель действий над хотбаром подскажет, куда их ставить."}
+{"name": "aoe2mc.tutorial.camera", "text": "Быстро двигайтесь над картой: нажмите ПКМ предметом «Camera», идите, затем снова нажмите им ПКМ."}
+{"name": "aoe2mc.tutorial.camp", "text": "Уничтожьте вражеский лагерь в центре карты: выберите ополченцев и нажмите ПКМ по зданию. Полоса босса вверху показывает шаг."}
+{"name": "aoe2mc.tutorial.camps", "text": "Постройте лесопилку у деревьев и мельницу у ягод. Боковая панель справа показывает, сколько дерева они стоят."}
+{"name": "aoe2mc.tutorial.complete", "text": "Обучение пройдено. Далее: сыграйте против бота: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Обучение пройдено"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Перейдите в Феодальную эпоху: нажмите ПКМ по городскому центру и выберите Феодальную эпоху. Боковая панель справа показывает вашу пищу."}
+{"name": "aoe2mc.tutorial.food", "text": "Соберите 100 пищи: отправьте крестьянина к ягодам. Боковая панель справа показывает вашу пищу."}
+{"name": "aoe2mc.tutorial.house", "text": "Постройте дом: нажмите ПКМ по выбранному крестьянину, выберите дом и поставьте его. Панель действий над хотбаром подскажет, куда его ставить."}
+{"name": "aoe2mc.tutorial.militia", "text": "Обучите 3 ополченцев: нажмите ПКМ по казармам и выберите ополченца. Боковая панель справа показывает вашу пищу и золото."}
+{"name": "aoe2mc.tutorial.raid", "text": "Враг атакует ваших крестьян! Нажмите красную строку тревоги в чате, чтобы перейти туда, затем выберите ополченцев и нажмите ПКМ по врагам. Полоса босса вверху показывает здоровье выбранного юнита."}
+{"name": "aoe2mc.tutorial.select", "text": "Выберите крестьянина: нажмите ПКМ командным жезлом по одному из своих крестьян. Полоса босса вверху показывает выбранный юнит, панель действий над хотбаром показывает следующее действие."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Шаг выполнен"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Шаг %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "СОВЕТ: казармы обучают пехоту. Пехота дешёвая и хороша против зданий."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "СОВЕТ: атакуйте всеми юнитами вместе. Маленькая группа гибнет, не успев нанести урон."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "СОВЕТ: стройте склады рядом с ресурсами, чтобы крестьяне ходили недалеко."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "СОВЕТ: следующая эпоха открывает новые здания, юниты и технологии. Пусть крестьяне работают, пока вы переходите."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "СОВЕТ: ягоды у мельницы — надёжный старт по пище. Позже фермы дают пищу, которая не кончается."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "СОВЕТ: дом даёт место ещё для 5 населения. Следите за населением на боковой панели и стройте дома до того, как оно заполнится."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "СОВЕТ: при наличии ресурсов можно поставить в очередь здания до 15 юнитов."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "СОВЕТ: в AoE2 набат отправляет крестьян в городской центр. Бейте в него, когда враг нападает на город."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "СОВЕТ: строка Idle боковой панели справа считает ваших крестьян без работы. Дайте им работу."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "СОВЕТ: всё время обучайте крестьян в первые эпохи. Больше крестьян — больше ресурсов."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "СОВЕТ: крестьяне собирают быстрее рядом со складом. Постройте лесопилку рядом с деревьями."}
+{"name": "aoe2mc.tutorial.villager", "text": "Обучите крестьянина: нажмите ПКМ по городскому центру и выберите крестьянина. Боковая панель справа показывает, сколько пищи он стоит."}
+{"name": "aoe2mc.tutorial.wood", "text": "Соберите 50 дерева: выберите крестьянина и нажмите ПКМ по дереву. Боковая панель справа показывает ваше дерево."}
+{"name": "aoe2mc.victory", "text": "Победа"}
+{"name": "aoe2mc.wonder.built", "text": "Игрок %s построил чудо."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Чудо игрока %s разрушено."}

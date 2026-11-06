@@ -1,0 +1,314 @@
+{"name": "aoe2mc.age_up", "text": "Pemain %s maju ke %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Kerosakan mengambil peta dari sempadan ke tengahnya dalam %s. Ia memusnahkan semua unit dan bangunan di dalamnya."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Saya tidak boleh membina %s di situ sekarang."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Saya tidak boleh melatih unit itu: saya tiada bangunan untuknya."}
+{"name": "aoe2mc.bot.flare_two", "text": "Letak suar di dua tempat untuk tembok."}
+{"name": "aoe2mc.bot.no_flare", "text": "Saya tidak nampak suar."}
+{"name": "aoe2mc.bot.no_market", "text": "Saya tiada pasar: saya tidak boleh menghantar ufti."}
+{"name": "aoe2mc.bot.no_onager", "text": "Saya tiada onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Saya tiada sumber yang cukup untuk tembok."}
+{"name": "aoe2mc.bot.no_water", "text": "Saya tiada air dekat bandar saya: saya tidak boleh membina tentera laut."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Onager saya tidak boleh menebang pokok."}
+{"name": "aoe2mc.build.cost", "text": "Sumber tidak cukup: sebuah %s berharga %s."}
+{"name": "aoe2mc.build.flat", "text": "%s mesti berdiri di atas tanah rata."}
+{"name": "aoe2mc.build.gate_spot", "text": "Sebuah %s mesti diletakkan pada 4 petak tembok sendiri dalam garis lurus, atau pada 3 petak pepenjuru."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Bina: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Sebuah %s mesti berdiri di atas air di sebelah pantai."}
+{"name": "aoe2mc.build.space", "text": "Tiada ruang untuk %s di sini."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Sumber tidak cukup: %s petak %s berharga %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: klik kanan hujung tembok."}
+{"name": "aoe2mc.build.water", "text": "Sebuah %s mesti berdiri di atas air."}
+{"name": "aoe2mc.camera.fov", "text": "Kamera pantas membuat item yang dipegang berayun. Untuk mengekalkannya, tetapkan Options > Accessibility Settings > View Bobbing kepada OFF. Kamera juga meluaskan pandangan, yang menunjukkan lebih banyak peta. Untuk pandangan biasa, tetapkan Options > Accessibility Settings > FOV Effects kepada 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: mati"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: hidup, kelajuan x%s. Shift klik kanan: kelajuan seterusnya."}
+{"name": "aoe2mc.camera.speed", "text": "Kelajuan kamera: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Kalahkan semua unit musuh dan kehilangan sedikit unit"}
+{"name": "aoe2mc.challenge.booming", "text": "Latih 100 penduduk dan maju ke Zaman Empayar"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Maju ke Zaman Istana dan bertahan daripada serangan musuh"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Musnahkan istana musuh"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Kumpul 200 makanan, 200 kayu, 100 emas dan 200 batu, latih 21 penduduk, bina kem kayu dan kilang, dan maju ke Zaman Feudal"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Latih 27 penduduk, bina 5 rumah dan maju ke Zaman Istana"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Kalahkan semua enam gelombang musuh"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s unit hilang, pingat gangsa sehingga %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s unit hilang, pingat emas sehingga %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s unit hilang, tiada pingat"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s unit hilang, pingat perak sehingga %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Pingat gangsa"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Pingat emas"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Pingat perak"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Musnahkan semua kapal perang musuh"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Tiada pingat"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Bunuh 5 penduduk musuh"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Pingat gangsa dalam %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Pingat emas dalam %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Pingat perak dalam %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis mati"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis hidup"}
+{"name": "aoe2mc.cheat.beyond", "text": "Teknologi: sehingga 256 kajian"}
+{"name": "aoe2mc.cheat.cpu", "text": "Had populasi: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Kabus perang: mati"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Kabus perang: hidup"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Teknologi percuma"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Berkongsi tanda peduli: pendapatan anda pergi kepada sekutu"}
+{"name": "aoe2mc.cheat.wonders", "text": "Anda mengawal alam: %s haiwan"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Hanya sekutu yang tinggal: pakatan tamat. Pemain terakhir yang hidup menang."}
+{"name": "aoe2mc.conquest.defeated", "text": "Pemain %s dikalahkan."}
+{"name": "aoe2mc.controls.attack", "text": "Serang: pilih unit tentera, kemudian klik kanan musuh."}
+{"name": "aoe2mc.controls.build", "text": "Bina: pilih penduduk, klik kanan mereka untuk menu bina, pilih bangunan, kemudian klik kiri tanah. Shift + klik kiri: letak lagi. Klik kanan: batal."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: klik kanan dengan teropong Camera (kekunci 2): anda berjalan pantas tinggi di atas peta. Shift klik kanan: kelajuan seterusnya. Klik kanan lagi: anda terbang turun."}
+{"name": "aoe2mc.controls.garrison", "text": "Kubu: pilih unit, kemudian klik kanan bangunan sendiri. Menunya mengeluarkan mereka. Menu pusat bandar: Bunyikan Loceng Bandar."}
+{"name": "aoe2mc.controls.gather", "text": "Kumpul: pilih penduduk, kemudian klik kanan pokok, semak buah, lombong atau ladang."}
+{"name": "aoe2mc.controls.goto", "text": "Pergi ke: klik kanan dengan kompas Go to (kekunci 3): menu pusat bandar, kumpulan kawalan dan penduduk terbiar seterusnya."}
+{"name": "aoe2mc.controls.groups", "text": "Kumpulan kawalan: pilih unit, ambil item kumpulan (kekunci 5 hingga 9) dan Shift + klik kanan untuk simpan pilihan. Klik kanan: pilih kumpulan."}
+{"name": "aoe2mc.controls.head", "text": "Kawalan (pegang lobak merah pada kayu; bar tindakan menunjukkan langkah seterusnya):"}
+{"name": "aoe2mc.controls.menu", "text": "Menu permainan: klik kanan dengan buku Game menu (kekunci 4): diplomasi dan ufti, suar, simpan, jeda dan pokok teknologi."}
+{"name": "aoe2mc.controls.move", "text": "Gerak: dengan pilihan, klik kanan tanah."}
+{"name": "aoe2mc.controls.research", "text": "Kaji dan naik zaman: klik kanan bangunan sendiri dan klik teknologi atau zaman seterusnya dalam menunya."}
+{"name": "aoe2mc.controls.select", "text": "Pilih: klik kiri unit. Tahan klik kiri dan lihat merentasi tanah: kotak pilihan. Klik kanan: beri arahan."}
+{"name": "aoe2mc.controls.train", "text": "Latih: klik kanan bangunan sendiri (pusat bandar, berek ...) dan klik unit dalam menunya."}
+{"name": "aoe2mc.defeat", "text": "Kekalahan"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Sekutu"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Pemain %s menukar sikapnya terhadap anda: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Musuh"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutral"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Pemain %s menetapkan kelajuan permainan kepada %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Pemain %s menghantar %s %s kepada pemain %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Suar di %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Ikut: klik unit sendiri"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Kawal: klik unit atau bangunan sendiri"}
+{"name": "aoe2mc.gaia.joins", "text": "Sebuah %s menyertai anda."}
+{"name": "aoe2mc.garrison.all_back", "text": "Semua kembali bekerja"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Loceng bandar berbunyi: %s penduduk mencari perlindungan"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Tiada penduduk dipilih."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Anda tiada penduduk."}
+{"name": "aoe2mc.garrison.out", "text": "%s unit keluar"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s penduduk mencari perlindungan"}
+{"name": "aoe2mc.gather.act_attack", "text": "serang"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menu bina"}
+{"name": "aoe2mc.gather.act_garrison", "text": "kubu"}
+{"name": "aoe2mc.gather.act_gather", "text": "kumpul"}
+{"name": "aoe2mc.gather.act_hunt", "text": "buru"}
+{"name": "aoe2mc.gather.act_move", "text": "gerak"}
+{"name": "aoe2mc.gather.act_select", "text": "pilih"}
+{"name": "aoe2mc.gather.act_select_type", "text": "pilih semua jenis ini"}
+{"name": "aoe2mc.gather.act_trade", "text": "dagang"}
+{"name": "aoe2mc.gather.act_train", "text": "latih"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Serang: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Kotak pilihan: dibatalkan"}
+{"name": "aoe2mc.gather.bush", "text": "Semak beri"}
+{"name": "aoe2mc.gather.carcass", "text": "Bangkai"}
+{"name": "aoe2mc.gather.corner", "text": "Kotak pilihan: klik sudut yang lain"}
+{"name": "aoe2mc.gather.enemy", "text": "%s musuh"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Bangunan musuh"}
+{"name": "aoe2mc.gather.farm", "text": "Ladang"}
+{"name": "aoe2mc.gather.ground", "text": "Tanah"}
+{"name": "aoe2mc.gather.group", "text": "Kumpulan %s: %s unit"}
+{"name": "aoe2mc.gather.group_saved", "text": "Kumpulan %s: %s unit disimpan"}
+{"name": "aoe2mc.gather.mine", "text": "Lombong %s"}
+{"name": "aoe2mc.gather.paused", "text": "Permainan dijeda."}
+{"name": "aoe2mc.gather.point", "text": "%s · Klik kanan: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Tanam semula dalam giliran: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Dipilih: %s unit"}
+{"name": "aoe2mc.gather.tree", "text": "Pokok"}
+{"name": "aoe2mc.hill.holds", "text": "Pemain %s memegang monumen."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Serang Tanah: klik kanan tanah"}
+{"name": "aoe2mc.hints.attack_move", "text": "Serang Sambil Gerak: klik kanan tanah"}
+{"name": "aoe2mc.hints.building", "text": "Letak %s: klik kanan tanah · Shift + klik kanan: letak lagi · Batal: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: klik kiri untuk letak · Shift: letak lagi · Klik kanan: batal"}
+{"name": "aoe2mc.hints.corner", "text": "Kotak pilihan: klik kanan sudut yang lain"}
+{"name": "aoe2mc.hints.count_military", "text": "%s unit tentera"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s unit tentera"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s penduduk"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s penduduk"}
+{"name": "aoe2mc.hints.deselect", "text": "Kotak kosong: nyahpilih"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Klik kiri: nyahpilih"}
+{"name": "aoe2mc.hints.follow", "text": "Ikut: klik kanan unit sendiri atau sekutu"}
+{"name": "aoe2mc.hints.guard", "text": "Kawal: klik kanan unit atau bangunan sendiri atau sekutu"}
+{"name": "aoe2mc.hints.military", "text": "%s · Klik kanan: serang musuh, menu sikap · %s"}
+{"name": "aoe2mc.hints.none", "text": "Klik kiri: pilih unit · Tahan klik kiri: kotak pilihan"}
+{"name": "aoe2mc.hints.none_wand", "text": "Klik kanan: pilih unit · Tongkat: kotak pilihan"}
+{"name": "aoe2mc.hints.patrol", "text": "Ronda: klik kanan tanah"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Klik kanan: kumpul, bina, menu bina · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s sedia"}
+{"name": "aoe2mc.lobby.you_play", "text": "Anda bermain %s."}
+{"name": "aoe2mc.monk.converts", "text": "Seorang sami menukar %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s mati (Heresy)."}
+{"name": "aoe2mc.pause.continued", "text": "Pemain %s menyambung permainan."}
+{"name": "aoe2mc.pause.paused", "text": "Pemain %s menjeda permainan."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Pasukan %s (penarafan purata %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Permainan tamat. Klik kanan buku Recap di tangan anda untuk melihat keputusan. Hentikan program permainan dengan Ctrl-C dalam konsolnya."}
+{"name": "aoe2mc.relic_victory.all", "text": "Pemain %s memegang semua relik."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Pemain %s kehilangan relik."}
+{"name": "aoe2mc.repair.no_resources", "text": "Sumber tidak cukup untuk membaiki %s."}
+{"name": "aoe2mc.replay.army", "text": "Tentera: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", tentera pada akhir: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", hilang: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Urutan bina:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · kubu %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | membawa %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "bina %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "makanan %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "emas %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "terbiar %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "batu %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "kayu %s"}
+{"name": "aoe2mc.replay.flare", "text": "Suar"}
+{"name": "aoe2mc.replay.game_ends", "text": "Permainan tamat"}
+{"name": "aoe2mc.replay.game_time", "text": "Masa permainan %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · kubu %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Ten %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Sum %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Pen %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s memegang monumen: kemenangan King of the Hill pada %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s serangan %s/%s perisai%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Tekan Shift dua kali: pandangan penonton (terbang menembusi blok). Klik kanan item hotbar: kawalan main semula."}
+{"name": "aoe2mc.replay.king_died", "text": ": Raja mati pada %s. Regicide: pemain tersingkir."}
+{"name": "aoe2mc.replay.king_killed", "text": "Raja dibunuh pada %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Main semula langsung: lompatan berhenti pada kelewatan di belakang permainan."}
+{"name": "aoe2mc.replay.lost", "text": "Hilang: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " memegang monumen pada %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monumen, %s tahun lagi"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monumen, %s tahun lagi"}
+{"name": "aoe2mc.replay.no_camera", "text": "Rakaman ini tiada kamera pemainnya."}
+{"name": "aoe2mc.replay.now", "text": " sekarang"}
+{"name": "aoe2mc.replay.out", "text": "%s tersingkir"}
+{"name": "aoe2mc.replay.players", "text": "Pemain"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " membawa relik ke biara dan menang."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Main semula tamat"}
+{"name": "aoe2mc.replay.research", "text": " mengkaji %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s menyerah"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Pelayan dimulakan semula untuk lompatan ke belakang: sertai semula."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Bangunan %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekonomi %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Tentera %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Teknologi %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Jumlah %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "istana %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "dibeli %s, dijual %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relik %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "keajaiban %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Dibelanjakan:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Bina %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eko %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Ten %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tek %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": penduduk dilatih %s, dikumpul %s, masa penduduk terbiar %s, masa TC terbiar %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": memegang monumen (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monumen dimenangi %s (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": unit tentera dilatih %s, unit hilang %s, bangunan hilang %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Raja dibunuh %s (Regicide)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": menang, relik di biara %s (Capture the Relic)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sufti dihantar %s, diterima %s, penduduk tertinggi %s (anggaran)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": pusat bandar hilang %s (Sudden Death)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, teknologi %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": pemasa keajaiban dari %s, tamat %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Ringkasan (anggaran)"}
+{"name": "aoe2mc.replay.task_building", "text": "membina"}
+{"name": "aoe2mc.replay.task_following", "text": "mengikut"}
+{"name": "aoe2mc.replay.task_food", "text": "mengumpul makanan"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "dalam kubu"}
+{"name": "aoe2mc.replay.task_gold", "text": "mengumpul emas"}
+{"name": "aoe2mc.replay.task_guarding", "text": "mengawal"}
+{"name": "aoe2mc.replay.task_idle", "text": "terbiar"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "meronda"}
+{"name": "aoe2mc.replay.task_resources", "text": "mengumpul sumber"}
+{"name": "aoe2mc.replay.task_stone", "text": "mengumpul batu"}
+{"name": "aoe2mc.replay.task_walking", "text": "berjalan"}
+{"name": "aoe2mc.replay.task_wood", "text": "mengumpul kayu"}
+{"name": "aoe2mc.replay.team", "text": "Pasukan %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Pemanah %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Perisai pemanah %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Bawa %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Perisai berkuda %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Ladang %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Emas %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Perisai infantri %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Alat tenun %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Jarak dekat %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Batu %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Kayu %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Istana"}
+{"name": "aoe2mc.replay.tl_king", "text": "Raja dibunuh"}
+{"name": "aoe2mc.replay.tl_military", "text": "Tentera pertama: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relik"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Menyerah"}
+{"name": "aoe2mc.replay.town_fell", "text": ": pusat bandar runtuh pada %s. Sudden Death: pemain tersingkir."}
+{"name": "aoe2mc.replay.town_lost", "text": "Pusat bandar hilang pada %s"}
+{"name": "aoe2mc.replay.training", "text": "Latihan: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universiti:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekonomi %s · Universiti %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " membina keajaiban pada %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Lawan: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s unit"}
+{"name": "aoe2mc.replay_input.fights", "text": "Pertempuran besar:"}
+{"name": "aoe2mc.replay_input.help", "text": "Main semula: klik kanan item dalam hotbar anda, atau klik: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Ambil alih: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s unit)"}
+{"name": "aoe2mc.replay_input.vs", "text": " lwn "}
+{"name": "aoe2mc.resource.food", "text": "makanan"}
+{"name": "aoe2mc.resource.gold", "text": "emas"}
+{"name": "aoe2mc.resource.stone", "text": "batu"}
+{"name": "aoe2mc.resource.wood", "text": "kayu"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kempen selesai"}
+{"name": "aoe2mc.run.chat_hint", "text": "Sembang: baris biasa pergi kepada semua, /tm TEXT kepada sekutu anda, /msg NAME TEXT kepada seorang."}
+{"name": "aoe2mc.run.scenario_starts", "text": "Senario %s bermula. Sertai semula."}
+{"name": "aoe2mc.run.starts_in", "text": "Permainan bermula dalam %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Buka \"Choose your player\" dan klik \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Semua kawalan: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Langkah pertama: pegang tongkat arahan dan klik kanan salah seorang penduduk anda."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Langkah pertama: pegang tongkat arahan dan klik kiri salah seorang penduduk anda."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Matlamat: menangi permainan. Tetapan kemenangan: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Permainan disimpan: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s unit keluar"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Tinjau Automatik"}
+{"name": "aoe2mc.stance.formation", "text": "Formasi: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Tiada unit boleh menyerang tanah"}
+{"name": "aoe2mc.stance.unpack", "text": "Buka Trebuchet dahulu"}
+{"name": "aoe2mc.train.active", "text": "%s aktif."}
+{"name": "aoe2mc.train.rally", "text": "Klik kanan tanah untuk titik himpunan."}
+{"name": "aoe2mc.train.researched", "text": "%s telah dikaji."}
+{"name": "aoe2mc.transport.out", "text": "%s unit keluar"}
+{"name": "aoe2mc.treaty.ended", "text": "Perjanjian tamat: pemain boleh menyerang sekarang."}
+{"name": "aoe2mc.treaty.refuse", "text": "Perjanjian: anda tidak boleh menyerang sebelum %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Perjanjian: anda tidak boleh menyerang dalam permainan ini."}
+{"name": "aoe2mc.treaty.start", "text": "Perjanjian: tiada pemain boleh menyerang pemain lain sebelum %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Perjanjian: tiada pemain boleh menyerang pemain lain dalam permainan ini."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Bina berek: klik kanan penduduk yang dipilih, pilih berek dan letakkannya. Bar tindakan di atas hotbar memberitahu tempat untuk meletakkannya."}
+{"name": "aoe2mc.tutorial.camera", "text": "Bergerak pantas atas peta: klik kanan dengan item \"Camera\", berjalan, kemudian klik kanan dengannya lagi."}
+{"name": "aoe2mc.tutorial.camp", "text": "Musnahkan kem musuh di tengah peta: pilih Militia anda dan klik kanan pada bangunan. Bar bos di atas menunjukkan langkah."}
+{"name": "aoe2mc.tutorial.camps", "text": "Bina kem kayu dekat pokok dan kilang dekat beri. Bar sisi kanan menunjukkan kayu yang diperlukan."}
+{"name": "aoe2mc.tutorial.complete", "text": "Tutorial selesai. Seterusnya: main permainan menentang bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutorial selesai"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Maju ke Zaman Feudal: klik kanan pusat bandar anda dan pilih Zaman Feudal. Bar sisi kanan menunjukkan makanan anda."}
+{"name": "aoe2mc.tutorial.food", "text": "Kumpul 100 makanan: hantar seorang penduduk ke beri. Bar sisi kanan menunjukkan makanan anda."}
+{"name": "aoe2mc.tutorial.house", "text": "Bina rumah: klik kanan penduduk yang dipilih, pilih rumah dan letakkannya. Bar tindakan di atas hotbar memberitahu tempat untuk meletakkannya."}
+{"name": "aoe2mc.tutorial.militia", "text": "Latih 3 Militia: klik kanan berek anda dan pilih militia. Bar sisi kanan menunjukkan makanan dan emas anda."}
+{"name": "aoe2mc.tutorial.raid", "text": "Musuh menyerang penduduk anda! Klik baris amaran merah dalam sembang untuk pergi ke sana, kemudian pilih Militia anda dan klik kanan pada musuh. Bar bos di atas menunjukkan kesihatan unit dipilih."}
+{"name": "aoe2mc.tutorial.select", "text": "Pilih seorang penduduk: klik kanan salah seorang penduduk anda dengan tongkat arahan. Bar bos di atas menunjukkan unit dipilih, bar tindakan di atas hotbar menunjukkan tindakan seterusnya."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Langkah selesai"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Langkah %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "PETUA: berek melatih infantri. Infantri murah dan bagus menentang bangunan."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "PETUA: serang dengan semua unit bersama. Kumpulan kecil mati sebelum dapat memberi kerosakan."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "PETUA: bina bangunan simpanan dekat sumber, supaya penduduk berjalan jarak pendek."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "PETUA: zaman seterusnya membuka bangunan, unit dan teknologi baharu. Teruskan penduduk bekerja semasa anda maju."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "PETUA: beri dekat kilang ialah permulaan makanan yang selamat. Kemudian, ladang memberi makanan yang tidak habis."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "PETUA: sebuah rumah memberi ruang untuk 5 populasi lagi. Lihat populasi pada bar sisi dan bina rumah sebelum ia penuh."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "PETUA: anda boleh beratur sehingga 15 unit dalam bangunan apabila anda ada sumber."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "PETUA: dalam AoE2 loceng bandar menghantar penduduk ke pusat bandar. Bunyikannya apabila musuh menyerbu bandar anda."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "PETUA: baris Idle pada bar sisi kanan mengira penduduk anda yang tiada kerja. Beri mereka kerja."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "PETUA: latih penduduk sepanjang masa pada zaman awal. Lebih ramai penduduk memberi lebih banyak sumber."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "PETUA: penduduk mengumpul lebih pantas dekat bangunan simpanan. Bina kem kayu di sebelah pokok."}
+{"name": "aoe2mc.tutorial.villager", "text": "Latih seorang penduduk: klik kanan pusat bandar anda dan pilih penduduk. Bar sisi kanan menunjukkan makanan yang diperlukan."}
+{"name": "aoe2mc.tutorial.wood", "text": "Kumpul 50 kayu: pilih seorang penduduk dan klik kanan pada pokok. Bar sisi kanan menunjukkan kayu anda."}
+{"name": "aoe2mc.victory", "text": "Kemenangan"}
+{"name": "aoe2mc.wonder.built", "text": "Pemain %s membina keajaiban."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Keajaiban pemain %s dimusnahkan."}

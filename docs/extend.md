@@ -34,6 +34,9 @@ parallel tickets do not change the same lines. Most rules have a check: `tools/d
   in the module that reads it, not a new table of `game/train.py` (#2507).
 - A special effect of a technology at its research is a function `(g, entry)` in its own module and the key
   `"on_research"` (`"module.function"`) on its line, not an `if` block in `train.research()` (#3243).
+- A new language of the texts is one new file `game/data/lang/<code>.jsonl` (the Minecraft language code, one line
+  `{"name", "text"}` per key of the English texts), not a column of `texts.jsonl`, `tutorial.jsonl` or
+  `challenges.jsonl`: a column changes each line, and two language PRs conflict (#5901).
 - A new key of `game/data/setup.jsonl` (a game mode, a lobby setting) is one line in `game/data/setup_keys.jsonl` (`"type"`,
   `"kind": true` for a key of the "one kind" rule, `"text"`, `"issue"`), not a change of `tests/data_checks/setup.py` (#2558).
 - A new unit ability (epic #4387: a plugin command per unit, as `aoe frenzy`) is one new module in `game/abilities/`
