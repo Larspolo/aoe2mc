@@ -227,6 +227,22 @@ def forget(world, name):
                 os.remove(os.path.join(root, f))
 
 
+def servers_dat(path, address):
+    """Write the server list of the client (uncompressed NBT) with one server that accepts its resource pack
+    (acceptTextures 1): else the prompt of a server pack waits for a click and the join stops (#5916)."""
+    import struct
+
+    def text(t, name, value):
+        b = value.encode()
+        return bytes([t]) + struct.pack(">H", len(name)) + name.encode() + struct.pack(">H", len(b)) + b
+
+    server = (text(8, "ip", address) + text(8, "name", "aoe2mc") + b"\x01" + struct.pack(">H", 14)
+              + b"acceptTextures" + b"\x01" + b"\x00")
+    body = b"\x09" + struct.pack(">H", 7) + b"servers" + b"\x0a" + struct.pack(">i", 1) + server
+    with open(path, "wb") as f:
+        f.write(b"\x0a\x00\x00" + body + b"\x00")
+
+
 class Client:
     """The client as player "aoe2mc" on the server at 127.0.0.1:port (online-mode=false), in Xvfb. A context manager:
     the client is in the world when wait_join() returns (or the test sees the player in "list").
@@ -251,6 +267,7 @@ class Client:
         opts = OPTIONS | {"guiScale": self.SCALE} | ({"chatScale": "1.0"} if self.chat else {})
         with open(os.path.join(self.game, "options.txt"), "w") as f:
             f.writelines(f"{k}:{v}\n" for k, v in opts.items())
+        servers_dat(os.path.join(self.game, "servers.dat"), f"{self.host}:{self.port}")
         disp = free_display()
         self.env = dict(os.environ, DISPLAY=f":{disp}", LIBGL_ALWAYS_SOFTWARE="1")
         self.xvfb = subprocess.Popen(["Xvfb", f":{disp}", "-screen", "0", f"{self.size[0]}x{self.size[1]}x24"],
