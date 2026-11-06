@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Ar c'hoarier %s a ya d'ar %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: an Dilusion a gemer ar gartenn adalek he skevel betek he greiz e %s. Diskar a ra an holl unanezhioù hag ar savadurioù a zo ennañ."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ne c'hallan ket savout %s eno bremañ."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ne c'hallan ket treinañ an unanez-se: n'am eus savadur ebet evit-se."}
+{"name": "aoe2mc.bot.flare_two", "text": "Lakit daou fuzeenn evit ar voger."}
+{"name": "aoe2mc.bot.no_flare", "text": "Ne welan fuzeenn ebet."}
+{"name": "aoe2mc.bot.no_market", "text": "N'am eus marc'had ebet: ne c'hallan ket kas tribut."}
+{"name": "aoe2mc.bot.no_onager", "text": "N'am eus onager ebet."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "N'am eus ket a skouer evit ur voger."}
+{"name": "aoe2mc.bot.no_water", "text": "N'am eus dour ebet tost da zêr ma c'hêr: ne c'hallan ket savout ur flotenn."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Ne c'hall ket ma onagerioù tec'hiñ gwez."}
+{"name": "aoe2mc.build.cost", "text": "N'eus ket a skouer ebet: ur %s a gost %s."}
+{"name": "aoe2mc.build.flat", "text": "Ret eo d'ar %s bezañ war un douar leun."}
+{"name": "aoe2mc.build.gate_spot", "text": "Ret eo d'ar %s bezañ war 4 tachenn eus ur voger ho peus war a-raok, en ul linenn sklaer, pe war 3 tachenn diagonal."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Savout: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Ret eo d'ar %s bezañ war an dour tost da ar c'hreiz."}
+{"name": "aoe2mc.build.space", "text": "Plasenn ebet evit ar %s amañ."}
+{"name": "aoe2mc.build.tiles_cost", "text": "N'eus ket a skouer ebet: %s tachenn eus %s a gost %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: klikit a-zehou war fin ar voger."}
+{"name": "aoe2mc.build.water", "text": "Ret eo d'ar %s bezañ war an dour."}
+{"name": "aoe2mc.camera.fov", "text": "Ar c'hamera buan a lak an dra en hoc'h dorn da zrouzal. Evit he derc'hel fiñv, lakit Dibarzhioù > Arventennoù Atersadur > View Bobbing da OFF. Ar c'hamera a laka ivez ar gwel da vezañ ledanoc'h, a ziskouez muioc'h eus ar gartenn. Evit derc'hel ar gwel boas, lakit Dibarzhioù > Arventennoù Atersadur > FOV Effects da 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: diweredekaet"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: war-lerc'h, buander x%s. Shift klik dehoù: buander all."}
+{"name": "aoe2mc.camera.speed", "text": "Buander ar gamera: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Trec'hit an holl unanezhioù enebour ha kollit nebeut a unanezhioù"}
+{"name": "aoe2mc.challenge.booming", "text": "Treinit 100 pezhiad hag en em lakit en Oad Impalaer"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Mont en Oad ar C'hastell ha tizhout atakoù an enebour"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Diskar kastell an enebour"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Dastumit 200 boued, 200 koad, 100 aour ha 200 maen, treinit 21 pezhiad, savit ur c'hampoù koad ha ur vilin, ha mont en Oad Feodal"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Treinit 27 pezhiad, savit 5 ti ha mont en Oad ar C'hastell"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Trec'hit an holl c'hwec'h tonn enebour"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s unanezh kollet, medalenn efedn betek %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s unanezh kollet, medalenn aour betek %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s unanezh kollet, medalenn ebet"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s unanezh kollet, medalenn arc'hant betek %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Medalenn efedn"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Medalenn aour"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Medalenn arc'hant"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Diskar an holl vagodoù brezel enebour"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Medalenn ebet"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Lazhit 5 pezhiad enebour"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Medalenn efedn e %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Medalenn aour e %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Medalenn arc'hant e %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis diweredekaet"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis war-lerc'h"}
+{"name": "aoe2mc.cheat.beyond", "text": "Teknologiezh: betek 256 ergerzh"}
+{"name": "aoe2mc.cheat.cpu", "text": "Bevennadur a boblans: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Kleier ar brezel: diweredekaet"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Kleier ar brezel: war-lerc'h"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Teknologioù a zo dieub"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Rannañ a zo gwellañ: an arc'hant a zeu ganeoc'h a vo kaset d'ho c'heoded"}
+{"name": "aoe2mc.cheat.wonders", "text": "Reoliñ a rit ar en-natur: %s loen"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Ne chom nemet kevelerien: an disheñvelioù a echu. An dornaer diwezhañ bev a c'hounez."}
+{"name": "aoe2mc.conquest.defeated", "text": "Trec'het eo bet ar c'hoarier %s."}
+{"name": "aoe2mc.controls.attack", "text": "Lazhañ: dibabit an unanezhioù soudarded, neuze klikit dehoù war un enebour."}
+{"name": "aoe2mc.controls.build", "text": "Savout: dibabit pezhiad, klikit dehoù warno evit ar roll savout, dibabit ur savadur, neuze klikit kleiz war an douar. Shift + klik kleiz: lakaat muioc'h. Klik dehoù: nullañ."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: klikit dehoù gant ar sperlunad Kamera (klav bar 2): dont a rit buan en uhelder dreist ar gartenn. Shift klik dehoù: buander all. Klik dehoù adarre: diskennet a rit."}
+{"name": "aoe2mc.controls.garrison", "text": "Gwarnizon: dibabit unanezhioù, neuze klikit dehoù war ho savadur. Lakaat anezho en-dro a ra e roll. Roll ti-kloc'h ar gêr: Sonit kloc'h ar gêr."}
+{"name": "aoe2mc.controls.gather", "text": "Dastum: dibabit pezhiad, klikit dehoù war ur wezenn, ur gwezenn-frouezh, ur c'hleuz pe ur parkad."}
+{"name": "aoe2mc.controls.goto", "text": "Mont da: klikit dehoù gant ar gompas Mont da (klav bar 3): ur roll eus ho tiegezhioù-kloc'h, ho strolloù renet hag ar pezhiad dilabour da-heul."}
+{"name": "aoe2mc.controls.groups", "text": "Strolloù renet: dibabit unanezhioù, kemerit un trastell strolladoù (klavioù bar 5 betek 9) ha Shift + klik dehoù evit enrollañ an dibab. Klik dehoù: dibabit ar strollad."}
+{"name": "aoe2mc.controls.head", "text": "Kontrolloù (daliit ar c'harrot war ur bazh; ar bar oberiañ a ziskouez ar pazenn war-lerc'h):"}
+{"name": "aoe2mc.controls.menu", "text": "Roll ar c'hêr: klikit dehoù gant al levr Roll ar c'hêr (klav bar 4): diplomatiezh ha tribut, fuzeenn, enrollañ, paouez ha gwezenn an teknologioù."}
+{"name": "aoe2mc.controls.move", "text": "Mont: gant un dibab, klikit dehoù war an douar."}
+{"name": "aoe2mc.controls.research", "text": "Ober enklaskoù ha mont d'an oad war-lerc'h: klikit dehoù war ho savadur ha klikit war un teknologiezh pe an oad war-lerc'h en e roll."}
+{"name": "aoe2mc.controls.select", "text": "Dibabit: klikit kleiz war ur unanez. Derc'hit ar c'hlikañ kleiz ha sellit dre ar memes douar: ur boest dibab. Klik dehoù: reiñ urzhioù."}
+{"name": "aoe2mc.controls.train", "text": "Treinañ: klikit dehoù war ho savadur (ti-kloc'h, kazarn ...) ha klikit war un unanez en e roll."}
+{"name": "aoe2mc.defeat", "text": "Trec'h"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Kevelerien"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Kemmet en deus ar c'hoarier %s e stad a-zivout deoc'h: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Enebour"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Didro"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Lakaet en deus ar c'hoarier %s buander ar c'hêr da %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Kaset en deus ar c'hoarier %s %s %s d'ar c'hoarier %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Fuzeenn e %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Heuliañ: klikit war un unanez deoc'h"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Gwarediñ: klikit war un unanez pe ur savadur deoc'h"}
+{"name": "aoe2mc.gaia.joins", "text": "Un %s a zeu ganeoc'h."}
+{"name": "aoe2mc.garrison.all_back", "text": "Pep hini a zistro d'al labour"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Sonet a ra kloc'h ar gêr: %s pezhiad a glask lojerez"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Dibabet n'eus pezhiad ebet."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "N'eus pezhiad ebet ganeoc'h."}
+{"name": "aoe2mc.garrison.out", "text": "%s unanezh a zo bet er-maez"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s pezhiad a glask lojerez"}
+{"name": "aoe2mc.gather.act_attack", "text": "lazhañ"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "roll savout"}
+{"name": "aoe2mc.gather.act_garrison", "text": "gwarnizon"}
+{"name": "aoe2mc.gather.act_gather", "text": "dastum"}
+{"name": "aoe2mc.gather.act_hunt", "text": "heuliañ loened"}
+{"name": "aoe2mc.gather.act_move", "text": "mont"}
+{"name": "aoe2mc.gather.act_select", "text": "dibab"}
+{"name": "aoe2mc.gather.act_select_type", "text": "dibab an holl eus ar seurt"}
+{"name": "aoe2mc.gather.act_trade", "text": "marc'hadourezh"}
+{"name": "aoe2mc.gather.act_train", "text": "treinañ"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Lazhañ: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Boest dibab: nullet"}
+{"name": "aoe2mc.gather.bush", "text": "Dourgwezenn"}
+{"name": "aoe2mc.gather.carcass", "text": "Kerc'h"}
+{"name": "aoe2mc.gather.corner", "text": "Boest dibab: klikit war ar c'horn all"}
+{"name": "aoe2mc.gather.enemy", "text": "Enebour %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Savadur enebour"}
+{"name": "aoe2mc.gather.farm", "text": "Parkad"}
+{"name": "aoe2mc.gather.ground", "text": "An douar"}
+{"name": "aoe2mc.gather.group", "text": "Strollad %s: %s unanezh"}
+{"name": "aoe2mc.gather.group_saved", "text": "Strollad %s: %s unanezh enrollet"}
+{"name": "aoe2mc.gather.mine", "text": "Mengleuz %s"}
+{"name": "aoe2mc.gather.paused", "text": "Paouezet eo ar c'hêm."}
+{"name": "aoe2mc.gather.point", "text": "%s · Klik dehoù: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Hadoù en ostilhoù: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Dibabet: %s unanezh"}
+{"name": "aoe2mc.gather.tree", "text": "Gwezenn"}
+{"name": "aoe2mc.hill.holds", "text": "Miret a ra ar c'hoarier %s ar vonumant."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Lazhañ an douar: klikit dehoù war an douar"}
+{"name": "aoe2mc.hints.attack_move", "text": "Mont ha lazhañ: klikit dehoù war an douar"}
+{"name": "aoe2mc.hints.building", "text": "Lakit ar %s: klikit dehoù war an douar · Shift + klik dehoù: lakaat muioc'h · Nullañ: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: klik kleiz evit lakaat · Shift: lakaat muioc'h · Klik dehoù: nullañ"}
+{"name": "aoe2mc.hints.corner", "text": "Boest dibab: klikit dehoù war ar c'horn all"}
+{"name": "aoe2mc.hints.count_military", "text": "%s unanezh soudard"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s unanezh soudard"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s pezhiad"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s pezhiad"}
+{"name": "aoe2mc.hints.deselect", "text": "Boest goullo: diziubañ"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Klik kleiz: diziubañ"}
+{"name": "aoe2mc.hints.follow", "text": "Heuliañ: klikit dehoù war un unanez deoc'h pe kevelerien"}
+{"name": "aoe2mc.hints.guard", "text": "Gwarediñ: klikit dehoù war un unanez pe ur savadur deoc'h pe kevelerien"}
+{"name": "aoe2mc.hints.military", "text": "%s · Klik dehoù: lazhañ un enebour, roll ar stad · %s"}
+{"name": "aoe2mc.hints.none", "text": "Klik kleiz: dibab ur unanez · Derc'hit ar c'hlikañ kleiz: boest dibab"}
+{"name": "aoe2mc.hints.none_wand", "text": "Klik dehoù: dibab ur unanez · Gwalenn: boest dibab"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrouilhañ: klikit dehoù war an douar"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Klik dehoù: dastum, savout, roll savout · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s prest"}
+{"name": "aoe2mc.lobby.you_play", "text": "C'hoari a rit %s."}
+{"name": "aoe2mc.monk.converts", "text": "Ur manac'h a dro ar %s."}
+{"name": "aoe2mc.monk.dies", "text": "Ar %s a varv (Fallagezh)."}
+{"name": "aoe2mc.pause.continued", "text": "Kenderc'hel a reas ar c'hoarier %s gant ar c'hêm."}
+{"name": "aoe2mc.pause.paused", "text": "Paouezet en deus ar c'hoarier %s ar c'hêm."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Skipailh %s (renkañs keidel %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Echu eo ar c'hêm. Klikit dehoù war al levr Diskoulm en ho torn evit gwelout an disoc'hoù. Stagit programm ar c'hêm gant Ctrl-C en he gonsol."}
+{"name": "aoe2mc.relic_victory.all", "text": "Miret a ra ar c'hoarier %s an holl releg."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Kollet en deus ar c'hoarier %s ur releg."}
+{"name": "aoe2mc.repair.no_resources", "text": "N'eus ket a skouer ebet evit adober ar %s."}
+{"name": "aoe2mc.replay.army", "text": "Arme: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", arme en diwezh: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", kollet: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Urzh savout:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · gwarnizon %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | a zoug %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "savout %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "boued %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "aour %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "dilabour %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "maen %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "koad %s"}
+{"name": "aoe2mc.replay.flare", "text": "Fuzeenn"}
+{"name": "aoe2mc.replay.game_ends", "text": "Echu a ra ar c'hêm"}
+{"name": "aoe2mc.replay.game_time", "text": "Amzer ar c'hêm %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · gwarnizon %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Soudarded %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Poblañs %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Stokoù %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Pezhiad %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s en deus miret ar vonumant: trec'h Roue ar Menez e %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s lazh %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Pouezit Shift daou wezh: gwel evezherien (en ur dremen dre vlokoù). Klikit dehoù war traoù ar bar: restrenn adwelet."}
+{"name": "aoe2mc.replay.king_died", "text": ": ar Roue a varvas e %s. Lazhadenn ar Roue: trec'het eo ar c'hoarier."}
+{"name": "aoe2mc.replay.king_killed", "text": "Roue lazhet e %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Adwelet bev: ar c'hlazh a sav e-kreiz an dale a-zehou ar c'hêm."}
+{"name": "aoe2mc.replay.lost", "text": "Kollet: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " a vir ar vonumant e %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monumant, %s bloaz a chom"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monumant, %s bloaz a chom"}
+{"name": "aoe2mc.replay.no_camera", "text": "N'eus kamera ebet e-biou ar c'hoarier-mañ."}
+{"name": "aoe2mc.replay.now", "text": " bremañ"}
+{"name": "aoe2mc.replay.out", "text": "%s a zo er-maez"}
+{"name": "aoe2mc.replay.players", "text": "C'hoarierien"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " a gas ar releg d'ur vanac'hti ha gounezañ a ra."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Echu eo an adwelet"}
+{"name": "aoe2mc.replay.research", "text": " a ra enklaskoù %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s a zilez"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Adloc'hañ a ra ar servijer evit ar c'hlazh distro: lakit ac'hanoc'h en-dro."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Savadurioù %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekonomiezh %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Soudarded %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Teknologiezh %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Hollad %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "kastelioù %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "prenet %s, gwerzhet %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relegoù %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "marvioù %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Gwariet:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Savout %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Ekon. %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Soud. %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tekn. %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": pezhiad treinet %s, dastumet %s, amzer dilabour ar pezhiad %s, amzer dilabour ti-kloc'h ar gêr %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": a vir ar vonumant (Roue ar Menez)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monumant gounezet %s (Roue ar Menez)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": unanezhioù soudard treinet %s, unanezhioù kollet %s, savadurioù kollet %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Roue lazhet %s (Lazhadenn ar Roue)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": gounezet, releg e vanac'hti %s (Kemer ar Releg)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stribut kaset %s, resevet %s, pezhiad uhel %s (brezhegennet)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": ti-kloc'h ar gêr kollet %s (Marv prim)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, teknologiezh %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": amzeer ar marv a %s, a echu %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Diverradenn (brezhegennet)"}
+{"name": "aoe2mc.replay.task_building", "text": "o savout"}
+{"name": "aoe2mc.replay.task_following", "text": "o heuliañ"}
+{"name": "aoe2mc.replay.task_food", "text": "o tastum boued"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "gwarnizonet"}
+{"name": "aoe2mc.replay.task_gold", "text": "o tastum aour"}
+{"name": "aoe2mc.replay.task_guarding", "text": "o gwarediñ"}
+{"name": "aoe2mc.replay.task_idle", "text": "dilabour"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "o patrouilhañ"}
+{"name": "aoe2mc.replay.task_resources", "text": "o tastum stokoù"}
+{"name": "aoe2mc.replay.task_stone", "text": "o tastum maen"}
+{"name": "aoe2mc.replay.task_walking", "text": "o vale"}
+{"name": "aoe2mc.replay.task_wood", "text": "o tastum koad"}
+{"name": "aoe2mc.replay.team", "text": "Skipailh %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Gwaroer %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Arnezioù gwaroerien %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Dougen %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Arnezioù marc'hegerien %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Parkad %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Aour %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Arnezioù soudarded %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Gwiad %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Emgann tost %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Maen %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Koad %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Kastell"}
+{"name": "aoe2mc.replay.tl_king", "text": "Roue lazhet"}
+{"name": "aoe2mc.replay.tl_military", "text": "1añ soudard: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Releg"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Dilezel"}
+{"name": "aoe2mc.replay.town_fell", "text": ": kouezhet eo ti-kloc'h ar gêr e %s. Marv prim: trec'het eo ar c'hoarier."}
+{"name": "aoe2mc.replay.town_lost", "text": "Ti-kloc'h ar gêr kollet e %s"}
+{"name": "aoe2mc.replay.training", "text": "Treinañ: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universelezh:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekonomiezh %s · Universelezh %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " en deus savet ur marv e %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Emgann: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s unanezh"}
+{"name": "aoe2mc.replay_input.fights", "text": "Emgannoù bras:"}
+{"name": "aoe2mc.replay_input.help", "text": "Adwelet: klikit dehoù war traoù ho bar, pe klikit: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Kemer an dra: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s unanezh)"}
+{"name": "aoe2mc.replay_input.vs", "text": " a-enep "}
+{"name": "aoe2mc.resource.food", "text": "boued"}
+{"name": "aoe2mc.resource.gold", "text": "aour"}
+{"name": "aoe2mc.resource.stone", "text": "maen"}
+{"name": "aoe2mc.resource.wood", "text": "koad"}
+{"name": "aoe2mc.run.back", "text": "%s a zo en-dro"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampagn echuet"}
+{"name": "aoe2mc.run.chat_hint", "text": "Kaozeadenn: al linenn boas a yao d'an holl, /tm TESTENN evit ho kevelerien, /msg ANV TESTENN evit unan hepken."}
+{"name": "aoe2mc.run.left_bot", "text": "Kuitaet en deus %s: ur bot a c'hoari ar c'hoarier %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Kregiñ a ra an senario %s. Lakit ac'hanoc'h en-dro."}
+{"name": "aoe2mc.run.starts_in", "text": "Kregiñ a ra ar c'hêm en %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Digorit \"Dibabit ho c'hoarier\" ha klikit \"Prest\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "An holl reolennoù: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Kentañ pazenn: daliit ar bazh urzhioù ha klikit dehoù war unan eus ho pezhiad."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Kentañ pazenn: daliit ar bazh urzhioù ha klikit kleiz war unan eus ho pezhiad."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Pal: gounezañ ar c'hêm. Arventenn an trec'h: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Enrollet eo ar c'hêm: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s unanezh a zo bet er-maez"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Espiañ otomatek"}
+{"name": "aoe2mc.stance.formation", "text": "Furmadur: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Unan ebet a c'hall lazhañ an douar"}
+{"name": "aoe2mc.stance.unpack", "text": "Dibakit ar Trebuchet a-raok"}
+{"name": "aoe2mc.train.active", "text": "%s a zo oberiant."}
+{"name": "aoe2mc.train.rally", "text": "Klikit dehoù war an douar evit ar pal dastum."}
+{"name": "aoe2mc.train.researched", "text": "%s a zo bet enklasket."}
+{"name": "aoe2mc.transport.out", "text": "%s unanezh a zo bet er-maez"}
+{"name": "aoe2mc.treaty.ended", "text": "Echu eo an emglev: c'hall ar c'hoarierien lazhañ bremañ."}
+{"name": "aoe2mc.treaty.refuse", "text": "Emglev: ne c'hallit ket lazhañ a-raok %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Emglev: ne c'hallit ket lazhañ en ar c'hêm-mañ."}
+{"name": "aoe2mc.treaty.start", "text": "Emglev: ne c'hall hini ebet ar c'hoarierien lazhañ ur c'hoarier all a-raok %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Emglev: ne c'hall hini ebet ar c'hoarierien lazhañ ur c'hoarier all en ar c'hêm-mañ."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Savit ur c'hazarn: klikit dehoù war ur pezhiad dibabet, dibabit ar c'hazarn ha lakit anezhi. Ar bar oberiañ a-us ar bar klavioù a lavar deoc'h da belec'h lakaat anezhi."}
+{"name": "aoe2mc.tutorial.camera", "text": "Dont buan dreist ar gartenn: klikit dehoù gant an dra \"Kamera\", kerzhit, neuze klikit dehoù gantañ adarre."}
+{"name": "aoe2mc.tutorial.camp", "text": "Diskar kampell an enebour e-kreiz ar gartenn: dibabit ho Milisiened ha klikit dehoù war ur savadur. Ar bar boss a-us a ziskouez ar pazenn."}
+{"name": "aoe2mc.tutorial.camps", "text": "Savit ur c'hampoù koad tost d'ar gwez ha ur vilin tost d'an dourgwezennoù. Ar bar a-zehou a ziskouez ar c'hoad a gost."}
+{"name": "aoe2mc.tutorial.complete", "text": "Echu eo ar skolidigezh. Goude: c'hoarit ur c'hêm a-enep ar bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Skolidigezh echuet"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Mont en Oad Feodal: klikit dehoù war ho ti-kloc'h ha dibabit an Oad Feodal. Ar bar a-zehou a ziskouez ho boued."}
+{"name": "aoe2mc.tutorial.food", "text": "Dastumit 100 boued: kasit ur pezhiad d'ar dourgwezennoù. Ar bar a-zehou a ziskouez ho boued."}
+{"name": "aoe2mc.tutorial.house", "text": "Savit un ti: klikit dehoù war ur pezhiad dibabet, dibabit an ti ha lakit anezhi. Ar bar oberiañ a-us ar bar klavioù a lavar deoc'h da belec'h lakaat anezhi."}
+{"name": "aoe2mc.tutorial.militia", "text": "Treinit 3 Milisiened: klikit dehoù war ho kazarn ha dibabit ar milisiened. Ar bar a-zehou a ziskouez ho boued ha ho aour."}
+{"name": "aoe2mc.tutorial.raid", "text": "Ar gelc'h a sach ho pezhiad! Klikit war al linenn gellwenn ruz er c'haozeadenn evit mont eno, neuze dibabit ho Milisiened ha klikit dehoù war ar gelc'h. Ar bar boss a-us a ziskouez enkrez an unanez dibabet."}
+{"name": "aoe2mc.tutorial.select", "text": "Dibabit ur pezhiad: klikit kleiz war unan eus ho pezhiad gant ar bazh urzhioù. Ar bar boss a-us a ziskouez an unanez dibabet, ar bar oberiañ a-us ar bar klavioù a ziskouez an oberiadenn war-lerc'h."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Pazenn graet"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Pazenn %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "AWEL: treinañ a ra ar c'hazarn soudarded-troad. Soudarded-troad a zo spi ha mat a-enep savadurioù."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "AWEL: lazhit gant an holl unanezhioù asambles. Ur strollad bihan a varv a-raok ma c'hall ober dommaj."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "AWEL: savit ar savadurioù distreiñ tost d'ar stokoù, evit ma kerzho ar pezhiad ur pellder berr."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "AWEL: an oad war-lerc'h a zigor savadurioù, unanezhioù ha teknologiezhioù nevez. Derc'hit ar pezhiad en labour pa vez ac'hanoc'h en ho raok."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "AWEL: ar dourgwezennoù tost d'ur vilin a zo un derañ diogel evit ar boued. Diwezhatoc'h, ar parkadoù a ro boued na echu ket."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "AWEL: un ti a ro lec'h da 5 den all. Sellit ouzh ar boblañs er bar a-zehou ha savit tiegezhioù a-raok ma vezo leun."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "AWEL: gallout a rit lakaat betek 15 unanez en ostilhoù ur savadur pa vez ho stokoù ganeoc'h."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "AWEL: en AoE2 e kas kloc'h ar gêr ar pezhiad e-barzh ti-kloc'h ar gêr. Sonit hi pa vez raktaolet ho kêr gant an enebour."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "AWEL: an linenn Dilabour er bar a-zehou a gont ho pezhiad hep labour. Roit labour dezho."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "AWEL: treinit pezhiad bep amzer en oadoù kentañ. Pezhiad muioc'h a ro stokoù muioc'h."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "AWEL: dastumañ a ra ar pezhiad buanoc'h tost d'ur savadur distreiñ. Savit ur c'hampoù koad tost d'ar gwez."}
+{"name": "aoe2mc.tutorial.villager", "text": "Treinit ur pezhiad: klikit dehoù war ho ti-kloc'h ha dibabit ar pezhiad. Ar bar a-zehou a ziskouez ar boued a gost."}
+{"name": "aoe2mc.tutorial.wood", "text": "Dastumit 50 koad: dibabit ur pezhiad ha klikit dehoù war ur wezenn. Ar bar a-zehou a ziskouez ho koad."}
+{"name": "aoe2mc.victory", "text": "Trec'h"}
+{"name": "aoe2mc.wonder.built", "text": "Savet en deus ar c'hoarier %s ur marv."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Diskaret eo bet marv ar c'hoarier %s."}

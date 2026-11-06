@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Bidh an cluicheadair %s a' dol gu an %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: bidh an Truailleadh a' toirt a' mhapa bhon oir gu a' mheadhan ann an %s. Bidh e a' sgrios a h-uile aonad agus togalach innte."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Chan urrainn dhomh %s a thogail an sin an-dràsta."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Chan urrainn dhomh an t-aonad sin a thrèanadh: chan eil togalach agam air a shon."}
+{"name": "aoe2mc.bot.flare_two", "text": "Cuir dà lasair airson a' bhalla."}
+{"name": "aoe2mc.bot.no_flare", "text": "Chan fhaic mi lasair sam bith."}
+{"name": "aoe2mc.bot.no_market", "text": "Chan eil margadh agam: chan urrainn dhomh càin a chur."}
+{"name": "aoe2mc.bot.no_onager", "text": "Chan eil onager agam."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Chan eil gu leòr goireasan agam airson balla."}
+{"name": "aoe2mc.bot.no_water", "text": "Chan eil uisge faisg air mo bhaile: chan urrainn dhomh cabhlach a thogail."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Chan urrainn dha mo onagers craobhan a ghearradh."}
+{"name": "aoe2mc.build.cost", "text": "Chan eil gu leòr goireasan ann: cosnaidh %s %s."}
+{"name": "aoe2mc.build.flat", "text": "Feumaidh an %s seasamh air talamh còmhnard."}
+{"name": "aoe2mc.build.gate_spot", "text": "Feumaidh %s seasamh air 4 teàrnaichean de bhalla agad fhèin ann an loidhne dhìreach, no air 3 teàrnaichean trasnanach."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Tog: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Feumaidh %s seasamh air uisge ri taobh a' chladaich."}
+{"name": "aoe2mc.build.space", "text": "Chan eil àite airson an %s an seo."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Chan eil gu leòr goireasan ann: cosnaidh %s teàrnaichean de %s %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: cliog deas air deireadh a' bhalla."}
+{"name": "aoe2mc.build.water", "text": "Feumaidh %s seasamh air an uisge."}
+{"name": "aoe2mc.camera.fov", "text": "Bidh a' chamara luath a' toirt air an nì na do lorg crathadh. Gus a chumail socair, suidhich Roghainnean > Roghainnean Ruigsichd > View Bobbing gu OFF. Bidh a' chamara a' dèanamh an t-sealladh nas leithide cuideachd, a tha a' sealltainn barrachd den mhapa. Gus an t-sealladh àbhaisteach a chumail, suidhich Roghainnean > Roghainnean Ruigsichd > FOV Effects gu 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Camara: dheth"}
+{"name": "aoe2mc.camera.on", "text": "Camara: air, luaths x%s. Shift cliog deas: an ath-luaths."}
+{"name": "aoe2mc.camera.speed", "text": "Luaths na camara: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Thoir a-mach a h-uile aonad nàmhaid agus caill beagan aonadan"}
+{"name": "aoe2mc.challenge.booming", "text": "Trèan 100 tuathanach agus rach gu Aois an Ìmpire"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Rach gu Aois a' Chaisteil agus mair ionnsaighean an nàmhaid"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Sgrios caisteal an nàmhaid"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Cruinnich 200 biadh, 200 fiodh, 100 òr agus 200 clach, trèan 21 tuathanach, tog campa fiodha agus muileann, agus rach gu Aois an Fheudalachd"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Trèan 27 tuathanach, tog 5 taighean agus rach gu Aois a' Chaisteil"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Thoir a-mach a h-uile sianar tonn nàmhaid"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s aonadan air chall, bonn umha suas gu %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s aonadan air chall, bonn òir suas gu %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s aonadan air chall, gun bhonn"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s aonadan air chall, bonn airgid suas gu %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bonn umha"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Bonn òir"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Bonn airgid"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Sgrios a h-uile long chogaidh nàmhaid"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Gun bhonn"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Marbh 5 tuathanaich nàmhaid"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bonn umha ann an %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Bonn òir ann an %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Bonn airgid ann an %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis dheth"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis air"}
+{"name": "aoe2mc.cheat.beyond", "text": "Teicneòlasan: suas gu 256 rannsachadh"}
+{"name": "aoe2mc.cheat.cpu", "text": "Crìoch an t-sluaigh: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Ceò a' chogaidh: dheth"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Ceò a' chogaidh: air"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Tha teicneòlasan an-asgaidh"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Is e roinn a tha ceart: thèid an teachd-a-steach agad gu do cho-chaidreachais"}
+{"name": "aoe2mc.cheat.wonders", "text": "Tha thu a' riaghladh na nàdair: %s beathaichean"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Chan eil ach co-chaidreachais air fhàgail: thig na caidreachasan gu crìch. Buannaichidh an cluicheadair mu dheireadh a tha beò."}
+{"name": "aoe2mc.conquest.defeated", "text": "Tha an cluicheadair %s air a chur an sàs."}
+{"name": "aoe2mc.controls.attack", "text": "Ionnsaich: tagh aonadan armachd, an uairsin cliog deas air nàmhaid."}
+{"name": "aoe2mc.controls.build", "text": "Tog: tagh tuathanaich, cliog orra deas airson a' chlàr togail, tagh togalach, an uairsin cliog clì air an talamh. Shift + cliog clì: cuir barrachd. Cliog deas: sguir dheth."}
+{"name": "aoe2mc.controls.camera", "text": "Camara: cliog deas leis an speactarlann Camara (iuchair bàr 2): tha thu a' coiseachd gu luath àrd os cionn na mapa. Shift cliog deas: an ath-luaths. Cliog deas a-rithist: tha thu a' itealaich sìos."}
+{"name": "aoe2mc.controls.garrison", "text": "Dìon: tagh aonadan, an uairsin cliog deas air togalach agad fhèin. Leigidh a chlàr iad a-mach. Clàr an tùr-clag baile: Dèan Clag a' Bhaile a sheinn."}
+{"name": "aoe2mc.controls.gather", "text": "Cruinnich: tagh tuathanaich, an uairsin cliog deas air craobh, preas mheasan, mèinn no fearann-àiteachais."}
+{"name": "aoe2mc.controls.goto", "text": "Rach gu: cliog deas leis a' chonnadh Rach gu (iuchair bàr 3): clàr de na tùir-chlag baile agad, do bhuidhnean smachd agus an ath thuathanach gun obair."}
+{"name": "aoe2mc.controls.groups", "text": "Buidhnean smachd: tagh aonadan, glac nì buidhne (iuchraichean bàr 5 gu 9) agus Shift + cliog deas gus an taghadh a shàbhaladh. Cliog deas: tagh a' bhuidheann."}
+{"name": "aoe2mc.controls.head", "text": "Smachdan (cùm an curran air bata; tha am bàr gnìomh a' sealltainn an ath cheum):"}
+{"name": "aoe2mc.controls.menu", "text": "Clàr a' gheama: cliog deas leis an leabhar Clàr a' gheama (iuchair bàr 4): dioplòmasaidh agus càin, lasair, sàbhail, cuir stad agus craobh nan teicneòlasan."}
+{"name": "aoe2mc.controls.move", "text": "Gluais: le taghadh, cliog deas air an talamh."}
+{"name": "aoe2mc.controls.research", "text": "Rannsaich agus rach gu aois na h-ath-aois: cliog deas air togalach agad fhèin agus cliog air teicneolas no air an ath aois anns a' chlàr aige."}
+{"name": "aoe2mc.controls.select", "text": "Tagh: cliog clì air aonad. Cùm an cliog clì agus seall tarsainn air an talamh: bogsa taghaidh. Cliog deas: thoir òrdughan."}
+{"name": "aoe2mc.controls.train", "text": "Trèan: cliog deas air togalach agad fhèin (tùr-clag, bairac ...) agus cliog air aonad anns a' chlàr aige."}
+{"name": "aoe2mc.defeat", "text": "Call"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Co-chaidreachas"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Dh'atharraich an cluicheadair %s a sheasamh dhut: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Nàmhaid"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neodrach"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Shuidhich an cluicheadair %s luaths a' gheama gu %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Chuir an cluicheadair %s %s %s gu cluicheadair %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Lasair aig %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Lean: cliog air aonad agad fhèin"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Freiceadan: cliog air aonad no togalach agad fhèin"}
+{"name": "aoe2mc.gaia.joins", "text": "Thig %s thugad."}
+{"name": "aoe2mc.garrison.all_back", "text": "Air ais gu obair, a h-uile duine"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Bidh clag a' bhaile a' seinn: bidh %s tuathanaich a' sireadh fasgadh"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Chan eil tuathanach air a thaghadh."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Chan eil tuathanaich agad."}
+{"name": "aoe2mc.garrison.out", "text": "Thàinig %s aonadan a-mach"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "Bidh %s tuathanaich a' sireadh fasgadh"}
+{"name": "aoe2mc.gather.act_attack", "text": "ionnsaich"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "clàr togail"}
+{"name": "aoe2mc.gather.act_garrison", "text": "dìon"}
+{"name": "aoe2mc.gather.act_gather", "text": "cruinnich"}
+{"name": "aoe2mc.gather.act_hunt", "text": "seilg"}
+{"name": "aoe2mc.gather.act_move", "text": "gluais"}
+{"name": "aoe2mc.gather.act_select", "text": "tagh"}
+{"name": "aoe2mc.gather.act_select_type", "text": "tagh a h-uile dhen t-seòrsa"}
+{"name": "aoe2mc.gather.act_trade", "text": "malairt"}
+{"name": "aoe2mc.gather.act_train", "text": "trèan"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Ionnsaich: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Bogsa taghaidh: sguireadh dheth"}
+{"name": "aoe2mc.gather.bush", "text": "Preas mheasan"}
+{"name": "aoe2mc.gather.carcass", "text": "Cairbh"}
+{"name": "aoe2mc.gather.corner", "text": "Bogsa taghaidh: cliog air an oisean eile"}
+{"name": "aoe2mc.gather.enemy", "text": "Nàmhaid %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Togalach nàmhaid"}
+{"name": "aoe2mc.gather.farm", "text": "Fearann-àiteachais"}
+{"name": "aoe2mc.gather.ground", "text": "An talamh"}
+{"name": "aoe2mc.gather.group", "text": "Buidheann %s: %s aonadan"}
+{"name": "aoe2mc.gather.group_saved", "text": "Buidheann %s: %s aonadan sàbhailte"}
+{"name": "aoe2mc.gather.mine", "text": "Mèinn %s"}
+{"name": "aoe2mc.gather.paused", "text": "Tha a' gheama air stad."}
+{"name": "aoe2mc.gather.point", "text": "%s · Cliog deas: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Sìolan san loidhne: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Air a thaghadh: %s aonadan"}
+{"name": "aoe2mc.gather.tree", "text": "Craobh"}
+{"name": "aoe2mc.hill.holds", "text": "Tha an cluicheadair %s a' cumail a' charragh-chuimhne."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Ionnsaich an Talamh: cliog deas air an talamh"}
+{"name": "aoe2mc.hints.attack_move", "text": "Gluais agus Ionnsaich: cliog deas air an talamh"}
+{"name": "aoe2mc.hints.building", "text": "Cuir an %s: cliog deas air an talamh · Shift + cliog deas: cuir barrachd · Sguir dheth: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: cliog clì airson a chur · Shift: cuir barrachd · Cliog deas: sguir dheth"}
+{"name": "aoe2mc.hints.corner", "text": "Bogsa taghaidh: cliog deas air an oisean eile"}
+{"name": "aoe2mc.hints.count_military", "text": "%s aonad armachd"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s aonadan armachd"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s tuathanach"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s tuathanaich"}
+{"name": "aoe2mc.hints.deselect", "text": "Bogsa falamh: thoir an taghadh air falbh"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Cliog clì: thoir an taghadh air falbh"}
+{"name": "aoe2mc.hints.follow", "text": "Lean: cliog deas air aonad agad fhèin no co-chaidreachail"}
+{"name": "aoe2mc.hints.guard", "text": "Freiceadan: cliog deas air aonad no togalach agad fhèin no co-chaidreachail"}
+{"name": "aoe2mc.hints.military", "text": "%s · Cliog deas: ionnsaich nàmhaid, clàr an t-seasamh · %s"}
+{"name": "aoe2mc.hints.none", "text": "Cliog clì: tagh aonad · Cùm an cliog clì: bogsa taghaidh"}
+{"name": "aoe2mc.hints.none_wand", "text": "Cliog deas: tagh aonad · Slat-draoidheachd: bogsa taghaidh"}
+{"name": "aoe2mc.hints.patrol", "text": "Peatrail: cliog deas air an talamh"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Cliog deas: cruinnich, tog, clàr togail · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s deiseil"}
+{"name": "aoe2mc.lobby.you_play", "text": "Tha thu a' cluich %s."}
+{"name": "aoe2mc.monk.converts", "text": "Bidh manach a' tionndadh an %s."}
+{"name": "aoe2mc.monk.dies", "text": "Bidh an %s a' bàsachadh (Eiresi)."}
+{"name": "aoe2mc.pause.continued", "text": "Lean an cluicheadair %s air adhart leis a' gheama."}
+{"name": "aoe2mc.pause.paused", "text": "Chuir an cluicheadair %s stad air a' gheama."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Sgioba %s (rangachadh meadhanach %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Tha a' gheama seachad. Cliog deas air an leabhar Geàrr-chunntas na do làimh gus na toraidhean fhaicinn. Stad prògram na geama le Ctrl-C na consoil."}
+{"name": "aoe2mc.relic_victory.all", "text": "Tha an cluicheadair %s a' cumail nan seann-chreideasan gu lèir."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Chaill an cluicheadair %s seann-chreideas."}
+{"name": "aoe2mc.repair.no_resources", "text": "Chan eil gu leòr goireasan ann airson an %s a chàradh."}
+{"name": "aoe2mc.replay.army", "text": "Arm: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", arm aig a' cheann: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", air chall: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Òrdugh togail:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · dìon %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | a' giùlan %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "tog %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "biadh %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "òr %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "gun obair %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "clach %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "fiodh %s"}
+{"name": "aoe2mc.replay.flare", "text": "Lasair"}
+{"name": "aoe2mc.replay.game_ends", "text": "Tha a' gheama a' crìochnachadh"}
+{"name": "aoe2mc.replay.game_time", "text": "Ùine na geama %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · dìon %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Armachd %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Sluagh %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Goireasan %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Tuathanaich %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "Chùm %s a' charragh-chuimhne: buaidh Rìgh a' Chnuic aig %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s ionnsaich %s/%s armachd%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Brùth Shift dà thuair: sealladh luchd-amhairc (itealaich tro bhlocaichean). Cliog deas air nithean a' bhàr: smachd ath-chluich."}
+{"name": "aoe2mc.replay.king_died", "text": ": bhàsaich an Rìgh aig %s. Rìghmharbhadh: tha an cluicheadair a-mach."}
+{"name": "aoe2mc.replay.king_killed", "text": "Chaidh an Rìgh a mharbhadh aig %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Ath-chluich bheò: stadaidh an leum aig an dàil air cùl na geama."}
+{"name": "aoe2mc.replay.lost", "text": "Air chall: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " a' cumail a' charragh-chuimhne aig %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: carragh-chuimhne, %s bliadhna air fhàgail"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: carragh-chuimhne, %s bliadhna air fhàgail"}
+{"name": "aoe2mc.replay.no_camera", "text": "Chan eil camara aig a' chlàr seo dhan chluicheadair aige."}
+{"name": "aoe2mc.replay.now", "text": " a-nis"}
+{"name": "aoe2mc.replay.out", "text": "Tha %s a-mach"}
+{"name": "aoe2mc.replay.players", "text": "Cluicheadairean"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " a' toirt an seann-chreideas gu manachainn agus a' buannachadh."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Ath-chluich thàinig gu crìch"}
+{"name": "aoe2mc.replay.research", "text": " a' rannsachadh %s"}
+{"name": "aoe2mc.replay.resigns", "text": "Tha %s a' leigeil dheth"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Tha am frithealaiche ag ath-thòiseachadh airson an leum air ais: rach a-steach a-rithist."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Togalaichean %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Eaconamaidh %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Armachd %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Teicneòlasan %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Iomlan %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "caistealan %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "cheannaich %s, reic %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "seann-chreideasan %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "iongnadh %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Chaidh a chosg:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Tog %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eaconamaidh %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Armachd %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Teic. %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": trèanadh %s tuathanaich, chruinnich %s, ùine gun obair tuathanaich %s, ùine gun obair tùr-clag a' bhaile %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": a' cumail a' charragh-chuimhne (Rìgh a' Chnuic)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": chaidh a' charragh-chuimhne %s a bhuannachadh (Rìgh a' Chnuic)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": aonadan armachd trèanta %s, aonadan air chall %s, togalaichean air chall %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": chaidh an Rìgh a mharbhadh %s (Rìghmharbhadh)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": buannaichidh e, seann-chreideas ann am manachainn %s (Glac an t-Seann-chreideas)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %scàin chaidh a chur %s, fhuair %s, àrd-thuathanaich %s (tuairmse)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": chaidh tùr-clag a' bhaile %s a chall (Bàs Obann)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, teicneòlasan %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": tàmailt iongnaidh bho %s, a' crìochnachadh %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Geàrr-chunntas (tuairmse)"}
+{"name": "aoe2mc.replay.task_building", "text": "a' togail"}
+{"name": "aoe2mc.replay.task_following", "text": "a' leantainn"}
+{"name": "aoe2mc.replay.task_food", "text": "a' cruinneachadh biadh"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "air a dhìon"}
+{"name": "aoe2mc.replay.task_gold", "text": "a' cruinneachadh òir"}
+{"name": "aoe2mc.replay.task_guarding", "text": "a' dìon"}
+{"name": "aoe2mc.replay.task_idle", "text": "gun obair"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "a' peatrail"}
+{"name": "aoe2mc.replay.task_resources", "text": "a' cruinneachadh ghoireasan"}
+{"name": "aoe2mc.replay.task_stone", "text": "a' cruinneachadh clach"}
+{"name": "aoe2mc.replay.task_walking", "text": "a' coiseachd"}
+{"name": "aoe2mc.replay.task_wood", "text": "a' cruinneachadh fiodh"}
+{"name": "aoe2mc.replay.team", "text": "Sgioba %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Saighdear %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armachd shaighdeirean %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Giùlan %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armachd eich %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Fearann-àiteachais %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Òr %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armachd saighdearan-coise %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Fighe %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Sabaid faisg %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Clach %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Fiodh %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Caisteal"}
+{"name": "aoe2mc.replay.tl_king", "text": "Chaidh an Rìgh a mharbhadh"}
+{"name": "aoe2mc.replay.tl_military", "text": "1d armachd: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Seann-chreideas"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Leigidh dheth"}
+{"name": "aoe2mc.replay.town_fell", "text": ": thuit tùr-clag a' bhaile aig %s. Bàs Obann: tha an cluicheadair a-mach."}
+{"name": "aoe2mc.replay.town_lost", "text": "Chaidh tùr-clag a' bhaile a chall aig %s"}
+{"name": "aoe2mc.replay.training", "text": "A' trèanadh: %s"}
+{"name": "aoe2mc.replay.university", "text": "Oilthigh:"}
+{"name": "aoe2mc.replay.up_counts", "text": "eaconamaidh %s · Oilthigh %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " thog iongnadh aig %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Sabaid: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s aonadan"}
+{"name": "aoe2mc.replay_input.fights", "text": "Sabaidean mòra:"}
+{"name": "aoe2mc.replay_input.help", "text": "Ath-chluich: cliog deas air nithean do bhàr, no cliog: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Gabh thairis: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s aonadan)"}
+{"name": "aoe2mc.replay_input.vs", "text": " an aghaidh "}
+{"name": "aoe2mc.resource.food", "text": "biadh"}
+{"name": "aoe2mc.resource.gold", "text": "òr"}
+{"name": "aoe2mc.resource.stone", "text": "clach"}
+{"name": "aoe2mc.resource.wood", "text": "fiodh"}
+{"name": "aoe2mc.run.back", "text": "Tha %s air ais"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Thoirt a' champaign gu crìch"}
+{"name": "aoe2mc.run.chat_hint", "text": "Conaltradh: thèid loidhne àbhaisteach gu a h-uile duine, /tm TEACSA gu do cho-chaidreachais, /msg AINM TEACSA gu aon neach."}
+{"name": "aoe2mc.run.left_bot", "text": "Dh'fhalbh %s: cluichidh bot an cluicheadair %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Tha an sealladh %s a' tòiseachadh. Rach a-steach a-rithist."}
+{"name": "aoe2mc.run.starts_in", "text": "Bidh a' gheama a' tòiseachadh ann an %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Fosgail \"Tagh do cluicheadair\" agus cliog \"Deiseil\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Gach smachd: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "A' chiad cheum: cùm am bata-òrdugh agus cliog deas air fear de na tuathanaich agad."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "A' chiad cheum: cùm am bata-òrdugh agus cliog clì air fear de na tuathanaich agad."}
+{"name": "aoe2mc.run.welcome_goal", "text": "An amas: a' gheama a bhuannachadh. Roghainn na buaidh: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Chaidh a' gheama a shàbhaladh: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "Thàinig %s aonadan a-mach"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Sgrùdadh Fèin-obrachail"}
+{"name": "aoe2mc.stance.formation", "text": "Cruth-ghrùpa: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Chan urrainn aonad sam bith an talamh ionnsaigh"}
+{"name": "aoe2mc.stance.unpack", "text": "Fosgail an Trebuchet an toiseach"}
+{"name": "aoe2mc.train.active", "text": "Tha %s gnìomhach."}
+{"name": "aoe2mc.train.rally", "text": "Cliog deas air an talamh airson an àite cruinneachaidh."}
+{"name": "aoe2mc.train.researched", "text": "Chaidh %s a rannsachadh."}
+{"name": "aoe2mc.transport.out", "text": "Thàinig %s aonadan a-mach"}
+{"name": "aoe2mc.treaty.ended", "text": "Thàinig an cùmhnant gu crìch: faodaidh cluicheadairean ionnsaigh a thoirt a-nis."}
+{"name": "aoe2mc.treaty.refuse", "text": "Cùmhnant: chan urrainn dhut ionnsaigh a thoirt ro %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Cùmhnant: chan urrainn dhut ionnsaigh a thoirt sa gheama seo."}
+{"name": "aoe2mc.treaty.start", "text": "Cùmhnant: chan urrainn do chluicheadair sam bith ionnsaigh a thoirt air cluicheadair eile ro %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Cùmhnant: chan urrainn do chluicheadair sam bith ionnsaigh a thoirt air cluicheadair eile sa gheama seo."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Tog bairac: cliog deas air tuathanach taghte, tagh am bairac agus cuir ann e. Tha am bàr gnìomh os cionn a' bhàr luathachaidh ag innse dhut càite an cuir thu e."}
+{"name": "aoe2mc.tutorial.camera", "text": "Gluais gu luath thar na mapa: cliog deas leis an nì \"Camara\", coisich, an uairsin cliog deas leis a-rithist."}
+{"name": "aoe2mc.tutorial.camp", "text": "Sgrios campa an nàmhaid ann am meadhan na mapa: tagh na Milisidh agad agus cliog deas air togalach. Tha am bàr boss aig mullach na sgrìn a' sealltainn na ceum."}
+{"name": "aoe2mc.tutorial.camps", "text": "Tog campa fiodha faisg air na craobhan agus muileann faisg air na preasan mheasan. Tha am bàr air an taobh dheis a' sealltainn am fiodh a bhios iad a' cosg."}
+{"name": "aoe2mc.tutorial.complete", "text": "Tha an teagasg deiseil. An ath rud: cluich geama an aghaidh a' bhot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Teagasg deiseil"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Rach gu Aois an Fheudalachd: cliog deas air tùr-clag do bhaile agus tagh Aois an Fheudalachd. Tha am bàr air an taobh dheis a' sealltainn do bhiadh."}
+{"name": "aoe2mc.tutorial.food", "text": "Cruinnich 100 biadh: cuir tuathanach gu na preasan mheasan. Tha am bàr air an taobh dheis a' sealltainn do bhiadh."}
+{"name": "aoe2mc.tutorial.house", "text": "Tog taigh: cliog deas air tuathanach taghte, tagh an taigh agus cuir ann e. Tha am bàr gnìomh os cionn a' bhàr luathachaidh ag innse dhut càite an cuir thu e."}
+{"name": "aoe2mc.tutorial.militia", "text": "Trèan 3 Milisidh: cliog deas air a' bhairac agad agus tagh a' mhilis. Tha am bàr air an taobh dheis a' sealltainn do bhiadh agus òr."}
+{"name": "aoe2mc.tutorial.raid", "text": "Tha an nàmhaid a' toirt ionnsaigh air na tuathanaich agad! Cliog air loidhne an rabhaidh dhearg sa chonaltradh airson a dhol ann, tagh na Milisidh agad an uairsin cliog deas air na nàimhdean. Tha am bàr boss aig mullach na sgrìn a' sealltainn slàinte an aonaid taghte."}
+{"name": "aoe2mc.tutorial.select", "text": "Tagh tuathanach: cliog clì air fear de na tuathanaich agad leis a' bhata-òrdugh. Tha am bàr boss aig mullach na sgrìn a' sealltainn an aonaid taghte, tha am bàr gnìomh os cionn a' bhàr luathachaidh a' sealltainn an ath ghnìomh."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Ceum deiseil"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Ceum %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "COMHAIRLE: bidh am bairac a' trèanadh saighdearan-coise. Tha saighdearan-coise saor agus math an aghaidh thogalaichean."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "COMHAIRLE: thoir ionnsaigh le na h-aonadan agad còmhla. Bàsaichidh buidheann bheag mus dèan i cron."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "COMHAIRLE: tog na togalaichean lùghdachaidh faisg air na goireasan, gus am coisich na tuathanaich astar goirid."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "COMHAIRLE: fosglaidh an ath aois togalaichean, aonadan agus teicneòlasan ùra. Cumaibh na tuathanaich ag obair fhad 's a tha thu a' dol air adhart."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "COMHAIRLE: is e tòiseachadh sàbhailte biadh a th' ann am preasan mheasan faisg air muileann. Nas fhaide air adhart, tha fearann-àiteachais a' toirt biadh nach tèid thairis."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "COMHAIRLE: tha taigh a' toirt àite airson 5 tuilleadh sluaigh. Thoir sùil air an t-sluagh sa bhàr air an taobh dheis agus tog taighean mus bi e làn."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "COMHAIRLE: is urrainn dhut suas ri 15 aonad a chur ann an sreath ann an togalach nuair a bhios na goireasan agad."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "COMHAIRLE: ann an AoE2 cuiridh clag a' bhaile na tuathanaich a-steach do thùr-clag a' bhaile. Dèan a seinn nuair a bhios an nàmhaid a' sabaid air a' bhaile agad."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "COMHAIRLE: comharraichidh loidhne Gun obair a' bhàr air an taobh dheis na tuathanaich agad gun obair. Thoir obair dhaibh."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "COMHAIRLE: trèan tuathanaich an-còmhnaidh anns na ciad aoisean. Bidh barrachd thuathanaich a' toirt barrachd ghoireasan."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "COMHAIRLE: bidh tuathanaich a' cruinneachadh nas luaithe faisg air togalach lùghdachaidh. Tog campa fiodha ri taobh nan craobh."}
+{"name": "aoe2mc.tutorial.villager", "text": "Trèan tuathanach: cliog deas air tùr-clag do bhaile agus tagh an tuathanach. Tha am bàr air an taobh dheis a' sealltainn am biadh a bhios e a' cosg."}
+{"name": "aoe2mc.tutorial.wood", "text": "Cruinnich 50 fiodh: tagh tuathanach agus cliog deas air craobh. Tha am bàr air an taobh dheis a' sealltainn am fiodh agad."}
+{"name": "aoe2mc.victory", "text": "Buaidh"}
+{"name": "aoe2mc.wonder.built", "text": "Thog an cluicheadair %s iongnadh."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Chaidh iongnadh a' chluicheadair %s a sgrios."}
