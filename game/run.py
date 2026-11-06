@@ -258,7 +258,23 @@ class PackServer:
         self.http.server_close()
 
 
-def properties(game_port, rcon_port, password, pack=None, host=False):
+def whitelist(game):
+    """Put the invited names on the white-list of the server (#5892): the server finds the UUID of each account."""
+    for name in game.invite if game.host else ():
+        game.command(f"whitelist add {name}")
+
+
+def invite_names(host, invite, offline):
+    """The names of --invite ("Alex,Sam"); stop on --host with none: an open server for all is not the default (#5892)."""
+    names = tuple(n.strip() for n in (invite or "").split(",") if n.strip())
+    if host and not names:
+        sys.exit("--host: give the Minecraft names of your friends with --invite NAME,NAME (you too, the host)")
+    if host and offline:
+        print("Warning: --offline: no Minecraft login check, a stranger can join with an invited name")
+    return names
+
+
+def properties(game_port, rcon_port, password, pack=None, host=False, offline=False):
     """server.properties: only local players can join (127.0.0.1). They play in creative mode (#292).
     A missing white-list becomes "true" in 26.3: then no player can join (#285). Each player is an operator
     (op_joined): the output of RCON and console commands (the "fill" of a falling building) must not go to its chat (#1799).
@@ -267,7 +283,9 @@ def properties(game_port, rcon_port, password, pack=None, host=False):
     pack: the PackServer of the world (#2740) or its ReleasePack (#2741). The units have no vanilla look without it: the player must accept it."""
     extra = (f"resource-pack={pack.url}\nresource-pack-sha1={pack.sha1}\nrequire-resource-pack=true\n"
              f"resource-pack-prompt={json.dumps({'text': PROMPT})}\n") if pack else ""
-    return extra + (f"online-mode=false\nserver-ip={'' if host else '127.0.0.1'}\nserver-port={game_port}\nwhite-list=false\n"
+    online = "true" if host and not offline else "false"
+    white = "white-list=true\nenforce-whitelist=true\n" if host else "white-list=false\n"
+    return extra + (f"online-mode={online}\nserver-ip={'' if host else '127.0.0.1'}\nserver-port={game_port}\n{white}"
             f"enable-rcon=true\nrcon.port={rcon_port}\nrcon.password={password}\n"
             "spawn-protection=0\nmax-tick-time=-1\nenable-query=false\nbroadcast-rcon-to-ops=false\n"
             "broadcast-console-to-ops=false\n"
@@ -313,6 +331,7 @@ class Game:
         (25 s) let the trigger timers of the first seconds run before the join."""
         self.world, self.version, self.timeout, self.kind = os.path.abspath(world), version, timeout, server
         self.wait, self.host = wait, False                # host: open to the network (--host, #5891)
+        self.invite, self.offline = (), False             # --invite, --offline: the white-list of a network game (#5892)
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
         self.sides = {}
@@ -343,7 +362,7 @@ class Game:
         path = pack_file(self.world)
         self.pack = pack_source(path, self.host) if path else None
         with open(os.path.join(self.folder, "server.properties"), "w") as f:
-            f.write(properties(self.game_port, self.port, password, self.pack, self.host))
+            f.write(properties(self.game_port, self.port, password, self.pack, self.host, self.offline))
         if self.kind == "paper":
             with open(os.path.join(self.folder, "spigot.yml"), "w") as f:
                 f.write(SPIGOT)
@@ -353,6 +372,7 @@ class Game:
         try:
             self.server.wait(r"\]: Done \(", self.timeout)
             self.rcon = Rcon("127.0.0.1", self.port, password)
+            whitelist(self)
             if self.wait:
                 freeze(self)
         except BaseException:
@@ -1595,6 +1615,10 @@ def main(argv=None, scenario=None):
                     "work rate (default 100)")
     ap.add_argument("--host", action="store_true", help="--play: open the game to the network: friends on the same "
                     "network join on the address that the program prints (#5891)")
+    ap.add_argument("--invite", metavar="NAME,...", help="--host: the Minecraft names that can join (the white-list, "
+                    "#5892); include your own name")
+    ap.add_argument("--offline", action="store_true", help="--host: no Minecraft login check (a network with no "
+                    "internet); the white-list still checks the names")
     ap.add_argument("--seats", metavar="N,N,...", help="--play: the AoE2 player of each person in the order in which "
                     "they join, for example 1,1,2: the first two people play player 1 together (co-op), the third "
                     "player 2 (replaces --people)")
@@ -1664,6 +1688,7 @@ def main(argv=None, scenario=None):
     ctrl_c()
     game = Game(a.world, a.version, server=a.server)
     game.host = a.host
+    game.invite, game.offline = invite_names(a.host, a.invite, a.offline), a.offline
     game.wait = a.play and not a.replay              # freeze at the start, as play(wait=...) below (#3974)
     if a.seats:                                      # co-op (#3489): one person for each seat
         game.seats = seat_list(a.seats)
