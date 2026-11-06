@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "%s játékos a(z) %s korszakba lép."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: a Romlás %s alatt a pálya szélétől a közepéig foglalja el a térképet. Minden benne lévő egységet és épületet elpusztít."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Most nem tudok ide %s építeni."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ezt az egységet nem tudom kiképezni: nincs hozzá épületem."}
+{"name": "aoe2mc.bot.flare_two", "text": "Helyezz el két jelzőfényt a falhoz."}
+{"name": "aoe2mc.bot.no_flare", "text": "Nem látok jelzőfényt."}
+{"name": "aoe2mc.bot.no_market", "text": "Nincs piacom: nem tudok adót küldeni."}
+{"name": "aoe2mc.bot.no_onager", "text": "Nincs onagerem."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Nincs elég erőforrásom falra."}
+{"name": "aoe2mc.bot.no_water", "text": "A városom közelében nincs víz: nem tudok hajóhadat építeni."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Az onagereim nem tudnak fát vágni."}
+{"name": "aoe2mc.build.cost", "text": "Nincs elég erőforrás: egy %s %s került."}
+{"name": "aoe2mc.build.flat", "text": "A(z) %s sík talajon kell álljon."}
+{"name": "aoe2mc.build.gate_spot", "text": "A(z) %s a saját fal 4 mezőjére kerül egyenes vonalban, vagy 3 átlós mezőre."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Építés: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "A(z) %s a parton, a vízen kell álljon."}
+{"name": "aoe2mc.build.space", "text": "Nincs hely a(z) %s számára itt."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Nincs elég erőforrás: %s db %s mező %s került."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: kattints a fal végére jobb gombbal."}
+{"name": "aoe2mc.build.water", "text": "A(z) %s a vízen kell álljon."}
+{"name": "aoe2mc.camera.fov", "text": "A gyors kamera miatt a kézben tartott tárgy leng. Hogy nyugton maradjon, állítsd a Beállítások > Akadálymentesség > Nézet ringatása értéket KI-re. A kamera szélesebbé is teszi a nézetet, így a térképnek többet látsz. A normál nézethez állítsd a Beállítások > Akadálymentesség > FOV-effektek értékét 0 %-ra."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: ki"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: be, sebesség x%s. Shift + jobb klikk: következő sebesség."}
+{"name": "aoe2mc.camera.speed", "text": "Kamera sebessége: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Győzd le az összes ellenséges egységet, és kevés egységet veszíts"}
+{"name": "aoe2mc.challenge.booming", "text": "Képezz ki 100 falusit, és lépj a birodalmi korszakba"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Lépj a várkorszakba, és élj túl az ellenséges támadásokat"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Pusztítsd el az ellenséges várat"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Gyűjts 200 élelmet, 200 fát, 100 aranyat és 200 követ, képezz ki 21 falusit, építs favágótábort és malmot, és lépj a feudális korszakba"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Képezz ki 27 falusit, építs 5 házat, és lépj a várkorszakba"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Győzd le mind a hat ellenséges hullámot"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s egység elveszett, bronzérem legfeljebb %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s egység elveszett, aranyérem legfeljebb %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s egység elveszett, nincs érem"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s egység elveszett, ezüstérem legfeljebb %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronzérem"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Aranyérem"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Ezüstérem"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Pusztítsd el az összes ellenséges hadihajót"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Nincs érem"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Ölj meg 5 ellenséges falusit"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronzérem %s alatt"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Aranyérem %s alatt"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Ezüstérem %s alatt"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Védelem ki"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Védelem be"}
+{"name": "aoe2mc.cheat.beyond", "text": "Technológiák: legfeljebb 256 kutatás"}
+{"name": "aoe2mc.cheat.cpu", "text": "Népességkorlát: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Háborús köd: ki"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Háborús köd: be"}
+{"name": "aoe2mc.cheat.free_techs", "text": "A technológiák ingyenesek"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "A megosztás gondoskodás: a bevételed a szövetségeseidhez megy"}
+{"name": "aoe2mc.cheat.wonders", "text": "Te irányítod a természetet: %s állat"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Csak szövetségesek maradtak: a szövetségek véget érnek. A utolsó életben maradt játékos nyer."}
+{"name": "aoe2mc.conquest.defeated", "text": "A(z) %s játékos vereséget szenvedett."}
+{"name": "aoe2mc.controls.attack", "text": "Támadás: jelölj ki katonai egységeket, majd kattints jobb gombbal egy ellenségre."}
+{"name": "aoe2mc.controls.build", "text": "Építés: jelölj ki falusikat, kattints rájuk jobb gombbal az építési menühöz, válassz egy épületet, majd kattints a földre bal gombbal. Shift + bal klikk: több építése. Jobb klikk: mégse."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: kattints jobb gombbal a Kamera távcsővel (gyorsbillentyű 2): gyorsan mozogsz magasan a térkép felett. Shift + jobb klikk: a következő sebesség. Újabb jobb klikk: leszállsz."}
+{"name": "aoe2mc.controls.garrison", "text": "Helyőrség: jelölj ki egységeket, majd kattints jobb gombbal a saját épületedre. Menüje kiengedi őket. Városháza menü: Városi harang meghúzása."}
+{"name": "aoe2mc.controls.gather", "text": "Gyűjtés: jelölj ki falusikat, majd kattints jobb gombbal egy fára, bogyós bokorra, bányára vagy farmra."}
+{"name": "aoe2mc.controls.goto", "text": "Menj ide: kattints jobb gombbal az Iránytű Menj ide eszközével (gyorsbillentyű 3): a városházáid, irányítási csoportjaid és a következő tétlen falusi menüje."}
+{"name": "aoe2mc.controls.groups", "text": "Irányítási csoportok: jelölj ki egységeket, vegyél egy csoportelemet (gyorsbillentyűk 5-9), és Shift + jobb klikkel mentsd el a kijelölést. Jobb klikk: csoport kijelölése."}
+{"name": "aoe2mc.controls.head", "text": "Irányítás (tartsd a répát a botján; az akciósor mutatja a következő lépést):"}
+{"name": "aoe2mc.controls.menu", "text": "Játékmenü: kattints jobb gombbal a Játékmenü könyvvel (gyorsbillentyű 4): diplomácia és adó, jelzőfény, mentés, szünet és technológiafa."}
+{"name": "aoe2mc.controls.move", "text": "Mozgás: kijelölt egységekkel kattints jobb gombbal a földre."}
+{"name": "aoe2mc.controls.research", "text": "Kutatás és korszaklépés: kattints jobb gombbal a saját épületedre, és válassz egy technológiát vagy a következő korszakot a menüjében."}
+{"name": "aoe2mc.controls.select", "text": "Kijelölés: kattints bal gombbal egy egységre. Tartsd lenyomva a bal gombot, és nézz át a földön: kijelölő doboz. Jobb klikk: parancsok adása."}
+{"name": "aoe2mc.controls.train", "text": "Kiképzés: kattints jobb gombbal a saját épületedre (városháza, kaszárnya ...), és válassz egy egységet a menüjében."}
+{"name": "aoe2mc.defeat", "text": "Vereség"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Szövetséges"}
+{"name": "aoe2mc.diplomacy.changed", "text": "A(z) %s játékos megváltoztatta irántad való álláspontját: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Ellenség"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Semleges"}
+{"name": "aoe2mc.diplomacy.speed", "text": "A(z) %s játékos a játék sebességét %s értékre állította."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "A(z) %s játékos %s %s küldött a(z) %s játékosnak."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Jelzőfény ide: %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Követés: kattints egy saját egységre"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Őrzés: kattints egy saját egységre vagy épületre"}
+{"name": "aoe2mc.gaia.joins", "text": "Egy %s csatlakozik hozzád."}
+{"name": "aoe2mc.garrison.all_back", "text": "Mindenki vissza a munkába"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Megszólal a városi harang: %s falusi menedéket keres"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Nincs falusi kijelölve."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Nincsenek falusiaid."}
+{"name": "aoe2mc.garrison.out", "text": "%s egység jött ki"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s falusi menedéket keres"}
+{"name": "aoe2mc.gather.act_attack", "text": "támadás"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "építési menü"}
+{"name": "aoe2mc.gather.act_garrison", "text": "helyőrség"}
+{"name": "aoe2mc.gather.act_gather", "text": "gyűjtés"}
+{"name": "aoe2mc.gather.act_hunt", "text": "vadászat"}
+{"name": "aoe2mc.gather.act_move", "text": "mozgás"}
+{"name": "aoe2mc.gather.act_select", "text": "kijelölés"}
+{"name": "aoe2mc.gather.act_select_type", "text": "az összes ilyen típusú kijelölése"}
+{"name": "aoe2mc.gather.act_trade", "text": "kereskedés"}
+{"name": "aoe2mc.gather.act_train", "text": "kiképzés"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Támadás: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Kijelölő doboz: megszakítva"}
+{"name": "aoe2mc.gather.bush", "text": "Bogyós bokor"}
+{"name": "aoe2mc.gather.carcass", "text": "Tetem"}
+{"name": "aoe2mc.gather.corner", "text": "Kijelölő doboz: kattints a másik sarokra"}
+{"name": "aoe2mc.gather.enemy", "text": "Ellenséges %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Ellenséges épület"}
+{"name": "aoe2mc.gather.farm", "text": "Farm"}
+{"name": "aoe2mc.gather.ground", "text": "Föld"}
+{"name": "aoe2mc.gather.group", "text": "%s. csoport: %s egység"}
+{"name": "aoe2mc.gather.group_saved", "text": "%s. csoport: %s egység mentve"}
+{"name": "aoe2mc.gather.mine", "text": "%s bánya"}
+{"name": "aoe2mc.gather.paused", "text": "A játék szünetel."}
+{"name": "aoe2mc.gather.point", "text": "%s · Jobb klikk: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Sorban álló újravetések: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Kijelölve: %s egység"}
+{"name": "aoe2mc.gather.tree", "text": "Fa"}
+{"name": "aoe2mc.hill.holds", "text": "A(z) %s játékos birtokolja az emlékművet."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Támadás a földre: kattints jobb gombbal a földre"}
+{"name": "aoe2mc.hints.attack_move", "text": "Támadó mozgás: kattints jobb gombbal a földre"}
+{"name": "aoe2mc.hints.building", "text": "Helyezd el a(z) %s: kattints jobb gombbal a földre · Shift + jobb klikk: több elhelyezése · Mégse: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: bal klikk az elhelyezéshez · Shift: több elhelyezése · Jobb klikk: mégse"}
+{"name": "aoe2mc.hints.corner", "text": "Kijelölő doboz: kattints jobb gombbal a másik sarokra"}
+{"name": "aoe2mc.hints.count_military", "text": "%s katonai egység"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s katonai egység"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s falusi"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s falusi"}
+{"name": "aoe2mc.hints.deselect", "text": "Üres doboz: kijelölés törlése"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Bal klikk: kijelölés törlése"}
+{"name": "aoe2mc.hints.follow", "text": "Követés: kattints jobb gombbal egy saját vagy szövetséges egységre"}
+{"name": "aoe2mc.hints.guard", "text": "Őrzés: kattints jobb gombbal egy saját vagy szövetséges egységre vagy épületre"}
+{"name": "aoe2mc.hints.military", "text": "%s · Jobb klikk: ellenség támadása, álláspont menü · %s"}
+{"name": "aoe2mc.hints.none", "text": "Bal klikk: egység kijelölése · Tartsd lenyomva a bal klikket: kijelölő doboz"}
+{"name": "aoe2mc.hints.none_wand", "text": "Jobb klikk: egység kijelölése · Pálca: kijelölő doboz"}
+{"name": "aoe2mc.hints.patrol", "text": "Járőrözés: kattints jobb gombbal a földre"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Jobb klikk: gyűjtés, építés, építési menü · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s kész"}
+{"name": "aoe2mc.lobby.you_play", "text": "Te a(z) %s népet játszod."}
+{"name": "aoe2mc.monk.converts", "text": "Egy szerzetes megtéríti a(z) %s egységet."}
+{"name": "aoe2mc.monk.dies", "text": "A(z) %s meghal (eretnekség)."}
+{"name": "aoe2mc.pause.continued", "text": "A(z) %s játékos folytatta a játékot."}
+{"name": "aoe2mc.pause.paused", "text": "A(z) %s játékos szüneteltette a játékot."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "%s. csapat (átlagos értékelés %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "A játék véget ért. Kattints jobb gombbal a kezedben lévő Összefoglaló könyvre az eredmények megtekintéséhez. A játékprogramot a konzolján Ctrl-C-vel állítsd le."}
+{"name": "aoe2mc.relic_victory.all", "text": "A(z) %s játékos birtokolja az összes ereklyét."}
+{"name": "aoe2mc.relic_victory.lost", "text": "A(z) %s játékos elvesztett egy ereklyét."}
+{"name": "aoe2mc.repair.no_resources", "text": "Nincs elég erőforrás a(z) %s javításához."}
+{"name": "aoe2mc.replay.army", "text": "Hadsereg: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", hadsereg a végén: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", elveszett: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Építési sorrend:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · helyőrség: %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | visz %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "építés %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "élelem %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "arany %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "tétlen %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "kő %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "fa %s"}
+{"name": "aoe2mc.replay.flare", "text": "Jelzőfény"}
+{"name": "aoe2mc.replay.game_ends", "text": "A játék véget ér"}
+{"name": "aoe2mc.replay.game_time", "text": "Játékidő %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · helyőrség: %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Kat %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Nép %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Erő %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Fal %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s birtokolta az emlékművet: Dombkirály győzelem ekkor: %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s tám %s/%s páncél%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Dupla Shift: nézői nézet (átrepülés a blokkokon). Jobb klikk a gyorssáv elemeire: visszajátszás vezérlése."}
+{"name": "aoe2mc.replay.king_died", "text": ": a király meghalt ekkor: %s. Királygyilkosság: a játékos kiesett."}
+{"name": "aoe2mc.replay.king_killed", "text": "A király meghalt ekkor: %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Élő visszajátszás: az ugrás a játék mögötti késleltetésnél áll meg."}
+{"name": "aoe2mc.replay.lost", "text": "Elveszett: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " birtokolja az emlékművet ekkor: %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: emlékmű, %s év van hátra"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: emlékmű, %s év van hátra"}
+{"name": "aoe2mc.replay.no_camera", "text": "Ennek a felvételnek nincs kamerája a játékosától."}
+{"name": "aoe2mc.replay.now", "text": " most"}
+{"name": "aoe2mc.replay.out", "text": "%s kiesett"}
+{"name": "aoe2mc.replay.players", "text": "Játékosok"}
+{"name": "aoe2mc.replay.range", "text": " t%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " a kolostorba viszi az ereklyét, és megnyeri a játékot."}
+{"name": "aoe2mc.replay.replay_ended", "text": "A visszajátszás véget ért"}
+{"name": "aoe2mc.replay.research", "text": " kutatja: %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s feladja"}
+{"name": "aoe2mc.replay.restart_jump", "text": "A szerver újraindul a visszaugráshoz: csatlakozz újra."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Épületek %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Gazdaság %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Katonaság %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Technológiák %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Összesen %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "várak %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "vásárolt %s, eladott %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "ereklyék %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "csodák %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Elköltve:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Épít %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Gazd %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Kat %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tech %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": kiképzett falusik %s, begyűjtött %s, falusik tétlen ideje %s, városháza tétlen ideje %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": birtokolja az emlékművet (Dombkirály)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": emlékmű megnyerve %s (Dombkirály)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": kiképzett katonai egységek %s, elveszett egységek %s, elveszett épületek %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": megölt királyok %s (Királygyilkosság)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": győzelmek, ereklye kolostorban %s (Ereklye elfoglalása)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sadó küldve %s, kapva %s, falusi csúcs %s (becsült)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": elveszett városháza %s (Hirtelen halál)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, technológiák %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": csoda időzítő %s-tól, vége %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Összefoglaló (becsült)"}
+{"name": "aoe2mc.replay.task_building", "text": "épít"}
+{"name": "aoe2mc.replay.task_following", "text": "követ"}
+{"name": "aoe2mc.replay.task_food", "text": "élelmet gyűjt"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "helyőrségben"}
+{"name": "aoe2mc.replay.task_gold", "text": "aranyat gyűjt"}
+{"name": "aoe2mc.replay.task_guarding", "text": "őriz"}
+{"name": "aoe2mc.replay.task_idle", "text": "tétlen"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "járőrözik"}
+{"name": "aoe2mc.replay.task_resources", "text": "erőforrásokat gyűjt"}
+{"name": "aoe2mc.replay.task_stone", "text": "követ gyűjt"}
+{"name": "aoe2mc.replay.task_walking", "text": "sétál"}
+{"name": "aoe2mc.replay.task_wood", "text": "fát gyűjt"}
+{"name": "aoe2mc.replay.team", "text": "%s. csapat · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Íjász %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Íjászok páncélja %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Szállítás %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Lovasság páncélja %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Farm %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Arany %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Gyalogság páncélja %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Szövőszék %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Közelharc %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Kő %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Fa %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Vár"}
+{"name": "aoe2mc.replay.tl_king", "text": "A király meghalt"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. katonai egység: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Ereklye"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Feladja"}
+{"name": "aoe2mc.replay.town_fell", "text": ": a városháza ekkor esett el: %s. Hirtelen halál: a játékos kiesett."}
+{"name": "aoe2mc.replay.town_lost", "text": "Városháza elveszett ekkor: %s"}
+{"name": "aoe2mc.replay.training", "text": "Kiképzés: %s"}
+{"name": "aoe2mc.replay.university", "text": "Egyetem:"}
+{"name": "aoe2mc.replay.up_counts", "text": "gazdaság %s · Egyetem %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " csodát épített ekkor: %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Harc: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s egység"}
+{"name": "aoe2mc.replay_input.fights", "text": "Nagy csaták:"}
+{"name": "aoe2mc.replay_input.help", "text": "Visszajátszás: kattints jobb gombbal a gyorssáv elemeire, vagy kattints: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Átvétel: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s egység)"}
+{"name": "aoe2mc.replay_input.vs", "text": " ellen "}
+{"name": "aoe2mc.resource.food", "text": "élelem"}
+{"name": "aoe2mc.resource.gold", "text": "arany"}
+{"name": "aoe2mc.resource.stone", "text": "kő"}
+{"name": "aoe2mc.resource.wood", "text": "fa"}
+{"name": "aoe2mc.run.back", "text": "%s visszatért"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampány teljesítve"}
+{"name": "aoe2mc.run.chat_hint", "text": "Csevegés: a sima sor mindenkinek megy, /tm SZÖVEG a szövetségeseknek, /msg NÉV SZÖVEG egy személynek."}
+{"name": "aoe2mc.run.left_bot", "text": "%s kilépett: egy bot játssza a(z) %s játékost"}
+{"name": "aoe2mc.run.scenario_starts", "text": "A(z) %s forgatókönyv elindul. Csatlakozz újra."}
+{"name": "aoe2mc.run.starts_in", "text": "A játék %s múlva kezdődik"}
+{"name": "aoe2mc.run.wait_ready", "text": "Nyisd meg a \"Válaszd ki a játékosod\" menüt, és kattints a \"Kész\" gombra"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Összes irányítás: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Első lépés: tartsd a parancsbotot, és kattints jobb gombbal az egyik falusidra."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Első lépés: tartsd a parancsbotot, és kattints bal gombbal az egyik falusidra."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Cél: megnyerni a játékot. Győzelmi beállítás: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "A játék mentve: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s egység jött ki"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Automatikus felderítés"}
+{"name": "aoe2mc.stance.formation", "text": "Alakzat: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Egyetlen egység sem tud a földre támadni"}
+{"name": "aoe2mc.stance.unpack", "text": "Előbb csomagold ki a hajítógépet"}
+{"name": "aoe2mc.train.active", "text": "%s aktív."}
+{"name": "aoe2mc.train.rally", "text": "Kattints jobb gombbal a földre a gyülekezőhelyhez."}
+{"name": "aoe2mc.train.researched", "text": "%s kutatva."}
+{"name": "aoe2mc.transport.out", "text": "%s egység jött ki"}
+{"name": "aoe2mc.treaty.ended", "text": "A szerződés véget ért: a játékosok most támadhatnak."}
+{"name": "aoe2mc.treaty.refuse", "text": "Szerződés: %s előtt nem támadhatsz."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Szerződés: ebben a játékban nem támadhatsz."}
+{"name": "aoe2mc.treaty.start", "text": "Szerződés: egyetlen játékos sem támadhat másik játékost %s előtt."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Szerződés: egyetlen játékos sem támadhat másik játékost ebben a játékban."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Építs kaszárnyát: kattints jobb gombbal egy kijelölt falusira, válaszd a kaszárnyát, és helyezd el. A gyorssáv feletti akciósor megmondja, hova kell tenni."}
+{"name": "aoe2mc.tutorial.camera", "text": "Gyorsan mozogj a térképen: kattints jobb gombbal a \"Kamera\" tárggyal, sétálj, majd kattints vele újra jobb gombbal."}
+{"name": "aoe2mc.tutorial.camp", "text": "Pusztítsd el az ellenséges tábort a térkép közepén: jelöld ki a milíciádat, és kattints jobb gombbal egy épületre. A felső főnökcsík mutatja a lépést."}
+{"name": "aoe2mc.tutorial.camps", "text": "Építs favágótábort a fák közelében, malmot a bogyók közelében. A jobb oldali oldalsáv mutatja, mennyi fába kerülnek."}
+{"name": "aoe2mc.tutorial.complete", "text": "A bemutató kész. Következő: játssz egy játékot a bot ellen: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Bemutató kész"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Lépj a feudális korszakba: kattints jobb gombbal a városházádra, és válaszd a feudális korszakot. A jobb oldali oldalsáv mutatja az élelmedet."}
+{"name": "aoe2mc.tutorial.food", "text": "Gyűjts 100 élelmet: küldj egy falusit a bogyókhoz. A jobb oldali oldalsáv mutatja az élelmedet."}
+{"name": "aoe2mc.tutorial.house", "text": "Építs házat: kattints jobb gombbal egy kijelölt falusira, válaszd a házat, és helyezd el. A gyorssáv feletti akciósor megmondja, hova kell tenni."}
+{"name": "aoe2mc.tutorial.militia", "text": "Képezz ki 3 milíciát: kattints jobb gombbal a kaszárnyádra, és válaszd a milíciát. A jobb oldali oldalsáv mutatja az élelmedet és az aranyadat."}
+{"name": "aoe2mc.tutorial.raid", "text": "Az ellenség megtámadja a falusiaidat! Kattints a csevegés piros riasztósorára, hogy odamenj, majd válaszd ki a milíciádat, és kattints jobb gombbal az ellenségekre. A felső főnökcsík mutatja a kijelölt egység életerejét."}
+{"name": "aoe2mc.tutorial.select", "text": "Válassz ki egy falusit: kattints bal gombbal az egyik falusidra a parancsbottal. A felső főnökcsík mutatja a kijelölt egységet, a gyorssáv feletti akciósor a következő műveletet."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Lépés kész"}
+{"name": "aoe2mc.tutorial.step_of", "text": "%s/%s. lépés: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIPP: a kaszárnya gyalogságot képez. A gyalogság olcsó, és jó az épületek ellen."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIPP: támadj az összes egységeddel együtt. Egy kis csoport meghal, mielőtt kárt tudna okozni."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIPP: az erőforrások közelében építs leadóépületeket, hogy a falusiak rövid utat járjanak."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIPP: a következő korszak új épületeket, egységeket és technológiákat nyit meg. Haladás közben tartsd munkában a falusiakat."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIPP: a malom mellett lévő bogyók biztonságos élelemkezdet. Később a farmok olyan élelmet adnak, ami nem fogy el."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIPP: egy ház 5 további lakosnak ad helyet. Nézd a népességet az oldalsávban, és építs házakat, mielőtt betelik."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIPP: ha van erőforrásod, egy épületben akár 15 egységet is sorba állíthatsz."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIPP: az AoE2-ben a városi harang a falusiakat a városházába küldi. Húzd meg, amikor az ellenség megtámadja a városodat."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIPP: az oldalsáv Tétlen sora azokat a falusikat számolja, akiknek nincs munkájuk. Adj nekik munkát."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIPP: az első korszakokban folyamatosan képezz falusikat. Több falusi több erőforrást ad."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIPP: a falusiak gyorsabban gyűjtenek a leadóépület közelében. Építs favágótábort a fák mellé."}
+{"name": "aoe2mc.tutorial.villager", "text": "Képezz ki egy falusit: kattints jobb gombbal a városházádra, és válaszd a falusit. A jobb oldali oldalsáv mutatja, mennyi élelembe kerül."}
+{"name": "aoe2mc.tutorial.wood", "text": "Gyűjts 50 fát: jelölj ki egy falusit, és kattints jobb gombbal egy fára. A jobb oldali oldalsáv mutatja a fádat."}
+{"name": "aoe2mc.victory", "text": "Győzelem"}
+{"name": "aoe2mc.wonder.built", "text": "A(z) %s játékos csodát épített."}
+{"name": "aoe2mc.wonder.destroyed", "text": "A(z) %s játékos csodája elpusztult."}
