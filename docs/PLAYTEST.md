@@ -98,7 +98,8 @@ The host:
 3. The firewall of your computer must let the game port and the port of the resource pack in. Windows asks at the
    first start: click "Allow" for Java and for the game program (with Python: for Python).
 4. The console shows two lines. "Join the server localhost:PORT" is for you. "Join the server ADDRESS:PORT (other
-   computers on the network)." is for your friends: send them ADDRESS:PORT.
+   computers on the network)." is for your friends: send them ADDRESS:PORT. To invite one more friend while the
+   game runs, type `whitelist add NAME` in the console (NAME: the Minecraft name of the friend).
 5. The program selects a free port at each start, also with `--load` (not with `--port N`). After each start,
    send the new address.
 6. Join on localhost:PORT as in section 3. The page "Choose your player" opens: select your AoE2 player and click
@@ -112,8 +113,8 @@ A friend:
    (host step 1). If you do not accept it, the server disconnects you.
 4. The page "Choose your player" opens: select your AoE2 player and click "Ready". The game starts when all people
    are ready.
-5. If the server says "You are not whitelisted on this server!", tell the host your exact Minecraft name. The host stops
-   the game with Ctrl-C and starts it again with that name in `--invite`.
+5. If the server says "You are not whitelisted on this server!", tell the host your exact Minecraft name. The host types
+   `whitelist add NAME` in the console of the game program (no restart). Then join again.
 
 A network with no internet: the host adds `--offline`. Then Minecraft does not check the login of the players, but
 the white-list still checks the names. The console shows "Warning: --offline: no Minecraft login check, a stranger
