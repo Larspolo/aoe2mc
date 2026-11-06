@@ -1518,6 +1518,8 @@ def main(argv=None, scenario=None):
     ap.add_argument("--bench", type=int, metavar="N", help="send N commands, print the commands per second, stop")
     ap.add_argument("--play", action="store_true", help="play: villagers of player 1 gather resources (aoe2mc.json)")
     ap.add_argument("--replay", action="store_true", help="replay the timeline of a recorded game (aoe2mc.json)")
+    ap.add_argument("--editor", metavar="OUT", help="the map editor (#5999): no game time; the chat word save and the stop "
+                    "write the map to OUT (.aoe2scenario)")
     ap.add_argument("--speed", type=float, default=1.0, help="--replay, --play: times the game speed "
                     "(default 1; --play: the server ticks faster too)")
     ap.add_argument("--from", dest="start", default="0:00", metavar="MM:SS", help="--replay: start at this game time")
@@ -1659,6 +1661,8 @@ def main(argv=None, scenario=None):
             ap.error(f"--challenge {a.challenge} is closed: win a medal in {challenge.CHALLENGES[a.challenge]['after']} first")
     if a.takeover is not None and (not a.replay or a.play or a.live):
         sys.exit("--takeover needs --replay, and not --play or --live (#5450)")
+    if a.editor and (a.play or a.replay or a.load):
+        ap.error("--editor starts the map with no game: not with --play, --replay or --load")
     if a.camera and a.follow is not None:
         ap.error("--camera and --follow N both move the spectators: give only one of them")
     if "mode" not in given(ap, argv):              # the --game-mode of a random map conversion (#4825)
@@ -1747,6 +1751,9 @@ def main(argv=None, scenario=None):
                 print(f"The replay reached its --from time: you play player {a.takeover} now.", file=sys.stderr)
             else:
                 print("The replay ended. The server stays up: type commands, Ctrl-C stops it.", file=sys.stderr)
+        if a.editor:                                 # no play(): no gather tick, bot, age, victory or fog
+            import editor
+            editor.run(game, a.editor, commands.is_alive)
         if a.play:
             with open(a.log, "w") if a.log else contextlib.nullcontext() as log:
                 g = play(game, a.world, log, a.cheats, a.bot, bot_attack=a.bot_attack, reveal=a.reveal,
@@ -1776,6 +1783,9 @@ def main(argv=None, scenario=None):
     finally:
         print("Stopping the server ...", file=sys.stderr)
         state = savegame.dump(game.g) if getattr(game, "g", None) else None
+        if a.editor and getattr(game, "rcon", None):    # the map at the stop (#5999)
+            import editor
+            print(f"Saved the map: {editor.save(game, a.editor)}", file=sys.stderr)
         game.stop()                                  # the server writes the world when it stops
         if state:
             print(f"Saved the game: {program()} {a.world} --play --load "
