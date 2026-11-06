@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Уйӑрӑмӑн %s %s эрӑ тӗлне куҫать."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Тӑхӑрӑнӑвӗ картӑна унӑн тӑрринчен вӗҫӗ тӗлне %s хушшинче илет. Унти пур вӗҫӗмсене те, ҫуртсене те ҫӗлӗтӗ."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ҫак вӑхӑтра унта %s тума манӑ май ҫук."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ку вӗҫӗме ҫӗнтерме манӑ май ҫук: унӑн валли ҫурт ҫук."}
+{"name": "aoe2mc.bot.flare_two", "text": "Стена валли иккӗ вырӑна сигнал лартӑр."}
+{"name": "aoe2mc.bot.no_flare", "text": "Манӑн сигнал курӑнмасть."}
+{"name": "aoe2mc.bot.no_market", "text": "Манӑн базар ҫук: эпӗ налог ярма манӑ май ҫук."}
+{"name": "aoe2mc.bot.no_onager", "text": "Манӑн онагер ҫук."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Стена валли манӑн ресурссем ҫитмеҫҫӗ."}
+{"name": "aoe2mc.bot.no_water", "text": "Манӑн хула хыҫӗнче вӑрӑм ҫук: флот тума манӑ май ҫук."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Манӑн онагерсем йывӑҫа ҫӗлме пултараймаҫҫӗ."}
+{"name": "aoe2mc.build.cost", "text": "Ресурссем ҫитмеҫҫӗ: %s тата %s."}
+{"name": "aoe2mc.build.flat", "text": "%s тӗрӗс ҫӗрте тӑрмалла."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s хӑйӗн стенин 4 плиткинче тура йӗрте, е 3 диагональ плиткинче тӑрмалла."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Тӑвар: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s ҫыран хыҫӗнчи вӑрӑм ҫинче тӑрмалла."}
+{"name": "aoe2mc.build.space", "text": "Кунта %s валли вырӑн ҫук."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Ресурссем ҫитмеҫҫӗ: %s плитка %s тата %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: стенӑн вӗҫне аякри ҫаклатса пӑсӑр."}
+{"name": "aoe2mc.build.water", "text": "%s вӑрӑм ҫинче тӑрмалла."}
+{"name": "aoe2mc.camera.fov", "text": "Виҫӗ камера аллӑрине тӑраниччен чӑтӑмлӑ ҫаврӑнать. Вӑл тӑрӑхлӑ пулчӑр тесен, Опцисем > Пӗлтерӗве тӑрӑшмалли > View Bobbing ҫине OFF лартӑр. Камера куҫа та киленӗнтерет, ҫавна валли картӑн нумай пайӗ курӑнать. Тӑван куҫ валли, Опцисем > Пӗлтерӗве тӑрӑшмалли > FOV Effects ҫине 0 % лартӑр."}
+{"name": "aoe2mc.camera.off", "text": "Камера: сӳнтерӗнӗ"}
+{"name": "aoe2mc.camera.on", "text": "Камера: кӗртӗнӗ, виҫӗ x%s. Shift + ҫаклатса пӑсӑр: тепӗр виҫӗ."}
+{"name": "aoe2mc.camera.speed", "text": "Камера виҫи: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Пур тӗлӗнмелли вӗҫӗмсене те ҫӗнтерӗр, тата пӗрне-ик вӗҫӗме ҫеҫ ҫухатӑр"}
+{"name": "aoe2mc.challenge.booming", "text": "100 ял халӑхне ҫӗнтерӗр те Империллӗ эрӑ тӗлне куҫӑр"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Кӑпӑл эрӑ тӗлне куҫӑр та тӗлӗнмелли хирӗҫӗвсенчен упранӑр"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Тӗлӗнмелли кӑпӑла ҫӗлӗтӗр"}
+{"name": "aoe2mc.challenge.early-economy", "text": "200 апат, 200 йывӑҫ, 100 алтӑн тата 200 чул пуҫтарӑр, 21 ял халӑхне ҫӗнтерӗр, йывӑҫ лагерь тата тирмен тӑвӑр, тата Феодал эрӑ тӗлне куҫӑр"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "27 ял халӑхне ҫӗнтерӗр, 5 ҫурт тӑвӑр тата Кӑпӑл эрӑ тӗлне куҫӑр"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Тӗлӗнмелли ултӑ тулкӑша та ҫӗнтерӗр"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s вӗҫӗме ҫухатрӗ, пӗрӗнчӗ миҫа %s таранах"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s вӗҫӗме ҫухатрӗ, алтӑн миҫа %s таранах"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s вӗҫӗме ҫухатрӗ, миҫа ҫук"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s вӗҫӗме ҫухатрӗ, тӗрӗс миҫа %s таранах"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Пӗрӗнчӗ миҫа"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Алтӑн миҫа"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Тӗрӗс миҫа"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Тӗлӗнмелли пур вӑрӑм-хуҫсене те ҫӗлӗтӗр"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Миҫа ҫук"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Тӗлӗнмелли 5 ял халӑхне вӗлерӗр"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "%s хушшинче пӗрӗнчӗ миҫа"}
+{"name": "aoe2mc.challenge.time_gold", "text": "%s хушшинче алтӑн миҫа"}
+{"name": "aoe2mc.challenge.time_silver", "text": "%s хушшинче тӗрӗс миҫа"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Эгида сӳнтерӗнӗ"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Эгида кӗртӗнӗ"}
+{"name": "aoe2mc.cheat.beyond", "text": "Технологисем: 256 ыйтупа таранах"}
+{"name": "aoe2mc.cheat.cpu", "text": "Халӑх тӗллевӗ: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Ҫапӑҫу тӑмани: сӳнтерӗнӗ"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Ҫапӑҫу тӑмани: кӗртӗнӗ"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Технологисем хирӗҫ"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Пӗрле тӑвасси — пӗрне шанасси: сирӗн кӗрекӗрӗр союзниксене каять"}
+{"name": "aoe2mc.cheat.wonders", "text": "Сирӗн ҫӗр-шыв сирӗн ҫине: %s вӗҫӗ"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Пӗрремӗш союзниксем кӑна юлнӑ: союзсем вӗтӗрӗнет. Шыв ҫинче юлнӑ пӗрремӗш уйрӑм ҫӗнтерет."}
+{"name": "aoe2mc.conquest.defeated", "text": "Уйрӑм %s ҫӗнтерӗнчӗ."}
+{"name": "aoe2mc.controls.attack", "text": "Хирӗҫӗв: ҫапӑҫу вӗҫӗмсене суйласа илӗр, унтан хирӗҫ аякри ҫаклатса пӑсӑр."}
+{"name": "aoe2mc.controls.build", "text": "Тӑвар: ял халӑхне суйласа илӗр, тӑвар менюшӗ валли вӗсене аякри ҫаклатса пӑсӑр, ҫурт суйласа илӗр, унтан ҫӗре ҫӳлтен ҫаклатса пӑсӑр. Shift + ҫӳлтен ҫаклатса пӑсӑр: нумайрах лартӑр. Аякри ҫаклатса пӑсӑр: пӑрахӑр."}
+{"name": "aoe2mc.controls.camera", "text": "Камера: телескоп камеры (хотбар кнопки 2) ҫинче аякри ҫаклатса пӑсӑр: картӑн тӑрринче чӑтӑмлӑ ҫӳретӗр. Shift + аякри ҫаклатса пӑсӑр: тепӗр виҫӗ. Тепӗр хут аякри ҫаклатса пӑсӑр: анса ҫӳретӗр."}
+{"name": "aoe2mc.controls.garrison", "text": "Гарнизон: вӗҫӗмсене суйласа илӗр, унтан хӑвӑр ҫуртӑн ҫине аякри ҫаклатса пӑсӑр. Унӑн менюшӗ вӗсене тухтарӗ. Хула тӑрӑхӗн менюшӗ: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "Пуҫтару: ял халӑхне суйласа илӗр, унтан йывӑҫ, ҫырӑ куҫҫулӗ, шахта е лакӑм ҫинче аякри ҫаклатса пӑсӑр."}
+{"name": "aoe2mc.controls.goto", "text": "Кайӑр: компас Кайӑр (хотбар кнопки 3) ҫинче аякри ҫаклатса пӑсӑр: хӑвӑр хула тӑрӑхӗсем, контроль ушкӑнӗсем тата ҫав вӑхӑтра ӗҫсӗр ял халӑхӗн менюшӗ."}
+{"name": "aoe2mc.controls.groups", "text": "Контроль ушкӑнӗсем: вӗҫӗмсене суйласа илӗр, ушкӑн предметне илӗр (хотбар кнопкисем 5-тан 9-ччен) тата суйлавне упраса хумашкӑн Shift + аякри ҫаклатса пӑсӑр. Аякри ҫаклатса пӑсӑр: ушкӑна суйласа илӗр."}
+{"name": "aoe2mc.controls.head", "text": "Контроллӗсем (таяк ҫинчи морковь тытӑр; ӗҫ панелӗ тепӗр ӑсатӑва кӑтартӗ):"}
+{"name": "aoe2mc.controls.menu", "text": "Ҫапӑҫу менюшӗ: Ҫапӑҫу менюшӗн кӗнекине аякри ҫаклатса пӑсӑр (хотбар кнопки 4): дипломати тата налог, сигнал, упрамалли, тӑхтатмалли тата технологи йывӑҫӗ."}
+{"name": "aoe2mc.controls.move", "text": "Куҫар: суйласа илнӗ вӗҫӗмсемпе, ҫӗре аякри ҫаклатса пӑсӑр."}
+{"name": "aoe2mc.controls.research", "text": "Тишкерӳ тата эрӑ куҫарасси: хӑвӑр ҫуртӑн ҫине аякри ҫаклатса пӑсӑр та менюра технологие е тепӗр эрӑна ҫаклатӑр."}
+{"name": "aoe2mc.controls.select", "text": "Суйласа илесси: вӗҫӗме ҫӳлтен ҫаклатса пӑсӑр. Ҫӳлтен ҫаклатса пӑсӑра тытса ҫӗре пӑхӑр: суйласа илмелли хӗр. Аякри ҫаклатса пӑсӑр: ӑсатусем парӑр."}
+{"name": "aoe2mc.controls.train", "text": "Ҫӗнтерӗвӗ: хӑвӑр тӑвӑрӑн ҫине (хула тӑрри, казарма ...) аякри ҫаклатса пӑсӑр та менюра вӗҫӗме ҫаклатӑр."}
+{"name": "aoe2mc.defeat", "text": "Ҫӗнтерӳ"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Союзник"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Уйрӑм %s сирӗн пирки хӑйӗн позицине улӑштарчӗ: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Хирӗҫ"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Нейтраль"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Уйрӑм %s ҫапӑҫу виҫине %s тесе ҫирӗплетрӗ."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Уйрӑм %s уйрӑм %s валли %s %s янӑрӗ."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Сигнал %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Ҫула: хӑвӑрӑн вӗҫӗме ҫаклатса пӑсӑр"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Упра: хӑвӑрӑн вӗҫӗме е ҫуртне ҫаклатса пӑсӑр"}
+{"name": "aoe2mc.gaia.joins", "text": "Пӗр %s сирӗнпе пӗрлешет."}
+{"name": "aoe2mc.garrison.all_back", "text": "Пурте ӗҫе таврӑнӑр"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Хула ҫинкӗ янӑрать: %s ял халӑхӗ упрăнма шырать"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Ял халӑхӗ суйласа илнӗ мар."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Сирӗн ял халӑхӗ ҫук."}
+{"name": "aoe2mc.garrison.out", "text": "%s вӗҫӗм тухрӗ"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s ял халӑхӗ упрăнма шырать"}
+{"name": "aoe2mc.gather.act_attack", "text": "хирӗҫӗв"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "тӑвар менюшӗ"}
+{"name": "aoe2mc.gather.act_garrison", "text": "гарнизон"}
+{"name": "aoe2mc.gather.act_gather", "text": "пуҫтар"}
+{"name": "aoe2mc.gather.act_hunt", "text": "аулаа"}
+{"name": "aoe2mc.gather.act_move", "text": "куҫар"}
+{"name": "aoe2mc.gather.act_select", "text": "суйла"}
+{"name": "aoe2mc.gather.act_select_type", "text": "ҫак тӗрлӗ пур вӗҫӗмсене суйла"}
+{"name": "aoe2mc.gather.act_trade", "text": "сутӑ"}
+{"name": "aoe2mc.gather.act_train", "text": "ҫӗнтер"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Хирӗҫӗв: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Суйласа илмелли хӗр: пӑрахнӑ"}
+{"name": "aoe2mc.gather.bush", "text": "Ҫырӑ куҫҫулӗ"}
+{"name": "aoe2mc.gather.carcass", "text": "Ӳкнӗ тутар"}
+{"name": "aoe2mc.gather.corner", "text": "Суйласа илмелли хӗр: тепӗр уҫлӑхе аякри ҫаклатса пӑсӑр"}
+{"name": "aoe2mc.gather.enemy", "text": "Хирӗҫ %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Хирӗҫ ҫурт"}
+{"name": "aoe2mc.gather.farm", "text": "Лакӑм"}
+{"name": "aoe2mc.gather.ground", "text": "Ҫӗр"}
+{"name": "aoe2mc.gather.group", "text": "Ушкӑн %s: %s вӗҫӗм"}
+{"name": "aoe2mc.gather.group_saved", "text": "Ушкӑн %s: %s вӗҫӗм упранчӗ"}
+{"name": "aoe2mc.gather.mine", "text": "%s шахта"}
+{"name": "aoe2mc.gather.paused", "text": "Ҫапӑҫу тӑхтатӑнчӗ."}
+{"name": "aoe2mc.gather.point", "text": "%s · Аякри ҫаклатса пӑсӑр: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Кӗтсе тӑракан тепӗр сӑрлавсем: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Суйласа илнӗ: %s вӗҫӗм"}
+{"name": "aoe2mc.gather.tree", "text": "Йывӑҫ"}
+{"name": "aoe2mc.hill.holds", "text": "Уйрӑм %s пысӑк ҫӗршывпа тытать."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Ҫӗре хирӗҫӗв: ҫӗре аякри ҫаклатса пӑсӑр"}
+{"name": "aoe2mc.hints.attack_move", "text": "Хирӗҫӗвпе куҫар: ҫӗре аякри ҫаклатса пӑсӑр"}
+{"name": "aoe2mc.hints.building", "text": "%s лартӑр: ҫӗре аякри ҫаклатса пӑсӑр · Shift + аякри ҫаклатса пӑсӑр: нумайрах лартӑр · Пӑрахмалли: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: лартмалли валли ҫӳлтен ҫаклатса пӑсӑр · Shift: нумайрах лартӑр · Аякри ҫаклатса пӑсӑр: пӑрахӑр"}
+{"name": "aoe2mc.hints.corner", "text": "Суйласа илмелли хӗр: тепӗр уҫлӑхе аякри ҫаклатса пӑсӑр"}
+{"name": "aoe2mc.hints.count_military", "text": "%s хӗҫпӑшал вӗҫӗмӗ"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s хӗҫпӑшал вӗҫӗмӗ"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s ял халӑхӗ"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s ял халӑхӗ"}
+{"name": "aoe2mc.hints.deselect", "text": "Пушӑ хӗр: суйласа илнине пӑрах"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Ҫӳлтен ҫаклатса пӑсӑр: суйласа илнине пӑрах"}
+{"name": "aoe2mc.hints.follow", "text": "Ҫула: хӑвӑрӑн е союзник вӗҫӗмне аякри ҫаклатса пӑсӑр"}
+{"name": "aoe2mc.hints.guard", "text": "Упра: хӑвӑрӑн е союзник вӗҫӗме е ҫуртне аякри ҫаклатса пӑсӑр"}
+{"name": "aoe2mc.hints.military", "text": "%s · Аякри ҫаклатса пӑсӑр: хирӗҫ хирӗҫӗвлӗ, тӑру менюшӗ · %s"}
+{"name": "aoe2mc.hints.none", "text": "Ҫӳлтен ҫаклатса пӑсӑр: вӗҫӗм суйласа илӗр · Ҫӳлтен ҫаклатса пӑсӑра тытсан: суйласа илмелли хӗр"}
+{"name": "aoe2mc.hints.none_wand", "text": "Аякри ҫаклатса пӑсӑр: вӗҫӗм суйласа илӗр · Таяк: суйласа илмелли хӗр"}
+{"name": "aoe2mc.hints.patrol", "text": "Патрул: ҫӗре аякри ҫаклатса пӑсӑр"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Аякри ҫаклатса пӑсӑр: пуҫтар, тӑвар, тӑвар менюшӗ · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s хатӗр"}
+{"name": "aoe2mc.lobby.you_play", "text": "Сирӗн %s вырӑнӗ."}
+{"name": "aoe2mc.monk.converts", "text": "Монах %s ыйтать."}
+{"name": "aoe2mc.monk.dies", "text": "%s вилет (Ҫӗнӗ ҫӑмӑл)."}
+{"name": "aoe2mc.pause.continued", "text": "Уйрӑм %s ҫапӑҫӑва тӑсрӗ."}
+{"name": "aoe2mc.pause.paused", "text": "Уйрӑм %s ҫапӑҫӑва тӑхтатрӗ."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Команда %s (уртӑмлӑ рейтинг %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Ҫапӑҫу вӗтӗрӗнчӗ. Ҫӗнтерӳсене пӑхмалли валли хӑвӑр аллӑрти Пӗчӗк кӗнеке ҫинче аякри ҫаклатса пӑсӑр. Ҫапӑҫу программине консолте Ctrl-C-пе тӑхтатӑр."}
+{"name": "aoe2mc.relic_victory.all", "text": "Уйрӑм %s пур реликвисене тытрӗ."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Уйрӑм %s пӗр реликвие ҫухатрӗ."}
+{"name": "aoe2mc.repair.no_resources", "text": "%s тӳрлеме ресурссем ҫитмеҫҫӗ."}
+{"name": "aoe2mc.replay.army", "text": "Армисем: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", вӗҫӗнчи армисем: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", ҫухатнӑ: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Тӑвӑс йӗрки:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · гарнизон %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | %s %s ташлать"}
+{"name": "aoe2mc.replay.eco_build", "text": "тӑвар %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "апат %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "алтӑн %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "ӗҫсӗр %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "чул %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "йывӑҫ %s"}
+{"name": "aoe2mc.replay.flare", "text": "Сигнал"}
+{"name": "aoe2mc.replay.game_ends", "text": "Ҫапӑҫу вӗтӗрӗнет"}
+{"name": "aoe2mc.replay.game_time", "text": "Ҫапӑҫу вӑхӑчӗ %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · гарнизон %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Хӗҫпӑшал %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Халӑх %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Ресурс %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Ял %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s пысӑк ҫӗршывпа тытрӗ: %s-ҫа Тау Патша ҫӗнтерӗвӗ."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s хирӗҫӗв %s/%s броня%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift-а иккӗ хут пусӑр: куракан куҫ (блоксем тӑрӑх вӗҫсе). Хотбар предметӗсене аякри ҫаклатса пӑсӑр: ҫӳрекен кӑларса тухмалли контроль."}
+{"name": "aoe2mc.replay.king_died", "text": ": Патша %s-ҫа вилчӗ. Патша вӗлерӗвӗ: уйрӑм тухса каять."}
+{"name": "aoe2mc.replay.king_killed", "text": "Патша %s-ҫа вӗлерӗнчӗ"}
+{"name": "aoe2mc.replay.live_jump", "text": "Пӗрлехи ҫӳрекен: сиктерӗвӗ ҫапӑҫу хыҫӗнчи чӑтӑмлӑхра тӑрать."}
+{"name": "aoe2mc.replay.lost", "text": "Ҫухатнӑ: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " %s-ҫа пысӑк ҫӗршывпа тытать."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: пысӑк ҫӗршыв, ҫитмен %s ҫул"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: пысӑк ҫӗршыв, ҫитмен %s ҫул"}
+{"name": "aoe2mc.replay.no_camera", "text": "Ку ҫырура унӑн уйрӑмӗн камери ҫук."}
+{"name": "aoe2mc.replay.now", "text": " паллӑ"}
+{"name": "aoe2mc.replay.out", "text": "%s тухрӗ"}
+{"name": "aoe2mc.replay.players", "text": "Уйрӑмсем"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " реликвие монастыре илсе кайать тата ҫӗнтерет."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Ҫырӑ вӗтӗрӗнчӗ"}
+{"name": "aoe2mc.replay.research", "text": " %s тишкерет"}
+{"name": "aoe2mc.replay.resigns", "text": "%s пусарӗ"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Кайран сиктерме серверӗ тепӗр хут пуҫланать: тепӗр хут кӗрсе тухӑр."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Ҫуртсем %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Экономика %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Хӗҫпӑшал %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Технологисем %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Пӗтӗмӗшле %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "кӑпӑлсем %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "туяннӑ %s, сутнӑ %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "реликвисем %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "чудо %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Тӑкӑнӑвӗ:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Тӑвар %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Экон. %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Хӗҫпӑшал %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Технол. %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": ҫӗнтернӗ ял халӑхӗ %s, пуҫтарнӑ %s, ял халӑхӗн ӗҫсӗр вӑхӑчӗ %s, хула тӑрринчи ӗҫсӗр вӑхӑт %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": пысӑк ҫӗршыв тытать (Тау Патша)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": пысӑк ҫӗршыв ҫӗнтерӗвӗ %s (Тау Патша)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": ҫӗнтернӗ хӗҫпӑшал вӗҫӗмӗсем %s, ҫухатнӑ вӗҫӗмсем %s, ҫухатнӑ ҫуртсем %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": патша вӗлерӗнчӗ %s (Патша вӗлерӗвӗ)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": ҫӗнтерӗвӗ, монастырьте реликвие %s (Реликвие илмелле)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sналог янӑратрӗ %s, илтрӗ %s, ял халӑхӗн чи пысӑк %s (шутлав)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": хула тӑрри ҫухатнӑ %s (Хытӑ вилӗм)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, технологисем %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": чудо таймер %s-ран, вӗтӗрӗнет %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Пӗчӗк кӗнеке (шутлав)"}
+{"name": "aoe2mc.replay.task_building", "text": "тӑвать"}
+{"name": "aoe2mc.replay.task_following", "text": "ҫулать"}
+{"name": "aoe2mc.replay.task_food", "text": "апат пуҫтарать"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "гарнизонра"}
+{"name": "aoe2mc.replay.task_gold", "text": "алтӑн пуҫтарать"}
+{"name": "aoe2mc.replay.task_guarding", "text": "упрать"}
+{"name": "aoe2mc.replay.task_idle", "text": "ӗҫсӗр"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "патрульпе ҫӳрет"}
+{"name": "aoe2mc.replay.task_resources", "text": "ресурссем пуҫтарать"}
+{"name": "aoe2mc.replay.task_stone", "text": "чул пуҫтарать"}
+{"name": "aoe2mc.replay.task_walking", "text": "утать"}
+{"name": "aoe2mc.replay.task_wood", "text": "йывӑҫ пуҫтарать"}
+{"name": "aoe2mc.replay.team", "text": "Команда %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Ҫӗнӗ %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Ҫӗнӗ броня %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Ташлама %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Ат ҫинчи броня %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Лакӑм %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Алтӑн %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Пехота броняйӗ %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Тукӑ станокӗ %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Тӑрӑхлӑ ҫапӑҫу %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Чул %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Йывӑҫ %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Кӑпӑл"}
+{"name": "aoe2mc.replay.tl_king", "text": "Патша вӗлерӗнчӗ"}
+{"name": "aoe2mc.replay.tl_military", "text": "1-мӗш хӗҫпӑшал: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Реликвие"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Пусарни"}
+{"name": "aoe2mc.replay.town_fell", "text": ": хула тӑрри %s-ҫа ӳкрӗ. Хытӑ вилӗм: уйрӑм тухса каять."}
+{"name": "aoe2mc.replay.town_lost", "text": "%s-ҫа хула тӑрри ҫухатнӑ"}
+{"name": "aoe2mc.replay.training", "text": "Ҫӗнтерӗвӗ: %s"}
+{"name": "aoe2mc.replay.university", "text": "Университет:"}
+{"name": "aoe2mc.replay.up_counts", "text": "экономика %s · Университет %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " %s-ҫа чудо ҫавӑрнӑ."}
+{"name": "aoe2mc.replay_input.fight", "text": "Ҫапӑҫу: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s вӗҫӗм"}
+{"name": "aoe2mc.replay_input.fights", "text": "Пысӑк ҫапӑҫусем:"}
+{"name": "aoe2mc.replay_input.help", "text": "Ҫырӑ: хотбар предметӗсене аякри ҫаклатса пӑсӑр, е ҫаклатса пӑсӑр: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Илсе тухас: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s вӗҫӗм)"}
+{"name": "aoe2mc.replay_input.vs", "text": " ҫине "}
+{"name": "aoe2mc.resource.food", "text": "апат"}
+{"name": "aoe2mc.resource.gold", "text": "алтӑн"}
+{"name": "aoe2mc.resource.stone", "text": "чул"}
+{"name": "aoe2mc.resource.wood", "text": "йывӑҫ"}
+{"name": "aoe2mc.run.back", "text": "%s таврӑнчӗ"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Кампани вӗтӗрӗнчӗ"}
+{"name": "aoe2mc.run.chat_hint", "text": "Чат: ҫирӗп ҫул пур ҫынсене каять, /tm TEXT союзниксене, /msg NAME TEXT пӗр ҫынна."}
+{"name": "aoe2mc.run.left_bot", "text": "%s тухрӗ: бот уйрӑм %s вырӑнне ҫапӑҫать"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Сценари %s пуҫланать. Тепӗр хут кӗрсе тухӑр."}
+{"name": "aoe2mc.run.starts_in", "text": "Ҫапӑҫу %s хушшинче пуҫланать"}
+{"name": "aoe2mc.run.wait_ready", "text": "\"Хӑвӑр уйрӑма суйлӑр\" уҫӑр та \"Хатӗр\" ҫаклатӑр"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Пур контроллӗсем: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Малтанхи ӑсату: командӑ таякне тытӑр та ял халӑхӗн пӗрне аякри ҫаклатса пӑсӑр."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Малтанхи ӑсату: командӑ таякне тытӑр та ял халӑхӗн пӗрне ҫӳлтен ҫаклатса пӑсӑр."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Тӗллев: ҫапӑҫӑва ҫӗнтерӗр. Ҫӗнтерӳ тӗллевӗ: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Ҫапӑҫу упранчӗ: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s вӗҫӗм тухрӗ"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Автомат разведка"}
+{"name": "aoe2mc.stance.formation", "text": "Тӑвар: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ҫӗре пӗр вӗҫӗм та хирӗҫӗв тӑваймасть"}
+{"name": "aoe2mc.stance.unpack", "text": "Малтан трибуше уҫӑр"}
+{"name": "aoe2mc.train.active", "text": "%s ӗҫлет."}
+{"name": "aoe2mc.train.rally", "text": "Пухӑнмалли вырӑн валли ҫӗре аякри ҫаклатса пӑсӑр."}
+{"name": "aoe2mc.train.researched", "text": "%s тишкерӗнчӗ."}
+{"name": "aoe2mc.transport.out", "text": "%s вӗҫӗм тухрӗ"}
+{"name": "aoe2mc.treaty.ended", "text": "Килӗшӳ вӗтӗрӗнчӗ: уйрӑмсем хӑш-пӗр вӑхӑтра хирӗҫӗв тӑваҫҫӗ."}
+{"name": "aoe2mc.treaty.refuse", "text": "Килӗшӳ: %s-ран малтан сирӗн хирӗҫӗв тӑвайрӗҫ мар."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Килӗшӳ: ку ҫапӑҫӑвра сирӗн хирӗҫӗв тӑвайрӗҫ мар."}
+{"name": "aoe2mc.treaty.start", "text": "Килӗшӳ: %s-ран малтан ҫак уйрӑм тепӗр уйрӑма хирӗҫӗв тӑваймасть."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Килӗшӳ: ку ҫапӑҫӑвра ҫак уйрӑм тепӗр уйрӑма хирӗҫӗв тӑваймасть."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Казарма тӑвӑр: суйласа илнӗ ял халӑхне аякри ҫаклатса пӑсӑр, казарма суйлӑр та лартӑр. Хотбар ҫинчи ӗҫ панелӗ унӑн ҫӳлтен вырӑнне кӑтартӗ."}
+{"name": "aoe2mc.tutorial.camera", "text": "Картӑра чӑтӑмлӑн куҫӑр: \"Камера\" предметпе аякри ҫаклатса пӑсӑр, утӑр, унтан унпа тепӗр хут аякри ҫаклатса пӑсӑр."}
+{"name": "aoe2mc.tutorial.camp", "text": "Картӑн варринчи хирӗҫ лагере ҫӗлӗтӗр: хӑвӑр милицие суйлӑр та ҫурт ҫинче аякри ҫаклатса пӑсӑр. Ҫӳлти босс-панель ӑсатӑва кӑтартӗ."}
+{"name": "aoe2mc.tutorial.camps", "text": "Йывӑҫсем хыҫӗнче йывӑҫ лагерь, ҫырӑсем хыҫӗнче тирмен тӑвӑр. Тӑваҫ енчи панель вӗсен йывӑҫ хирӗҫ кӑтартӗ."}
+{"name": "aoe2mc.tutorial.complete", "text": "Вӗрентӳ вӗтӗрӗнчӗ. Ҫитес: ботпа ҫапӑҫу ҫапӑр: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Вӗрентӳ вӗтӗрӗнчӗ"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Феодал эрӑ тӗлне куҫӑр: хӑвӑр хула тӑрринче аякри ҫаклатса пӑсӑр та Феодал эрӑна суйлӑр. Тӑваҫ енчи панель сирӗн апата кӑтартӗ."}
+{"name": "aoe2mc.tutorial.food", "text": "100 апат пуҫтарӑр: ял халӑхӗн пӗрне ҫырӑ куҫҫулӗсем патнелле янӑратӑр. Тӑваҫ енчи панель сирӗн апата кӑтартӗ."}
+{"name": "aoe2mc.tutorial.house", "text": "Ҫурт тӑвӑр: суйласа илнӗ ял халӑхне аякри ҫаклатса пӑсӑр, ҫурта суйлӑр та лартӑр. Хотбар ҫинчи ӗҫ панелӗ унӑн ҫӳлтен вырӑнне кӑтартӗ."}
+{"name": "aoe2mc.tutorial.militia", "text": "3 милици ҫӗнтерӑр: хӑвӑр казарма ҫине аякри ҫаклатса пӑсӑр та милицие суйлӑр. Тӑваҫ енчи панель сирӗн апата тата алтӑна кӑтартӗ."}
+{"name": "aoe2mc.tutorial.raid", "text": "Хирӗҫ ял халӑхӗпе хирӗҫӗв тӑвать! Ҫавӑнта каймалли валли чатри хӗрлӗ пӗлтерӗве ҫаклатса пӑсӑр, унтан хӑвӑр милицие суйлӑр та хирӗҫсене аякри ҫаклатса пӑсӑр. Ҫӳлти босс-панель суйласа илнӗ вӗҫӗм сывлӑшне кӑтартӗ."}
+{"name": "aoe2mc.tutorial.select", "text": "Ял халӑхӗн пӗрне суйлӑр: командӑ таякӗпе хӑвӑр ял халӑхӗн пӗрне ҫӳлтен ҫаклатса пӑсӑр. Ҫӳлти босс-панель суйласа илнӗ вӗҫӗме кӑтартӗ, хотбар ҫинчи ӗҫ панелӗ ҫитес ӗҫе кӑтартӗ."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Ӑсату тухрӗ"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Ӑсату %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "Канаш: казарма пехота ҫӗнтерет. Пехота аякка тухать тата ҫуртсем ҫине лайӑх."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "Канаш: пур вӗҫӗмсемпе пӗрле хирӗҫӗв тӑвӑр. Пӗчӗк пӗрлешӳ зиян килтерместӗн малтан вилет."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "Канаш: тӗп ресурссем хыҫӗнче пусарма тӑвӑсем тӑвӑр, ял халӑхӗ ҫулпа пысӑк мар утсын."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "Канаш: ҫитес эрӑ яланах яңӑ ҫуртсем, вӗҫӗмсем тата технологисем уҫать. Тухса кайсан ял халӑхне ӗҫре тытӑр."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "Канаш: тирмен хыҫӗнчи ҫырӑсем — апатӑн хурахсӑр пуҫламалли. Кайран лакӑмсем апат вӗтӗрӗнмен пулӑшӗ."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "Канаш: ҫурт 5 ытларах халӑх валли вырӑн парать. Панельте халӑха пӑхӑр та тулмасӑр малтан ҫурт тӑвӑр."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "Канаш: ресурссем пуҫарӗнче пӗр ҫурта 15 вӗҫӗме ҫитӗнме пулать."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "Канаш: AoE2 ҫинче хула ҫинкӗ ял халӑхне хула тӑрри патнелле янӑратать. Хирӗҫ хулӑна хирӗҫсе кӗрсен ҫинкӗ янӑратӑр."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "Канаш: тӑваҫ енчи панельте Ӗҫсӗр ҫул ӗҫсӗр ял халӑхне шутлать. Вӗсене ӗҫ парӑр."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "Канаш: малтанхи эрӑсенче яланах ял халӑхне ҫӗнтерӗр. Ытларах ял халӑхӗ — ытларах ресурс."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "Канаш: пусарма ҫурт патӗнче ял халӑхӗ ытла хытӑ пуҫтарать. Йывӑҫсем хыҫӗнче йывӑҫ лагерь тӑвӑр."}
+{"name": "aoe2mc.tutorial.villager", "text": "Ял халӑхне ҫӗнтерӗр: хӑвӑр хула тӑрри ҫине аякри ҫаклатса пӑсӑр та ял халӑхне суйлӑр. Тӑваҫ енчи панель унӑн апат хирӗҫ кӑтартӗ."}
+{"name": "aoe2mc.tutorial.wood", "text": "50 йывӑҫ пуҫтарӑр: ял халӑхне суйлӑр та йывӑҫ ҫине аякри ҫаклатса пӑсӑр. Тӑваҫ енчи панель сирӗн йывӑҫа кӑтартӗ."}
+{"name": "aoe2mc.victory", "text": "Ҫӗнтерӳ"}
+{"name": "aoe2mc.wonder.built", "text": "Уйрӑм %s чудо ҫавӑрнӑ."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Уйрӑм %s чудо ҫӗлӗнчӗ."}
