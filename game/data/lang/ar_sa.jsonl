@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "ينتقل اللاعب %s إلى %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: يستولي الفساد على الخريطة من حدودها إلى مركزها خلال %s. يدمر جميع الوحدات والمباني فيها."}
+{"name": "aoe2mc.bot.cannot_build", "text": "لا أستطيع بناء %s هناك الآن."}
+{"name": "aoe2mc.bot.cannot_train", "text": "لا أستطيع تدريب هذه الوحدة: ليس لدي مبنى لها."}
+{"name": "aoe2mc.bot.flare_two", "text": "ضع إشارتين للجدار."}
+{"name": "aoe2mc.bot.no_flare", "text": "لا أرى أي إشارة."}
+{"name": "aoe2mc.bot.no_market", "text": "ليس لدي سوق: لا أستطيع إرسال الجزية."}
+{"name": "aoe2mc.bot.no_onager", "text": "ليس لدي أونجر."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "ليست لدي موارد كافية لجدار."}
+{"name": "aoe2mc.bot.no_water", "text": "ليس لدي ماء قرب مدينتي: لا أستطيع بناء أسطول."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "لا تستطيع الأونجر الخاصة بي قطع الأشجار."}
+{"name": "aoe2mc.build.cost", "text": "موارد غير كافية: %s يكلف %s."}
+{"name": "aoe2mc.build.flat", "text": "يجب أن يقف %s على أرض مستوية."}
+{"name": "aoe2mc.build.gate_spot", "text": "يجب أن يقع %s على 4 مربعات من جدارك في خط مستقيم، أو على 3 مربعات قطرية."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "البناء: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "يجب أن يقف %s على الماء بجوار الشاطئ."}
+{"name": "aoe2mc.build.space", "text": "لا توجد مساحة لـ %s هنا."}
+{"name": "aoe2mc.build.tiles_cost", "text": "موارد غير كافية: %s مربعات من %s تكلف %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: انقر بالزر الأيمن على نهاية الجدار."}
+{"name": "aoe2mc.build.water", "text": "يجب أن يقف %s على الماء."}
+{"name": "aoe2mc.camera.fov", "text": "تجعل الكاميرا السريعة الأداة في يدك تتأرجح. لجعلها ثابتة، اضبط الخيارات > إعدادات إمكانية الوصول > تأرجح العرض على إيقاف. كما تجعل الكاميرا العرض أوسع، فيظهر المزيد من الخريطة. للإبقاء على العرض العادي، اضبط الخيارات > إعدادات إمكانية الوصول > تأثيرات FOV على 0 %."}
+{"name": "aoe2mc.camera.off", "text": "الكاميرا: متوقفة"}
+{"name": "aoe2mc.camera.on", "text": "الكاميرا: مفعلة، السرعة x%s. Shift + نقر أيمن: السرعة التالية."}
+{"name": "aoe2mc.camera.speed", "text": "سرعة الكاميرا: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "اهزم جميع وحدات العدو واخسر وحدات قليلة"}
+{"name": "aoe2mc.challenge.booming", "text": "درّب 100 فلاح وانتقل إلى العصر الإمبراطوري"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "انتقل إلى عصر القلعة ونجُ من هجمات العدو"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "دمّر قلعة العدو"}
+{"name": "aoe2mc.challenge.early-economy", "text": "اجمع 200 طعام و200 خشب و100 ذهب و200 حجر، ودرّب 21 فلاحًا، وابنِ معسكر حطابين وطاحونة، وانتقل إلى العصر الإقطاعي"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "درّب 27 فلاحًا، وابنِ 5 منازل، وانتقل إلى عصر القلعة"}
+{"name": "aoe2mc.challenge.land-battle", "text": "اهزم جميع الموجات الستة للعدو"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "فقدان %s وحدة، ميدالية برونزية حتى %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "فقدان %s وحدة، ميدالية ذهبية حتى %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "فقدان %s وحدة، بلا ميدالية"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "فقدان %s وحدة، ميدالية فضية حتى %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "ميدالية برونزية"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "ميدالية ذهبية"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "ميدالية فضية"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "دمّر جميع السفن الحربية للعدو"}
+{"name": "aoe2mc.challenge.no_medal", "text": "بلا ميدالية"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "اقتل 5 فلاحين للعدو"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "ميدالية برونزية في %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "ميدالية ذهبية في %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "ميدالية فضية في %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "الدرع متوقف"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "الدرع مفعّل"}
+{"name": "aoe2mc.cheat.beyond", "text": "التقنيات: حتى 256 بحثًا"}
+{"name": "aoe2mc.cheat.cpu", "text": "حد السكان: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "ضباب الحرب: متوقف"}
+{"name": "aoe2mc.cheat.fog_on", "text": "ضباب الحرب: مفعّل"}
+{"name": "aoe2mc.cheat.free_techs", "text": "التقنيات مجانية"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "المشاركة تعني الاهتمام: دخلك يذهب إلى حلفائك"}
+{"name": "aoe2mc.cheat.wonders", "text": "أنت تتحكم بالطبيعة: %s حيوانًا"}
+{"name": "aoe2mc.conquest.allies_end", "text": "لم يبق إلا الحلفاء: تنتهي التحالفات. يفوز آخر لاعب على قيد الحياة."}
+{"name": "aoe2mc.conquest.defeated", "text": "تم هزيمة اللاعب %s."}
+{"name": "aoe2mc.controls.attack", "text": "الهجوم: اختر الوحدات العسكرية، ثم انقر بالزر الأيمن على عدو."}
+{"name": "aoe2mc.controls.build", "text": "البناء: اختر الفلاحين، وانقر عليهم بالزر الأيمن لقائمة البناء، واختر مبنى، ثم انقر بالزر الأيسر على الأرض. Shift + نقر أيسر: ضع المزيد. نقر أيمن: إلغاء."}
+{"name": "aoe2mc.controls.camera", "text": "الكاميرا: انقر بالزر الأيمن بأداة المنظار الكاميرا (مفتاح شريط الأدوات 2): تطير بسرعة عاليًا فوق الخريطة. Shift + نقر أيمن: السرعة التالية. نقر أيمن مرة أخرى: تهبط."}
+{"name": "aoe2mc.controls.garrison", "text": "الحامية: اختر الوحدات، ثم انقر بالزر الأيمن على مبناك. قائمته تُخرجها. قائمة مركز المدينة: اقرع جرس المدينة."}
+{"name": "aoe2mc.controls.gather", "text": "الجمع: اختر الفلاحين، ثم انقر بالزر الأيمن على شجرة أو شجيرة توت أو منجم أو مزرعة."}
+{"name": "aoe2mc.controls.goto", "text": "الذهاب إلى: انقر بالزر الأيمن بأداة البوصلة الذهاب إلى (مفتاح شريط الأدوات 3): قائمة مراكز مدنك ومجموعات التحكم لديك والفلاح الخامل التالي."}
+{"name": "aoe2mc.controls.groups", "text": "مجموعات التحكم: اختر الوحدات، وخذ عنصر مجموعة (مفاتيح شريط الأدوات من 5 إلى 9) و Shift + نقر أيمن لحفظ الاختيار. نقر أيمن: اختيار المجموعة."}
+{"name": "aoe2mc.controls.head", "text": "عناصر التحكم (امسك الجزرة على عصا؛ شريط الأفعال يُظهر الخطوة التالية):"}
+{"name": "aoe2mc.controls.menu", "text": "قائمة اللعبة: انقر بالزر الأيمن بالكتاب قائمة اللعبة (مفتاح شريط الأدوات 4): الدبلوماسية والجزية، والإشارة، والحفظ، والإيقاف المؤقت، وشجرة التقنيات."}
+{"name": "aoe2mc.controls.move", "text": "التحرك: مع وجود اختيار، انقر بالزر الأيمن على الأرض."}
+{"name": "aoe2mc.controls.research", "text": "البحث والانتقال إلى عصر جديد: انقر بالزر الأيمن على مبناك، ثم انقر على تقنية أو على العصر التالي في قائمته."}
+{"name": "aoe2mc.controls.select", "text": "الاختيار: انقر بالزر الأيسر على وحدة. اضغط مع الاستمرار بالزر الأيسر وامتد على الأرض: مربع اختيار. نقر أيمن: إعطاء الأوامر."}
+{"name": "aoe2mc.controls.train", "text": "التدريب: انقر بالزر الأيمن على مبناك (مركز المدينة، الثكنة ...) وانقر على وحدة في قائمته."}
+{"name": "aoe2mc.defeat", "text": "الهزيمة"}
+{"name": "aoe2mc.diplomacy.ally", "text": "حليف"}
+{"name": "aoe2mc.diplomacy.changed", "text": "غيّر اللاعب %s موقفه تجاهك: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "عدو"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "محايد"}
+{"name": "aoe2mc.diplomacy.speed", "text": "ضبط اللاعب %s سرعة اللعبة على %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "أرسل اللاعب %s %s %s إلى اللاعب %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: إشارة عند %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "المتابعة: انقر على وحدة من وحداتك"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "الحراسة: انقر على وحدة أو مبنى من وحداتك"}
+{"name": "aoe2mc.gaia.joins", "text": "ينضم إليك %s."}
+{"name": "aoe2mc.garrison.all_back", "text": "عودة الجميع إلى العمل"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "يقرع جرس المدينة: %s فلاحين يبحثون عن مأوى"}
+{"name": "aoe2mc.garrison.no_villager", "text": "لم يُختر أي فلاح."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "ليس لديك فلاحون."}
+{"name": "aoe2mc.garrison.out", "text": "خرجت %s وحدات"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s فلاحين يبحثون عن مأوى"}
+{"name": "aoe2mc.gather.act_attack", "text": "هجوم"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "قائمة البناء"}
+{"name": "aoe2mc.gather.act_garrison", "text": "حامية"}
+{"name": "aoe2mc.gather.act_gather", "text": "جمع"}
+{"name": "aoe2mc.gather.act_hunt", "text": "صيد"}
+{"name": "aoe2mc.gather.act_move", "text": "تحرك"}
+{"name": "aoe2mc.gather.act_select", "text": "اختيار"}
+{"name": "aoe2mc.gather.act_select_type", "text": "اختيار كل من هذا النوع"}
+{"name": "aoe2mc.gather.act_trade", "text": "تجارة"}
+{"name": "aoe2mc.gather.act_train", "text": "تدريب"}
+{"name": "aoe2mc.gather.attack_siege", "text": "هجوم: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "مربع الاختيار: أُلغي"}
+{"name": "aoe2mc.gather.bush", "text": "شجيرة توت"}
+{"name": "aoe2mc.gather.carcass", "text": "جيفة"}
+{"name": "aoe2mc.gather.corner", "text": "مربع الاختيار: انقر على الزاوية الأخرى"}
+{"name": "aoe2mc.gather.enemy", "text": "%s عدو"}
+{"name": "aoe2mc.gather.enemy_building", "text": "مبنى عدو"}
+{"name": "aoe2mc.gather.farm", "text": "مزرعة"}
+{"name": "aoe2mc.gather.ground", "text": "الأرض"}
+{"name": "aoe2mc.gather.group", "text": "المجموعة %s: %s وحدة"}
+{"name": "aoe2mc.gather.group_saved", "text": "المجموعة %s: حُفظت %s وحدة"}
+{"name": "aoe2mc.gather.mine", "text": "منجم %s"}
+{"name": "aoe2mc.gather.paused", "text": "اللعبة متوقفة مؤقتًا."}
+{"name": "aoe2mc.gather.point", "text": "%s · نقر أيمن: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "إعادات الزراعة في الانتظار: %s"}
+{"name": "aoe2mc.gather.selected", "text": "المختار: %s وحدة"}
+{"name": "aoe2mc.gather.tree", "text": "شجرة"}
+{"name": "aoe2mc.hill.holds", "text": "يمسك اللاعب %s بالنصب."}
+{"name": "aoe2mc.hints.attack_ground", "text": "هجوم على الأرض: انقر بالزر الأيمن على الأرض"}
+{"name": "aoe2mc.hints.attack_move", "text": "هجوم أثناء التحرك: انقر بالزر الأيمن على الأرض"}
+{"name": "aoe2mc.hints.building", "text": "ضع %s: انقر بالزر الأيمن على الأرض · Shift + نقر أيمن: ضع المزيد · إلغاء: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: انقر بالزر الأيسر للوضع · Shift: ضع المزيد · نقر أيمن: إلغاء"}
+{"name": "aoe2mc.hints.corner", "text": "مربع الاختيار: انقر بالزر الأيمن على الزاوية الأخرى"}
+{"name": "aoe2mc.hints.count_military", "text": "وحدة عسكرية واحدة: %s"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s وحدات عسكرية"}
+{"name": "aoe2mc.hints.count_villager", "text": "فلاح واحد: %s"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s فلاحين"}
+{"name": "aoe2mc.hints.deselect", "text": "مربع فارغ: إلغاء الاختيار"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "نقر أيسر: إلغاء الاختيار"}
+{"name": "aoe2mc.hints.follow", "text": "المتابعة: انقر بالزر الأيمن على وحدة لك أو لحليف"}
+{"name": "aoe2mc.hints.guard", "text": "الحراسة: انقر بالزر الأيمن على وحدة أو مبنى لك أو لحليف"}
+{"name": "aoe2mc.hints.military", "text": "%s · نقر أيمن: هجوم على عدو، قائمة الموقف · %s"}
+{"name": "aoe2mc.hints.none", "text": "نقر أيسر: اختيار وحدة · اضغط مع الاستمرار بالزر الأيسر: مربع اختيار"}
+{"name": "aoe2mc.hints.none_wand", "text": "نقر أيمن: اختيار وحدة · عصا: مربع اختيار"}
+{"name": "aoe2mc.hints.patrol", "text": "الدورية: انقر بالزر الأيمن على الأرض"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · نقر أيمن: جمع، بناء، قائمة البناء · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s جاهز"}
+{"name": "aoe2mc.lobby.you_play", "text": "تلعب بـ %s."}
+{"name": "aoe2mc.monk.converts", "text": "يحوّل راهب %s."}
+{"name": "aoe2mc.monk.dies", "text": "يموت %s (بدعة)."}
+{"name": "aoe2mc.pause.continued", "text": "تابع اللاعب %s اللعبة."}
+{"name": "aoe2mc.pause.paused", "text": "أوقف اللاعب %s اللعبة مؤقتًا."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "الفريق %s (متوسط التقييم %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "انتهت اللعبة. انقر بالزر الأيمن على كتاب الملخص في يدك لرؤية النتائج. أوقف برنامج اللعبة بالضغط على Ctrl-C في وحدة تحكمه."}
+{"name": "aoe2mc.relic_victory.all", "text": "يمسك اللاعب %s بجميع الآثار."}
+{"name": "aoe2mc.relic_victory.lost", "text": "فقد اللاعب %s أثرًا."}
+{"name": "aoe2mc.repair.no_resources", "text": "موارد غير كافية لإصلاح %s."}
+{"name": "aoe2mc.replay.army", "text": "الجيش: %s"}
+{"name": "aoe2mc.replay.army_end", "text": "، الجيش في النهاية: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": "، خسائر: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "ترتيب البناء:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · حامية %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | يحمل %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "بناء %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "طعام %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "ذهب %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "خمول %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "حجر %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "خشب %s"}
+{"name": "aoe2mc.replay.flare", "text": "إشارة"}
+{"name": "aoe2mc.replay.game_ends", "text": "تنتهي اللعبة"}
+{"name": "aoe2mc.replay.game_time", "text": "وقت اللعبة %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · حامية %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "عسكر %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "سكان %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "موارد %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "فلاحون %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "أمسك %s بالنصب: فوز «ملك التل» عند %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | هجوم %s %s/%s درع%s"}
+{"name": "aoe2mc.replay.join_help", "text": "اضغط Shift مرتين: عرض المتفرج (التحليق عبر الكتل). انقر بالزر الأيمن على عناصر شريط الأدوات: التحكم في الإعادة."}
+{"name": "aoe2mc.replay.king_died", "text": ": مات الملك عند %s. قتل الملك: يخرج اللاعب."}
+{"name": "aoe2mc.replay.king_killed", "text": "قُتل الملك عند %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "إعادة مباشرة: يتوقف القفز عند التأخير خلف اللعبة."}
+{"name": "aoe2mc.replay.lost", "text": "خسر: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " يمسك بالنصب عند %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: نصب، بقي %s سنة"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: نصب، بقي %s سنوات"}
+{"name": "aoe2mc.replay.no_camera", "text": "لا توجد كاميرا للاعب في هذا التسجيل."}
+{"name": "aoe2mc.replay.now", "text": " الآن"}
+{"name": "aoe2mc.replay.out", "text": "%s خرج من اللعبة"}
+{"name": "aoe2mc.replay.players", "text": "اللاعبون"}
+{"name": "aoe2mc.replay.range", "text": " م%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " يأخذ الأثر إلى دير ويفوز."}
+{"name": "aoe2mc.replay.replay_ended", "text": "انتهت الإعادة"}
+{"name": "aoe2mc.replay.research", "text": " يبحث عن %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s يستسلم"}
+{"name": "aoe2mc.replay.restart_jump", "text": "يُعاد تشغيل الخادم للقفز إلى الخلف: ادخل إليه مرة أخرى."}
+{"name": "aoe2mc.replay.share_buildings", "text": "المباني %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "الاقتصاد %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "العسكر %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "التقنيات %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "المجموع %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "قلاع %s، "}
+{"name": "aoe2mc.replay.soc_market", "text": "اشترى %s، باع %s، "}
+{"name": "aoe2mc.replay.soc_relics", "text": "آثار %s، "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "عجائب %s، "}
+{"name": "aoe2mc.replay.spent", "text": "المصروف:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "بناء %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "اقتصاد %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "عسكر %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "تقنيات %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": فلاحون مدرَّبون %s، جُمعوا %s، وقت خمول الفلاحين %s، وقت خمول مركز المدينة %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": يمسك بالنصب («ملك التل»)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": فاز بالنصب %s («ملك التل»)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": وحدات عسكرية مدرَّبة %s، وحدات مفقودة %s، مبانٍ مفقودة %s، APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": قُتل ملوك %s («قتل الملك»)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": فوز، أثر في دير %s («الاستيلاء على الأثر»)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sجزية أُرسلت %s، واستُلمت %s، ذروة الفلاحين %s (تقديري)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": فُقد مركز المدينة %s («الموت المفاجئ»)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s، تقنيات %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": مؤقت العجيبة من %s، ينتهي %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "الملخص (تقديري)"}
+{"name": "aoe2mc.replay.task_building", "text": "يبني"}
+{"name": "aoe2mc.replay.task_following", "text": "يتابع"}
+{"name": "aoe2mc.replay.task_food", "text": "يجمع الطعام"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "في الحامية"}
+{"name": "aoe2mc.replay.task_gold", "text": "يجمع الذهب"}
+{"name": "aoe2mc.replay.task_guarding", "text": "يحرس"}
+{"name": "aoe2mc.replay.task_idle", "text": "خامل"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "يقوم بدورية"}
+{"name": "aoe2mc.replay.task_resources", "text": "يجمع الموارد"}
+{"name": "aoe2mc.replay.task_stone", "text": "يجمع الحجر"}
+{"name": "aoe2mc.replay.task_walking", "text": "يمشي"}
+{"name": "aoe2mc.replay.task_wood", "text": "يجمع الخشب"}
+{"name": "aoe2mc.replay.team", "text": "الفريق %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "الرماة %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "درع الرماة %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "الحمل %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "درع الفرسان %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "المزرعة %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "الذهب %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "درع المشاة %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "النول %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "القتال المباشر %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "الحجر %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "الخشب %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "القلعة"}
+{"name": "aoe2mc.replay.tl_king", "text": "قُتل الملك"}
+{"name": "aoe2mc.replay.tl_military", "text": "أول جيش: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "الأثر"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "يستسلم"}
+{"name": "aoe2mc.replay.town_fell", "text": ": سقط مركز المدينة عند %s. الموت المفاجئ: يخرج اللاعب."}
+{"name": "aoe2mc.replay.town_lost", "text": "فُقد مركز المدينة عند %s"}
+{"name": "aoe2mc.replay.training", "text": "التدريب: %s"}
+{"name": "aoe2mc.replay.university", "text": "الجامعة:"}
+{"name": "aoe2mc.replay.up_counts", "text": "الاقتصاد %s · الجامعة %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " بنى عجيبة عند %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "قتال: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": "، %s وحدات"}
+{"name": "aoe2mc.replay_input.fights", "text": "معارك كبيرة:"}
+{"name": "aoe2mc.replay_input.help", "text": "الإعادة: انقر بالزر الأيمن على عناصر شريط الأدوات، أو انقر: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "الاستيلاء: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s وحدات)"}
+{"name": "aoe2mc.replay_input.vs", "text": " ضد "}
+{"name": "aoe2mc.resource.food", "text": "طعام"}
+{"name": "aoe2mc.resource.gold", "text": "ذهب"}
+{"name": "aoe2mc.resource.stone", "text": "حجر"}
+{"name": "aoe2mc.resource.wood", "text": "خشب"}
+{"name": "aoe2mc.run.back", "text": "%s عاد"}
+{"name": "aoe2mc.run.campaign_complete", "text": "اكتملت الحملة"}
+{"name": "aoe2mc.run.chat_hint", "text": "الدردشة: السطر العادي يذهب إلى الجميع، /tm النص إلى حلفائك، /msg الاسم النص إلى شخص واحد."}
+{"name": "aoe2mc.run.left_bot", "text": "غادر %s: يلعب بوت دور اللاعب %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "تبدأ السيناريو %s. ادخل مرة أخرى."}
+{"name": "aoe2mc.run.starts_in", "text": "تبدأ اللعبة خلال %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "افتح «اختر لاعبك» وانقر على «جاهز»"}
+{"name": "aoe2mc.run.welcome_controls", "text": "كل عناصر التحكم: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "الخطوة الأولى: امسك عصا الأوامر وانقر بالزر الأيمن على أحد فلاحيك."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "الخطوة الأولى: امسك عصا الأوامر وانقر بالزر الأيسر على أحد فلاحيك."}
+{"name": "aoe2mc.run.welcome_goal", "text": "الهدف: الفوز في اللعبة. إعداد الفوز: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "حُفظت اللعبة: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "خرجت %s وحدات"}
+{"name": "aoe2mc.stance.auto_scout", "text": "استطلاع تلقائي"}
+{"name": "aoe2mc.stance.formation", "text": "التشكيل: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "لا تستطيع أي وحدة مهاجمة الأرض"}
+{"name": "aoe2mc.stance.unpack", "text": "افرد المنجنيق أولًا"}
+{"name": "aoe2mc.train.active", "text": "%s نشط."}
+{"name": "aoe2mc.train.rally", "text": "انقر بالزر الأيمن على الأرض لنقطة التجمع."}
+{"name": "aoe2mc.train.researched", "text": "تم بحث %s."}
+{"name": "aoe2mc.transport.out", "text": "خرجت %s وحدات"}
+{"name": "aoe2mc.treaty.ended", "text": "انتهت المعاهدة: يمكن للاعبين الهجوم الآن."}
+{"name": "aoe2mc.treaty.refuse", "text": "معاهدة: لا يمكنك الهجوم قبل %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "معاهدة: لا يمكنك الهجوم في هذه اللعبة."}
+{"name": "aoe2mc.treaty.start", "text": "معاهدة: لا يستطيع أي لاعب مهاجمة لاعب آخر قبل %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "معاهدة: لا يستطيع أي لاعب مهاجمة لاعب آخر في هذه اللعبة."}
+{"name": "aoe2mc.tutorial.barracks", "text": "ابنِ ثكنة: انقر بالزر الأيمن على فلاح مختار، واختر الثكنة وضعها. يخبرك شريط الأفعال فوق شريط الأدوات أين تضعها."}
+{"name": "aoe2mc.tutorial.camera", "text": "تحرك بسرعة فوق الخريطة: انقر بالزر الأيمن بعنصر «الكاميرا»، وامشِ، ثم انقر بالزر الأيمن به مرة أخرى."}
+{"name": "aoe2mc.tutorial.camp", "text": "دمّر المعسكر المعادي في منتصف الخريطة: اختر المليشيا لديك وانقر بالزر الأيمن على مبنى. يُظهر شريط الزعيم في الأعلى الخطوة."}
+{"name": "aoe2mc.tutorial.camps", "text": "ابنِ معسكر حطابين قرب الأشجار ومطحنة قرب التوت. تُظهر اللوحة الجانبية على اليمين الخشب الذي تكلفه."}
+{"name": "aoe2mc.tutorial.complete", "text": "اكتمل الدرس التعليمي. التالي: العب لعبة ضد البوت: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "اكتمل الدرس التعليمي"}
+{"name": "aoe2mc.tutorial.feudal", "text": "انتقل إلى العصر الإقطاعي: انقر بالزر الأيمن على مركز مدينتك واختر العصر الإقطاعي. تُظهر اللوحة الجانبية على اليمين طعامك."}
+{"name": "aoe2mc.tutorial.food", "text": "اجمع 100 طعام: أرسل فلاحًا إلى التوت. تُظهر اللوحة الجانبية على اليمين طعامك."}
+{"name": "aoe2mc.tutorial.house", "text": "ابنِ منزلًا: انقر بالزر الأيمن على فلاح مختار، واختر المنزل وضعه. يخبرك شريط الأفعال فوق شريط الأدوات أين تضعه."}
+{"name": "aoe2mc.tutorial.militia", "text": "درّب 3 من المليشيا: انقر بالزر الأيمن على ثكنتك واختر المليشيا. تُظهر اللوحة الجانبية على اليمين طعامك وذهبك."}
+{"name": "aoe2mc.tutorial.raid", "text": "العدو يهاجم فلاحيك! انقر على السطر الأحمر للإنذار في الدردشة للذهاب إلى هناك، ثم اختر المليشيا لديك وانقر بالزر الأيمن على الأعداء. يُظهر شريط الزعيم في الأعلى صحة الوحدة المختارة."}
+{"name": "aoe2mc.tutorial.select", "text": "اختر فلاحًا: انقر بالزر الأيسر على أحد فلاحيك بعصا الأوامر. يُظهر شريط الزعيم في الأعلى الوحدة المختارة، ويُظهر شريط الأفعال فوق شريط الأدوات الإجراء التالي."}
+{"name": "aoe2mc.tutorial.step_done", "text": "اكتملت الخطوة"}
+{"name": "aoe2mc.tutorial.step_of", "text": "الخطوة %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "نصيحة: تدرب الثكنة المشاة. المشاة رخيصة وجيدة ضد المباني."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "نصيحة: هاجم بجميع وحداتك معًا. المجموعة الصغيرة تموت قبل أن تُحدث ضررًا."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "نصيحة: ابنِ مباني التفريغ قرب الموارد، حتى يمشي الفلاحون مسافة قصيرة."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "نصيحة: العصر التالي يفتح مبانٍ ووحدات وتقنيات جديدة. أبقِ الفلاحين في العمل وأنت تتقدم."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "نصيحة: التوت قرب المطحنة بداية آمنة للطعام. لاحقًا تعطي المزارع طعامًا لا ينتهي."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "نصيحة: المنزل يوفر مكانًا لـ 5 من السكان الإضافيين. انظر إلى السكان في اللوحة الجانبية وابنِ المنازل قبل أن يمتلئ."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "نصيحة: يمكنك وضع حتى 15 وحدة في الطابور داخل مبنى عندما تملك الموارد."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "نصيحة: في AoE2 يرسل جرس المدينة الفلاحين إلى مركز المدينة. اقرعه عندما يغير العدو على مدينتك."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "نصيحة: سطر الخاملين في اللوحة الجانبية على اليمين يحصي فلاحيك بلا عمل. أعطهم عملًا."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "نصيحة: درّب الفلاحين باستمرار في العصور الأولى. الفلاحون الأكثر يعطون موارد أكثر."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "نصيحة: يجمع الفلاحون أسرع قرب مبنى التفريغ. ابنِ معسكر حطابين بجوار الأشجار."}
+{"name": "aoe2mc.tutorial.villager", "text": "درّب فلاحًا: انقر بالزر الأيمن على مركز مدينتك واختر الفلاح. تُظهر اللوحة الجانبية على اليمين الطعام الذي يكلفه."}
+{"name": "aoe2mc.tutorial.wood", "text": "اجمع 50 خشبًا: اختر فلاحًا وانقر بالزر الأيمن على شجرة. تُظهر اللوحة الجانبية على اليمين خشبك."}
+{"name": "aoe2mc.victory", "text": "النصر"}
+{"name": "aoe2mc.wonder.built", "text": "بنى اللاعب %s عجيبة."}
+{"name": "aoe2mc.wonder.destroyed", "text": "دُمّرت عجيبة اللاعب %s."}

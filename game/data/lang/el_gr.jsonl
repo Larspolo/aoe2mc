@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Ο παίκτης %s προχωρά στην %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: η Διαφθορά καταλαμβάνει τον χάρτη από το περίγραμμά του προς το κέντρο σε %s. Καταστρέφει όλες τις μονάδες και τα κτίρια που βρίσκονται μέσα της."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Δεν μπορώ να χτίσω ένα %s εκεί τώρα."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Δεν μπορώ να εκπαιδεύσω αυτή τη μονάδα: δεν έχω κτίριο γι' αυτήν."}
+{"name": "aoe2mc.bot.flare_two", "text": "Τοποθετήστε δύο σήματα για το τείχος."}
+{"name": "aoe2mc.bot.no_flare", "text": "Δεν βλέπω κανένα σήμα."}
+{"name": "aoe2mc.bot.no_market", "text": "Δεν έχω αγορά: δεν μπορώ να στείλω φόρο υποτέλειας."}
+{"name": "aoe2mc.bot.no_onager", "text": "Δεν έχω ονάγρο."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Δεν έχω αρκετούς πόρους για τείχος."}
+{"name": "aoe2mc.bot.no_water", "text": "Δεν έχω νερό κοντά στην πόλη μου: δεν μπορώ να χτίσω στόλο."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Οι ονάγροι μου δεν μπορούν να κόψουν δέντρα."}
+{"name": "aoe2mc.build.cost", "text": "Δεν υπάρχουν αρκετοί πόροι: ένα %s κοστίζει %s."}
+{"name": "aoe2mc.build.flat", "text": "Το %s πρέπει να βρίσκεται σε επίπεδο έδαφος."}
+{"name": "aoe2mc.build.gate_spot", "text": "Ένα %s πρέπει να μπει σε 4 πλακίδια ενός δικού σας τείχους σε ευθεία γραμμή, ή σε 3 διαγώνια πλακίδια."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Κατασκευή: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Ένα %s πρέπει να βρίσκεται στο νερό, δίπλα στην ακτή."}
+{"name": "aoe2mc.build.space", "text": "Δεν υπάρχει χώρος για το %s εδώ."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Δεν υπάρχουν αρκετοί πόροι: %s πλακίδια του %s κοστίζουν %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: κάντε δεξί κλικ στο τέλος του τείχους."}
+{"name": "aoe2mc.build.water", "text": "Ένα %s πρέπει να βρίσκεται στο νερό."}
+{"name": "aoe2mc.camera.fov", "text": "Η γρήγορη κάμερα κάνει το αντικείμενο στο χέρι να κουνιέται. Για να μένει ακίνητο, ορίστε Επιλογές > Ρυθμίσεις προσβασιμότητας > Κούνημα προβολής σε ΑΝΕΝΕΡΓΟ. Η κάμερα κάνει επίσης την προβολή πιο φαρδιά, ώστε να φαίνεται περισσότερος χάρτης. Για να κρατήσετε την κανονική προβολή, ορίστε Επιλογές > Ρυθμίσεις προσβασιμότητας > Εφέ FOV σε 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Κάμερα: ανενεργή"}
+{"name": "aoe2mc.camera.on", "text": "Κάμερα: ενεργή, ταχύτητα x%s. Shift + δεξί κλικ: επόμενη ταχύτητα."}
+{"name": "aoe2mc.camera.speed", "text": "Ταχύτητα κάμερας: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Νικήστε όλες τις μονάδες του αντιπάλου και χάστε λίγες μονάδες"}
+{"name": "aoe2mc.challenge.booming", "text": "Εκπαιδεύστε 100 χωρικούς και προχωρήστε στην Αυτοκρατορική Εποχή"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Προχωρήστε στην Εποχή του Κάστρου και επιζήστε από τις επιθέσεις του αντιπάλου"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Καταστρέψτε το κάστρο του αντιπάλου"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Συλλέξτε 200 τροφή, 200 ξύλο, 100 χρυσό και 200 πέτρα, εκπαιδεύστε 21 χωρικούς, χτίστε ένα στρατόπεδο υλοτόμων και έναν μύλο, και προχωρήστε στη Φεουδαρχική Εποχή"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Εκπαιδεύστε 27 χωρικούς, χτίστε 5 σπίτια και προχωρήστε στην Εποχή του Κάστρου"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Νικήστε και τα έξι κύματα του αντιπάλου"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "Χάθηκαν %s μονάδες, χάλκινο μετάλλιο έως %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "Χάθηκαν %s μονάδες, χρυσό μετάλλιο έως %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "Χάθηκαν %s μονάδες, χωρίς μετάλλιο"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "Χάθηκαν %s μονάδες, ασημένιο μετάλλιο έως %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Χάλκινο μετάλλιο"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Χρυσό μετάλλιο"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Ασημένιο μετάλλιο"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Καταστρέψτε όλα τα πολεμικά πλοία του αντιπάλου"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Χωρίς μετάλλιο"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Σκοτώστε 5 χωρικούς του αντιπάλου"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Χάλκινο μετάλλιο σε %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Χρυσό μετάλλιο σε %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Ασημένιο μετάλλιο σε %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Η Ασπίδα ανενεργή"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Η Ασπίδα ενεργή"}
+{"name": "aoe2mc.cheat.beyond", "text": "Τεχνολογίες: έως 256 έρευνες"}
+{"name": "aoe2mc.cheat.cpu", "text": "Όριο πληθυσμού: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Ομίχλη πολέμου: ανενεργή"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Ομίχλη πολέμου: ενεργή"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Οι τεχνολογίες είναι δωρεάν"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Το να μοιράζεσαι είναι να νοιάζεσαι: το εισόδημά σου πάει στους συμμάχους σου"}
+{"name": "aoe2mc.cheat.wonders", "text": "Ελέγχετε τη φύση: %s ζώα"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Έμειναν μόνο σύμμαχοι: οι συμμαχίες λήγουν. Νικά ο τελευταίος παίκτης που έμεινε ζωντανός."}
+{"name": "aoe2mc.conquest.defeated", "text": "Ο παίκτης %s ηττήθηκε."}
+{"name": "aoe2mc.controls.attack", "text": "Επίθεση: επιλέξτε στρατιωτικές μονάδες, και μετά δεξί κλικ σε έναν αντίπαλο."}
+{"name": "aoe2mc.controls.build", "text": "Κατασκευή: επιλέξτε χωρικούς, κάντε δεξί κλικ σε αυτούς για το μενού κατασκευής, επιλέξτε κτίριο, και μετά αριστερό κλικ στο έδαφος. Shift + αριστερό κλικ: τοποθέτηση περισσότερων. Δεξί κλικ: ακύρωση."}
+{"name": "aoe2mc.controls.camera", "text": "Κάμερα: δεξί κλικ με το τηλεσκόπιο Κάμερα (πλήκτρο γρήγορης μπάρας 2): πετάτε γρήγορα ψηλά πάνω από τον χάρτη. Shift + δεξί κλικ: η επόμενη ταχύτητα. Νέο δεξί κλικ: κατεβαίνετε."}
+{"name": "aoe2mc.controls.garrison", "text": "Φρουρά: επιλέξτε μονάδες, και μετά δεξί κλικ στο δικό σας κτίριο. Το μενού του το βγάζει έξω. Μενού Δημαρχείου: Χτύπημα της Καμπάνας της Πόλης."}
+{"name": "aoe2mc.controls.gather", "text": "Συλλογή: επιλέξτε χωρικούς, και μετά δεξί κλικ σε δέντρο, θάμνο με μούρα, ορυχείο ή αγρόκτημα."}
+{"name": "aoe2mc.controls.goto", "text": "Μετάβαση: δεξί κλικ με την πυξίδα Μετάβαση (πλήκτρο γρήγορης μπάρας 3): μενού με τα δημαρχεία σας, τις ομάδες ελέγχου σας και τον επόμενο αδρανή χωρικό."}
+{"name": "aoe2mc.controls.groups", "text": "Ομάδες ελέγχου: επιλέξτε μονάδες, πάρτε ένα αντικείμενο ομάδας (πλήκτρα γρήγορης μπάρας 5 έως 9) και Shift + δεξί κλικ για αποθήκευση της επιλογής. Δεξί κλικ: επιλογή της ομάδας."}
+{"name": "aoe2mc.controls.head", "text": "Έλεγχοι (κρατήστε το καρότο σε ένα ραβδί· η γραμμή ενεργειών δείχνει το επόμενο βήμα):"}
+{"name": "aoe2mc.controls.menu", "text": "Μενού παιχνιδιού: δεξί κλικ με το βιβλίο Μενού παιχνιδιού (πλήκτρο γρήγορης μπάρας 4): διπλωματία και φόρος υποτέλειας, σήμα, αποθήκευση, παύση και δέντρο τεχνολογιών."}
+{"name": "aoe2mc.controls.move", "text": "Μετακίνηση: με επιλογή, δεξί κλικ στο έδαφος."}
+{"name": "aoe2mc.controls.research", "text": "Έρευνα και άνοδος εποχής: δεξί κλικ στο δικό σας κτίριο και κλικ σε μια τεχνολογία ή στην επόμενη εποχή στο μενού του."}
+{"name": "aoe2mc.controls.select", "text": "Επιλογή: αριστερό κλικ σε μια μονάδα. Κρατήστε το αριστερό κλικ και σύρετε στο έδαφος: ένα πλαίσιο επιλογής. Δεξί κλικ: δώστε εντολές."}
+{"name": "aoe2mc.controls.train", "text": "Εκπαίδευση: δεξί κλικ στο δικό σας κτίριο (δημαρχείο, στρατώνας ...) και κλικ σε μια μονάδα στο μενού του."}
+{"name": "aoe2mc.defeat", "text": "Ήττα"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Σύμμαχος"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Ο παίκτης %s άλλαξε τη στάση του απέναντί σας: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Εχθρός"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Ουδέτερος"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Ο παίκτης %s όρισε την ταχύτητα του παιχνιδιού σε %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Ο παίκτης %s έστειλε %s %s στον παίκτη %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Σήμα στο %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Ακολούθηση: κάντε κλικ σε μια δική σας μονάδα"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Φύλαξη: κάντε κλικ σε μια δική σας μονάδα ή κτίριο"}
+{"name": "aoe2mc.gaia.joins", "text": "Ένας %s σας συμμαχεί."}
+{"name": "aoe2mc.garrison.all_back", "text": "Όλοι πίσω στη δουλειά"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Χτυπά η καμπάνα της πόλης: %s χωρικοί ζητούν καταφύγιο"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Δεν είναι επιλεγμένος κανένας χωρικός."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Δεν έχετε χωρικούς."}
+{"name": "aoe2mc.garrison.out", "text": "Βγήκαν %s μονάδες"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s χωρικοί ζητούν καταφύγιο"}
+{"name": "aoe2mc.gather.act_attack", "text": "επίθεση"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "μενού κατασκευής"}
+{"name": "aoe2mc.gather.act_garrison", "text": "φρουρά"}
+{"name": "aoe2mc.gather.act_gather", "text": "συλλογή"}
+{"name": "aoe2mc.gather.act_hunt", "text": "κυνήγι"}
+{"name": "aoe2mc.gather.act_move", "text": "μετακίνηση"}
+{"name": "aoe2mc.gather.act_select", "text": "επιλογή"}
+{"name": "aoe2mc.gather.act_select_type", "text": "επιλογή όλων του τύπου"}
+{"name": "aoe2mc.gather.act_trade", "text": "εμπόριο"}
+{"name": "aoe2mc.gather.act_train", "text": "εκπαίδευση"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Επίθεση: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Πλαίσιο επιλογής: ακυρώθηκε"}
+{"name": "aoe2mc.gather.bush", "text": "Θάμνος με μούρα"}
+{"name": "aoe2mc.gather.carcass", "text": "Πτώμα ζώου"}
+{"name": "aoe2mc.gather.corner", "text": "Πλαίσιο επιλογής: κάντε κλικ στην άλλη γωνία"}
+{"name": "aoe2mc.gather.enemy", "text": "Εχθρικός %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Εχθρικό κτίριο"}
+{"name": "aoe2mc.gather.farm", "text": "Αγρόκτημα"}
+{"name": "aoe2mc.gather.ground", "text": "Έδαφος"}
+{"name": "aoe2mc.gather.group", "text": "Ομάδα %s: %s μονάδες"}
+{"name": "aoe2mc.gather.group_saved", "text": "Ομάδα %s: αποθηκεύτηκαν %s μονάδες"}
+{"name": "aoe2mc.gather.mine", "text": "Ορυχείο %s"}
+{"name": "aoe2mc.gather.paused", "text": "Το παιχνίδι είναι σε παύση."}
+{"name": "aoe2mc.gather.point", "text": "%s · Δεξί κλικ: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Επαναφυτεύσεις σε αναμονή: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Επιλεγμένες: %s μονάδες"}
+{"name": "aoe2mc.gather.tree", "text": "Δέντρο"}
+{"name": "aoe2mc.hill.holds", "text": "Ο παίκτης %s κατέχει το μνημείο."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Επίθεση στο έδαφος: δεξί κλικ στο έδαφος"}
+{"name": "aoe2mc.hints.attack_move", "text": "Επίθεση εν κινήσει: δεξί κλικ στο έδαφος"}
+{"name": "aoe2mc.hints.building", "text": "Τοποθετήστε το %s: δεξί κλικ στο έδαφος · Shift + δεξί κλικ: τοποθέτηση περισσότερων · Ακύρωση: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: αριστερό κλικ για τοποθέτηση · Shift: τοποθέτηση περισσότερων · Δεξί κλικ: ακύρωση"}
+{"name": "aoe2mc.hints.corner", "text": "Πλαίσιο επιλογής: δεξί κλικ στην άλλη γωνία"}
+{"name": "aoe2mc.hints.count_military", "text": "%s στρατιωτική μονάδα"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s στρατιωτικές μονάδες"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s χωρικός"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s χωρικοί"}
+{"name": "aoe2mc.hints.deselect", "text": "Κενό πλαίσιο: αποεπιλογή"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Αριστερό κλικ: αποεπιλογή"}
+{"name": "aoe2mc.hints.follow", "text": "Ακολούθηση: δεξί κλικ σε μια δική σας ή συμμαχική μονάδα"}
+{"name": "aoe2mc.hints.guard", "text": "Φύλαξη: δεξί κλικ σε μια δική σας ή συμμαχική μονάδα ή κτίριο"}
+{"name": "aoe2mc.hints.military", "text": "%s · Δεξί κλικ: επίθεση σε εχθρό, μενού στάσης · %s"}
+{"name": "aoe2mc.hints.none", "text": "Αριστερό κλικ: επιλογή μονάδας · Κρατήστε το αριστερό κλικ: πλαίσιο επιλογής"}
+{"name": "aoe2mc.hints.none_wand", "text": "Δεξί κλικ: επιλογή μονάδας · Ραβδί: πλαίσιο επιλογής"}
+{"name": "aoe2mc.hints.patrol", "text": "Περιπολία: δεξί κλικ στο έδαφος"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Δεξί κλικ: συλλογή, κατασκευή, μενού κατασκευής · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s έτοιμοι"}
+{"name": "aoe2mc.lobby.you_play", "text": "Παίζετε με %s."}
+{"name": "aoe2mc.monk.converts", "text": "Ένας μοναχός προσηλυτίζει τον %s."}
+{"name": "aoe2mc.monk.dies", "text": "Ο %s πεθαίνει (Αίρεση)."}
+{"name": "aoe2mc.pause.continued", "text": "Ο παίκτης %s συνέχισε το παιχνίδι."}
+{"name": "aoe2mc.pause.paused", "text": "Ο παίκτης %s έβαλε το παιχνίδι σε παύση."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Ομάδα %s (μέση βαθμολογία %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Το παιχνίδι τελείωσε. Κάντε δεξί κλικ στο βιβλίο Σύνοψη στο χέρι σας για να δείτε τα αποτελέσματα. Σταματήστε το πρόγραμμα του παιχνιδιού με Ctrl-C στην κονσόλα του."}
+{"name": "aoe2mc.relic_victory.all", "text": "Ο παίκτης %s κατέχει όλα τα λείψανα."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Ο παίκτης %s έχασε ένα λείψανο."}
+{"name": "aoe2mc.repair.no_resources", "text": "Δεν υπάρχουν αρκετοί πόροι για να επισκευαστεί το %s."}
+{"name": "aoe2mc.replay.army", "text": "Στρατός: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", στρατός στο τέλος: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", χάθηκαν: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Σειρά κατασκευών:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · φρουρά %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | μεταφέρει %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "κατασκευή %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "τροφή %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "χρυσός %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "αδράνεια %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "πέτρα %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "ξύλο %s"}
+{"name": "aoe2mc.replay.flare", "text": "Σήμα"}
+{"name": "aoe2mc.replay.game_ends", "text": "Το παιχνίδι τελειώνει"}
+{"name": "aoe2mc.replay.game_time", "text": "Χρόνος παιχνιδιού %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · φρουρά %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Στρ %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Πλ %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Πόρ %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Χωρ %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "Ο %s κατείχε το μνημείο: νίκη «Βασιλιάς του Λόφου» στο %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s επίθ. %s/%s θωρ.%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Πατήστε Shift δύο φορές: προβολή θεατή (πετάτε μέσα από τα μπλοκ). Δεξί κλικ στα αντικείμενα της γρήγορης μπάρας: έλεγχος επανάληψης."}
+{"name": "aoe2mc.replay.king_died", "text": ": ο βασιλιάς σκοτώθηκε στο %s. Βασιλικοκτονία: ο παίκτης αποκλείεται."}
+{"name": "aoe2mc.replay.king_killed", "text": "Ο βασιλιάς σκοτώθηκε στο %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Ζωντανή επανάληψη: το άλμα σταματά στην καθυστέρηση πίσω από το παιχνίδι."}
+{"name": "aoe2mc.replay.lost", "text": "Χάθηκε: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " κατέχει το μνημείο στο %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: μνημείο, απομένει %s έτος"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: μνημείο, απομένουν %s έτη"}
+{"name": "aoe2mc.replay.no_camera", "text": "Αυτή η εγγραφή δεν έχει κάμερα του παίκτη της."}
+{"name": "aoe2mc.replay.now", "text": " τώρα"}
+{"name": "aoe2mc.replay.out", "text": "Ο %s έχει βγει"}
+{"name": "aoe2mc.replay.players", "text": "Παίκτες"}
+{"name": "aoe2mc.replay.range", "text": " β%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " μεταφέρει το λείψανο σε μοναστήρι και κερδίζει."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Η επανάληψη τελείωσε"}
+{"name": "aoe2mc.replay.research", "text": " ερευνά %s"}
+{"name": "aoe2mc.replay.resigns", "text": "Ο %s παραιτείται"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Ο διακομιστής επανεκκινείται για το άλμα πίσω: συνδεθείτε ξανά."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Κτίρια %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Οικονομία %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Στρατός %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Τεχνολογίες %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Σύνολο %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "κάστρα %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "αγόρασε %s, πούλησε %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "λείψανα %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "θαύματα %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Δαπάνες:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Κτίρια %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Οικονομία %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Στρατός %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Τεχνολογίες %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": εκπαιδεύτηκαν χωρικοί %s, συλλέχθηκαν %s, χρόνος αδρανών χωρικών %s, χρόνος αδρανούς δημαρχείου %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": κατέχει το μνημείο (Βασιλιάς του Λόφου)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": κέρδισε το μνημείο %s (Βασιλιάς του Λόφου)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": εκπαιδεύτηκαν στρατιωτικές μονάδες %s, χάθηκαν μονάδες %s, χάθηκαν κτίρια %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": σκοτώθηκαν βασιλιάδες %s (Βασιλικοκτονία)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": νίκες, λείψανο σε μοναστήρι %s (Κατάληψη λειψάνου)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sφόρος υποτέλειας στάλθηκε %s, ελήφθη %s, κορύφωση χωρικών %s (εκτ.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": χάθηκε το δημαρχείο %s (Ξαφνικός θάνατος)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, τεχνολογίες %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": χρονόμετρο θαύματος από %s, λήγει %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Σύνοψη (εκτ.)"}
+{"name": "aoe2mc.replay.task_building", "text": "κατασκευή"}
+{"name": "aoe2mc.replay.task_following", "text": "ακολουθεί"}
+{"name": "aoe2mc.replay.task_food", "text": "συλλογή τροφής"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "σε φρουρά"}
+{"name": "aoe2mc.replay.task_gold", "text": "συλλογή χρυσού"}
+{"name": "aoe2mc.replay.task_guarding", "text": "φύλαξη"}
+{"name": "aoe2mc.replay.task_idle", "text": "αδρανής"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "περιπολία"}
+{"name": "aoe2mc.replay.task_resources", "text": "συλλογή πόρων"}
+{"name": "aoe2mc.replay.task_stone", "text": "συλλογή πέτρας"}
+{"name": "aoe2mc.replay.task_walking", "text": "περπάτημα"}
+{"name": "aoe2mc.replay.task_wood", "text": "συλλογή ξύλου"}
+{"name": "aoe2mc.replay.team", "text": "Ομάδα %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Τοξότης %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Θωράκιση τοξοτών %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Μεταφορά %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Θωράκιση ιππικού %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Αγρόκτημα %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Χρυσός %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Θωράκιση πεζικού %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Αργαλειός %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Εκ του σύνεγγυς %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Πέτρα %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Ξύλο %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Κάστρο"}
+{"name": "aoe2mc.replay.tl_king", "text": "Βασιλιάς σκοτώθηκε"}
+{"name": "aoe2mc.replay.tl_military", "text": "1ος στρατός: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Λείψανο"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Παραίτηση"}
+{"name": "aoe2mc.replay.town_fell", "text": ": το δημαρχείο έπεσε στο %s. Ξαφνικός θάνατος: ο παίκτης αποκλείεται."}
+{"name": "aoe2mc.replay.town_lost", "text": "Χάθηκε το δημαρχείο στο %s"}
+{"name": "aoe2mc.replay.training", "text": "Εκπαίδευση: %s"}
+{"name": "aoe2mc.replay.university", "text": "Πανεπιστήμιο:"}
+{"name": "aoe2mc.replay.up_counts", "text": "οικονομία %s · Πανεπιστήμιο %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " έχτισε ένα θαύμα στο %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Μάχη: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s μονάδες"}
+{"name": "aoe2mc.replay_input.fights", "text": "Μεγάλες μάχες:"}
+{"name": "aoe2mc.replay_input.help", "text": "Επανάληψη: δεξί κλικ στα αντικείμενα της γρήγορης μπάρας σας, ή κλικ: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Ανάληψη: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s μονάδες)"}
+{"name": "aoe2mc.replay_input.vs", "text": " εναντίον "}
+{"name": "aoe2mc.resource.food", "text": "τροφή"}
+{"name": "aoe2mc.resource.gold", "text": "χρυσός"}
+{"name": "aoe2mc.resource.stone", "text": "πέτρα"}
+{"name": "aoe2mc.resource.wood", "text": "ξύλο"}
+{"name": "aoe2mc.run.back", "text": "Ο %s επέστρεψε"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Η εκστρατεία ολοκληρώθηκε"}
+{"name": "aoe2mc.run.chat_hint", "text": "Συνομιλία: μια απλή γραμμή πηγαίνει σε όλους, /tm ΚΕΙΜΕΝΟ στους συμμάχους σας, /msg ΟΝΟΜΑ ΚΕΙΜΕΝΟ σε ένα άτομο."}
+{"name": "aoe2mc.run.left_bot", "text": "Ο %s αποχώρησε: ένα bot παίζει τον παίκτη %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Το σενάριο %s ξεκινά. Συνδεθείτε ξανά."}
+{"name": "aoe2mc.run.starts_in", "text": "Το παιχνίδι ξεκινά σε %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Ανοίξτε το «Επιλέξτε τον παίκτη σας» και κάντε κλικ στο «Έτοιμος»"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Όλοι οι έλεγχοι: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Πρώτο βήμα: κρατήστε το ραβδί εντολών και κάντε δεξί κλικ σε έναν από τους χωρικούς σας."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Πρώτο βήμα: κρατήστε το ραβδί εντολών και κάντε αριστερό κλικ σε έναν από τους χωρικούς σας."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Στόχος: νίκη στο παιχνίδι. Ρύθμιση νίκης: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Το παιχνίδι αποθηκεύτηκε: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "Βγήκαν %s μονάδες"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Αυτόματη αναγνώριση"}
+{"name": "aoe2mc.stance.formation", "text": "Σχηματισμός: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Καμία μονάδα δεν μπορεί να επιτεθεί στο έδαφος"}
+{"name": "aoe2mc.stance.unpack", "text": "Ξεδιπλώστε πρώτα τον Καταπέλτη"}
+{"name": "aoe2mc.train.active", "text": "Το %s είναι ενεργό."}
+{"name": "aoe2mc.train.rally", "text": "Δεξί κλικ στο έδαφος για το σημείο συγκέντρωσης."}
+{"name": "aoe2mc.train.researched", "text": "Το %s έχει ερευνηθεί."}
+{"name": "aoe2mc.transport.out", "text": "Βγήκαν %s μονάδες"}
+{"name": "aoe2mc.treaty.ended", "text": "Η συνθήκη έληξε: οι παίκτες μπορούν τώρα να επιτεθούν."}
+{"name": "aoe2mc.treaty.refuse", "text": "Συνθήκη: δεν μπορείτε να επιτεθείτε πριν από το %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Συνθήκη: δεν μπορείτε να επιτεθείτε σε αυτό το παιχνίδι."}
+{"name": "aoe2mc.treaty.start", "text": "Συνθήκη: κανένας παίκτης δεν μπορεί να επιτεθεί σε άλλον παίκτη πριν από το %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Συνθήκη: κανένας παίκτης δεν μπορεί να επιτεθεί σε άλλον παίκτη σε αυτό το παιχνίδι."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Χτίστε στρατώνα: δεξί κλικ σε έναν επιλεγμένο χωρικό, διαλέξτε τον στρατώνα και τοποθετήστε τον. Η γραμμή ενεργειών πάνω από τη γρήγορη μπάρα δείχνει πού να τον τοποθετήσετε."}
+{"name": "aoe2mc.tutorial.camera", "text": "Κινηθείτε γρήγορα πάνω από τον χάρτη: δεξί κλικ με το αντικείμενο «Κάμερα», περπατήστε, και μετά ξανά δεξί κλικ με αυτό."}
+{"name": "aoe2mc.tutorial.camp", "text": "Καταστρέψτε το εχθρικό στρατόπεδο στο κέντρο του χάρτη: επιλέξτε τους Πολιτοφύλακές σας και κάντε δεξί κλικ σε ένα κτίριο. Η μπάρα του αρχηγού στην κορυφή δείχνει το βήμα."}
+{"name": "aoe2mc.tutorial.camps", "text": "Χτίστε ένα στρατόπεδο υλοτόμων κοντά στα δέντρα και έναν μύλο κοντά στα μούρα. Η πλαϊνή μπάρα στα δεξιά δείχνει το ξύλο που κοστίζουν."}
+{"name": "aoe2mc.tutorial.complete", "text": "Το σεμινάριο ολοκληρώθηκε. Επόμενο: παίξτε ένα παιχνίδι με το bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Το σεμινάριο ολοκληρώθηκε"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Προχωρήστε στη Φεουδαρχική Εποχή: δεξί κλικ στο δημαρχείο σας και διαλέξτε τη Φεουδαρχική Εποχή. Η πλαϊνή μπάρα στα δεξιά δείχνει την τροφή σας."}
+{"name": "aoe2mc.tutorial.food", "text": "Συλλέξτε 100 τροφή: στείλτε έναν χωρικό στα μούρα. Η πλαϊνή μπάρα στα δεξιά δείχνει την τροφή σας."}
+{"name": "aoe2mc.tutorial.house", "text": "Χτίστε ένα σπίτι: δεξί κλικ σε έναν επιλεγμένο χωρικό, διαλέξτε το σπίτι και τοποθετήστε το. Η γραμμή ενεργειών πάνω από τη γρήγορη μπάρα δείχνει πού να το τοποθετήσετε."}
+{"name": "aoe2mc.tutorial.militia", "text": "Εκπαιδεύστε 3 Πολιτοφύλακες: δεξί κλικ στον στρατώνα σας και διαλέξτε πολιτοφύλακα. Η πλαϊνή μπάρα στα δεξιά δείχνει την τροφή και τον χρυσό σας."}
+{"name": "aoe2mc.tutorial.raid", "text": "Ο αντίπαλος επιτίθεται στους χωρικούς σας! Κάντε κλικ στην κόκκινη γραμμή συναγερμού στη συνομιλία για να πάτε εκεί, και μετά επιλέξτε τους Πολιτοφύλακές σας και κάντε δεξί κλικ στους εχθρούς. Η μπάρα του αρχηγού στην κορυφή δείχνει την υγεία της επιλεγμένης μονάδας."}
+{"name": "aoe2mc.tutorial.select", "text": "Επιλέξτε έναν χωρικό: αριστερό κλικ σε έναν από τους χωρικούς σας με το ραβδί εντολών. Η μπάρα του αρχηγού στην κορυφή δείχνει την επιλεγμένη μονάδα, η γραμμή ενεργειών πάνω από τη γρήγορη μπάρα δείχνει την επόμενη ενέργεια."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Το βήμα ολοκληρώθηκε"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Βήμα %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "ΣΥΜΒΟΥΛΗ: ο στρατώνας εκπαιδεύει πεζικό. Το πεζικό είναι φτηνό και καλό απέναντι σε κτίρια."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "ΣΥΜΒΟΥΛΗ: επιτεθείτε με όλες τις μονάδες μαζί. Μια μικρή ομάδα πεθαίνει πριν προλάβει να κάνει ζημιά."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "ΣΥΜΒΟΥΛΗ: χτίστε τα κτίρια εκφόρτωσης κοντά στους πόρους, ώστε οι χωρικοί να περπατούν λίγο."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "ΣΥΜΒΟΥΛΗ: η επόμενη εποχή ξεκλειδώνει νέα κτίρια, μονάδες και τεχνολογίες. Κρατήστε τους χωρικούς στη δουλειά ενώ προχωράτε."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "ΣΥΜΒΟΥΛΗ: τα μούρα κοντά σε μύλο είναι μια ασφαλής αρχή για την τροφή. Αργότερα, τα αγροκτήματα δίνουν τροφή που δεν τελειώνει."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "ΣΥΜΒΟΥΛΗ: ένα σπίτι δίνει χώρο για 5 ακόμα κατοίκους. Κοιτάξτε τον πληθυσμό στην πλαϊνή μπάρα και χτίστε σπίτια πριν γεμίσει."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "ΣΥΜΒΟΥΛΗ: μπορείτε να βάλετε στην ουρά έως 15 μονάδες σε ένα κτίριο, όταν έχετε τους πόρους."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "ΣΥΜΒΟΥΛΗ: στο AoE2 η καμπάνα της πόλης στέλνει τους χωρικούς στο δημαρχείο. Χτυπήστε την όταν ο αντίπαλος επιδρομάρει στην πόλη σας."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "ΣΥΜΒΟΥΛΗ: η γραμμή Αδρανείς στην πλαϊνή μπάρα δεξιά μετράει τους χωρικούς χωρίς δουλειά. Δώστε τους δουλειά."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "ΣΥΜΒΟΥΛΗ: εκπαιδεύετε χωρικούς συνεχώς στις πρώτες εποχές. Περισσότεροι χωρικοί δίνουν περισσότερους πόρους."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "ΣΥΜΒΟΥΛΗ: οι χωρικοί μαζεύουν πιο γρήγορα κοντά σε κτίριο εκφόρτωσης. Χτίστε ένα στρατόπεδο υλοτόμων δίπλα στα δέντρα."}
+{"name": "aoe2mc.tutorial.villager", "text": "Εκπαιδεύστε έναν χωρικό: δεξί κλικ στο δημαρχείο σας και διαλέξτε τον χωρικό. Η πλαϊνή μπάρα στα δεξιά δείχνει την τροφή που κοστίζει."}
+{"name": "aoe2mc.tutorial.wood", "text": "Συλλέξτε 50 ξύλο: επιλέξτε έναν χωρικό και κάντε δεξί κλικ σε ένα δέντρο. Η πλαϊνή μπάρα στα δεξιά δείχνει το ξύλο σας."}
+{"name": "aoe2mc.victory", "text": "Νίκη"}
+{"name": "aoe2mc.wonder.built", "text": "Ο παίκτης %s έχτισε ένα θαύμα."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Το θαύμα του παίκτη %s καταστράφηκε."}
