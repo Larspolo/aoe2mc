@@ -4,7 +4,7 @@ Join a --host game with real clients (#5916, the check of docs/PLAYTEST.md secti
 of the verify skill for --host, --invite and --offline (game/run.py).
 
 Usage:
-    python3 aoe2mc.py --random-map arabia --seed 1 OUTWorld
+    python3 aoe2mc.py --random-map arabia --seed 1 --resource-pack OUTWorld
     python3 tools/host_check.py OUTWorld OUTDIR [--speed 4] [--beat N]
 
 The tool copies the world and runs `run.main([WORLD, --play, --host, --invite alice,bob, --offline, --people 2])`
@@ -138,6 +138,8 @@ def main(argv=None):
         mc_shot.beat(a.beat)
     if not os.path.isfile(os.path.join(a.world, "level.dat")):
         sys.exit(f"no level.dat in {a.world}")
+    if not os.path.isfile(os.path.join(a.world, "resourcepacks", "resources.zip")):
+        sys.exit(f"no resource pack in {a.world}: convert with --resource-pack (the check loads the pack)")
     os.makedirs(a.out, exist_ok=True)
     a.copy = os.path.join(tempfile.mkdtemp(), os.path.basename(os.path.normpath(a.world)))
     shutil.copytree(a.world, a.copy)                                   # the game changes the world
