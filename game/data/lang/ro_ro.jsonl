@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Jucătorul %s avansează la %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Corupția ocupă harta de la margine până în centru în %s. Distruge toate unitățile și clădirile din zonă."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Nu pot construi un %s acolo acum."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Nu pot antrena această unitate: nu am o clădire pentru ea."}
+{"name": "aoe2mc.bot.flare_two", "text": "Plasează două semnale pentru zid."}
+{"name": "aoe2mc.bot.no_flare", "text": "Nu văd niciun semnal."}
+{"name": "aoe2mc.bot.no_market", "text": "Nu am piață: nu pot trimite tribut."}
+{"name": "aoe2mc.bot.no_onager", "text": "Nu am onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Nu am suficiente resurse pentru un zid."}
+{"name": "aoe2mc.bot.no_water", "text": "Nu am apă lângă orașul meu: nu pot construi o flotă."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Onagrii mei nu pot tăia copaci."}
+{"name": "aoe2mc.build.cost", "text": "Resurse insuficiente: un %s costă %s."}
+{"name": "aoe2mc.build.flat", "text": "%s trebuie să stea pe teren plat."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s trebuie să stea pe 4 pătrățele ale unui zid propriu, în linie dreaptă, sau pe 3 pătrățele diagonale."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Construiește: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s trebuie să stea pe apă, lângă mal."}
+{"name": "aoe2mc.build.space", "text": "Nu este loc pentru %s aici."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Resurse insuficiente: %s pătrățele de %s costă %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: apasă clic dreapta pe capătul zidului."}
+{"name": "aoe2mc.build.water", "text": "%s trebuie să stea pe apă."}
+{"name": "aoe2mc.camera.fov", "text": "Camera rapidă face obiectul ținut în mână să se legene. Pentru a-l ține nemișcat, setează Opțiuni > Setări de accesibilitate > Legănarea vederii la OPRIT. Camera face și vederea mai largă, astfel că vezi mai mult din hartă. Pentru vederea normală, setează Opțiuni > Setări de accesibilitate > Efecte FOV la 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Cameră: oprită"}
+{"name": "aoe2mc.camera.on", "text": "Cameră: pornită, viteză x%s. Shift clic dreapta: următoarea viteză."}
+{"name": "aoe2mc.camera.speed", "text": "Viteza camerei: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Învinge toate unitățile inamice și pierde puține unități"}
+{"name": "aoe2mc.challenge.booming", "text": "Antrenează 100 de săteni și avansează în Epoca Imperială"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Avansează în Epoca Castelului și supraviețuiește atacurilor inamicului"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Distruge castelul inamic"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Adună 200 de hrană, 200 de lemn, 100 de aur și 200 de piatră, antrenează 21 de săteni, construiește un tabără de tăietori și o moară și avansează în Epoca Feudală"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Antrenează 27 de săteni, construiește 5 case și avansează în Epoca Castelului"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Învinge toate cele șase valuri inamice"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s unități pierdute, medalie de bronz până la %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s unități pierdute, medalie de aur până la %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s unități pierdute, fără medalie"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s unități pierdute, medalie de argint până la %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Medalie de bronz"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Medalie de aur"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Medalie de argint"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Distruge toate navele de război inamice"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Fără medalie"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Ucide 5 săteni inamici"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Medalie de bronz în %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Medalie de aur în %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Medalie de argint în %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Egida oprită"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Egida pornită"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tehnologii: până la 256 de cercetări"}
+{"name": "aoe2mc.cheat.cpu", "text": "Limita populației: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Ceața războiului: oprită"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Ceața războiului: pornită"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Tehnologiile sunt gratuite"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Împărtășirea este grijă: venitul tău merge la aliații tăi"}
+{"name": "aoe2mc.cheat.wonders", "text": "Controlezi natura: %s animale"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Au rămas doar aliați: alianțele se încheie. Ultimul jucător în viață câștigă."}
+{"name": "aoe2mc.conquest.defeated", "text": "Jucătorul %s este învins."}
+{"name": "aoe2mc.controls.attack", "text": "Atac: selectează unitățile militare, apoi apasă clic dreapta pe un inamic."}
+{"name": "aoe2mc.controls.build", "text": "Construiește: selectează sătenii, apasă clic dreapta pe ei pentru meniul de construcție, selectează o clădire, apoi apasă clic stânga pe sol. Shift + clic stânga: plasează mai multe. Clic dreapta: anulează."}
+{"name": "aoe2mc.controls.camera", "text": "Cameră: apasă clic dreapta cu lunetta Cameră (tasta 2 din bară): mergi rapid sus, deasupra hărții. Shift clic dreapta: următoarea viteză. Încă un clic dreapta: cobori."}
+{"name": "aoe2mc.controls.garrison", "text": "Garnizoană: selectează unități, apoi apasă clic dreapta pe clădirea ta. Meniul ei le lasă afară. Meniul centrului orașului: Sună clopotul orașului."}
+{"name": "aoe2mc.controls.gather", "text": "Strânge: selectează săteni, apoi apasă clic dreapta pe un copac, un tufiș de fructe, o mină sau o fermă."}
+{"name": "aoe2mc.controls.goto", "text": "Mergi la: apasă clic dreapta cu busola Mergi la (tasta 3 din bară): un meniu cu centrele tale de oraș, grupurile de control și următorul sătean inactiv."}
+{"name": "aoe2mc.controls.groups", "text": "Grupuri de control: selectează unități, ia un obiect de grup (tastele 5 până la 9) și Shift + clic dreapta pentru a salva selecția. Clic dreapta: selectează grupul."}
+{"name": "aoe2mc.controls.head", "text": "Comenzi (ține morcovul pe un băț; bara de acțiuni arată următorul pas):"}
+{"name": "aoe2mc.controls.menu", "text": "Meniul jocului: apasă clic dreapta cu cartea Meniul jocului (tasta 4 din bară): diplomație și tribut, semnal, salvare, pauză și arborele tehnologic."}
+{"name": "aoe2mc.controls.move", "text": "Mișcare: cu o selecție, apasă clic dreapta pe sol."}
+{"name": "aoe2mc.controls.research", "text": "Cercetare și avansare de epocă: apasă clic dreapta pe clădirea ta și apasă pe o tehnologie sau pe următoarea epocă din meniul ei."}
+{"name": "aoe2mc.controls.select", "text": "Selectare: apasă clic stânga pe o unitate. Ține apăsat clic stânga și privește peste sol: o casetă de selecție. Clic dreapta: dă comenzi."}
+{"name": "aoe2mc.controls.train", "text": "Antrenare: apasă clic dreapta pe clădirea ta (centrul orașului, cazarma ...) și apasă pe o unitate din meniul ei."}
+{"name": "aoe2mc.defeat", "text": "Înfrângere"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Aliat"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Jucătorul %s ți-a schimbat atitudinea: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Inamic"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutru"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Jucătorul %s a setat viteza jocului la %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Jucătorul %s a trimis %s %s jucătorului %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Semnal la %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Urmărește: apasă pe o unitate proprie"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Pază: apasă pe o unitate sau clădire proprie"}
+{"name": "aoe2mc.gaia.joins", "text": "Un %s se alătură ție."}
+{"name": "aoe2mc.garrison.all_back", "text": "Toți înapoi la muncă"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Sună clopotul orașului: %s săteni caută adăpost"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Niciun sătean nu este selectat."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Nu ai săteni."}
+{"name": "aoe2mc.garrison.out", "text": "%s unități au ieșit"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s săteni caută adăpost"}
+{"name": "aoe2mc.gather.act_attack", "text": "atac"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "meniul de construcție"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garnizoană"}
+{"name": "aoe2mc.gather.act_gather", "text": "strânge"}
+{"name": "aoe2mc.gather.act_hunt", "text": "vânează"}
+{"name": "aoe2mc.gather.act_move", "text": "mișcare"}
+{"name": "aoe2mc.gather.act_select", "text": "selectează"}
+{"name": "aoe2mc.gather.act_select_type", "text": "selectează toate de acest tip"}
+{"name": "aoe2mc.gather.act_trade", "text": "comerț"}
+{"name": "aoe2mc.gather.act_train", "text": "antrenează"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Atac: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Casetă de selecție: anulată"}
+{"name": "aoe2mc.gather.bush", "text": "Tufiș cu fructe"}
+{"name": "aoe2mc.gather.carcass", "text": "Carcasă"}
+{"name": "aoe2mc.gather.corner", "text": "Casetă de selecție: apasă pe celălalt colț"}
+{"name": "aoe2mc.gather.enemy", "text": "Inamic %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Clădire inamică"}
+{"name": "aoe2mc.gather.farm", "text": "Fermă"}
+{"name": "aoe2mc.gather.ground", "text": "Sol"}
+{"name": "aoe2mc.gather.group", "text": "Grupul %s: %s unități"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grupul %s: %s unități salvate"}
+{"name": "aoe2mc.gather.mine", "text": "Mină de %s"}
+{"name": "aoe2mc.gather.paused", "text": "Jocul este în pauză."}
+{"name": "aoe2mc.gather.point", "text": "%s · Clic dreapta: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Replantări în coadă: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Selectate: %s unități"}
+{"name": "aoe2mc.gather.tree", "text": "Copac"}
+{"name": "aoe2mc.hill.holds", "text": "Jucătorul %s deține monumentul."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Atac asupra solului: apasă clic dreapta pe sol"}
+{"name": "aoe2mc.hints.attack_move", "text": "Mișcare de atac: apasă clic dreapta pe sol"}
+{"name": "aoe2mc.hints.building", "text": "Plasează %s: apasă clic dreapta pe sol · Shift + clic dreapta: plasează mai multe · Anulare: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: clic stânga pentru a plasa · Shift: plasează mai multe · Clic dreapta: anulează"}
+{"name": "aoe2mc.hints.corner", "text": "Casetă de selecție: apasă clic dreapta pe celălalt colț"}
+{"name": "aoe2mc.hints.count_military", "text": "%s unitate militară"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s unități militare"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s sătean"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s săteni"}
+{"name": "aoe2mc.hints.deselect", "text": "Casetă goală: deselectează"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Clic stânga: deselectează"}
+{"name": "aoe2mc.hints.follow", "text": "Urmărește: apasă clic dreapta pe o unitate proprie sau aliată"}
+{"name": "aoe2mc.hints.guard", "text": "Pază: apasă clic dreapta pe o unitate sau clădire proprie sau aliată"}
+{"name": "aoe2mc.hints.military", "text": "%s · Clic dreapta: atacă un inamic, meniul de atitudine · %s"}
+{"name": "aoe2mc.hints.none", "text": "Clic stânga: selectează o unitate · Ține apăsat clic stânga: casetă de selecție"}
+{"name": "aoe2mc.hints.none_wand", "text": "Clic dreapta: selectează o unitate · Baghetă: casetă de selecție"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrulare: apasă clic dreapta pe sol"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Clic dreapta: strânge, construiește, meniul de construcție · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s gata"}
+{"name": "aoe2mc.lobby.you_play", "text": "Joci cu %s."}
+{"name": "aoe2mc.monk.converts", "text": "Un călugăr convertește %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s moare (erezie)."}
+{"name": "aoe2mc.pause.continued", "text": "Jucătorul %s a continuat jocul."}
+{"name": "aoe2mc.pause.paused", "text": "Jucătorul %s a pus jocul pe pauză."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Echipa %s (rating mediu %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Jocul s-a încheiat. Apasă clic dreapta pe cartea Rezumat din mână pentru a vedea rezultatele. Oprește programul jocului cu Ctrl-C în consola lui."}
+{"name": "aoe2mc.relic_victory.all", "text": "Jucătorul %s deține toate relicvele."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Jucătorul %s a pierdut o relicvă."}
+{"name": "aoe2mc.repair.no_resources", "text": "Resurse insuficiente pentru a repara %s."}
+{"name": "aoe2mc.replay.army", "text": "Armată: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", armată la final: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", pierdute: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Ordinea de construcție:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garnizoană %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | duce %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "construiește %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "hrană %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "aur %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "inactivi %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "piatră %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "lemn %s"}
+{"name": "aoe2mc.replay.flare", "text": "Semnal"}
+{"name": "aoe2mc.replay.game_ends", "text": "Jocul se termină"}
+{"name": "aoe2mc.replay.game_time", "text": "Timpul de joc %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · garnizoană %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Săt %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s a deținut monumentul: victorie Regele Dealului la %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atac %s/%s armură%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Apasă Shift de două ori: vedere de spectator (zbor prin blocuri). Clic dreapta pe obiectele din bară: controlul reluării."}
+{"name": "aoe2mc.replay.king_died", "text": ": regele a murit la %s. Regicid: jucătorul a ieșit."}
+{"name": "aoe2mc.replay.king_killed", "text": "Rege ucis la %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Reluare live: săritura se oprește la întârzierea din spatele jocului."}
+{"name": "aoe2mc.replay.lost", "text": "Pierdute: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " deține monumentul la %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monument, mai rămâne %s an"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monument, mai rămân %s ani"}
+{"name": "aoe2mc.replay.no_camera", "text": "Această înregistrare nu are camera jucătorului ei."}
+{"name": "aoe2mc.replay.now", "text": " acum"}
+{"name": "aoe2mc.replay.out", "text": "%s a ieșit"}
+{"name": "aoe2mc.replay.players", "text": "Jucători"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " duce relicva la o mănăstire și câștigă."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Reluarea s-a încheiat"}
+{"name": "aoe2mc.replay.research", "text": " cercetează %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s capitulează"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Serverul repornește pentru săritura înapoi: conectează-te din nou."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Clădiri %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Economie %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Militar %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tehnologii %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Total %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "castele %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "cumpărat %s, vândut %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relicve %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "minuni %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Cheltuit:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Construcții %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Econ %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tehn %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": săteni antrenați %s, strânși %s, timp de inactivitate al sătenilor %s, timp de inactivitate al centrului %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": deține monumentul (Regele Dealului)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monument câștigat %s (Regele Dealului)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": unități militare antrenate %s, unități pierdute %s, clădiri pierdute %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": regi uciși %s (Regicid)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": victorii, relicvă într-o mănăstire %s (Capturează relicva)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stribut trimis %s, primit %s, maximum de săteni %s (est.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": centrul orașului pierdut %s (Moarte subită)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tehnologii %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": cronometru al minunii de la %s, se termină %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Rezumat (est.)"}
+{"name": "aoe2mc.replay.task_building", "text": "construiește"}
+{"name": "aoe2mc.replay.task_following", "text": "urmărește"}
+{"name": "aoe2mc.replay.task_food", "text": "strânge hrană"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "în garnizoană"}
+{"name": "aoe2mc.replay.task_gold", "text": "strânge aur"}
+{"name": "aoe2mc.replay.task_guarding", "text": "păzește"}
+{"name": "aoe2mc.replay.task_idle", "text": "inactiv"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrulează"}
+{"name": "aoe2mc.replay.task_resources", "text": "strânge resurse"}
+{"name": "aoe2mc.replay.task_stone", "text": "strânge piatră"}
+{"name": "aoe2mc.replay.task_walking", "text": "merge"}
+{"name": "aoe2mc.replay.task_wood", "text": "strânge lemn"}
+{"name": "aoe2mc.replay.team", "text": "Echipa %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Arcaș %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armura arcașilor %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Transport %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armura cavaleriei %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Fermă %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Aur %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armura infanteriei %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Război de țesut %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Corp la corp %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Piatră %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Lemn %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castel"}
+{"name": "aoe2mc.replay.tl_king", "text": "Rege ucis"}
+{"name": "aoe2mc.replay.tl_military", "text": "Prima unitate militară: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relicvă"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Capitulează"}
+{"name": "aoe2mc.replay.town_fell", "text": ": centrul orașului a căzut la %s. Moarte subită: jucătorul a ieșit."}
+{"name": "aoe2mc.replay.town_lost", "text": "Centrul orașului pierdut la %s"}
+{"name": "aoe2mc.replay.training", "text": "Antrenare: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitate:"}
+{"name": "aoe2mc.replay.up_counts", "text": "economie %s · Universitate %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " a construit o minune la %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Luptă: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s unități"}
+{"name": "aoe2mc.replay_input.fights", "text": "Lupte mari:"}
+{"name": "aoe2mc.replay_input.help", "text": "Reluare: apasă clic dreapta pe obiectele din bară sau apasă: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Preia: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s unități)"}
+{"name": "aoe2mc.replay_input.vs", "text": " contra "}
+{"name": "aoe2mc.resource.food", "text": "hrană"}
+{"name": "aoe2mc.resource.gold", "text": "aur"}
+{"name": "aoe2mc.resource.stone", "text": "piatră"}
+{"name": "aoe2mc.resource.wood", "text": "lemn"}
+{"name": "aoe2mc.run.back", "text": "%s s-a întors"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Campanie încheiată"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: o linie normală merge la toți, /tm TEXT către aliații tăi, /msg NUME TEXT către o persoană."}
+{"name": "aoe2mc.run.left_bot", "text": "%s a plecat: un bot joacă pentru jucătorul %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenariul %s începe. Conectează-te din nou."}
+{"name": "aoe2mc.run.starts_in", "text": "Jocul începe în %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Deschide \"Alege-ți jucătorul\" și apasă \"Gata\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Toate comenzile: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Primul pas: ține bățul de comandă și apasă clic dreapta pe unul dintre sătenii tăi."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Primul pas: ține bățul de comandă și apasă clic stânga pe unul dintre sătenii tăi."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Scop: câștigă jocul. Setarea de victorie: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Jocul a fost salvat: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s unități au ieșit"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Recunoaștere automată"}
+{"name": "aoe2mc.stance.formation", "text": "Formație: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Nicio unitate nu poate ataca solul"}
+{"name": "aoe2mc.stance.unpack", "text": "Desfă mai întâi trabucul"}
+{"name": "aoe2mc.train.active", "text": "%s este activ."}
+{"name": "aoe2mc.train.rally", "text": "Apasă clic dreapta pe sol pentru punctul de adunare."}
+{"name": "aoe2mc.train.researched", "text": "%s este cercetat."}
+{"name": "aoe2mc.transport.out", "text": "%s unități au ieșit"}
+{"name": "aoe2mc.treaty.ended", "text": "Tratatul s-a încheiat: jucătorii pot ataca acum."}
+{"name": "aoe2mc.treaty.refuse", "text": "Tratat: nu poți ataca înainte de %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Tratat: nu poți ataca în acest joc."}
+{"name": "aoe2mc.treaty.start", "text": "Tratat: niciun jucător nu poate ataca un alt jucător înainte de %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Tratat: niciun jucător nu poate ataca un alt jucător în acest joc."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Construiește o cazarmă: apasă clic dreapta pe un sătean selectat, alege cazarma și plasează-o. Bara de acțiuni de deasupra barei de obiecte îți spune unde să o plasezi."}
+{"name": "aoe2mc.tutorial.camera", "text": "Deplasează-te rapid peste hartă: apasă clic dreapta cu obiectul \"Cameră\", mergi, apoi apasă din nou clic dreapta cu el."}
+{"name": "aoe2mc.tutorial.camp", "text": "Distruge tabăra inamică din mijlocul hărții: selectează Miliția și apasă clic dreapta pe o clădire. Bara șefului de sus arată pasul."}
+{"name": "aoe2mc.tutorial.camps", "text": "Construiește o tabără de tăietori lângă copaci și o moară lângă fructe. Bara laterală din dreapta arată cât lemn costă."}
+{"name": "aoe2mc.tutorial.complete", "text": "Tutorialul este încheiat. Următorul pas: joacă un joc împotriva botului: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutorial încheiat"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Avansează în Epoca Feudală: apasă clic dreapta pe centrul orașului și alege Epoca Feudală. Bara laterală din dreapta arată hrana ta."}
+{"name": "aoe2mc.tutorial.food", "text": "Strânge 100 de hrană: trimite un sătean la fructe. Bara laterală din dreapta arată hrana ta."}
+{"name": "aoe2mc.tutorial.house", "text": "Construiește o casă: apasă clic dreapta pe un sătean selectat, alege casa și plasează-o. Bara de acțiuni de deasupra barei de obiecte îți spune unde să o plasezi."}
+{"name": "aoe2mc.tutorial.militia", "text": "Antrenează 3 Miliții: apasă clic dreapta pe cazarma ta și alege miliția. Bara laterală din dreapta arată hrana și aurul tău."}
+{"name": "aoe2mc.tutorial.raid", "text": "Inamicul atacă sătenii tăi! Apasă pe linia roșie de alarmă din chat ca să mergi acolo, apoi selectează Miliția și apasă clic dreapta pe inamici. Bara șefului de sus arată viața unității selectate."}
+{"name": "aoe2mc.tutorial.select", "text": "Selectează un sătean: apasă clic stânga pe unul dintre sătenii tăi cu bățul de comandă. Bara șefului de sus arată unitatea selectată, bara de acțiuni de deasupra barei de obiecte arată următoarea acțiune."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Pas încheiat"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Pasul %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "SFAT: cazarma antrenează infanterie. Infanteria este ieftină și bună împotriva clădirilor."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "SFAT: atacă cu toate unitățile tale împreună. Un grup mic moare înainte să facă vreun rău."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "SFAT: construiește clădirile de depozitare aproape de resurse, ca sătenii să meargă un drum scurt."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "SFAT: următoarea epocă deblochează clădiri, unități și tehnologii noi. Ține sătenii la lucru când avansezi."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "SFAT: fructele lângă o moară sunt un început sigur de hrană. Mai târziu, fermele dau hrană care nu se termină."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "SFAT: o casă oferă loc pentru încă 5 locuitori. Uită-te la populația din bara laterală și construiește case înainte ca ea să fie plină."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "SFAT: poți pune în coadă până la 15 unități într-o clădire când ai resursele."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "SFAT: în AoE2, clopotul orașului trimite sătenii în centrul orașului. Sună-l când inamicul îți atacă orașul."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "SFAT: linia Inactivi din bara laterală din dreapta numără sătenii fără lucru. Dă-le de lucru."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "SFAT: antrenează sătenii tot timpul în primele epoci. Mai mulți săteni dau mai multe resurse."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "SFAT: sătenii strâng mai repede lângă o clădire de depozitare. Construiește o tabără de tăietori lângă copaci."}
+{"name": "aoe2mc.tutorial.villager", "text": "Antrenează un sătean: apasă clic dreapta pe centrul orașului și alege sătean. Bara laterală din dreapta arată hrana pe care o costă."}
+{"name": "aoe2mc.tutorial.wood", "text": "Strânge 50 de lemn: selectează un sătean și apasă clic dreapta pe un copac. Bara laterală din dreapta arată lemnul tău."}
+{"name": "aoe2mc.victory", "text": "Victorie"}
+{"name": "aoe2mc.wonder.built", "text": "Jucătorul %s a construit o minune."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Minunea jucătorului %s este distrusă."}

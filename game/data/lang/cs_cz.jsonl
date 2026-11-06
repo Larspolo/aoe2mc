@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Hráč %s postupuje do doby %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Zkáza zabírá mapu od okraje do středu za %s. Ničí všechny jednotky a budovy na ní."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Teď tam nemohu postavit %s."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Tu jednotku nemohu vycvičit: nemám na ni budovu."}
+{"name": "aoe2mc.bot.flare_two", "text": "Umístěte dva signály na zeď."}
+{"name": "aoe2mc.bot.no_flare", "text": "Nevidím žádný signál."}
+{"name": "aoe2mc.bot.no_market", "text": "Nemám tržiště: nemohu posílat tribut."}
+{"name": "aoe2mc.bot.no_onager", "text": "Nemám onagra."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Nemám dost surovin na zeď."}
+{"name": "aoe2mc.bot.no_water", "text": "Poblíž mého města není voda: nemohu postavit loďstvo."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Moji onagrové nemohou kácet stromy."}
+{"name": "aoe2mc.build.cost", "text": "Nedostatek surovin: %s stojí %s."}
+{"name": "aoe2mc.build.flat", "text": "%s musí stát na rovném terénu."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s musí stát na 4 polích vlastní zdi v přímé řadě, nebo na 3 polích na diagonále."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Stavět: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s musí stát na vodě u pobřeží."}
+{"name": "aoe2mc.build.space", "text": "Pro %s tady není místo."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Nedostatek surovin: %s polí typu %s stojí %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: klikněte pravým tlačítkem na konec zdi."}
+{"name": "aoe2mc.build.water", "text": "%s musí stát na vodě."}
+{"name": "aoe2mc.camera.fov", "text": "Rychlá kamera způsobuje houpání držené položky. Aby zůstala v klidu, nastavte Možnosti > Nastavení přístupnosti > Houpání pohledu na VYPNUTO. Kamera také rozšiřuje pohled, takže vidíte více mapy. Pro normální pohled nastavte Možnosti > Nastavení přístupnosti > Efekty FOV na 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: vypnuto"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: zapnuto, rychlost x%s. Shift + pravé tlačítko: další rychlost."}
+{"name": "aoe2mc.camera.speed", "text": "Rychlost kamery: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Porazte všechny nepřátelské jednotky a ztraťte málo jednotek"}
+{"name": "aoe2mc.challenge.booming", "text": "Vycvičte 100 vesničanů a postupte do doby imperiální"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Postupte do doby hradů a přežijte útoky nepřítele"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Zničte nepřátelský hrad"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Nasbírejte 200 jídla, 200 dřeva, 100 zlata a 200 kamene, vycvičte 21 vesničanů, postavte tábor dřevorubců a mlýn a postupte do feudální doby"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Vycvičte 27 vesničanů, postavte 5 domů a postupte do doby hradů"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Porazte všech šest nepřátelských vln"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "Ztraceno %s jednotek, bronzová medaile až do %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "Ztraceno %s jednotek, zlatá medaile až do %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "Ztraceno %s jednotek, žádná medaile"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "Ztraceno %s jednotek, stříbrná medaile až do %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronzová medaile"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Zlatá medaile"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Stříbrná medaile"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Zničte všechny nepřátelské válečné lodě"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Žádná medaile"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Zabijte 5 nepřátelských vesničanů"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronzová medaile za %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Zlatá medaile za %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Stříbrná medaile za %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Ochrana vypnuta"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Ochrana zapnuta"}
+{"name": "aoe2mc.cheat.beyond", "text": "Technologie: až 256 výzkumů"}
+{"name": "aoe2mc.cheat.cpu", "text": "Limit populace: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Mlha války: vypnuta"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Mlha války: zapnuta"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Technologie jsou zdarma"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Sdílení je péče: váš příjem jde vašim spojencům"}
+{"name": "aoe2mc.cheat.wonders", "text": "Ovládáte přírodu: %s zvířat"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Zůstali jen spojenci: spojenectví končí. Vyhrává poslední živý hráč."}
+{"name": "aoe2mc.conquest.defeated", "text": "Hráč %s je poražen."}
+{"name": "aoe2mc.controls.attack", "text": "Útok: vyberte vojenské jednotky a klikněte pravým tlačítkem na nepřítele."}
+{"name": "aoe2mc.controls.build", "text": "Stavět: vyberte vesničany, klikněte na ně pravým tlačítkem pro nabídku staveb, vyberte budovu a pak klikněte levým tlačítkem na zem. Shift + levé tlačítko: postavit více. Pravé tlačítko: zrušit."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: klikněte pravým tlačítkem s kukátkem Kamera (klávesa 2 v liště): rychle se pohybujete vysoko nad mapou. Shift + pravé tlačítko: další rychlost. Pravé tlačítko znovu: klesnete dolů."}
+{"name": "aoe2mc.controls.garrison", "text": "Posádka: vyberte jednotky a klikněte pravým tlačítkem na svou budovu. Její nabídka je pustí ven. Nabídka radnice: Zazvonit zvonem města."}
+{"name": "aoe2mc.controls.gather", "text": "Sbírat: vyberte vesničany a klikněte pravým tlačítkem na strom, keř s bobulemi, důl nebo farmu."}
+{"name": "aoe2mc.controls.goto", "text": "Jdi na: klikněte pravým tlačítkem s kompasem Jdi na (klávesa 3 v liště): nabídka vašich radnic, vašich skupin ovládání a dalšího nečinného vesničana."}
+{"name": "aoe2mc.controls.groups", "text": "Skupiny ovládání: vyberte jednotky, vezměte skupinový předmět (klávesy 5 až 9) a uložte výběr klávesou Shift + pravé tlačítko. Pravé tlačítko: vyberte skupinu."}
+{"name": "aoe2mc.controls.head", "text": "Ovládání (držte mrkev na hůlce; panel akcí ukazuje další krok):"}
+{"name": "aoe2mc.controls.menu", "text": "Herní nabídka: klikněte pravým tlačítkem s knihou Herní nabídka (klávesa 4 v liště): diplomacie a tribut, signál, uložení, pauza a strom technologií."}
+{"name": "aoe2mc.controls.move", "text": "Pohyb: s vybranými jednotkami klikněte pravým tlačítkem na zem."}
+{"name": "aoe2mc.controls.research", "text": "Výzkum a postup do další doby: klikněte pravým tlačítkem na svou budovu a v její nabídce vyberte technologii nebo další dobu."}
+{"name": "aoe2mc.controls.select", "text": "Výběr: klikněte levým tlačítkem na jednotku. Podržte levé tlačítko a přejeďte po zemi: výběrový rámeček. Pravé tlačítko: dávejte rozkazy."}
+{"name": "aoe2mc.controls.train", "text": "Výcvik: klikněte pravým tlačítkem na svou budovu (radnice, kasárna ...) a vyberte jednotku v její nabídce."}
+{"name": "aoe2mc.defeat", "text": "Porážka"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Spojenec"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Hráč %s změnil svůj postoj k vám: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Nepřítel"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutrální"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Hráč %s nastavil rychlost hry na %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Hráč %s poslal %s %s hráči %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Signál na %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Následovat: klikněte na vlastní jednotku"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Hlídat: klikněte na vlastní jednotku nebo budovu"}
+{"name": "aoe2mc.gaia.joins", "text": "%s se k vám připojuje."}
+{"name": "aoe2mc.garrison.all_back", "text": "Všichni zpět do práce"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Zvoní zvon města: %s vesničanů hledá úkryt"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Není vybrán žádný vesničan."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Nemáte žádné vesničany."}
+{"name": "aoe2mc.garrison.out", "text": "%s jednotek vyšlo ven"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s vesničanů hledá úkryt"}
+{"name": "aoe2mc.gather.act_attack", "text": "útok"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "nabídka staveb"}
+{"name": "aoe2mc.gather.act_garrison", "text": "posádka"}
+{"name": "aoe2mc.gather.act_gather", "text": "sbírat"}
+{"name": "aoe2mc.gather.act_hunt", "text": "lovit"}
+{"name": "aoe2mc.gather.act_move", "text": "pohyb"}
+{"name": "aoe2mc.gather.act_select", "text": "vybrat"}
+{"name": "aoe2mc.gather.act_select_type", "text": "vybrat všechny tohoto typu"}
+{"name": "aoe2mc.gather.act_trade", "text": "obchod"}
+{"name": "aoe2mc.gather.act_train", "text": "vycvičit"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Útok: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Výběrový rámeček: zrušen"}
+{"name": "aoe2mc.gather.bush", "text": "Keř s bobulemi"}
+{"name": "aoe2mc.gather.carcass", "text": "Mršina"}
+{"name": "aoe2mc.gather.corner", "text": "Výběrový rámeček: klikněte na druhý roh"}
+{"name": "aoe2mc.gather.enemy", "text": "Nepřítel %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Nepřátelská budova"}
+{"name": "aoe2mc.gather.farm", "text": "Farma"}
+{"name": "aoe2mc.gather.ground", "text": "Zem"}
+{"name": "aoe2mc.gather.group", "text": "Skupina %s: %s jednotek"}
+{"name": "aoe2mc.gather.group_saved", "text": "Skupina %s: %s jednotek uloženo"}
+{"name": "aoe2mc.gather.mine", "text": "%s důl"}
+{"name": "aoe2mc.gather.paused", "text": "Hra je pozastavena."}
+{"name": "aoe2mc.gather.point", "text": "%s · Pravé tlačítko: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Ve frontě opětovné zasazení: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Vybráno: %s jednotek"}
+{"name": "aoe2mc.gather.tree", "text": "Strom"}
+{"name": "aoe2mc.hill.holds", "text": "Hráč %s drží památník."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Útok na zem: klikněte pravým tlačítkem na zem"}
+{"name": "aoe2mc.hints.attack_move", "text": "Útočný pohyb: klikněte pravým tlačítkem na zem"}
+{"name": "aoe2mc.hints.building", "text": "Umístěte %s: klikněte pravým tlačítkem na zem · Shift + pravé tlačítko: umístit více · Zrušit: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: levým tlačítkem umístíte · Shift: umístit více · Pravé tlačítko: zrušit"}
+{"name": "aoe2mc.hints.corner", "text": "Výběrový rámeček: klikněte pravým tlačítkem na druhý roh"}
+{"name": "aoe2mc.hints.count_military", "text": "%s vojenská jednotka"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s vojenských jednotek"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s vesničan"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s vesničanů"}
+{"name": "aoe2mc.hints.deselect", "text": "Prázdný rámeček: zrušit výběr"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Levé tlačítko: zrušit výběr"}
+{"name": "aoe2mc.hints.follow", "text": "Následovat: klikněte pravým tlačítkem na vlastní nebo spojeneckou jednotku"}
+{"name": "aoe2mc.hints.guard", "text": "Hlídat: klikněte pravým tlačítkem na vlastní nebo spojeneckou jednotku nebo budovu"}
+{"name": "aoe2mc.hints.military", "text": "%s · Pravé tlačítko: útok na nepřítele, nabídka postojů · %s"}
+{"name": "aoe2mc.hints.none", "text": "Levé tlačítko: vyberte jednotku · Podržte levé tlačítko: výběrový rámeček"}
+{"name": "aoe2mc.hints.none_wand", "text": "Pravé tlačítko: vyberte jednotku · Hůlka: výběrový rámeček"}
+{"name": "aoe2mc.hints.patrol", "text": "Hlídkování: klikněte pravým tlačítkem na zem"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Pravé tlačítko: sbírat, stavět, nabídka staveb · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s připraveno"}
+{"name": "aoe2mc.lobby.you_play", "text": "Hrajete za %s."}
+{"name": "aoe2mc.monk.converts", "text": "Mnich obrací %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s umírá (kacířství)."}
+{"name": "aoe2mc.pause.continued", "text": "Hráč %s pokračoval ve hře."}
+{"name": "aoe2mc.pause.paused", "text": "Hráč %s pozastavil hru."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Tým %s (průměrné hodnocení %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Hra skončila. Klikněte pravým tlačítkem na knihu Shrnutí ve své ruce a uvidíte výsledky. Program hry zastavíte klávesami Ctrl-C v jeho konzoli."}
+{"name": "aoe2mc.relic_victory.all", "text": "Hráč %s drží všechny relikvie."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Hráč %s ztratil relikvii."}
+{"name": "aoe2mc.repair.no_resources", "text": "Nedostatek surovin na opravu: %s."}
+{"name": "aoe2mc.replay.army", "text": "Armáda: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", armáda na konci: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", ztraceno: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Pořadí staveb:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · posádka %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | nese %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "stavět %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "jídlo %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "zlato %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "nečinní %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "kámen %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "dřevo %s"}
+{"name": "aoe2mc.replay.flare", "text": "Signál"}
+{"name": "aoe2mc.replay.game_ends", "text": "Hra končí"}
+{"name": "aoe2mc.replay.game_time", "text": "Herní čas %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · posádka %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Voj %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Sur %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Vesn %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s držel památník: vítězství Krále kopce v %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s útok %s/%s brnění%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Dvakrát klepněte na Shift: pohled diváka (létání skrz bloky). Pravé tlačítko na předměty v liště: ovládání přehrávání."}
+{"name": "aoe2mc.replay.king_died", "text": ": král zemřel v %s. Královražda: hráč je venku."}
+{"name": "aoe2mc.replay.king_killed", "text": "Král zabit v %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Živé přehrání: skok se zastaví u zpoždění za hrou."}
+{"name": "aoe2mc.replay.lost", "text": "Ztraceno: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " drží památník v %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: památník, zbývá %s rok"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: památník, zbývají %s roky"}
+{"name": "aoe2mc.replay.no_camera", "text": "Tento záznam nemá kameru svého hráče."}
+{"name": "aoe2mc.replay.now", "text": " nyní"}
+{"name": "aoe2mc.replay.out", "text": "%s je venku"}
+{"name": "aoe2mc.replay.players", "text": "Hráči"}
+{"name": "aoe2mc.replay.range", "text": " d%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " odnáší relikvii do kláštera a vyhrává."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Přehrávání skončilo"}
+{"name": "aoe2mc.replay.research", "text": " zkoumá %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s se vzdává"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Server se restartuje kvůli skoku zpět: připojte se znovu."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Budovy %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekonomika %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Vojsko %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Technologie %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Celkem %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "hrady %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "koupeno %s, prodáno %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relikvie %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "divy %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Utraceno:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Stavby %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Ekon %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Voj %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tech %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": vycvičeno vesničanů %s, nasbíráno %s, nečinný čas vesničanů %s, nečinný čas radnice %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": drží památník (Král kopce)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": památník získán %s (Král kopce)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": vycvičeno vojenských jednotek %s, ztraceno jednotek %s, ztraceno budov %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": zabito králů %s (Královražda)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": výhry, relikvie v klášteře %s (Získání relikvie)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stribut odeslán %s, přijat %s, nejvyšší počet vesničanů %s (odhad)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": ztracena radnice %s (Náhlá smrt)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, technologie %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": časovač divu od %s, končí %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Shrnutí (odhad)"}
+{"name": "aoe2mc.replay.task_building", "text": "staví"}
+{"name": "aoe2mc.replay.task_following", "text": "následuje"}
+{"name": "aoe2mc.replay.task_food", "text": "sbírá jídlo"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "v posádce"}
+{"name": "aoe2mc.replay.task_gold", "text": "sbírá zlato"}
+{"name": "aoe2mc.replay.task_guarding", "text": "hlídá"}
+{"name": "aoe2mc.replay.task_idle", "text": "nečinný"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "hlídkuje"}
+{"name": "aoe2mc.replay.task_resources", "text": "sbírá suroviny"}
+{"name": "aoe2mc.replay.task_stone", "text": "sbírá kámen"}
+{"name": "aoe2mc.replay.task_walking", "text": "jde"}
+{"name": "aoe2mc.replay.task_wood", "text": "sbírá dřevo"}
+{"name": "aoe2mc.replay.team", "text": "Tým %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Lukostřelec %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Brnění lukostřelců %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Nošení %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Brnění jezdectva %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Farma %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Zlato %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Brnění pěchoty %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Tkalcovský stav %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Boj zblízka %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Kámen %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Dřevo %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Hrad"}
+{"name": "aoe2mc.replay.tl_king", "text": "Král zabit"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. vojenská jednotka: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relikvie"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Vzdává se"}
+{"name": "aoe2mc.replay.town_fell", "text": ": radnice padla v %s. Náhlá smrt: hráč je venku."}
+{"name": "aoe2mc.replay.town_lost", "text": "Radnice ztracena v %s"}
+{"name": "aoe2mc.replay.training", "text": "Výcvik: %s"}
+{"name": "aoe2mc.replay.university", "text": "Univerzita:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekonomika %s · Univerzita %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " postavil div v %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Boj: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s jednotek"}
+{"name": "aoe2mc.replay_input.fights", "text": "Velké bitvy:"}
+{"name": "aoe2mc.replay_input.help", "text": "Přehrávání: klikněte pravým tlačítkem na předměty v liště, nebo klikněte: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Převzít: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s jednotek)"}
+{"name": "aoe2mc.replay_input.vs", "text": " proti "}
+{"name": "aoe2mc.resource.food", "text": "jídlo"}
+{"name": "aoe2mc.resource.gold", "text": "zlato"}
+{"name": "aoe2mc.resource.stone", "text": "kámen"}
+{"name": "aoe2mc.resource.wood", "text": "dřevo"}
+{"name": "aoe2mc.run.back", "text": "%s je zpět"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampaň dokončena"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: běžný řádek jde všem, /tm TEXT vašim spojencům, /msg JMÉNO TEXT jednomu hráči."}
+{"name": "aoe2mc.run.left_bot", "text": "%s odešel: bot hraje za hráče %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scénář %s začíná. Připojte se znovu."}
+{"name": "aoe2mc.run.starts_in", "text": "Hra začíná za %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Otevřete \"Vyberte svého hráče\" a klikněte na \"Připraven\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Všechna ovládání: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "První krok: držte velitelskou hůlku a pravým tlačítkem klikněte na jednoho ze svých vesničanů."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "První krok: držte velitelskou hůlku a levým tlačítkem klikněte na jednoho ze svých vesničanů."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Cíl: vyhrát hru. Nastavení vítězství: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Hra uložena: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s jednotek vyšlo ven"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Automatický průzkum"}
+{"name": "aoe2mc.stance.formation", "text": "Formace: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Žádná jednotka nemůže útočit na zem"}
+{"name": "aoe2mc.stance.unpack", "text": "Nejdřív rozbalte trebuchet"}
+{"name": "aoe2mc.train.active", "text": "%s je aktivní."}
+{"name": "aoe2mc.train.rally", "text": "Klikněte pravým tlačítkem na zem pro shromaždiště."}
+{"name": "aoe2mc.train.researched", "text": "%s je vyzkoumáno."}
+{"name": "aoe2mc.transport.out", "text": "%s jednotek vyšlo ven"}
+{"name": "aoe2mc.treaty.ended", "text": "Smlouva skončila: hráči mohou nyní útočit."}
+{"name": "aoe2mc.treaty.refuse", "text": "Smlouva: nemůžete útočit před %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Smlouva: v této hře nemůžete útočit."}
+{"name": "aoe2mc.treaty.start", "text": "Smlouva: žádný hráč nemůže útočit na jiného hráče před %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Smlouva: žádný hráč nemůže útočit na jiného hráče v této hře."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Postavte kasárna: klikněte pravým tlačítkem na vybraného vesničana, vyberte kasárna a umístěte je. Panel akcí nad lištou vám řekne, kam je umístit."}
+{"name": "aoe2mc.tutorial.camera", "text": "Rychle se pohybujte po mapě: klikněte pravým tlačítkem s předmětem \"Kamera\", jděte a klikněte s ním znovu pravým tlačítkem."}
+{"name": "aoe2mc.tutorial.camp", "text": "Zničte nepřátelský tábor uprostřed mapy: vyberte svou Milici a klikněte pravým tlačítkem na budovu. Lišta bossů nahoře ukazuje krok."}
+{"name": "aoe2mc.tutorial.camps", "text": "Postavte tábor dřevorubců u stromů a mlýn u bobulí. Postranní panel vpravo ukazuje, kolik dřeva stojí."}
+{"name": "aoe2mc.tutorial.complete", "text": "Výukový kurz je dokončen. Dále hrajte hru proti botovi: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Výukový kurz dokončen"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Postupte do feudální doby: klikněte pravým tlačítkem na svou radnici a vyberte feudální dobu. Postranní panel vpravo ukazuje vaše jídlo."}
+{"name": "aoe2mc.tutorial.food", "text": "Nasbírejte 100 jídla: pošlete vesničana k bobulím. Postranní panel vpravo ukazuje vaše jídlo."}
+{"name": "aoe2mc.tutorial.house", "text": "Postavte dům: klikněte pravým tlačítkem na vybraného vesničana, vyberte dům a umístěte jej. Panel akcí nad lištou vám řekne, kam jej umístit."}
+{"name": "aoe2mc.tutorial.militia", "text": "Vycvičte 3 Milice: klikněte pravým tlačítkem na svá kasárna a vyberte milici. Postranní panel vpravo ukazuje vaše jídlo a zlato."}
+{"name": "aoe2mc.tutorial.raid", "text": "Nepřítel útočí na vaše vesničany! Klikněte na červený výstražný řádek v chatu, abyste tam šli, potom vyberte svou Milici a klikněte pravým tlačítkem na nepřátele. Lišta bossů nahoře ukazuje zdraví vybrané jednotky."}
+{"name": "aoe2mc.tutorial.select", "text": "Vyberte vesničana: klikněte levým tlačítkem na jednoho ze svých vesničanů s velitelskou hůlkou. Lišta bossů nahoře ukazuje vybranou jednotku, panel akcí nad lištou ukazuje další akci."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Krok hotov"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Krok %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIP: kasárna cvičí pěchotu. Pěchota je levná a dobrá proti budovám."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIP: útočte se všemi jednotkami najednou. Malá skupina zemře dřív, než stihne způsobit škodu."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIP: stavte odkládací budovy blízko zdrojů, aby vesničané šli krátkou cestu."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIP: další doba odemyká nové budovy, jednotky a technologie. Při postupu nechte vesničany pracovat."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIP: bobule blízko mlýna jsou bezpečný začátek jídla. Později farmy dají jídlo, které nedojde."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIP: dům dává místo pro 5 dalších obyvatel. Podívejte se na populaci v postranním panelu a stavte domy, než bude plná."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIP: v budově můžete zařadit do fronty až 15 jednotek, když máte suroviny."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIP: v AoE2 zvon města pošle vesničany do radnice. Zazvoňte, když nepřítel napadne vaše město."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIP: řádek Nečinní v postranním panelu počítá vesničany bez práce. Dejte jim práci."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIP: v prvních dobách cvičte vesničany pořád. Více vesničanů dává více surovin."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIP: vesničané sbírají rychleji blízko odkládací budovy. Postavte tábor dřevorubců vedle stromů."}
+{"name": "aoe2mc.tutorial.villager", "text": "Vycvičte vesničana: klikněte pravým tlačítkem na svou radnici a vyberte vesničana. Postranní panel vpravo ukazuje, kolik jídla stojí."}
+{"name": "aoe2mc.tutorial.wood", "text": "Nasbírejte 50 dřeva: vyberte vesničana a klikněte pravým tlačítkem na strom. Postranní panel vpravo ukazuje vaše dřevo."}
+{"name": "aoe2mc.victory", "text": "Vítězství"}
+{"name": "aoe2mc.wonder.built", "text": "Hráč %s postavil div."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Div hráče %s je zničen."}
