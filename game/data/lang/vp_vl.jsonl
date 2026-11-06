@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "El jugadó %s arriba a la %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: la Corrupció pren el mapa des de la seua vora fins al seu centre en %s. Destrueix totes les unitats i edificis que hi ha dins."}
+{"name": "aoe2mc.bot.cannot_build", "text": "No puc construir un %s allí ara."}
+{"name": "aoe2mc.bot.cannot_train", "text": "No puc entrenar eixa unitat: no tinc edifici per a ella."}
+{"name": "aoe2mc.bot.flare_two", "text": "Posa dos senyals per a la muralla."}
+{"name": "aoe2mc.bot.no_flare", "text": "No veig cap senyal."}
+{"name": "aoe2mc.bot.no_market", "text": "No tinc mercat: no puc enviar tribut."}
+{"name": "aoe2mc.bot.no_onager", "text": "No tinc cap onagre."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "No tinc prou recursos per a una muralla."}
+{"name": "aoe2mc.bot.no_water", "text": "No tinc aigua prop de la meua ciutat: no puc construir una armada."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Els meus onagres no poden talar arbres."}
+{"name": "aoe2mc.build.cost", "text": "Recursos insuficients: un %s costa %s."}
+{"name": "aoe2mc.build.flat", "text": "El %s ha d'estar en terreny pla."}
+{"name": "aoe2mc.build.gate_spot", "text": "Un %s ha d'estar en 4 caselles de muralla pròpia en línia recta, o en 3 caselles en diagonal."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Construir: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Un %s ha d'estar en l'aigua prop de la vora."}
+{"name": "aoe2mc.build.space", "text": "No hi ha espai per al %s ací."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Recursos insuficients: %s caselles de %s costen %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: clic dret en el final de la muralla."}
+{"name": "aoe2mc.build.water", "text": "Un %s ha d'estar en l'aigua."}
+{"name": "aoe2mc.camera.fov", "text": "La càmera ràpida fa que l'objecte de la mà es balance. Per a que estiga quiet, posa Opcions > Ajustos d'accessibilitat > Balanceig de la vista en OFF. La càmera també eixampla la vista, i així es veu més mapa. Per a la vista normal, posa Opcions > Ajustos d'accessibilitat > Efectes del FOV en 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Càmera: apagada"}
+{"name": "aoe2mc.camera.on", "text": "Càmera: encesa, velocitat x%s. Shift + clic dret: velocitat següent."}
+{"name": "aoe2mc.camera.speed", "text": "Velocitat de la càmera: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Venç totes les unitats enemigues i perd poques unitats"}
+{"name": "aoe2mc.challenge.booming", "text": "Entrena 100 aldeans i arriba a l'Edat Imperial"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Arriba a l'Edat dels Castells i aguanta els atacs enemics"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Destrueix el castell enemic"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Recull 200 menjar, 200 fusta, 100 or i 200 pedra, entrena 21 aldeans, construeix un campament de fusters i un molí, i arriba a l'Edat Feudal"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Entrena 27 aldeans, construeix 5 cases i arriba a l'Edat dels Castells"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Venç les sis onades enemigues"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s unitats perdudes, medalla de bronze fins a %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s unitats perdudes, medalla d'or fins a %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s unitats perdudes, sense medalla"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s unitats perdudes, medalla de plata fins a %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Medalla de bronze"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Medalla d'or"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Medalla de plata"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Destrueix tots els vaixells de guerra enemics"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Sense medalla"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Mata 5 aldeans enemics"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Medalla de bronze en %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Medalla d'or en %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Medalla de plata en %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Égida apagada"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Égida encesa"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tecnologies: fins a 256 investigacions"}
+{"name": "aoe2mc.cheat.cpu", "text": "Límit de població: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Boira de guerra: apagada"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Boira de guerra: encesa"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Les tecnologies són gratis"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Compartir és cuidar: els teus ingressos van als teus aliats"}
+{"name": "aoe2mc.cheat.wonders", "text": "Controles la natura: %s animals"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Només queden aliats: les aliances acaben. Guanya l'últim jugador viu."}
+{"name": "aoe2mc.conquest.defeated", "text": "El jugador %s està derrotat."}
+{"name": "aoe2mc.controls.attack", "text": "Atacar: selecciona unitats militars, després clic dret en un enemic."}
+{"name": "aoe2mc.controls.build", "text": "Construir: selecciona aldeans, clic dret en ells per al menú de construcció, tria un edifici i després clic esquerre en el terra. Shift + clic esquerre: posa més. Clic dret: cancel·la."}
+{"name": "aoe2mc.controls.camera", "text": "Càmera: clic dret amb el catalescopi Càmera (tecla 2 de la barra): camines ràpid per damunt del mapa. Shift + clic dret: la velocitat següent. Clic dret un altre cop: baixes volant."}
+{"name": "aoe2mc.controls.garrison", "text": "Guarnició: selecciona unitats, després clic dret en el teu edifici. El seu menú les trau. Menú del centre urbà: Tocar la campana de la ciutat."}
+{"name": "aoe2mc.controls.gather", "text": "Recollir: selecciona aldeans, després clic dret en un arbre, un arbust de fruites, una mina o una granja."}
+{"name": "aoe2mc.controls.goto", "text": "Anar a: clic dret amb la brúixola Anar a (tecla 3 de la barra): un menú dels teus centres urbans, els teus grups de control i el següent aldeà ociós."}
+{"name": "aoe2mc.controls.groups", "text": "Grups de control: selecciona unitats, agafa un objecte de grup (tecles 5 a 9) i Shift + clic dret per a guardar la selecció. Clic dret: selecciona el grup."}
+{"name": "aoe2mc.controls.head", "text": "Controls (mantín la pastanaga en un pal; la barra d'acció mostra el següent pas):"}
+{"name": "aoe2mc.controls.menu", "text": "Menú del joc: clic dret amb el llibre Menú del joc (tecla 4 de la barra): diplomàcia i tribut, senyal, guardar, pausa i l'arbre de tecnologies."}
+{"name": "aoe2mc.controls.move", "text": "Moure: amb una selecció, clic dret en el terra."}
+{"name": "aoe2mc.controls.research", "text": "Investigar i pujar d'edat: clic dret en el teu edifici i clic en una tecnologia o en la següent edat del seu menú."}
+{"name": "aoe2mc.controls.select", "text": "Seleccionar: clic esquerre en una unitat. Mantín el clic esquerre i mira el terra: una caixa de selecció. Clic dret: dona ordres."}
+{"name": "aoe2mc.controls.train", "text": "Entrenar: clic dret en el teu edifici (centre urbà, quarter ...) i clic en una unitat del seu menú."}
+{"name": "aoe2mc.defeat", "text": "Derrota"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Aliat"}
+{"name": "aoe2mc.diplomacy.changed", "text": "El jugador %s ha canviat la seua postura amb tu: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Enemic"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutral"}
+{"name": "aoe2mc.diplomacy.speed", "text": "El jugador %s ha posat la velocitat del joc en %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "El jugador %s ha enviat %s %s al jugador %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Senyal en %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Seguir: clic en una unitat pròpia"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Guardar: clic en una unitat o edifici propi"}
+{"name": "aoe2mc.gaia.joins", "text": "Un %s s'uneix a tu."}
+{"name": "aoe2mc.garrison.all_back", "text": "Tots tornen a la faena"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Sona la campana de la ciutat: %s aldeans busquen refugi"}
+{"name": "aoe2mc.garrison.no_villager", "text": "No hi ha cap aldeà seleccionat."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "No tens aldeans."}
+{"name": "aoe2mc.garrison.out", "text": "%s unitats han eixit"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s aldeans busquen refugi"}
+{"name": "aoe2mc.gather.act_attack", "text": "atacar"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menú de construcció"}
+{"name": "aoe2mc.gather.act_garrison", "text": "guarnició"}
+{"name": "aoe2mc.gather.act_gather", "text": "recollir"}
+{"name": "aoe2mc.gather.act_hunt", "text": "caçar"}
+{"name": "aoe2mc.gather.act_move", "text": "moure"}
+{"name": "aoe2mc.gather.act_select", "text": "seleccionar"}
+{"name": "aoe2mc.gather.act_select_type", "text": "seleccionar tots del tipus"}
+{"name": "aoe2mc.gather.act_trade", "text": "comerciar"}
+{"name": "aoe2mc.gather.act_train", "text": "entrenar"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Atacar: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Caixa de selecció: cancel·lada"}
+{"name": "aoe2mc.gather.bush", "text": "Arbust de baies"}
+{"name": "aoe2mc.gather.carcass", "text": "Carronya"}
+{"name": "aoe2mc.gather.corner", "text": "Caixa de selecció: clic en l'altra cantonada"}
+{"name": "aoe2mc.gather.enemy", "text": "%s enemic"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Edifici enemic"}
+{"name": "aoe2mc.gather.farm", "text": "Granja"}
+{"name": "aoe2mc.gather.ground", "text": "Terra"}
+{"name": "aoe2mc.gather.group", "text": "Grup %s: %s unitats"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grup %s: %s unitats guardades"}
+{"name": "aoe2mc.gather.mine", "text": "Mina de %s"}
+{"name": "aoe2mc.gather.paused", "text": "El joc està en pausa."}
+{"name": "aoe2mc.gather.point", "text": "%s · Clic dret: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Resembres en cua: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Seleccionades: %s unitats"}
+{"name": "aoe2mc.gather.tree", "text": "Arbre"}
+{"name": "aoe2mc.hill.holds", "text": "El jugador %s té el monument."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Atacar terra: clic dret en el terra"}
+{"name": "aoe2mc.hints.attack_move", "text": "Atacar en moure: clic dret en el terra"}
+{"name": "aoe2mc.hints.building", "text": "Posa el %s: clic dret en el terra · Shift + clic dret: posa més · Cancel·lar: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: clic esquerre per a posar · Shift: posa més · Clic dret: cancel·la"}
+{"name": "aoe2mc.hints.corner", "text": "Caixa de selecció: clic dret en l'altra cantonada"}
+{"name": "aoe2mc.hints.count_military", "text": "%s unitat militar"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s unitats militars"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s aldeà"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s aldeans"}
+{"name": "aoe2mc.hints.deselect", "text": "Caixa buida: deseleccionar"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Clic esquerre: deseleccionar"}
+{"name": "aoe2mc.hints.follow", "text": "Seguir: clic dret en una unitat pròpia o aliada"}
+{"name": "aoe2mc.hints.guard", "text": "Guardar: clic dret en una unitat o edifici propi o aliat"}
+{"name": "aoe2mc.hints.military", "text": "%s · Clic dret: atacar un enemic, menú de postura · %s"}
+{"name": "aoe2mc.hints.none", "text": "Clic esquerre: seleccionar una unitat · Mantín el clic esquerre: caixa de selecció"}
+{"name": "aoe2mc.hints.none_wand", "text": "Clic dret: seleccionar una unitat · Vareta: caixa de selecció"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrullar: clic dret en el terra"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Clic dret: recollir, construir, menú de construcció · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s preparats"}
+{"name": "aoe2mc.lobby.you_play", "text": "Jugues amb %s."}
+{"name": "aoe2mc.monk.converts", "text": "Un monjo converteix el %s."}
+{"name": "aoe2mc.monk.dies", "text": "El %s mor (Heretgia)."}
+{"name": "aoe2mc.pause.continued", "text": "El jugador %s ha continuat el joc."}
+{"name": "aoe2mc.pause.paused", "text": "El jugador %s ha pausat el joc."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Equip %s (valoració mitjana %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "El joc ha acabat. Clic dret en el llibre Resum que tens a la mà per a veure els resultats. Para el programa del joc amb Ctrl-C en la seua consola."}
+{"name": "aoe2mc.relic_victory.all", "text": "El jugador %s té totes les relíquies."}
+{"name": "aoe2mc.relic_victory.lost", "text": "El jugador %s ha perdut una relíquia."}
+{"name": "aoe2mc.repair.no_resources", "text": "Recursos insuficients per a reparar el %s."}
+{"name": "aoe2mc.replay.army", "text": "Exèrcit: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", exèrcit al final: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", perdut: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Ordre de construcció:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · guarnició %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | porta %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "construir %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "menjar %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "or %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "ociós %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "pedra %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "fusta %s"}
+{"name": "aoe2mc.replay.flare", "text": "Senyal"}
+{"name": "aoe2mc.replay.game_ends", "text": "El joc acaba"}
+{"name": "aoe2mc.replay.game_time", "text": "Temps de joc %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · guarnició %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pob %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Rec %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Ald %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s tenia el monument: victòria Rei de la Costa a %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atk %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Doble toc en Shift: vista d'espectador (volar per dins dels blocs). Clic dret en els objectes de la barra: control de la repetició."}
+{"name": "aoe2mc.replay.king_died", "text": ": el Rei va morir a %s. Regicidi: el jugador queda fora."}
+{"name": "aoe2mc.replay.king_killed", "text": "Rei mort a %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Repetició en directe: el salt para en el retard darrere del joc."}
+{"name": "aoe2mc.replay.lost", "text": "Perdut: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " té el monument a %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monument, li queda %s any"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monument, li queden %s anys"}
+{"name": "aoe2mc.replay.no_camera", "text": "Esta repetició no té càmera del seu jugador."}
+{"name": "aoe2mc.replay.now", "text": " ara"}
+{"name": "aoe2mc.replay.out", "text": "%s està fora"}
+{"name": "aoe2mc.replay.players", "text": "Jugadors"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " porta la relíquia a un monestir i guanya."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Repetició acabada"}
+{"name": "aoe2mc.replay.research", "text": " investiga %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s es rendeix"}
+{"name": "aoe2mc.replay.restart_jump", "text": "El servidor es reinicia per al salt arrere: uneix-te de nou."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Edificis %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Economia %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Militar %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tecnologies %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Total %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "castells %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "comprat %s, venut %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relíquies %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "meravelles %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Gastat:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Construir %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eco %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tec %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": aldeans entrenats %s, recollits %s, temps d'aldeà ociós %s, temps del CC ociós %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": té el monument (Rei de la Costa)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monument guanyat %s (Rei de la Costa)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": unitats militars entrenades %s, unitats perdudes %s, edificis perduts %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Rei mort %s (Regicidi)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": guanya, relíquia en un monestir %s (Capturar la relíquia)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stribut enviat %s, rebut %s, pic d'aldeans %s (est.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": centre urbà perdut %s (Mort sobtada)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tecnologies %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": temporitzador de meravella des de %s, acaba %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Resum (est.)"}
+{"name": "aoe2mc.replay.task_building", "text": "construint"}
+{"name": "aoe2mc.replay.task_following", "text": "seguint"}
+{"name": "aoe2mc.replay.task_food", "text": "recollint menjar"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "en guarnició"}
+{"name": "aoe2mc.replay.task_gold", "text": "recollint or"}
+{"name": "aoe2mc.replay.task_guarding", "text": "guardant"}
+{"name": "aoe2mc.replay.task_idle", "text": "ociós"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrullant"}
+{"name": "aoe2mc.replay.task_resources", "text": "recollint recursos"}
+{"name": "aoe2mc.replay.task_stone", "text": "recollint pedra"}
+{"name": "aoe2mc.replay.task_walking", "text": "caminant"}
+{"name": "aoe2mc.replay.task_wood", "text": "recollint fusta"}
+{"name": "aoe2mc.replay.team", "text": "Equip %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Arquer %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armadura d'arquer %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Transport %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armadura de cavalleria %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Granja %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Or %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armadura d'infanteria %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Telar %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Cos a cos %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Pedra %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Fusta %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castell"}
+{"name": "aoe2mc.replay.tl_king", "text": "Rei mort"}
+{"name": "aoe2mc.replay.tl_military", "text": "1a militar: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relíquia"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Es rendeix"}
+{"name": "aoe2mc.replay.town_fell", "text": ": el centre urbà va caure a %s. Mort sobtada: el jugador queda fora."}
+{"name": "aoe2mc.replay.town_lost", "text": "Centre urbà perdut a %s"}
+{"name": "aoe2mc.replay.training", "text": "Entrenant: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitat:"}
+{"name": "aoe2mc.replay.up_counts", "text": "economia %s · Universitat %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " va construir una meravella a %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Combat: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s unitats"}
+{"name": "aoe2mc.replay_input.fights", "text": "Grans combats:"}
+{"name": "aoe2mc.replay_input.help", "text": "Repetició: clic dret en els objectes de la barra, o clic en: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Prendre el control: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s unitats)"}
+{"name": "aoe2mc.replay_input.vs", "text": " contra "}
+{"name": "aoe2mc.resource.food", "text": "menjar"}
+{"name": "aoe2mc.resource.gold", "text": "or"}
+{"name": "aoe2mc.resource.stone", "text": "pedra"}
+{"name": "aoe2mc.resource.wood", "text": "fusta"}
+{"name": "aoe2mc.run.back", "text": "%s ha tornat"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Campanya completada"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: una línia normal va a tots, /tm TEXT per als teus aliats, /msg NOM TEXT per a una persona."}
+{"name": "aoe2mc.run.left_bot", "text": "%s ha eixit: un bot juga com el jugador %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "L'escenari %s comença. Uneix-te de nou."}
+{"name": "aoe2mc.run.starts_in", "text": "El joc comença en %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Obri \"Tria el teu jugador\" i clic en \"Preparat\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Tots els controls: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Primer pas: mantín el bastó de comandament i clic dret en un dels teus aldeans."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Primer pas: mantín el bastó de comandament i clic esquerre en un dels teus aldeans."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Objectiu: guanyar el joc. Ajust de victòria: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Joc guardat: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s unitats han eixit"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Explorador automàtic"}
+{"name": "aoe2mc.stance.formation", "text": "Formació: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Cap unitat pot atacar el terra"}
+{"name": "aoe2mc.stance.unpack", "text": "Desempaqueta primer el Trabuc"}
+{"name": "aoe2mc.train.active", "text": "%s està actiu."}
+{"name": "aoe2mc.train.rally", "text": "Clic dret en el terra per al punt de reunió."}
+{"name": "aoe2mc.train.researched", "text": "%s està investigat."}
+{"name": "aoe2mc.transport.out", "text": "%s unitats han eixit"}
+{"name": "aoe2mc.treaty.ended", "text": "El tractat ha acabat: els jugadors poden atacar ara."}
+{"name": "aoe2mc.treaty.refuse", "text": "Tractat: no pots atacar abans de %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Tractat: no pots atacar en este joc."}
+{"name": "aoe2mc.treaty.start", "text": "Tractat: cap jugador pot atacar a un altre abans de %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Tractat: cap jugador pot atacar a un altre en este joc."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Construeix un quarter: clic dret en un aldeà seleccionat, tria el quarter i posa'l. La barra d'acció de sobre de la barra d'objectes diu on posar-lo."}
+{"name": "aoe2mc.tutorial.camera", "text": "Mou-te ràpid pel mapa: clic dret amb l'objecte \"Càmera\", camina, i després clic dret un altre cop amb ell."}
+{"name": "aoe2mc.tutorial.camp", "text": "Destrueix el campament enemic al mig del mapa: selecciona els teus milicians i clic dret en un edifici. La barra del cap de dalt mostra el pas."}
+{"name": "aoe2mc.tutorial.camps", "text": "Construeix un campament de fusters prop dels arbres i un molí prop de les baies. La barra lateral de la dreta mostra la fusta que costen."}
+{"name": "aoe2mc.tutorial.complete", "text": "El tutorial està completat. Després: juga una partida contra el bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutorial completat"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Puja a l'Edat Feudal: clic dret en el teu centre urbà i tria l'Edat Feudal. La barra lateral de la dreta mostra el teu menjar."}
+{"name": "aoe2mc.tutorial.food", "text": "Recull 100 de menjar: envia un aldeà a les baies. La barra lateral de la dreta mostra el teu menjar."}
+{"name": "aoe2mc.tutorial.house", "text": "Construeix una casa: clic dret en un aldeà seleccionat, tria la casa i posa-la. La barra d'acció de sobre de la barra d'objectes diu on posar-la."}
+{"name": "aoe2mc.tutorial.militia", "text": "Entrena 3 milicians: clic dret en el teu quarter i tria el milicià. La barra lateral de la dreta mostra el teu menjar i el teu or."}
+{"name": "aoe2mc.tutorial.raid", "text": "L'enemic ataca els teus aldeans! Clic en la línia roja d'alerta del chat per a anar-hi, després selecciona els teus milicians i clic dret en els enemics. La barra del cap de dalt mostra la vida de la unitat seleccionada."}
+{"name": "aoe2mc.tutorial.select", "text": "Selecciona un aldeà: clic esquerre en un dels teus aldeans amb el bastó de comandament. La barra del cap de dalt mostra la unitat seleccionada, la barra d'acció de sobre de la barra d'objectes mostra la següent acció."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Pas fet"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Pas %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "CONSELL: el quarter entrena infanteria. La infanteria és barata i bona contra edificis."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "CONSELL: ataca amb totes les teues unitats juntes. Un grup xicotet mor abans de fer dany."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "CONSELL: construeix els edificis de lliurament prop dels recursos, perquè els aldeans caminen poc."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "CONSELL: l'edat següent desbloqueja edificis, unitats i tecnologies noves. Mantín els aldeans treballant mentre puges."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "CONSELL: les baies prop d'un molí són un bon començament de menjar. Després, les granges donen menjar que no s'acaba."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "CONSELL: una casa dona lloc per a 5 habitants més. Mira la població en la barra lateral i construeix cases abans que estiga plena."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "CONSELL: pots posar en cua fins a 15 unitats en un edifici quan tingues els recursos."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "CONSELL: en AoE2 la campana de la ciutat envia els aldeans al centre urbà. Tóca-la quan l'enemic assalte la teua ciutat."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "CONSELL: la línia Ociós de la barra lateral de la dreta compta els aldeans sense faena. Dona'ls faena."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "CONSELL: entrena aldeans tot el temps en les primeres edats. Més aldeans donen més recursos."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "CONSELL: els aldeans recullen més ràpid prop d'un edifici de lliurament. Construeix un campament de fusters al costat dels arbres."}
+{"name": "aoe2mc.tutorial.villager", "text": "Entrena un aldeà: clic dret en el teu centre urbà i tria l'aldeà. La barra lateral de la dreta mostra el menjar que costa."}
+{"name": "aoe2mc.tutorial.wood", "text": "Recull 50 de fusta: selecciona un aldeà i clic dret en un arbre. La barra lateral de la dreta mostra la teua fusta."}
+{"name": "aoe2mc.victory", "text": "Victòria"}
+{"name": "aoe2mc.wonder.built", "text": "El jugador %s ha construït una meravella."}
+{"name": "aoe2mc.wonder.destroyed", "text": "La meravella del jugador %s està destruïda."}
