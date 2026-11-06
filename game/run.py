@@ -201,7 +201,19 @@ class ReleasePack:
         pass
 
 
-def pack_source(path):
+def network_address():
+    """The address of this computer on the network (--host, #5891): the socket address of a UDP connect (no packet goes
+    out), else 127.0.0.1."""
+    import socket
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("192.0.2.1", 9))
+            return s.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+
+
+def pack_source(path, host=False):
     """The source of the world pack path for the players: the release link when the app bundle (sys.frozen) has
     RELEASE (the workflow bundles.yml writes it on a tag) and the world pack has the SHA-1 of the release pack; else
     the local PackServer (#2740). A world of another version has another pack: the client refuses a wrong SHA-1."""
@@ -209,14 +221,15 @@ def pack_source(path):
     release = json.load(open(RELEASE)) if getattr(sys, "frozen", False) and os.path.isfile(RELEASE) else {}
     if release.get("tag") and release.get("sha1") == sha1:
         return ReleasePack(RELEASE_URL.format(tag=release["tag"]), sha1)
-    return PackServer(path)
+    return PackServer(path, host)
 
 
 class PackServer:
     """Serve only the resource pack of the world over HTTP on 127.0.0.1 (#2740): the Minecraft server does not host
     it, it sends only the URL and the SHA-1 to each player who joins."""
 
-    def __init__(self, path):
+    def __init__(self, path, host=False):
+        """host: listen on all addresses and give the URL of the network address (--host, #5891)."""
         import http.server
         data = open(path, "rb").read()
         self.sha1 = hashlib.sha1(data).hexdigest()
@@ -234,8 +247,8 @@ class PackServer:
             def log_message(h, *args):
                 pass
 
-        self.http = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)   # port 0: a free port, no race
-        self.url = f"http://127.0.0.1:{self.http.server_address[1]}/resources.zip"
+        self.http = http.server.ThreadingHTTPServer(("0.0.0.0" if host else "127.0.0.1", 0), Handler)   # port 0: free
+        self.url = f"http://{network_address() if host else '127.0.0.1'}:{self.http.server_address[1]}/resources.zip"
         threading.Thread(target=self.http.serve_forever, daemon=True).start()
 
     def stop(self):
@@ -243,14 +256,16 @@ class PackServer:
         self.http.server_close()
 
 
-def properties(game_port, rcon_port, password, pack=None):
+def properties(game_port, rcon_port, password, pack=None, host=False):
     """server.properties: only local players can join (127.0.0.1). They play in creative mode (#292).
     A missing white-list becomes "true" in 26.3: then no player can join (#285). Each player is an operator
     (op_joined): the output of RCON and console commands (the "fill" of a falling building) must not go to its chat (#1799).
+    host: listen on all addresses (`--host`, #5891). Paper binds RCON to server-ip too: the program still connects
+    to 127.0.0.1, which "all addresses" includes.
     pack: the PackServer of the world (#2740) or its ReleasePack (#2741). The units have no vanilla look without it: the player must accept it."""
     extra = (f"resource-pack={pack.url}\nresource-pack-sha1={pack.sha1}\nrequire-resource-pack=true\n"
              f"resource-pack-prompt={json.dumps({'text': PROMPT})}\n") if pack else ""
-    return extra + (f"online-mode=false\nserver-ip=127.0.0.1\nserver-port={game_port}\nwhite-list=false\n"
+    return extra + (f"online-mode=false\nserver-ip={'' if host else '127.0.0.1'}\nserver-port={game_port}\nwhite-list=false\n"
             f"enable-rcon=true\nrcon.port={rcon_port}\nrcon.password={password}\n"
             "spawn-protection=0\nmax-tick-time=-1\nenable-query=false\nbroadcast-rcon-to-ops=false\n"
             "broadcast-console-to-ops=false\n"
@@ -295,7 +310,7 @@ class Game:
         """wait: freeze the ticks at once when the server is up (freeze, #3974): a client that starts before play()
         (25 s) let the trigger timers of the first seconds run before the join."""
         self.world, self.version, self.timeout, self.kind = os.path.abspath(world), version, timeout, server
-        self.wait = wait
+        self.wait, self.host = wait, False                # host: open to the network (--host, #5891)
         self.server = self.rcon = None
         self.lock, self.seen = threading.Lock(), 0     # the op thread and the game send commands
         self.sides = {}
@@ -323,9 +338,9 @@ class Game:
             os.makedirs(os.path.join(self.folder, "plugins"), exist_ok=True)
             shutil.copy(p, os.path.join(self.folder, "plugins", "aoe2mc-plugin.jar"))
         path = pack_file(self.world)
-        self.pack = pack_source(path) if path else None
+        self.pack = pack_source(path, self.host) if path else None
         with open(os.path.join(self.folder, "server.properties"), "w") as f:
-            f.write(properties(self.game_port, self.port, password, self.pack))
+            f.write(properties(self.game_port, self.port, password, self.pack, self.host))
         if self.kind == "paper":
             with open(os.path.join(self.folder, "spigot.yml"), "w") as f:
                 f.write(SPIGOT)
@@ -947,6 +962,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
         game.command(f"aoe minimap frame {replay.FRAME * data['tile_size']}")
     print(f"Join the server localhost:{game.game_port} (Minecraft {game.version}, multiplayer, direct connection).\n"
           f"{len(g.villagers)} villagers of player 1. " + START_HINT, file=sys.stderr)
+    if getattr(game, "host", False):                 # the address for the friends on the network (#5891)
+        print(f"Join the server {network_address()}:{game.game_port} (other computers on the network).\n"
+              "Warning: each person on the network can join this game.", file=sys.stderr)
     if people > 1:                                   # this console only: a person gets it in the chat on the join (#3555)
         print(CHAT_HINT, file=sys.stderr)
     game.g = g                                       # main saves its state on Ctrl-C (#2255)
@@ -1555,6 +1573,8 @@ def main(argv=None, scenario=None):
                     "player N, 100 to 200 percent in steps of 5 (for example 1=150, repeat it for more players): more "
                     "start resources, villager work rate and hit points, building hit points and military building "
                     "work rate (default 100)")
+    ap.add_argument("--host", action="store_true", help="--play: open the game to the network: friends on the same "
+                    "network join on the address that the program prints (#5891)")
     ap.add_argument("--seats", metavar="N,N,...", help="--play: the AoE2 player of each person in the order in which "
                     "they join, for example 1,1,2: the first two people play player 1 together (co-op), the third "
                     "player 2 (replaces --people)")
@@ -1623,6 +1643,7 @@ def main(argv=None, scenario=None):
         restore(os.path.join(a.load, "world"), a.world)
     ctrl_c()
     game = Game(a.world, a.version, server=a.server)
+    game.host = a.host
     game.wait = a.play and not a.replay              # freeze at the start, as play(wait=...) below (#3974)
     if a.seats:                                      # co-op (#3489): one person for each seat
         game.seats = seat_list(a.seats)
