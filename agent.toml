@@ -26,6 +26,8 @@ replay = '\.aoe2record\b'        # a regex: a ticket with a match goes into the 
 data = "tests/data/game_names_in_code.txt"   # the places of domain data left in the code: only gets shorter
 
 [ci]                            # framework/tools/ship_pr.py
+scans = ["tests/test_savegame_fields.py"]   # tests that scan files (no import finds them): ship_pr.py runs them
+scan_paths = ["game/"]          # when a changed file is under these paths, also with --tested (#5908)
 gates = []                      # the PR checks of ci.yml besides `quick` that Automerge needs green (for example ["browser"])
 
 [docs]
