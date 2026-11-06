@@ -75,6 +75,10 @@ def why():
                              for a, b in zip(w, w[1:] + [""])):
             return ("gh --body sends the text @file literally: the issue body is only a path (#4458). "
                     "Use --body-file file.md.")
+        if re.match(r"\s*\(?\s*git\s+(?:-C\s+\S+\s+)?(?:push|checkout|switch)\b", seg) and any(
+                re.match(r"(?:\S*:)?(?:refs/heads/|origin/)?claim/", x) for x in w[2:]):
+            return ("claim/* refs belong to framework/tools/claim.py: a PR from one never merges and its claim cannot be "
+                    "released (#5942). Work and push on the session branch (ship_pr.py).")
         if re.match(r"\s*\(?\s*git\s+(?:-C\s+\S+\s+)?stash\b", seg):
             sub = (w[w.index("stash") + 1:] or ["push"])[0]
             if sub not in ("list", "show") and in_merge():
