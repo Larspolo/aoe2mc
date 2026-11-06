@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "ผู้เล่น %s ก้าวสู่ยุค %s"}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: การคอร์รัปชันจะกินแผนที่จากขอบเข้าสู่กลางภายใน %s มันทำลายหน่วยและอาคารทั้งหมดในพื้นที่นั้น"}
+{"name": "aoe2mc.bot.cannot_build", "text": "ตอนนี้ฉันสร้าง %s ตรงนั้นไม่ได้"}
+{"name": "aoe2mc.bot.cannot_train", "text": "ฉันฝึกหน่วยนั้นไม่ได้ เพราะฉันไม่มีอาคารสำหรับมัน"}
+{"name": "aoe2mc.bot.flare_two", "text": "วางสัญญาณสองจุดสำหรับกำแพง"}
+{"name": "aoe2mc.bot.no_flare", "text": "ฉันไม่เห็นสัญญาณ"}
+{"name": "aoe2mc.bot.no_market", "text": "ฉันไม่มีตลาด: ฉันส่งบรรณาการไม่ได้"}
+{"name": "aoe2mc.bot.no_onager", "text": "ฉันไม่มีโอนาเจอร์"}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "ฉันมีทรัพยากรไม่พอสำหรับกำแพง"}
+{"name": "aoe2mc.bot.no_water", "text": "ฉันไม่มีน้ำใกล้เมือง: ฉันสร้างกองทัพเรือไม่ได้"}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "โอนาเจอร์ของฉันตัดต้นไม้ไม่ได้"}
+{"name": "aoe2mc.build.cost", "text": "ทรัพยากรไม่พอ: %s ราคา %s"}
+{"name": "aoe2mc.build.flat", "text": "%s ต้องตั้งอยู่บนพื้นที่ราบ"}
+{"name": "aoe2mc.build.gate_spot", "text": "%s ต้องวางบน 4 ช่องของกำแพงของคุณในแนวตรง หรือบน 3 ช่องแนวทแยง"}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "สร้าง: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s ต้องตั้งอยู่บนน้ำติดชายฝั่ง"}
+{"name": "aoe2mc.build.space", "text": "ไม่มีที่ว่างสำหรับ %s ตรงนี้"}
+{"name": "aoe2mc.build.tiles_cost", "text": "ทรัพยากรไม่พอ: %s ช่องของ %s ราคา %s"}
+{"name": "aoe2mc.build.wall_end", "text": "%s: คลิกขวาที่ปลายกำแพง"}
+{"name": "aoe2mc.build.water", "text": "%s ต้องตั้งอยู่บนน้ำ"}
+{"name": "aoe2mc.camera.fov", "text": "กล้องความเร็วสูงทำให้ของที่ถืออยู่แกว่ง หากต้องการให้นิ่ง ให้ไปที่ Options > Accessibility Settings > View Bobbing แล้วตั้งเป็น OFF กล้องยังทำให้มุมมองกว้างขึ้น ซึ่งแสดงแผนที่มากขึ้น หากต้องการมุมมองปกติ ให้ไปที่ Options > Accessibility Settings > FOV Effects แล้วตั้งเป็น 0 %"}
+{"name": "aoe2mc.camera.off", "text": "กล้อง: ปิด"}
+{"name": "aoe2mc.camera.on", "text": "กล้อง: เปิด ความเร็ว x%s Shift + คลิกขวา: ความเร็วถัดไป"}
+{"name": "aoe2mc.camera.speed", "text": "ความเร็วกล้อง: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "เอาชนะหน่วยศัตรูทั้งหมดและเสียหน่วยให้น้อย"}
+{"name": "aoe2mc.challenge.booming", "text": "ฝึกชาวบ้าน 100 คนและก้าวสู่ยุคจักรวรรดิ"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "ก้าวสู่ยุคปราสาทและรอดจากการโจมตีของศัตรู"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "ทำลายปราสาทของศัตรู"}
+{"name": "aoe2mc.challenge.early-economy", "text": "เก็บอาหาร 200 ไม้ 200 ทอง 100 และหิน 200 ฝึกชาวบ้าน 21 คน สร้างค่ายตัดไม้และโรงโม่แป้ง และก้าวสู่ยุคฟิวดัล"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "ฝึกชาวบ้าน 27 คน สร้างบ้าน 5 หลัง และก้าวสู่ยุคปราสาท"}
+{"name": "aoe2mc.challenge.land-battle", "text": "เอาชนะคลื่นศัตรูทั้งหกลูก"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "หน่วยที่เสีย %s หน่วย เหรียญทองแดงได้ถึง %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "หน่วยที่เสีย %s หน่วย เหรียญทองได้ถึง %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "หน่วยที่เสีย %s หน่วย ไม่ได้เหรียญ"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "หน่วยที่เสีย %s หน่วย เหรียญเงินได้ถึง %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "เหรียญทองแดง"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "เหรียญทอง"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "เหรียญเงิน"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "ทำลายเรือรบของศัตรูทั้งหมด"}
+{"name": "aoe2mc.challenge.no_medal", "text": "ไม่มีเหรียญ"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "สังหารชาวบ้านของศัตรู 5 คน"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "เหรียญทองแดงภายใน %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "เหรียญทองภายใน %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "เหรียญเงินภายใน %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "ปิดโล่"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "เปิดโล่"}
+{"name": "aoe2mc.cheat.beyond", "text": "เทคโนโลยี: สูงสุด 256 การวิจัย"}
+{"name": "aoe2mc.cheat.cpu", "text": "ขีดจำกัดประชากร: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "หมอกสงคราม: ปิด"}
+{"name": "aoe2mc.cheat.fog_on", "text": "หมอกสงคราม: เปิด"}
+{"name": "aoe2mc.cheat.free_techs", "text": "เทคโนโลยีฟรี"}
+{"name": "aoe2mc.cheat.marco", "text": "โปโล"}
+{"name": "aoe2mc.cheat.sharing", "text": "แบ่งปันคือความใส่ใจ: รายได้ของคุณไปที่พันธมิตร"}
+{"name": "aoe2mc.cheat.wonders", "text": "คุณควบคุมธรรมชาติ: สัตว์ %s ตัว"}
+{"name": "aoe2mc.conquest.allies_end", "text": "เหลือแต่พันธมิตร: พันธมิตรสิ้นสุดลง ผู้เล่นคนสุดท้ายที่ยังอยู่จะชนะ"}
+{"name": "aoe2mc.conquest.defeated", "text": "ผู้เล่น %s พ่ายแพ้"}
+{"name": "aoe2mc.controls.attack", "text": "โจมตี: เลือกหน่วยทหาร แล้วคลิกขวาที่ศัตรู"}
+{"name": "aoe2mc.controls.build", "text": "สร้าง: เลือกชาวบ้าน คลิกขวาที่พวกเขาเพื่อเปิดเมนูสร้าง เลือกอาคาร แล้วคลิกซ้ายที่พื้นดิน Shift + คลิกซ้าย: วางเพิ่ม คลิกขวา: ยกเลิก"}
+{"name": "aoe2mc.controls.camera", "text": "กล้อง: คลิกขวาด้วยกล้องส่อง (ช่องฮอตบาร์ 2) คุณจะเดินเร็วอยู่สูงเหนือแผนที่ Shift + คลิกขวา: ความเร็วถัดไป คลิกขวาอีกครั้ง: คุณบินลง"}
+{"name": "aoe2mc.controls.garrison", "text": "ประจำการ: เลือกหน่วย แล้วคลิกขวาที่อาคารของคุณเอง เมนูของอาคารจะให้พวกเขาออกมาได้ เมนูศาลาว่าการเมือง: ตีระฆังเมือง"}
+{"name": "aoe2mc.controls.gather", "text": "เก็บทรัพยากร: เลือกชาวบ้าน แล้วคลิกขวาที่ต้นไม้ พุ่มผลไม้ เหมือง หรือฟาร์ม"}
+{"name": "aoe2mc.controls.goto", "text": "ไปที่: คลิกขวาด้วยเข็มทิศ (ช่องฮอตบาร์ 3): เมนูของศาลาว่าการเมืองของคุณ กลุ่มควบคุม และชาวบ้านที่ว่างคนถัดไป"}
+{"name": "aoe2mc.controls.groups", "text": "กลุ่มควบคุม: เลือกหน่วย หยิบไอเท็มกลุ่ม (ช่องฮอตบาร์ 5 ถึง 9) แล้ว Shift + คลิกขวาเพื่อบันทึกการเลือก คลิกขวา: เลือกกลุ่ม"}
+{"name": "aoe2mc.controls.head", "text": "การควบคุม (ถือแครอทบนไม้; แถบการกระทำแสดงขั้นตอนถัดไป):"}
+{"name": "aoe2mc.controls.menu", "text": "เมนูเกม: คลิกขวาด้วยหนังสือ (ช่องฮอตบาร์ 4): การทูตและบรรณาการ สัญญาณ บันทึก หยุดชั่วคราว และแผนผังเทคโนโลยี"}
+{"name": "aoe2mc.controls.move", "text": "เคลื่อนที่: เมื่อมีการเลือกอยู่ คลิกขวาที่พื้นดิน"}
+{"name": "aoe2mc.controls.research", "text": "วิจัยและก้าวสู่ยุคถัดไป: คลิกขวาที่อาคารของคุณ แล้วคลิกเทคโนโลยีหรือยุคถัดไปในเมนูของมัน"}
+{"name": "aoe2mc.controls.select", "text": "เลือก: คลิกซ้ายที่หน่วย กดค้างคลิกซ้ายแล้วลากไปบนพื้นดิน: กรอบการเลือก คลิกขวา: สั่งการ"}
+{"name": "aoe2mc.controls.train", "text": "ฝึก: คลิกขวาที่อาคารของคุณ (ศาลาว่าการเมือง ค่ายทหาร ...) แล้วคลิกหน่วยในเมนูของมัน"}
+{"name": "aoe2mc.defeat", "text": "พ่ายแพ้"}
+{"name": "aoe2mc.diplomacy.ally", "text": "พันธมิตร"}
+{"name": "aoe2mc.diplomacy.changed", "text": "ผู้เล่น %s เปลี่ยนท่าทีต่อคุณเป็น: %s"}
+{"name": "aoe2mc.diplomacy.enemy", "text": "ศัตรู"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "เป็นกลาง"}
+{"name": "aoe2mc.diplomacy.speed", "text": "ผู้เล่น %s ตั้งความเร็วเกมเป็น %s"}
+{"name": "aoe2mc.diplomacy.tribute", "text": "ผู้เล่น %s ส่ง %s %s ให้ผู้เล่น %s"}
+{"name": "aoe2mc.flare.placed", "text": "%s: สัญญาณที่ %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "ติดตาม: คลิกหน่วยของคุณ"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "คุ้มกัน: คลิกหน่วยหรืออาคารของคุณ"}
+{"name": "aoe2mc.gaia.joins", "text": "%s เข้าร่วมกับคุณ"}
+{"name": "aoe2mc.garrison.all_back", "text": "ทุกคนกลับไปทำงาน"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "ระฆังเมืองดังขึ้น: ชาวบ้าน %s คนไปหลบภัย"}
+{"name": "aoe2mc.garrison.no_villager", "text": "ไม่มีการเลือกชาวบ้าน"}
+{"name": "aoe2mc.garrison.no_villagers", "text": "คุณไม่มีชาวบ้าน"}
+{"name": "aoe2mc.garrison.out", "text": "หน่วย %s หน่วยออกมาแล้ว"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "ชาวบ้าน %s คนไปหลบภัย"}
+{"name": "aoe2mc.gather.act_attack", "text": "โจมตี"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "เมนูสร้าง"}
+{"name": "aoe2mc.gather.act_garrison", "text": "ประจำการ"}
+{"name": "aoe2mc.gather.act_gather", "text": "เก็บทรัพยากร"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ล่าสัตว์"}
+{"name": "aoe2mc.gather.act_move", "text": "เคลื่อนที่"}
+{"name": "aoe2mc.gather.act_select", "text": "เลือก"}
+{"name": "aoe2mc.gather.act_select_type", "text": "เลือกทุกชนิดนี้"}
+{"name": "aoe2mc.gather.act_trade", "text": "ค้าขาย"}
+{"name": "aoe2mc.gather.act_train", "text": "ฝึก"}
+{"name": "aoe2mc.gather.attack_siege", "text": "โจมตี: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "กรอบการเลือก: ยกเลิกแล้ว"}
+{"name": "aoe2mc.gather.bush", "text": "พุ่มผลไม้"}
+{"name": "aoe2mc.gather.carcass", "text": "ซากสัตว์"}
+{"name": "aoe2mc.gather.corner", "text": "กรอบการเลือก: คลิกมุมอีกด้าน"}
+{"name": "aoe2mc.gather.enemy", "text": "ศัตรู %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "อาคารของศัตรู"}
+{"name": "aoe2mc.gather.farm", "text": "ฟาร์ม"}
+{"name": "aoe2mc.gather.ground", "text": "พื้นดิน"}
+{"name": "aoe2mc.gather.group", "text": "กลุ่ม %s: หน่วย %s หน่วย"}
+{"name": "aoe2mc.gather.group_saved", "text": "กลุ่ม %s: บันทึกหน่วย %s หน่วยแล้ว"}
+{"name": "aoe2mc.gather.mine", "text": "เหมือง%s"}
+{"name": "aoe2mc.gather.paused", "text": "เกมหยุดชั่วคราว"}
+{"name": "aoe2mc.gather.point", "text": "%s · คลิกขวา: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "การปลูกใหม่ในคิว: %s"}
+{"name": "aoe2mc.gather.selected", "text": "เลือกแล้ว: หน่วย %s หน่วย"}
+{"name": "aoe2mc.gather.tree", "text": "ต้นไม้"}
+{"name": "aoe2mc.hill.holds", "text": "ผู้เล่น %s ครอบครองอนุสาวรีย์"}
+{"name": "aoe2mc.hints.attack_ground", "text": "โจมตีพื้นดิน: คลิกขวาที่พื้นดิน"}
+{"name": "aoe2mc.hints.attack_move", "text": "เคลื่อนที่โจมตี: คลิกขวาที่พื้นดิน"}
+{"name": "aoe2mc.hints.building", "text": "วาง %s: คลิกขวาที่พื้นดิน · Shift + คลิกขวา: วางเพิ่ม · ยกเลิก: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: คลิกซ้ายเพื่อวาง · Shift: วางเพิ่ม · คลิกขวา: ยกเลิก"}
+{"name": "aoe2mc.hints.corner", "text": "กรอบการเลือก: คลิกขวามุมอีกด้าน"}
+{"name": "aoe2mc.hints.count_military", "text": "หน่วยทหาร %s หน่วย"}
+{"name": "aoe2mc.hints.count_military_many", "text": "หน่วยทหาร %s หน่วย"}
+{"name": "aoe2mc.hints.count_villager", "text": "ชาวบ้าน %s คน"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "ชาวบ้าน %s คน"}
+{"name": "aoe2mc.hints.deselect", "text": "กรอบว่าง: ยกเลิกการเลือก"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "คลิกซ้าย: ยกเลิกการเลือก"}
+{"name": "aoe2mc.hints.follow", "text": "ติดตาม: คลิกขวาที่หน่วยของคุณหรือพันธมิตร"}
+{"name": "aoe2mc.hints.guard", "text": "คุ้มกัน: คลิกขวาที่หน่วยหรืออาคารของคุณหรือพันธมิตร"}
+{"name": "aoe2mc.hints.military", "text": "%s · คลิกขวา: โจมตีศัตรู เมนูท่าที · %s"}
+{"name": "aoe2mc.hints.none", "text": "คลิกซ้าย: เลือกหน่วย · กดค้างคลิกซ้าย: กรอบการเลือก"}
+{"name": "aoe2mc.hints.none_wand", "text": "คลิกขวา: เลือกหน่วย · ไม้กายสิทธิ์: กรอบการเลือก"}
+{"name": "aoe2mc.hints.patrol", "text": "ลาดตระเวน: คลิกขวาที่พื้นดิน"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · คลิกขวา: เก็บทรัพยากร สร้าง เมนูสร้าง · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s พร้อม"}
+{"name": "aoe2mc.lobby.you_play", "text": "คุณเล่นเป็น %s"}
+{"name": "aoe2mc.monk.converts", "text": "พระภิกษุเปลี่ยนศาสนาของ %s"}
+{"name": "aoe2mc.monk.dies", "text": "%s ตาย (นอกรีต)"}
+{"name": "aoe2mc.pause.continued", "text": "ผู้เล่น %s เล่นเกมต่อ"}
+{"name": "aoe2mc.pause.paused", "text": "ผู้เล่น %s หยุดเกมชั่วคราว"}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "ทีม %s (คะแนนเฉลี่ย %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "เกมจบแล้ว คลิกขวาที่หนังสือสรุปเกมในมือเพื่อดูผลลัพธ์ หยุดโปรแกรมเกมด้วย Ctrl-C ในคอนโซลของมัน"}
+{"name": "aoe2mc.relic_victory.all", "text": "ผู้เล่น %s ครอบครองพระธาตุทั้งหมด"}
+{"name": "aoe2mc.relic_victory.lost", "text": "ผู้เล่น %s เสียพระธาตุหนึ่งชิ้น"}
+{"name": "aoe2mc.repair.no_resources", "text": "ทรัพยากรไม่พอสำหรับซ่อม %s"}
+{"name": "aoe2mc.replay.army", "text": "กองทัพ: %s"}
+{"name": "aoe2mc.replay.army_end", "text": " กองทัพตอนจบ: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": " เสียไป: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "ลำดับการสร้าง:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · ประจำการ %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | ถือ %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "สร้าง %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "อาหาร %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "ทอง %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "ว่าง %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "หิน %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "ไม้ %s"}
+{"name": "aoe2mc.replay.flare", "text": "สัญญาณ"}
+{"name": "aoe2mc.replay.game_ends", "text": "เกมจบลง"}
+{"name": "aoe2mc.replay.game_time", "text": "เวลาเกม %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · ประจำการ %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "ทหาร %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "ประชากร %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "ทรัพยากร %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "ชาวบ้าน %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s ครอบครองอนุสาวรีย์: ชัยชนะราชาแห่งเนินที่ %s"}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s โจมตี %s/%s เกราะ%s"}
+{"name": "aoe2mc.replay.join_help", "text": "กด Shift สองครั้ง: มุมมองผู้ชม (บินผ่านบล็อกได้) คลิกขวาที่ไอเท็มบนฮอตบาร์: ควบคุมการเล่นซ้ำ"}
+{"name": "aoe2mc.replay.king_died", "text": ": กษัตริย์สิ้นพระชนม์ที่ %s การสังหารกษัตริย์: ผู้เล่นออกจากเกม"}
+{"name": "aoe2mc.replay.king_killed", "text": "กษัตริย์ถูกสังหารที่ %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "การเล่นซ้ำสด: การกระโดดหยุดที่จุดหน่วงหลังเกม"}
+{"name": "aoe2mc.replay.lost", "text": "เสียไป: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " ครอบครองอนุสาวรีย์ที่ %s"}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: อนุสาวรีย์ เหลืออีก %s ปี"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: อนุสาวรีย์ เหลืออีก %s ปี"}
+{"name": "aoe2mc.replay.no_camera", "text": "การบันทึกนี้ไม่มีกล้องของผู้เล่นนั้น"}
+{"name": "aoe2mc.replay.now", "text": " ตอนนี้"}
+{"name": "aoe2mc.replay.out", "text": "%s ออกจากเกมแล้ว"}
+{"name": "aoe2mc.replay.players", "text": "ผู้เล่น"}
+{"name": "aoe2mc.replay.range", "text": " ระยะ %s"}
+{"name": "aoe2mc.replay.relic_won", "text": " นำพระธาตุไปยังอารามและชนะ"}
+{"name": "aoe2mc.replay.replay_ended", "text": "การเล่นซ้ำจบแล้ว"}
+{"name": "aoe2mc.replay.research", "text": " วิจัย %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s ยอมแพ้"}
+{"name": "aoe2mc.replay.restart_jump", "text": "เซิร์ฟเวอร์รีสตาร์ตเพื่อกระโดดย้อนกลับ: เข้าร่วมใหม่อีกครั้ง"}
+{"name": "aoe2mc.replay.share_buildings", "text": "อาคาร %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "เศรษฐกิจ %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "ทหาร %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "เทคโนโลยี %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "รวม %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "ปราสาท %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "ซื้อ %s, ขาย %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "พระธาตุ %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "สิ่งมหัศจรรย์ %s, "}
+{"name": "aoe2mc.replay.spent", "text": "ใช้ไป:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "สร้าง %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "เศรษฐกิจ %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "ทหาร %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "เทคโนโลยี %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": ฝึกชาวบ้าน %s คน เก็บทรัพยากร %s เวลาว่างของชาวบ้าน %s เวลาว่างของศาลาว่าการเมือง %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": ครอบครองอนุสาวรีย์ (ราชาแห่งเนิน)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": ชนะอนุสาวรีย์ %s (ราชาแห่งเนิน)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": ฝึกหน่วยทหาร %s หน่วย เสียหน่วย %s หน่วย เสียอาคาร %s หลัง APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": สังหารกษัตริย์ %s องค์ (การสังหารกษัตริย์)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": ชนะ พระธาตุในอาราม %s (ชิงพระธาตุ)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sบรรณาการที่ส่ง %s ที่ได้รับ %s จำนวนชาวบ้านสูงสุด %s (ประมาณ)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": เสียศาลาว่าการเมือง %s (ความตายกะทันหัน)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s เทคโนโลยี %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": ตัวจับเวลาสิ่งมหัศจรรย์เริ่มจาก %s สิ้นสุดที่ %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "สรุป (ประมาณ)"}
+{"name": "aoe2mc.replay.task_building", "text": "กำลังสร้าง"}
+{"name": "aoe2mc.replay.task_following", "text": "กำลังติดตาม"}
+{"name": "aoe2mc.replay.task_food", "text": "กำลังเก็บอาหาร"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "ประจำการ"}
+{"name": "aoe2mc.replay.task_gold", "text": "กำลังเก็บทอง"}
+{"name": "aoe2mc.replay.task_guarding", "text": "กำลังคุ้มกัน"}
+{"name": "aoe2mc.replay.task_idle", "text": "ว่าง"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "กำลังลาดตระเวน"}
+{"name": "aoe2mc.replay.task_resources", "text": "กำลังเก็บทรัพยากร"}
+{"name": "aoe2mc.replay.task_stone", "text": "กำลังเก็บหิน"}
+{"name": "aoe2mc.replay.task_walking", "text": "กำลังเดิน"}
+{"name": "aoe2mc.replay.task_wood", "text": "กำลังเก็บไม้"}
+{"name": "aoe2mc.replay.team", "text": "ทีม %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "นักธนู %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "เกราะนักธนู %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "การขนย้าย %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "เกราะทหารม้า %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "ฟาร์ม %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "ทอง %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "เกราะทหารราบ %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "กี่ทอ %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "การต่อสู้ระยะประชิด %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "หิน %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "ไม้ %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "ปราสาท"}
+{"name": "aoe2mc.replay.tl_king", "text": "สังหารกษัตริย์"}
+{"name": "aoe2mc.replay.tl_military", "text": "ทหารชุดแรก: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "พระธาตุ"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "ยอมแพ้"}
+{"name": "aoe2mc.replay.town_fell", "text": ": ศาลาว่าการเมืองล่มที่ %s ความตายกะทันหัน: ผู้เล่นออกจากเกม"}
+{"name": "aoe2mc.replay.town_lost", "text": "เสียศาลาว่าการเมืองที่ %s"}
+{"name": "aoe2mc.replay.training", "text": "กำลังฝึก: %s"}
+{"name": "aoe2mc.replay.university", "text": "มหาวิทยาลัย:"}
+{"name": "aoe2mc.replay.up_counts", "text": "เศรษฐกิจ %s · มหาวิทยาลัย %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " สร้างสิ่งมหัศจรรย์ที่ %s"}
+{"name": "aoe2mc.replay_input.fight", "text": "การต่อสู้: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": " หน่วย %s หน่วย"}
+{"name": "aoe2mc.replay_input.fights", "text": "การต่อสู้ใหญ่:"}
+{"name": "aoe2mc.replay_input.help", "text": "การเล่นซ้ำ: คลิกขวาที่ไอเท็มบนฮอตบาร์ หรือคลิก: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "ยึดครอง: "}
+{"name": "aoe2mc.replay_input.units", "text": " (หน่วย %s หน่วย)"}
+{"name": "aoe2mc.replay_input.vs", "text": " เทียบกับ "}
+{"name": "aoe2mc.resource.food", "text": "อาหาร"}
+{"name": "aoe2mc.resource.gold", "text": "ทอง"}
+{"name": "aoe2mc.resource.stone", "text": "หิน"}
+{"name": "aoe2mc.resource.wood", "text": "ไม้"}
+{"name": "aoe2mc.run.back", "text": "%s กลับมาแล้ว"}
+{"name": "aoe2mc.run.campaign_complete", "text": "การรณรงค์เสร็จสมบูรณ์"}
+{"name": "aoe2mc.run.chat_hint", "text": "แชท: ข้อความปกติส่งถึงทุกคน /tm TEXT ส่งถึงพันธมิตร /msg NAME TEXT ส่งถึงคนเดียว"}
+{"name": "aoe2mc.run.left_bot", "text": "%s ออกไปแล้ว: บอทเล่นเป็นผู้เล่น %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "สถานการณ์ %s เริ่มแล้ว เข้าร่วมใหม่อีกครั้ง"}
+{"name": "aoe2mc.run.starts_in", "text": "เกมจะเริ่มใน %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "เปิด «Choose your player» แล้วคลิก «Ready»"}
+{"name": "aoe2mc.run.welcome_controls", "text": "การควบคุมทั้งหมด: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "ขั้นแรก: ถือไม้คำสั่งไว้ แล้วคลิกขวาที่ชาวบ้านของคุณหนึ่งคน"}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "ขั้นแรก: ถือไม้คำสั่งไว้ แล้วคลิกซ้ายที่ชาวบ้านของคุณหนึ่งคน"}
+{"name": "aoe2mc.run.welcome_goal", "text": "เป้าหมาย: ชนะเกม การตั้งค่าชัยชนะ: %s"}
+{"name": "aoe2mc.savegame.saved", "text": "บันทึกเกมแล้ว: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "หน่วย %s หน่วยออกมาแล้ว"}
+{"name": "aoe2mc.stance.auto_scout", "text": "สอดแนมอัตโนมัติ"}
+{"name": "aoe2mc.stance.formation", "text": "กระบวนทัพ: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "ไม่มีหน่วยใดโจมตีพื้นดินได้"}
+{"name": "aoe2mc.stance.unpack", "text": "แตกหน่วยตรีบูเชต์ก่อน"}
+{"name": "aoe2mc.train.active", "text": "%s กำลังทำงาน"}
+{"name": "aoe2mc.train.rally", "text": "คลิกขวาที่พื้นดินเพื่อตั้งจุดรวมพล"}
+{"name": "aoe2mc.train.researched", "text": "วิจัย %s แล้ว"}
+{"name": "aoe2mc.transport.out", "text": "หน่วย %s หน่วยออกมาแล้ว"}
+{"name": "aoe2mc.treaty.ended", "text": "สนธิสัญญาสิ้นสุด: ผู้เล่นโจมตีกันได้แล้ว"}
+{"name": "aoe2mc.treaty.refuse", "text": "สนธิสัญญา: คุณโจมตีก่อน %s ไม่ได้"}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "สนธิสัญญา: คุณโจมตีในเกมนี้ไม่ได้"}
+{"name": "aoe2mc.treaty.start", "text": "สนธิสัญญา: ไม่มีผู้เล่นคนใดโจมตีผู้เล่นอื่นก่อน %s"}
+{"name": "aoe2mc.treaty.start_endless", "text": "สนธิสัญญา: ไม่มีผู้เล่นคนใดโจมตีผู้เล่นอื่นในเกมนี้"}
+{"name": "aoe2mc.tutorial.barracks", "text": "สร้างค่ายทหาร: คลิกขวาที่ชาวบ้านที่เลือกไว้ เลือกค่ายทหาร แล้ววางมัน แถบการกระทำเหนือฮอตบาร์บอกว่าต้องวางตรงไหน"}
+{"name": "aoe2mc.tutorial.camera", "text": "เดินทางบนแผนที่อย่างรวดเร็ว: คลิกขวาด้วยไอเท็ม «Camera» เดิน แล้วคลิกขวาที่มันอีกครั้ง"}
+{"name": "aoe2mc.tutorial.camp", "text": "ทำลายค่ายของศัตรูกลางแผนที่: เลือกทหารกลุ่ม Militia ของคุณ แล้วคลิกขวาที่อาคาร แถบบอสด้านบนแสดงขั้นตอน"}
+{"name": "aoe2mc.tutorial.camps", "text": "สร้างค่ายตัดไม้ใกล้ต้นไม้ และโรงโม่แป้งใกล้พุ่มเบอร์รี่ แถบข้างด้านขวาแสดงไม้ที่อาคารเหล่านี้ใช้"}
+{"name": "aoe2mc.tutorial.complete", "text": "การสอนเสร็จสมบูรณ์ ขั้นต่อไป: เล่นกับบอท: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "การสอนเสร็จสมบูรณ์"}
+{"name": "aoe2mc.tutorial.feudal", "text": "ก้าวสู่ยุคฟิวดัล: คลิกขวาที่ศาลาว่าการเมืองของคุณ แล้วเลือกยุคฟิวดัล แถบข้างด้านขวาแสดงอาหารของคุณ"}
+{"name": "aoe2mc.tutorial.food", "text": "เก็บอาหาร 100: ส่งชาวบ้านไปเก็บเบอร์รี่ แถบข้างด้านขวาแสดงอาหารของคุณ"}
+{"name": "aoe2mc.tutorial.house", "text": "สร้างบ้าน: คลิกขวาที่ชาวบ้านที่เลือกไว้ เลือกบ้าน แล้ววางมัน แถบการกระทำเหนือฮอตบาร์บอกว่าต้องวางตรงไหน"}
+{"name": "aoe2mc.tutorial.militia", "text": "ฝึกทหาร Militia 3 นาย: คลิกขวาที่ค่ายทหารของคุณ แล้วเลือก militia แถบข้างด้านขวาแสดงอาหารและทองของคุณ"}
+{"name": "aoe2mc.tutorial.raid", "text": "ศัตรูโจมตีชาวบ้านของคุณ! คลิกเส้นแจ้งเตือนสีแดงในแชทเพื่อไปที่นั่น แล้วเลือกทหาร Militia ของคุณ และคลิกขวาที่ศัตรู แถบบอสด้านบนแสดงพลังชีวิตของหน่วยที่เลือก"}
+{"name": "aoe2mc.tutorial.select", "text": "เลือกชาวบ้าน: คลิกซ้ายที่ชาวบ้านของคุณหนึ่งคนด้วยไม้คำสั่ง แถบบอสด้านบนแสดงหน่วยที่เลือก แถบการกระทำเหนือฮอตบาร์แสดงการกระทำถัดไป"}
+{"name": "aoe2mc.tutorial.step_done", "text": "ทำขั้นตอนเสร็จแล้ว"}
+{"name": "aoe2mc.tutorial.step_of", "text": "ขั้นตอน %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "เคล็ดลับ: ค่ายทหารฝึกทหารราบ ทหารราบราคาถูกและดีต่ออาคาร"}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "เคล็ดลับ: โจมตีด้วยหน่วยทั้งหมดพร้อมกัน กลุ่มเล็กจะตายก่อนที่จะทำความเสียหาย"}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "เคล็ดลับ: สร้างอาคารรับของใกล้ทรัพยากร เพื่อให้ชาวบ้านเดินระยะสั้น"}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "เคล็ดลับ: ยุคถัดไปปลดล็อกอาคาร หน่วย และเทคโนโลยีใหม่ ให้ชาวบ้านทำงานต่อไปขณะคุณก้าวหน้า"}
+{"name": "aoe2mc.tutorial.tip_food", "text": "เคล็ดลับ: เบอร์รี่ใกล้โรงโม่แป้งคือจุดเริ่มต้นอาหารที่ปลอดภัย ต่อมาฟาร์มจะให้อาหารที่ไม่มีวันหมด"}
+{"name": "aoe2mc.tutorial.tip_house", "text": "เคล็ดลับ: บ้านหนึ่งหลังเพิ่มที่ว่างให้ประชากรอีก 5 คน ดูประชากรในแถบข้างและสร้างบ้านก่อนที่จะเต็ม"}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "เคล็ดลับ: เมื่อมีทรัพยากร คุณเข้าคิวหน่วยได้สูงสุด 15 หน่วยในอาคารหนึ่ง"}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "เคล็ดลับ: ใน AoE2 ระฆังเมืองจะส่งชาวบ้านเข้าไปในศาลาว่าการเมือง ตีมันเมื่อศัตรูบุกเมืองของคุณ"}
+{"name": "aoe2mc.tutorial.tip_select", "text": "เคล็ดลับ: บรรทัดว่างในแถบข้างด้านขวานับชาวบ้านที่ไม่มีงาน ให้งานพวกเขาทำ"}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "เคล็ดลับ: ฝึกชาวบ้านตลอดในยุคแรก ชาวบ้านมากขึ้นให้ทรัพยากรมากขึ้น"}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "เคล็ดลับ: ชาวบ้านทำงานเร็วขึ้นใกล้อาคารรับของ สร้างค่ายตัดไม้ข้างต้นไม้"}
+{"name": "aoe2mc.tutorial.villager", "text": "ฝึกชาวบ้าน: คลิกขวาที่ศาลาว่าการเมืองของคุณ แล้วเลือกชาวบ้าน แถบข้างด้านขวาแสดงอาหารที่มันใช้"}
+{"name": "aoe2mc.tutorial.wood", "text": "เก็บไม้ 50: เลือกชาวบ้านแล้วคลิกขวาที่ต้นไม้ แถบข้างด้านขวาแสดงไม้ของคุณ"}
+{"name": "aoe2mc.victory", "text": "ชัยชนะ"}
+{"name": "aoe2mc.wonder.built", "text": "ผู้เล่น %s สร้างสิ่งมหัศจรรย์"}
+{"name": "aoe2mc.wonder.destroyed", "text": "สิ่งมหัศจรรย์ของผู้เล่น %s ถูกทำลาย"}

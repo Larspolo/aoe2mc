@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Umabante ang manlalaro %s sa %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Sinasakop ng Korapsyon ang mapa mula sa gilid papunta sa gitna sa loob ng %s. Winawasak nito ang lahat ng yunit at gusali sa loob nito."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Hindi ako makapagtayo ng %s doon ngayon."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Hindi ko masanay ang yunit na iyon: wala akong gusali para dito."}
+{"name": "aoe2mc.bot.flare_two", "text": "Maglagay ng dalawang senyales para sa pader."}
+{"name": "aoe2mc.bot.no_flare", "text": "Wala akong nakikitang senyales."}
+{"name": "aoe2mc.bot.no_market", "text": "Wala akong pamilihan: hindi ako makapagpadala ng tributo."}
+{"name": "aoe2mc.bot.no_onager", "text": "Wala akong onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Kulang ang mga yaman ko para sa pader."}
+{"name": "aoe2mc.bot.no_water", "text": "Walang tubig malapit sa bayan ko: hindi ako makapagtayo ng hukbong-dagat."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Hindi kayang putulin ng mga onager ko ang mga puno."}
+{"name": "aoe2mc.build.cost", "text": "Kulang ang yaman: ang %s ay nagkakahalaga ng %s."}
+{"name": "aoe2mc.build.flat", "text": "Ang %s ay dapat nasa patag na lupa."}
+{"name": "aoe2mc.build.gate_spot", "text": "Ang %s ay dapat nasa 4 na tile ng sarili mong pader sa tuwid na linya, o sa 3 dayagonal na tile."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Magtayo: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Ang %s ay dapat nasa tubig na malapit sa pampang."}
+{"name": "aoe2mc.build.space", "text": "Walang espasyo para sa %s dito."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Kulang ang yaman: ang %s tile ng %s ay nagkakahalaga ng %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: i-right click ang dulo ng pader."}
+{"name": "aoe2mc.build.water", "text": "Ang %s ay dapat nasa tubig."}
+{"name": "aoe2mc.camera.fov", "text": "Ang mabilis na kamera ay nagpapaindayog sa hawak na bagay. Para manatiling nakatigil, itakda ang Options > Accessibility Settings > View Bobbing sa OFF. Pinalalawak din ng kamera ang tanaw, kaya mas maraming mapa ang nakikita. Para sa normal na tanaw, itakda ang Options > Accessibility Settings > FOV Effects sa 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: naka-off"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: naka-on, bilis x%s. Shift + right click: susunod na bilis."}
+{"name": "aoe2mc.camera.speed", "text": "Bilis ng kamera: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Talunin ang lahat ng yunit ng kalaban at kaunti lang ang mawala"}
+{"name": "aoe2mc.challenge.booming", "text": "Sanayin ang 100 magsasaka at umabante sa Imperial Age"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Umabante sa Castle Age at makaligtas sa mga atake ng kalaban"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Wasakin ang kastilyo ng kalaban"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Mangalap ng 200 pagkain, 200 kahoy, 100 ginto at 200 bato, sanayin ang 21 magsasaka, magtayo ng kampo ng kahoy at giling, at umabante sa Feudal Age"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Sanayin ang 27 magsasaka, magtayo ng 5 bahay, at umabante sa Castle Age"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Talunin ang lahat ng anim na alon ng kalaban"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s yunit ang nawala, bronse na medalya hanggang %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s yunit ang nawala, gintong medalya hanggang %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s yunit ang nawala, walang medalya"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s yunit ang nawala, pilak na medalya hanggang %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronse na medalya"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Gintong medalya"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Pilak na medalya"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Wasakin ang lahat ng barkong pandigma ng kalaban"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Walang medalya"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Patayin ang 5 magsasaka ng kalaban"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronse na medalya sa loob ng %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Gintong medalya sa loob ng %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Pilak na medalya sa loob ng %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Naka-off ang Aegis"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Naka-on ang Aegis"}
+{"name": "aoe2mc.cheat.beyond", "text": "Mga teknolohiya: hanggang 256 na pananaliksik"}
+{"name": "aoe2mc.cheat.cpu", "text": "Limitasyon ng populasyon: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Ulap ng digmaan: naka-off"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Ulap ng digmaan: naka-on"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Libre ang mga teknolohiya"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Ang pagbabahagi ay pagmamalasakit: ang kita mo ay mapupunta sa mga kaalyado mo"}
+{"name": "aoe2mc.cheat.wonders", "text": "Kontrolado mo ang kalikasan: %s hayop"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Kaalyado na lang ang natitira: nagtatapos ang mga alyansa. Ang huling buhay na manlalaro ang panalo."}
+{"name": "aoe2mc.conquest.defeated", "text": "Natalo ang manlalaro %s."}
+{"name": "aoe2mc.controls.attack", "text": "Atake: pumili ng mga yunit militar, pagkatapos i-right click ang kalaban."}
+{"name": "aoe2mc.controls.build", "text": "Magtayo: pumili ng mga magsasaka, i-right click sila para sa menu ng pagtatayo, pumili ng gusali, pagkatapos i-left click ang lupa. Shift + left click: maglagay pa. Right click: kanselahin."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: i-right click ang spyglass na Kamera (hotbar key 2): mabilis kang maglalakad nang mataas sa ibabaw ng mapa. Shift right click: susunod na bilis. Right click ulit: bababa ka."}
+{"name": "aoe2mc.controls.garrison", "text": "Garrison: pumili ng mga yunit, pagkatapos i-right click ang sarili mong gusali. Pinapalabas ng menu nito ang mga yunit. Menu ng town center: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "Mangalap: pumili ng mga magsasaka, pagkatapos i-right click ang puno, palumpong ng prutas, minahan o taniman."}
+{"name": "aoe2mc.controls.goto", "text": "Pumunta sa: i-right click ang compass na Pumunta sa (hotbar key 3): menu ng mga town center mo, mga control group at ang susunod na walang gawaing magsasaka."}
+{"name": "aoe2mc.controls.groups", "text": "Mga control group: pumili ng mga yunit, kunin ang group item (hotbar key 5 hanggang 9) at Shift + right click para i-save ang pagpili. Right click: piliin ang grupo."}
+{"name": "aoe2mc.controls.head", "text": "Mga kontrol (hawakan ang karot sa tungkod; ipinapakita ng action bar ang susunod na hakbang):"}
+{"name": "aoe2mc.controls.menu", "text": "Game menu: i-right click ang aklat na Game menu (hotbar key 4): diplomasya at tributo, senyales, i-save, i-pause at ang tech tree."}
+{"name": "aoe2mc.controls.move", "text": "Galaw: may napiling yunit, i-right click ang lupa."}
+{"name": "aoe2mc.controls.research", "text": "Magsaliksik at umabante sa edad: i-right click ang sarili mong gusali at i-click ang teknolohiya o susunod na edad sa menu nito."}
+{"name": "aoe2mc.controls.select", "text": "Pumili: i-left click ang isang yunit. Hawakan ang left click at tumingin sa lupa: kahon ng pagpili. Right click: magbigay ng utos."}
+{"name": "aoe2mc.controls.train", "text": "Sanayin: i-right click ang sarili mong gusali (town center, barracks ...) at i-click ang yunit sa menu nito."}
+{"name": "aoe2mc.defeat", "text": "Pagkatalo"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Kaalyado"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Binago ng manlalaro %s ang paninindigan nito sa iyo: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Kalaban"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutral"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Itinakda ng manlalaro %s ang bilis ng laro sa %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Nagpadala ang manlalaro %s ng %s %s sa manlalaro %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Senyales sa %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Sundan: i-click ang sarili mong yunit"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Bantayan: i-click ang sarili mong yunit o gusali"}
+{"name": "aoe2mc.gaia.joins", "text": "Sumasama sa iyo ang isang %s."}
+{"name": "aoe2mc.garrison.all_back", "text": "Lahat ay bumalik sa trabaho"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Tumunog ang kampana ng bayan: %s magsasaka ang naghahanap ng masisilungan"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Walang napiling magsasaka."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Wala kang magsasaka."}
+{"name": "aoe2mc.garrison.out", "text": "%s yunit ang lumabas"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s magsasaka ang naghahanap ng masisilungan"}
+{"name": "aoe2mc.gather.act_attack", "text": "atake"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menu ng pagtatayo"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garrison"}
+{"name": "aoe2mc.gather.act_gather", "text": "mangalap"}
+{"name": "aoe2mc.gather.act_hunt", "text": "manghuli"}
+{"name": "aoe2mc.gather.act_move", "text": "galaw"}
+{"name": "aoe2mc.gather.act_select", "text": "pumili"}
+{"name": "aoe2mc.gather.act_select_type", "text": "piliin ang lahat ng ganitong uri"}
+{"name": "aoe2mc.gather.act_trade", "text": "makipagkalakalan"}
+{"name": "aoe2mc.gather.act_train", "text": "sanayin"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Atake: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Kahon ng pagpili: kinansela"}
+{"name": "aoe2mc.gather.bush", "text": "Palumpong ng berry"}
+{"name": "aoe2mc.gather.carcass", "text": "Bangkay"}
+{"name": "aoe2mc.gather.corner", "text": "Kahon ng pagpili: i-click ang kabilang sulok"}
+{"name": "aoe2mc.gather.enemy", "text": "Kalaban na %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Gusali ng kalaban"}
+{"name": "aoe2mc.gather.farm", "text": "Taniman"}
+{"name": "aoe2mc.gather.ground", "text": "Lupa"}
+{"name": "aoe2mc.gather.group", "text": "Grupo %s: %s yunit"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grupo %s: %s yunit ang na-save"}
+{"name": "aoe2mc.gather.mine", "text": "Minahan ng %s"}
+{"name": "aoe2mc.gather.paused", "text": "Naka-pause ang laro."}
+{"name": "aoe2mc.gather.point", "text": "%s · Right click: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Mga muling itatanim sa pila: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Napili: %s yunit"}
+{"name": "aoe2mc.gather.tree", "text": "Puno"}
+{"name": "aoe2mc.hill.holds", "text": "Hawak ng manlalaro %s ang monumento."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Atakehin ang Lupa: i-right click ang lupa"}
+{"name": "aoe2mc.hints.attack_move", "text": "Galaw na Atake: i-right click ang lupa"}
+{"name": "aoe2mc.hints.building", "text": "Ilagay ang %s: i-right click ang lupa · Shift + right click: maglagay pa · Kanselahin: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: i-left click para ilagay · Shift: maglagay pa · Right click: kanselahin"}
+{"name": "aoe2mc.hints.corner", "text": "Kahon ng pagpili: i-right click ang kabilang sulok"}
+{"name": "aoe2mc.hints.count_military", "text": "%s yunit militar"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s yunit militar"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s magsasaka"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s magsasaka"}
+{"name": "aoe2mc.hints.deselect", "text": "Walang laman na kahon: alisin ang pagpili"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Left click: alisin ang pagpili"}
+{"name": "aoe2mc.hints.follow", "text": "Sundan: i-right click ang sarili o kaalyadong yunit"}
+{"name": "aoe2mc.hints.guard", "text": "Bantayan: i-right click ang sarili o kaalyadong yunit o gusali"}
+{"name": "aoe2mc.hints.military", "text": "%s · Right click: atakehin ang kalaban, menu ng paninindigan · %s"}
+{"name": "aoe2mc.hints.none", "text": "Left click: pumili ng yunit · Hawakan ang left click: kahon ng pagpili"}
+{"name": "aoe2mc.hints.none_wand", "text": "Right click: pumili ng yunit · Wand: kahon ng pagpili"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrol: i-right click ang lupa"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Right click: mangalap, magtayo, menu ng pagtatayo · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s handa na"}
+{"name": "aoe2mc.lobby.you_play", "text": "Ikaw ay naglalaro bilang %s."}
+{"name": "aoe2mc.monk.converts", "text": "Ang isang monghe ay nagko-convert ng %s."}
+{"name": "aoe2mc.monk.dies", "text": "Namatay ang %s (Erehiya)."}
+{"name": "aoe2mc.pause.continued", "text": "Ipinagpatuloy ng manlalaro %s ang laro."}
+{"name": "aoe2mc.pause.paused", "text": "Pinahinto ng manlalaro %s ang laro."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Koponan %s (karaniwang rating %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Tapos na ang laro. I-right click ang aklat na Recap sa kamay mo para makita ang mga resulta. Itigil ang programa ng laro gamit ang Ctrl-C sa console nito."}
+{"name": "aoe2mc.relic_victory.all", "text": "Hawak ng manlalaro %s ang lahat ng relik."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Nawalan ng isang relik ang manlalaro %s."}
+{"name": "aoe2mc.repair.no_resources", "text": "Kulang ang yaman para ayusin ang %s."}
+{"name": "aoe2mc.replay.army", "text": "Hukbo: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", hukbo sa pagtatapos: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", nawala: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Pagkakasunod ng pagtatayo:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garrison %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | dala %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "magtayo %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "pagkain %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "ginto %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "walang gawa %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "bato %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "kahoy %s"}
+{"name": "aoe2mc.replay.flare", "text": "Senyales"}
+{"name": "aoe2mc.replay.game_ends", "text": "Natatapos ang laro"}
+{"name": "aoe2mc.replay.game_time", "text": "Oras ng laro %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · garrison %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Yaman %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Mag %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "Hawak ng %s ang monumento: panalo ng Hari ng Burol sa %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atake %s/%s baluti%s"}
+{"name": "aoe2mc.replay.join_help", "text": "I-double tap ang Shift: tanaw ng tagamasid (lumipad sa mga block). I-right click ang mga item sa hotbar: kontrol ng replay."}
+{"name": "aoe2mc.replay.king_died", "text": ": Namatay ang Hari sa %s. Regicide: lumabas ang manlalaro."}
+{"name": "aoe2mc.replay.king_killed", "text": "Napatay ang Hari sa %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Live replay: humihinto ang pagtalon sa delay sa likod ng laro."}
+{"name": "aoe2mc.replay.lost", "text": "Nawala: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " ay hawak ang monumento sa %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monumento, %s taon ang natitira"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monumento, %s taon ang natitira"}
+{"name": "aoe2mc.replay.no_camera", "text": "Walang kamera ng manlalaro nito ang record na ito."}
+{"name": "aoe2mc.replay.now", "text": " ngayon"}
+{"name": "aoe2mc.replay.out", "text": "Lumabas na si %s"}
+{"name": "aoe2mc.replay.players", "text": "Mga manlalaro"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " dinala ang relik sa monasteryo at nanalo."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Natapos ang replay"}
+{"name": "aoe2mc.replay.research", "text": " nagsasaliksik ng %s"}
+{"name": "aoe2mc.replay.resigns", "text": "Sumuko si %s"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Nagre-restart ang server para sa pagbalik: sumali ulit."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Mga gusali %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekonomiya %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Militar %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Mga teknolohiya %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Kabuuan %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "kastilyo %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "bumili ng %s, nagbenta ng %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relik %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "himala %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Ginastos:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Tayo %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eko %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tek %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": sinanay na magsasaka %s, nangalap %s, oras na walang gawa ng magsasaka %s, oras na walang gawa ng town center %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": hawak ang monumento (Hari ng Burol)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": nanalo sa monumento %s (Hari ng Burol)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": mga yunit militar na sinanay %s, nawalang yunit %s, nawalang gusali %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": napatay na Hari %s (Regicide)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": panalo, relik sa monasteryo %s (Capture the Relic)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stributo na ipinadala %s, natanggap %s, pinakamataas na magsasaka %s (tantiya)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": nawala ang town center %s (Sudden Death)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, mga teknolohiya %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": timer ng himala mula sa %s, nagtatapos %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Buod (tantiya)"}
+{"name": "aoe2mc.replay.task_building", "text": "nagtatayo"}
+{"name": "aoe2mc.replay.task_following", "text": "sumusunod"}
+{"name": "aoe2mc.replay.task_food", "text": "nangangalap ng pagkain"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "naka-garrison"}
+{"name": "aoe2mc.replay.task_gold", "text": "nangangalap ng ginto"}
+{"name": "aoe2mc.replay.task_guarding", "text": "nagbabantay"}
+{"name": "aoe2mc.replay.task_idle", "text": "walang gawa"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "nagpapatrol"}
+{"name": "aoe2mc.replay.task_resources", "text": "nangangalap ng yaman"}
+{"name": "aoe2mc.replay.task_stone", "text": "nangangalap ng bato"}
+{"name": "aoe2mc.replay.task_walking", "text": "naglalakad"}
+{"name": "aoe2mc.replay.task_wood", "text": "nangangalap ng kahoy"}
+{"name": "aoe2mc.replay.team", "text": "Koponan %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Mamamana %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Baluti ng mamamana %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Pagdadala %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Baluti ng kabalyero %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Taniman %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Ginto %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Baluti ng infantry %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Habihan %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Malapitang labanan %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Bato %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Kahoy %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Kastilyo"}
+{"name": "aoe2mc.replay.tl_king", "text": "Napatay ang Hari"}
+{"name": "aoe2mc.replay.tl_military", "text": "Unang militar: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relik"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Sumuko"}
+{"name": "aoe2mc.replay.town_fell", "text": ": bumagsak ang town center sa %s. Sudden Death: lumabas ang manlalaro."}
+{"name": "aoe2mc.replay.town_lost", "text": "Nawala ang town center sa %s"}
+{"name": "aoe2mc.replay.training", "text": "Sinasanay: %s"}
+{"name": "aoe2mc.replay.university", "text": "Unibersidad:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekonomiya %s · Unibersidad %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " nagtayo ng himala sa %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Laban: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s yunit"}
+{"name": "aoe2mc.replay_input.fights", "text": "Malalaking laban:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: i-right click ang mga item sa hotbar mo, o i-click: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Pagkuha: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s yunit)"}
+{"name": "aoe2mc.replay_input.vs", "text": " laban sa "}
+{"name": "aoe2mc.resource.food", "text": "pagkain"}
+{"name": "aoe2mc.resource.gold", "text": "ginto"}
+{"name": "aoe2mc.resource.stone", "text": "bato"}
+{"name": "aoe2mc.resource.wood", "text": "kahoy"}
+{"name": "aoe2mc.run.back", "text": "Bumalik na si %s"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Tapos na ang kampanya"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: ang normal na linya ay napupunta sa lahat, /tm TEXT sa mga kaalyado mo, /msg NAME TEXT sa isang tao."}
+{"name": "aoe2mc.run.left_bot", "text": "Umalis si %s: pinaglalaruan ng bot ang manlalaro %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Nagsisimula ang senaryo na %s. Sumali ulit."}
+{"name": "aoe2mc.run.starts_in", "text": "Magsisimula ang laro sa loob ng %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Buksan ang «Choose your player» at i-click ang «Ready»"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Lahat ng kontrol: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Unang hakbang: hawakan ang command stick at i-right click ang isa sa mga magsasaka mo."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Unang hakbang: hawakan ang command stick at i-left click ang isa sa mga magsasaka mo."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Layunin: manalo sa laro. Setting ng panalo: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Na-save ang laro: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s yunit ang lumabas"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Awtomatikong Scout"}
+{"name": "aoe2mc.stance.formation", "text": "Pormasyon: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Walang yunit na makakaatake sa lupa"}
+{"name": "aoe2mc.stance.unpack", "text": "I-unpack muna ang Trebuchet"}
+{"name": "aoe2mc.train.active", "text": "Aktibo ang %s."}
+{"name": "aoe2mc.train.rally", "text": "I-right click ang lupa para sa rally point."}
+{"name": "aoe2mc.train.researched", "text": "Nasaliksik na ang %s."}
+{"name": "aoe2mc.transport.out", "text": "%s yunit ang lumabas"}
+{"name": "aoe2mc.treaty.ended", "text": "Natapos ang kasunduan: maaari nang umatake ang mga manlalaro."}
+{"name": "aoe2mc.treaty.refuse", "text": "Kasunduan: hindi ka makakaatake bago ang %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Kasunduan: hindi ka makakaatake sa larong ito."}
+{"name": "aoe2mc.treaty.start", "text": "Kasunduan: walang manlalaro ang makakaatake sa ibang manlalaro bago ang %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Kasunduan: walang manlalaro ang makakaatake sa ibang manlalaro sa larong ito."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Magtayo ng barracks: i-right click ang napiling magsasaka, piliin ang barracks at ilagay ito. Sinasabi ng action bar sa itaas ng hotbar kung saan ilalagay."}
+{"name": "aoe2mc.tutorial.camera", "text": "Mabilis na gumalaw sa mapa: i-right click ang item na \"Camera\", maglakad, pagkatapos i-right click ulit ito."}
+{"name": "aoe2mc.tutorial.camp", "text": "Wasakin ang kampo ng kalaban sa gitna ng mapa: piliin ang Militia mo at i-right click ang isang gusali. Ipinapakita ng boss bar sa itaas ang hakbang."}
+{"name": "aoe2mc.tutorial.camps", "text": "Magtayo ng kampo ng kahoy malapit sa mga puno at giling malapit sa berry. Ipinapakita ng sidebar sa kanan ang kahoy na kailangan nila."}
+{"name": "aoe2mc.tutorial.complete", "text": "Tapos na ang tutorial. Susunod: maglaro laban sa bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tapos na ang tutorial"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Umabante sa Feudal Age: i-right click ang town center mo at piliin ang Feudal Age. Ipinapakita ng sidebar sa kanan ang pagkain mo."}
+{"name": "aoe2mc.tutorial.food", "text": "Mangalap ng 100 pagkain: magpadala ng magsasaka sa berry. Ipinapakita ng sidebar sa kanan ang pagkain mo."}
+{"name": "aoe2mc.tutorial.house", "text": "Magtayo ng bahay: i-right click ang napiling magsasaka, piliin ang bahay at ilagay ito. Sinasabi ng action bar sa itaas ng hotbar kung saan ilalagay."}
+{"name": "aoe2mc.tutorial.militia", "text": "Sanayin ang 3 Militia: i-right click ang barracks mo at piliin ang militia. Ipinapakita ng sidebar sa kanan ang pagkain at ginto mo."}
+{"name": "aoe2mc.tutorial.raid", "text": "Inaatake ng kalaban ang mga magsasaka mo! I-click ang pulang linya ng alerto sa chat para pumunta roon, pagkatapos piliin ang Militia mo at i-right click ang mga kalaban. Ipinapakita ng boss bar sa itaas ang kalusugan ng napiling yunit."}
+{"name": "aoe2mc.tutorial.select", "text": "Pumili ng magsasaka: i-left click ang isa sa mga magsasaka mo gamit ang command stick. Ipinapakita ng boss bar sa itaas ang napiling yunit, ipinapakita ng action bar sa itaas ng hotbar ang susunod na aksyon."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Tapos na ang hakbang"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Hakbang %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "PAYO: ang barracks ay nagsasanay ng infantry. Mura ang infantry at mahusay laban sa mga gusali."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "PAYO: umatake nang sabay-sabay gamit ang lahat ng yunit mo. Ang maliit na grupo ay namamatay bago makapinsala."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "PAYO: magtayo ng mga gusali para sa pagbaba ng yaman malapit sa mga yaman, para maikli ang nilalakad ng mga magsasaka."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "PAYO: ang susunod na edad ay nagbubukas ng bagong gusali, yunit at teknolohiya. Panatilihing nagtatrabaho ang mga magsasaka habang umaabante ka."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "PAYO: ang mga berry malapit sa giling ay ligtas na simula ng pagkain. Mamaya, ang mga taniman ay nagbibigay ng pagkaing hindi nauubos."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "PAYO: ang isang bahay ay nagbibigay ng puwang para sa 5 pang populasyon. Tingnan ang populasyon sa sidebar at magtayo ng bahay bago mapuno."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "PAYO: maaari kang maglagay ng hanggang 15 yunit sa pila ng isang gusali kapag may yaman ka."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "PAYO: sa AoE2, ang kampana ng bayan ay nagpapapasok ng mga magsasaka sa town center. Tunugin ito kapag sinalakay ng kalaban ang bayan mo."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "PAYO: ang linyang Walang Gawa sa sidebar sa kanan ay nagbibilang ng mga magsasakang walang trabaho. Bigyan sila ng trabaho."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "PAYO: magsanay ng magsasaka palagi sa mga unang edad. Mas maraming magsasaka, mas maraming yaman."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "PAYO: mas mabilis mangalap ang mga magsasaka malapit sa gusali para sa pagbaba ng yaman. Magtayo ng kampo ng kahoy sa tabi ng mga puno."}
+{"name": "aoe2mc.tutorial.villager", "text": "Sanayin ang magsasaka: i-right click ang town center mo at piliin ang magsasaka. Ipinapakita ng sidebar sa kanan ang pagkaing kailangan nito."}
+{"name": "aoe2mc.tutorial.wood", "text": "Mangalap ng 50 kahoy: pumili ng magsasaka at i-right click ang puno. Ipinapakita ng sidebar sa kanan ang kahoy mo."}
+{"name": "aoe2mc.victory", "text": "Tagumpay"}
+{"name": "aoe2mc.wonder.built", "text": "Nagtayo ng himala ang manlalaro %s."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Nawasak ang himala ng manlalaro %s."}
