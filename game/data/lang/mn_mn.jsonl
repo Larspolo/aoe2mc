@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Тоглогч %s, %s эрин үе рүү шилжинэ."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Гэмтэл газрын зургийг хилээс нь төв рүү нь %s дотор эзэлнэ. Түүний дотор байгаа бүх анги, барилгыг устгана."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Би одоо тэнд %s барьж чадахгүй."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Би тэр ангиа бэлтгэж чадахгүй: түүнд барилга алга."}
+{"name": "aoe2mc.bot.flare_two", "text": "Хаалтанд хоёр газарт гэрэл тавина уу."}
+{"name": "aoe2mc.bot.no_flare", "text": "Би гэрэл харахгүй байна."}
+{"name": "aoe2mc.bot.no_market", "text": "Надад зах алга: татвар илгээж чадахгүй."}
+{"name": "aoe2mc.bot.no_onager", "text": "Надад онагр алга."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Хаалтанд нөөц хангалтгүй."}
+{"name": "aoe2mc.bot.no_water", "text": "Миний хот ойр ус алга: флот барьж чадахгүй."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Миний онагрууд мод огтолж чадахгүй."}
+{"name": "aoe2mc.build.cost", "text": "Нөөц хангалтгүй: %s үнэ нь %s."}
+{"name": "aoe2mc.build.flat", "text": "%s тэгш газарт зогсох ёстой."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s өөрийн хаалтны 4 хавтангийн шулуун мөрөнд эсвэл 3 диагональ хавтан дээр зогсох ёстой."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Барилга: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s эргийн ойр, усан дээр зогсох ёстой."}
+{"name": "aoe2mc.build.space", "text": "Энд %s-д зай байхгүй."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Нөөц хангалтгүй: %s хавтан, %s үнэ нь %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: хаалтны төгсгөлийг баруун товчоор дарна уу."}
+{"name": "aoe2mc.build.water", "text": "%s усан дээр зогсох ёстой."}
+{"name": "aoe2mc.camera.fov", "text": "Хурдан камер барьж буй зүйлийг сэгсэрнэ. Үүнийг зогсоохын тулд Сонголт > Тусгай боломжууд хэсэгт View Bobbing утгыг OFF болгоно уу. Камер харагдах талбайг өргөтгөж, газрын зургийн илүү хэсгийг харуулна. Энгийн харагдацыг хадгалахын тулд Сонголт > Тусгай боломжууд хэсэгт FOV Effects утгыг 0 % болгоно уу."}
+{"name": "aoe2mc.camera.off", "text": "Камер: унтраасан"}
+{"name": "aoe2mc.camera.on", "text": "Камер: асаасан, хурд x%s. Shift + баруун товч: дараагийн хурд."}
+{"name": "aoe2mc.camera.speed", "text": "Камерын хурд: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Дайсны бүх ангийг ялж, цөөн анги алдана уу"}
+{"name": "aoe2mc.challenge.booming", "text": "100 ард түмэн бэлтгэж, Эзэнт гүрний эрин үе рүү шилжинэ үү"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Цайзын эрин үе рүү шилжиж, дайсны довтолгоонд тэсвэр"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Дайсны цайзыг сүйтгэнэ үү"}
+{"name": "aoe2mc.challenge.early-economy", "text": "200 хоол, 200 мод, 100 алт, 200 чулуу цуглуулж, 21 ард түмэн бэлтгэж, модны уурхай болон тээрмийг барьж, Феодалын эрин үе рүү шилжинэ үү"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "27 ард түмэн бэлтгэж, 5 байшин барьж, Цайзын эрин үе рүү шилжинэ үү"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Дайсны зургаан давалгааг ялна уу"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s анги алдагдсан, хүрэл медаль хүртэл: %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s анги алдагдсан, алтан медаль хүртэл: %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s анги алдагдсан, медаль байхгүй"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s анги алдагдсан, мөнгөн медаль хүртэл: %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Хүрэл медаль"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Алтан медаль"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Мөнгөн медаль"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Дайсны бүх дайны хөлөг онгоцыг устгана уу"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Медаль байхгүй"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Дайсны 5 ард түмнийг ална уу"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "%s дотор хүрэл медаль"}
+{"name": "aoe2mc.challenge.time_gold", "text": "%s дотор алтан медаль"}
+{"name": "aoe2mc.challenge.time_silver", "text": "%s дотор мөнгөн медаль"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis унтраасан"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis асаасан"}
+{"name": "aoe2mc.cheat.beyond", "text": "Технологи: 256 судалгаа хүртэл"}
+{"name": "aoe2mc.cheat.cpu", "text": "Хүн амын хязгаар: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Манан: унтраасан"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Манан: асаасан"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Технологи үнэгүй"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Хуваалцах нь халамжлах: таны орлого холбоотнуудад очно"}
+{"name": "aoe2mc.cheat.wonders", "text": "Та байгалийг удирдана: %s амьтан"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Зөвхөн холбоотнууд үлдлээ: холбоо дуусна. Сүүлд амьд үлдсэн тоглогч ялна."}
+{"name": "aoe2mc.conquest.defeated", "text": "Тоглогч %s ялагдсан."}
+{"name": "aoe2mc.controls.attack", "text": "Довтолгоо: дайны ангиудыг сонгоод, дайсан дээр баруун товчоор дарна уу."}
+{"name": "aoe2mc.controls.build", "text": "Барилга: ард түмнийг сонгоод, барилгын цэсний тулд баруун товчоор дарж, барилгыг сонгоод, газрыг зүүн товчоор дарна уу. Shift + зүүн товч: илүү барих. Баруун товч: цуцлах."}
+{"name": "aoe2mc.controls.camera", "text": "Камер: Камер эд зүйлийг (түргэн товч 2) барьсан баруун товч: та газрын зургийн дээр хурдан нисэнэ. Shift + баруун товч: дараагийн хурд. Дахин баруун товч: та доош буух."}
+{"name": "aoe2mc.controls.garrison", "text": "Харуул: ангиудыг сонгоод, өөрийн барилга дээр баруун товчоор дарна уу. Түүний цэс тэднийг гаргана. Төв цайзын цэс: Хонхны дуудлага."}
+{"name": "aoe2mc.controls.gather", "text": "Цуглуулах: ард түмнийг сонгоод, мод, жимсний бут, уурхай эсвэл тариалан дээр баруун товчоор дарна уу."}
+{"name": "aoe2mc.controls.goto", "text": "Очих: Очих луужин (түргэн товч 3) барьсан баруун товч: таны төв цайзууд, удирдлагын бүлгүүд, дараагийн сул ард түмний цэс."}
+{"name": "aoe2mc.controls.groups", "text": "Удирдлагын бүлгүүд: ангиудыг сонгоод, бүлгийн зүйл авч (түргэн товч 5-9), Shift + баруун товчоор сонголтыг хадгална уу. Баруун товч: бүлгийг сонгох."}
+{"name": "aoe2mc.controls.head", "text": "Удирдлага (хурдны ишийг барина уу; үйлдлийн мөр дараагийн алхмыг харуулна):"}
+{"name": "aoe2mc.controls.menu", "text": "Тоглоомын цэс: Тоглоомын цэсийн ном барьсан баруун товч (түргэн товч 4): дипломат ба татвар, гэрэл, хадгалах, түр зогсоох, технологийн мод."}
+{"name": "aoe2mc.controls.move", "text": "Хөдөлгөөн: сонгосон ангиудтай газрыг баруун товчоор дарна уу."}
+{"name": "aoe2mc.controls.research", "text": "Судалгаа ба эрин үе рүү шилжих: өөрийн барилга дээр баруун товч, цэс дэх технологи эсвэл дараагийн эринг дарна уу."}
+{"name": "aoe2mc.controls.select", "text": "Сонгох: анги дээр зүүн товчоор дарна уу. Зүүн товчийг барьж, газрыг харна уу: сонголтын хайрцаг. Баруун товч: тушаал өгнө."}
+{"name": "aoe2mc.controls.train", "text": "Бэлтгэх: өөрийн барилга (төв цайз, казарм ...) дээр баруун товч, цэс дэх ангийг дарна уу."}
+{"name": "aoe2mc.defeat", "text": "Ялагдал"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Холбоотон"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Тоглогч %s таны хандлагыг өөрчиллөө: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Дайсан"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Бие даасан"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Тоглогч %s тоглоомын хурдыг %s болгов."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Тоглогч %s, %s %s-г тоглогч %s-д илгээв."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Гэрэл, %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Дагах: өөрийн ангид дарна уу"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Хамгаалах: өөрийн анги эсвэл барилгад дарна уу"}
+{"name": "aoe2mc.gaia.joins", "text": "%s таньд нэгдэнэ."}
+{"name": "aoe2mc.garrison.all_back", "text": "Бүгд ажилдаа буцна"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Хонхны дуудлага: %s ард түмэн хоргодох газар хайна"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Ард түмэн сонгогдоогүй."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Танд ард түмэн алга."}
+{"name": "aoe2mc.garrison.out", "text": "%s анги гарлаа"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s ард түмэн хоргодох газар хайна"}
+{"name": "aoe2mc.gather.act_attack", "text": "довтолгоо"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "барилгын цэс"}
+{"name": "aoe2mc.gather.act_garrison", "text": "харуул"}
+{"name": "aoe2mc.gather.act_gather", "text": "цуглуулах"}
+{"name": "aoe2mc.gather.act_hunt", "text": "агнуур"}
+{"name": "aoe2mc.gather.act_move", "text": "хөдөлгөөн"}
+{"name": "aoe2mc.gather.act_select", "text": "сонгох"}
+{"name": "aoe2mc.gather.act_select_type", "text": "энэ төрлийн бүгдийг сонгох"}
+{"name": "aoe2mc.gather.act_trade", "text": "худалдаа"}
+{"name": "aoe2mc.gather.act_train", "text": "бэлтгэх"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Довтолгоо: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Сонголтын хайрцаг: цуцлагдлаа"}
+{"name": "aoe2mc.gather.bush", "text": "Жимсний бут"}
+{"name": "aoe2mc.gather.carcass", "text": "Цогцос"}
+{"name": "aoe2mc.gather.corner", "text": "Сонголтын хайрцаг: өөр буланд дарна уу"}
+{"name": "aoe2mc.gather.enemy", "text": "Дайсан %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Дайсны барилга"}
+{"name": "aoe2mc.gather.farm", "text": "Тариалан"}
+{"name": "aoe2mc.gather.ground", "text": "Газар"}
+{"name": "aoe2mc.gather.group", "text": "Бүлэг %s: %s анги"}
+{"name": "aoe2mc.gather.group_saved", "text": "Бүлэг %s: %s анги хадгалагдлаа"}
+{"name": "aoe2mc.gather.mine", "text": "%s уурхай"}
+{"name": "aoe2mc.gather.paused", "text": "Тоглоом зогсоосон."}
+{"name": "aoe2mc.gather.point", "text": "%s · Баруун товч: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Дараалсан тариалалт: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Сонгосон: %s анги"}
+{"name": "aoe2mc.gather.tree", "text": "Мод"}
+{"name": "aoe2mc.hill.holds", "text": "Тоглогч %s монументыг эзэмшиж байна."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Газрыг довтлох: газарт баруун товчоор дарна уу"}
+{"name": "aoe2mc.hints.attack_move", "text": "Довтолгооны алхалт: газарт баруун товчоор дарна уу"}
+{"name": "aoe2mc.hints.building", "text": "%s барих: газарт баруун товчоор дарна уу · Shift + баруун товч: илүү барих · Цуцлах: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: барихын тулд зүүн товч · Shift: илүү барих · Баруун товч: цуцлах"}
+{"name": "aoe2mc.hints.corner", "text": "Сонголтын хайрцаг: өөр буланд баруун товчоор дарна уу"}
+{"name": "aoe2mc.hints.count_military", "text": "%s дайны анги"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s дайны анги"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s ард түмэн"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s ард түмэн"}
+{"name": "aoe2mc.hints.deselect", "text": "Хоосон хайрцаг: сонголтыг цуцлах"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Зүүн товч: сонголтыг цуцлах"}
+{"name": "aoe2mc.hints.follow", "text": "Дагах: өөрийн эсвэл холбоотны ангид баруун товчоор дарна уу"}
+{"name": "aoe2mc.hints.guard", "text": "Хамгаалах: өөрийн эсвэл холбоотны анги эсвэл барилгад баруун товчоор дарна уу"}
+{"name": "aoe2mc.hints.military", "text": "%s · Баруун товч: дайсанд довтлох, байрлалын цэс · %s"}
+{"name": "aoe2mc.hints.none", "text": "Зүүн товч: анги сонгох · Зүүн товчийг барих: сонголтын хайрцаг"}
+{"name": "aoe2mc.hints.none_wand", "text": "Баруун товч: анги сонгох · Саваа: сонголтын хайрцаг"}
+{"name": "aoe2mc.hints.patrol", "text": "Эргүүл: газарт баруун товчоор дарна уу"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Баруун товч: цуглуулах, барих, барилгын цэс · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s бэлэн"}
+{"name": "aoe2mc.lobby.you_play", "text": "Та %s-г тоглож байна."}
+{"name": "aoe2mc.monk.converts", "text": "Лам %s-г хувиргана."}
+{"name": "aoe2mc.monk.dies", "text": "%s үхнэ (Еретик)."}
+{"name": "aoe2mc.pause.continued", "text": "Тоглогч %s тоглоомоо үргэлжлүүлэв."}
+{"name": "aoe2mc.pause.paused", "text": "Тоглогч %s тоглоомоо түр зогсоов."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "%s баг (дундаж үнэлгээ %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Тоглоом дууслаа. Үр дүнг харахын тулд гартаа байгаа Дүгнэлтийн номыг баруун товчоор дарна уу. Тоглоомын програмыг консол дээр Ctrl-C-ээр зогсооно уу."}
+{"name": "aoe2mc.relic_victory.all", "text": "Тоглогч %s бүх ариун эд зүйлийг эзэмшиж байна."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Тоглогч %s ариун эд зүйлээ алдлаа."}
+{"name": "aoe2mc.repair.no_resources", "text": "%s засахад нөөц хангалтгүй."}
+{"name": "aoe2mc.replay.army", "text": "Цэрэг: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", дуусахад цэрэг: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", алдагдсан: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Барилгын дараалал:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · харуул %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | %s %s зөөнө"}
+{"name": "aoe2mc.replay.eco_build", "text": "барилга %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "хоол %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "алт %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "сул %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "чулуу %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "мод %s"}
+{"name": "aoe2mc.replay.flare", "text": "Гэрэл"}
+{"name": "aoe2mc.replay.game_ends", "text": "Тоглоом дуусна"}
+{"name": "aoe2mc.replay.game_time", "text": "Тоглоомын цаг %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · харуул %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Цэрэг %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Хүн ам %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Нөөц %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Ард түмэн %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s монументыг эзэмшлээ: Толгодын хаан ялалт, %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s довтолгоо %s/%s хамгаалалт%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift-ийг хоёр удаа дарна уу: үзэгчийн харагдац (блокоор нисэх). Түргэн самбарын зүйлд баруун товч: дахин тоглуулах удирдлага."}
+{"name": "aoe2mc.replay.king_died", "text": ": Хаан %s-д нас барав. Хааныг устгах: тоглогч гарна."}
+{"name": "aoe2mc.replay.king_killed", "text": "Хаан %s-д алагдлаа"}
+{"name": "aoe2mc.replay.live_jump", "text": "Шууд дахин тоглуулалт: үсрэлт тоглоомын ард байгаа саатал хүртэл зогсоно."}
+{"name": "aoe2mc.replay.lost", "text": "Алдагдсан: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " монументыг %s-д эзэмшиж байна."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: монумент, %s жил үлдлээ"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: монумент, %s жил үлдлээ"}
+{"name": "aoe2mc.replay.no_camera", "text": "Энэ бичлэгт тоглогчийн камер алга."}
+{"name": "aoe2mc.replay.now", "text": " одоо"}
+{"name": "aoe2mc.replay.out", "text": "%s гарлаа"}
+{"name": "aoe2mc.replay.players", "text": "Тоглогчид"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " ариун эд зүйлийг хийдэд аваачиж, ялна."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Дахин тоглуулалт дууслаа"}
+{"name": "aoe2mc.replay.research", "text": " %s судална"}
+{"name": "aoe2mc.replay.resigns", "text": "%s бууж өгөв"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Үсрэхэд сервер дахин эхэлнэ: дахин холбогдоно уу."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Барилгууд %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Эдийн засаг %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Цэрэг %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Технологи %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Нийт %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "цайзууд %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "худалдаж авсан %s, зарсан %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "ариун эд зүйлс %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "гайхамшгууд %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Зарцуулсан:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Барилга %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Эдийн засаг %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Цэрэг %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Технологи %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": бэлтгэсэн ард түмэн %s, цуглуулсан %s, ард түмний сул хугацаа %s, төвийн сул хугацаа %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": монументыг эзэмшиж байна (Толгодын хаан)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": монументын ялалт %s (Толгодын хаан)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": бэлтгэсэн цэрэг %s, алдсан анги %s, алдсан барилга %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": хаан алагдсан %s (Хааныг устгах)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": ялна, хийд дэх ариун эд зүйл %s (Ариун эд зүйлийг авах)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %s татвар илгээсэн %s, хүлээн авсан %s, ард түмний дээд %s (тооцоолсон)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": төв цайз алдагдсан %s (Гэнэтийн үхэл)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, технологи %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": гайхамшгийн таймер %s-аас, дуусна %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Дүгнэлт (тооцоолсон)"}
+{"name": "aoe2mc.replay.task_building", "text": "барилга"}
+{"name": "aoe2mc.replay.task_following", "text": "дагах"}
+{"name": "aoe2mc.replay.task_food", "text": "хоол цуглуулах"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "харуулд"}
+{"name": "aoe2mc.replay.task_gold", "text": "алт цуглуулах"}
+{"name": "aoe2mc.replay.task_guarding", "text": "хамгаалах"}
+{"name": "aoe2mc.replay.task_idle", "text": "сул"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "эргүүл"}
+{"name": "aoe2mc.replay.task_resources", "text": "нөөц цуглуулах"}
+{"name": "aoe2mc.replay.task_stone", "text": "чулуу цуглуулах"}
+{"name": "aoe2mc.replay.task_walking", "text": "алхах"}
+{"name": "aoe2mc.replay.task_wood", "text": "мод цуглуулах"}
+{"name": "aoe2mc.replay.team", "text": "Баг %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Нум сумчин %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Нум сумчны хуяг %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Тээвэрлэлт %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Морин цэргийн хуяг %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Тариалан %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Алт %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Явган цэргийн хуяг %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Ткацын станц %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Ойрын тулаан %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Чулуу %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Мод %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Цайз"}
+{"name": "aoe2mc.replay.tl_king", "text": "Хаан алагдсан"}
+{"name": "aoe2mc.replay.tl_military", "text": "1-р цэрэг: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Ариун эд зүйл"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Бууж өгсөн"}
+{"name": "aoe2mc.replay.town_fell", "text": ": төв цайз %s-д унав. Гэнэтийн үхэл: тоглогч гарна."}
+{"name": "aoe2mc.replay.town_lost", "text": "Төв цайз %s-д алдагдлаа"}
+{"name": "aoe2mc.replay.training", "text": "Бэлтгэх: %s"}
+{"name": "aoe2mc.replay.university", "text": "Их сургууль:"}
+{"name": "aoe2mc.replay.up_counts", "text": "эдийн засаг %s · Их сургууль %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " %s-д гайхамшиг барьсан."}
+{"name": "aoe2mc.replay_input.fight", "text": "Тулаан: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s анги"}
+{"name": "aoe2mc.replay_input.fights", "text": "Том тулалдаанууд:"}
+{"name": "aoe2mc.replay_input.help", "text": "Дахин тоглуулалт: түргэн самбарын зүйлд баруун товч эсвэл дарна уу: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Эзлэх: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s анги)"}
+{"name": "aoe2mc.replay_input.vs", "text": " эсрэг "}
+{"name": "aoe2mc.resource.food", "text": "хоол"}
+{"name": "aoe2mc.resource.gold", "text": "алт"}
+{"name": "aoe2mc.resource.stone", "text": "чулуу"}
+{"name": "aoe2mc.resource.wood", "text": "мод"}
+{"name": "aoe2mc.run.back", "text": "%s буцаж ирлээ"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Кампанит ажил дууслаа"}
+{"name": "aoe2mc.run.chat_hint", "text": "Чат: энгийн мессеж бүгдэд, /tm ТЕКСТ холбоотнуудад, /msg НЭР ТЕКСТ нэг хүнд."}
+{"name": "aoe2mc.run.left_bot", "text": "%s гарлаа: бот тоглогч %s-г тоглоно"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Сценари %s эхэлнэ. Дахин холбогдоно уу."}
+{"name": "aoe2mc.run.starts_in", "text": "Тоглоом %s дотор эхэлнэ"}
+{"name": "aoe2mc.run.wait_ready", "text": "\"Тоглогчоо сонгох\" цонхыг нээж, \"Бэлэн\" товчийг дарна уу"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Бүх удирдлага: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Эхний алхам: удирдлагын саваа барьж, ард түмний нэгийг баруун товчоор дарна уу."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Эхний алхам: удирдлагын саваа барьж, ард түмний нэгийг зүүн товчоор дарна уу."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Зорилго: тоглоомыг ялах. Ялалтын тохиргоо: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Тоглоомыг хадгаллаа: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s анги гарлаа"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Авто тагнуул"}
+{"name": "aoe2mc.stance.formation", "text": "Бүтэц: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ямар ч анги газарт довтолж чадахгүй"}
+{"name": "aoe2mc.stance.unpack", "text": "Эхлээд Тебетийг нээнэ үү"}
+{"name": "aoe2mc.train.active", "text": "%s идэвхтэй."}
+{"name": "aoe2mc.train.rally", "text": "Цугларах цэгийн тулд газрыг баруун товчоор дарна уу."}
+{"name": "aoe2mc.train.researched", "text": "%s судлагдлаа."}
+{"name": "aoe2mc.transport.out", "text": "%s анги гарлаа"}
+{"name": "aoe2mc.treaty.ended", "text": "Гэрээ дууслаа: тоглогчид одоо довтолж болно."}
+{"name": "aoe2mc.treaty.refuse", "text": "Гэрээ: %s хүртэл та довтолж чадахгүй."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Гэрээ: энэ тоглоомд та довтолж чадахгүй."}
+{"name": "aoe2mc.treaty.start", "text": "Гэрээ: %s хүртэл ямар ч тоглогч өөр тоглогчид довтолж чадахгүй."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Гэрээ: энэ тоглоомд ямар ч тоглогч өөр тоглогчид довтолж чадахгүй."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Казарм барина уу: сонгосон ард түмэнд баруун товч, казармыг сонгоод байрлуулна уу. Түргэн самбарын дээрх үйлдлийн мөр хаана байрлуулахыг харуулна."}
+{"name": "aoe2mc.tutorial.camera", "text": "Камертай газрын зургийг хурдан үзнэ үү: \"Камер\" зүйлээр баруун товч, алхаад, дахин баруун товч."}
+{"name": "aoe2mc.tutorial.camp", "text": "Газрын зургийн голд байгаа дайсны бааз устгана уу: цэрэгээ сонгоод, барилга дээр баруун товчоор дарна уу. Дээрх босс мөр алхмыг харуулна."}
+{"name": "aoe2mc.tutorial.camps", "text": "Модны ойролцоо модны уурхай, жимсний бутны ойролцоо тээрэм барина уу. Баруун талын хажуугийн самбар тэдний үнийг модоор харуулна."}
+{"name": "aoe2mc.tutorial.complete", "text": "Сургалт дууслаа. Дараа нь: ботын эсрэг тоглоом тоглоно уу: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Сургалт дууслаа"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Феодалын эрин үе рүү шилжинэ үү: төв цайздаа баруун товч дарж, Феодалын эринийг сонгоно уу. Баруун талын самбар таны хоолыг харуулна."}
+{"name": "aoe2mc.tutorial.food", "text": "100 хоол цуглуулна уу: ард түмнийг жимсний бут руу явуулна уу. Баруун талын самбар таны хоолыг харуулна."}
+{"name": "aoe2mc.tutorial.house", "text": "Байшин барина уу: сонгосон ард түмэнд баруун товч, байшинг сонгоод байрлуулна уу. Түргэн самбарын дээрх үйлдлийн мөр хаана байрлуулахыг харуулна."}
+{"name": "aoe2mc.tutorial.militia", "text": "3 Милиц бэлтгэнэ үү: казармдаа баруун товч дараад милицыг сонгоно уу. Баруун талын самбар хоол, алтыг харуулна."}
+{"name": "aoe2mc.tutorial.raid", "text": "Дайсан таны ард түмэнд довтолж байна! Чатын улаан анхааруулгын мөрийг дарж тийшээ очоод, милицаа сонгоод дайсан дээр баруун товчоор дарна уу. Дээрх босс мөр сонгосон ангийн эрүүл мэндийг харуулна."}
+{"name": "aoe2mc.tutorial.select", "text": "Ард түмэн сонгоно уу: удирдлагын саваатай ард түмний нэгийг зүүн товчоор дарна уу. Дээрх босс мөр сонгосон ангийг, түргэн самбарын дээрх үйлдлийн мөр дараагийн үйлдлийг харуулна."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Алхам биелэв"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Алхам %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "ЗӨВЛӨГӨӨ: казарм явган цэрэг бэлтгэдэг. Явган цэрэг хямд бөгөөд барилгын эсрэг сайн."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "ЗӨВЛӨГӨӨ: бүх ангиудаа хамт довтлоорой. Жижиг бүлэг хохирол учруулахаас өмнө үхдэг."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "ЗӨВЛӨГӨӨ: нөөцийн ойролцоо хүлээн авах барилгуудыг барьж, ард түмэн богино зам туулна."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "ЗӨВЛӨГӨӨ: дараагийн эрин шинэ барилга, анги, технологи нээдэг. Эрин рүү шилжиж байхад ард түмнээ ажилд байлга."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "ЗӨВЛӨГӨӨ: тээрмийн ойролцоох жимсний бут хоолны аюулгүй эхлэл. Хожим тариалан хоол тогтмол өгдөг."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "ЗӨВЛӨГӨӨ: байшин 5 ард түмэнд зай өгдөг. Хажуугийн самбарын хүн амыг хараад, дүүрэхээс өмнө байшин барина уу."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "ЗӨВЛӨГӨӨ: нөөц байхад барилгад 15 анги хүртэл дараалалд оруулж болно."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "ЗӨВЛӨГӨӨ: AoE2-т хонх ард түмнийг төв рүү буцаадаг. Дайсан таны хотыг дайрвал хонхыг дуудна уу."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "ЗӨВЛӨГӨӨ: баруун талын самбарын Сул мөр ажилгүй ард түмнийг тоолдог. Тэдэнд ажил өгнө үү."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "ЗӨВЛӨГӨӨ: эхний эринд үргэлж ард түмэн бэлтгэнэ үү. Олон ард түмэн илүү нөөц өгдөг."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "ЗӨВЛӨГӨӨ: хүлээн авах барилгын ойролцоох ард түмэн илүү хурдан цуглуулдаг. Модны ойролцоо модны уурхай барина уу."}
+{"name": "aoe2mc.tutorial.villager", "text": "Ард түмэн бэлтгэх: төв цайзад баруун товч, ард түмнийг сонгоно уу. Баруун талын самбар түүний үнийг хоолоор харуулна."}
+{"name": "aoe2mc.tutorial.wood", "text": "50 мод цуглуулна уу: ард түмнийг сонгоод модонд баруун товчоор дарна уу. Баруун талын самбар таны модыг харуулна."}
+{"name": "aoe2mc.victory", "text": "Ялалт"}
+{"name": "aoe2mc.wonder.built", "text": "Тоглогч %s гайхамшиг барьсан."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Тоглогч %s-ын гайхамшиг устгагдлаа."}

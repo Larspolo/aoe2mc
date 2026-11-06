@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Ойыншы %s, %s дәуіріне өтеді."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Бүлінген күш картаны шетінен ортасына қарай %s ішінде басып алады. Ол ішіндегі барлық бірлік пен ғимаратты жояды."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Мен қазір сол жерде %s сала алмаймын."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Мен бұл бірлікті дайындай алмаймын: оған ғимарат жоқ."}
+{"name": "aoe2mc.bot.flare_two", "text": "Қабырға үшін екі жерге жарық қойыңыз."}
+{"name": "aoe2mc.bot.no_flare", "text": "Мен жарық көрмеймін."}
+{"name": "aoe2mc.bot.no_market", "text": "Менде базар жоқ: салық жібере алмаймын."}
+{"name": "aoe2mc.bot.no_onager", "text": "Менде онагр жоқ."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Қабырға үшін ресурс жеткіліксіз."}
+{"name": "aoe2mc.bot.no_water", "text": "Қаламның жанында су жоқ: әскери флот сала алмаймын."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Менің онагрларым ағаш кесе алмайды."}
+{"name": "aoe2mc.build.cost", "text": "Ресурс жеткіліксіз: %s құны %s."}
+{"name": "aoe2mc.build.flat", "text": "%s тегіс жерде тұруы керек."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s өз қабырғасының 4 плиткасында түзу сызықпен, немесе 3 диагональ плиткада тұруы керек."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Құрылыс: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s жағада, судың үстінде тұруы керек."}
+{"name": "aoe2mc.build.space", "text": "Мұнда %s үшін орын жоқ."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Ресурс жеткіліксіз: %s плитка, %s құны %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: қабырғаның соңын оң батырмамен басыңыз."}
+{"name": "aoe2mc.build.water", "text": "%s суда тұруы керек."}
+{"name": "aoe2mc.camera.fov", "text": "Жылдам камера ұстаған затты селкілдетеді. Оны тоқтату үшін Опциялар > Арнайы мүмкіндіктер ішінде View Bobbing мәнін OFF күйіне қойыңыз. Камера көріністі кеңейтіп, картаның көбірек бөлігін көрсетеді. Қалыпты көріністі сақтау үшін Опциялар > Арнайы мүмкіндіктер ішінде FOV Effects мәнін 0 % қойыңыз."}
+{"name": "aoe2mc.camera.off", "text": "Камера: өшірулі"}
+{"name": "aoe2mc.camera.on", "text": "Камера: қосулы, жылдамдық x%s. Shift + оң батырма: келесі жылдамдық."}
+{"name": "aoe2mc.camera.speed", "text": "Камера жылдамдығы: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Барлық жау бірліктерін жеңіңіз және аз бірлік жоғалтыңыз"}
+{"name": "aoe2mc.challenge.booming", "text": "100 тұрғын дайындап, Императорлық дәуірге өтіңіз"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Замок дәуіріне өтіңіз де жау шабуылдарын тойтарыңыз"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Жаудың замогын талқандаңыз"}
+{"name": "aoe2mc.challenge.early-economy", "text": "200 тамақ, 200 ағаш, 100 алтын және 200 тас жинаңыз, 21 тұрғын дайындаңыз, ағаш кесу лагерін және диірмен салыңыз, Феодалдық дәуірге өтіңіз"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "27 тұрғын дайындаңыз, 5 үй салыңыз және Замок дәуіріне өтіңіз"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Жаудың алты толқынын жеңіңіз"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s бірлік жоғалды, қола медальға дейін: %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s бірлік жоғалды, алтын медальға дейін: %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s бірлік жоғалды, медаль жоқ"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s бірлік жоғалды, күміс медальға дейін: %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Қола медаль"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Алтын медаль"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Күміс медаль"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Барлық жау әскери кемелерін жойыңыз"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Медаль жоқ"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Жаудың 5 тұрғынын өлтіріңіз"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "%s ішінде қола медаль"}
+{"name": "aoe2mc.challenge.time_gold", "text": "%s ішінде алтын медаль"}
+{"name": "aoe2mc.challenge.time_silver", "text": "%s ішінде күміс медаль"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis өшірулі"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis қосулы"}
+{"name": "aoe2mc.cheat.beyond", "text": "Технологиялар: 256 зерттеуге дейін"}
+{"name": "aoe2mc.cheat.cpu", "text": "Халық шегі: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Тұман: өшірулі"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Тұман: қосулы"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Технологиялар тегін"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Бөлісу — қамқорлық: табысыңыз одақтастарыңызға барады"}
+{"name": "aoe2mc.cheat.wonders", "text": "Сіз табиғатты басқарасыз: %s аң"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Тек одақтастар қалды: одақтар тарады. Соңғы тірі қалған ойыншы жеңеді."}
+{"name": "aoe2mc.conquest.defeated", "text": "Ойыншы %s жеңілді."}
+{"name": "aoe2mc.controls.attack", "text": "Шабуыл: әскери бірліктерді таңдаңыз, сосын жаудың үстіне оң батырмамен басыңыз."}
+{"name": "aoe2mc.controls.build", "text": "Құрылыс: тұрғындарды таңдаңыз, құрылыс мәзірі үшін оң батырмамен басыңыз, ғимаратты таңдаңыз, сосын жерді сол батырмамен басыңыз. Shift + сол батырма: көбірек салу. Оң батырма: болдырмау."}
+{"name": "aoe2mc.controls.camera", "text": "Камера: Камера заты (жылдам пернесі 2) бар оң батырма: карта үстінде тез ұшасыз. Shift + оң батырма: келесі жылдамдық. Тағы оң батырма: төмен түсесіз."}
+{"name": "aoe2mc.controls.garrison", "text": "Гарнизон: бірліктерді таңдаңыз, сосын өз ғимаратыңызға оң батырма. Оның мәзірі оларды шығарады. Қала орталығының мәзірі: Қоңырау соғу."}
+{"name": "aoe2mc.controls.gather", "text": "Жинау: тұрғындарды таңдаңыз, сосын ағашқа, жидек бұтасына, кенге немесе егінге оң батырма."}
+{"name": "aoe2mc.controls.goto", "text": "Бару: Бару заты (жылдам пернесі 3) бар оң батырма: қала орталықтарыңыз, басқару топтарыңыз және келесі бос тұрғынның мәзірі."}
+{"name": "aoe2mc.controls.groups", "text": "Басқару топтары: бірліктерді таңдаңыз, топ затын алыңыз (жылдам пернелер 5-9) және Shift + оң батырма арқылы таңдауды сақтаңыз. Оң батырма: топты таңдау."}
+{"name": "aoe2mc.controls.head", "text": "Басқару (сабақты ұстаңыз; әрекет жолағы келесі қадамды көрсетеді):"}
+{"name": "aoe2mc.controls.menu", "text": "Ойын мәзірі: Ойын мәзірі кітабымен оң батырма (жылдам пернесі 4): дипломатия және салық, жарық, сақтау, пауза және технология ағашы."}
+{"name": "aoe2mc.controls.move", "text": "Жылжу: таңдалған бірліктермен жерді оң батырмамен басыңыз."}
+{"name": "aoe2mc.controls.research", "text": "Зерттеу және дәуірге өту: өз ғимаратыңызға оң батырма және оның мәзіріндегі технологияны немесе келесі дәуірді басыңыз."}
+{"name": "aoe2mc.controls.select", "text": "Таңдау: бірлікті сол батырмамен басыңыз. Сол батырманы ұстап, жерді шолыңыз: таңдау қорабы. Оң батырма: бұйрық беріңіз."}
+{"name": "aoe2mc.controls.train", "text": "Дайындау: өз ғимаратыңызға (қала орталығы, казарма ...) оң батырма және оның мәзіріндегі бірлікті басыңыз."}
+{"name": "aoe2mc.defeat", "text": "Жеңіліс"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Одақтас"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Ойыншы %s сізге қатынасын өзгертті: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Жау"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Бейтарап"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Ойыншы %s ойын жылдамдығын %s етіп орнатты."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Ойыншы %s, %s %s ойыншы %s-ке жіберді."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Жарық, %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Ілесу: өз бірлігіңізді басыңыз"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Күзету: өз бірлігіңізді немесе ғимаратыңызды басыңыз"}
+{"name": "aoe2mc.gaia.joins", "text": "%s сізге қосылады."}
+{"name": "aoe2mc.garrison.all_back", "text": "Барлығы жұмысқа қайтады"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Қоңырау соғылды: %s тұрғын баспана іздейді"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Тұрғын таңдалмаған."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Сізде тұрғындар жоқ."}
+{"name": "aoe2mc.garrison.out", "text": "%s бірлік шықты"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s тұрғын баспана іздейді"}
+{"name": "aoe2mc.gather.act_attack", "text": "шабуыл"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "құрылыс мәзірі"}
+{"name": "aoe2mc.gather.act_garrison", "text": "гарнизон"}
+{"name": "aoe2mc.gather.act_gather", "text": "жинау"}
+{"name": "aoe2mc.gather.act_hunt", "text": "аңшылық"}
+{"name": "aoe2mc.gather.act_move", "text": "жылжу"}
+{"name": "aoe2mc.gather.act_select", "text": "таңдау"}
+{"name": "aoe2mc.gather.act_select_type", "text": "осы түрдің барлығын таңдау"}
+{"name": "aoe2mc.gather.act_trade", "text": "сауда"}
+{"name": "aoe2mc.gather.act_train", "text": "дайындау"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Шабуыл: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Таңдау қорабы: болдырылмады"}
+{"name": "aoe2mc.gather.bush", "text": "Жидек бұтасы"}
+{"name": "aoe2mc.gather.carcass", "text": "Өлексе"}
+{"name": "aoe2mc.gather.corner", "text": "Таңдау қорабы: басқа бұрышты басыңыз"}
+{"name": "aoe2mc.gather.enemy", "text": "Жау %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Жау ғимараты"}
+{"name": "aoe2mc.gather.farm", "text": "Егіс"}
+{"name": "aoe2mc.gather.ground", "text": "Жер"}
+{"name": "aoe2mc.gather.group", "text": "Топ %s: %s бірлік"}
+{"name": "aoe2mc.gather.group_saved", "text": "Топ %s: %s бірлік сақталды"}
+{"name": "aoe2mc.gather.mine", "text": "%s кені"}
+{"name": "aoe2mc.gather.paused", "text": "Ойын тоқтатылған."}
+{"name": "aoe2mc.gather.point", "text": "%s · Оң батырма: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Кезекте егу: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Таңдалған: %s бірлік"}
+{"name": "aoe2mc.gather.tree", "text": "Ағаш"}
+{"name": "aoe2mc.hill.holds", "text": "Ойыншы %s монументті ұстап тұр."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Жерге шабуыл: жерді оң батырмамен басыңыз"}
+{"name": "aoe2mc.hints.attack_move", "text": "Шабуыл-жүріс: жерді оң батырмамен басыңыз"}
+{"name": "aoe2mc.hints.building", "text": "%s салыңыз: жерді оң батырмамен басыңыз · Shift + оң батырма: көбірек салу · Болдырмау: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: салу үшін сол батырма · Shift: көбірек салу · Оң батырма: болдырмау"}
+{"name": "aoe2mc.hints.corner", "text": "Таңдау қорабы: басқа бұрышты оң батырмамен басыңыз"}
+{"name": "aoe2mc.hints.count_military", "text": "%s әскери бірлік"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s әскери бірлік"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s тұрғын"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s тұрғын"}
+{"name": "aoe2mc.hints.deselect", "text": "Бос қорап: таңдауды алу"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Сол батырма: таңдауды алу"}
+{"name": "aoe2mc.hints.follow", "text": "Ілесу: өз немесе одақтас бірлікті оң батырмамен басыңыз"}
+{"name": "aoe2mc.hints.guard", "text": "Күзету: өз немесе одақтас бірлік немесе ғимаратты оң батырмамен басыңыз"}
+{"name": "aoe2mc.hints.military", "text": "%s · Оң батырма: жауға шабуыл, позиция мәзірі · %s"}
+{"name": "aoe2mc.hints.none", "text": "Сол батырма: бірлікті таңдау · Сол батырманы ұстау: таңдау қорабы"}
+{"name": "aoe2mc.hints.none_wand", "text": "Оң батырма: бірлікті таңдау · Таяқша: таңдау қорабы"}
+{"name": "aoe2mc.hints.patrol", "text": "Патрульдеу: жерді оң батырмамен басыңыз"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Оң батырма: жинау, салу, құрылыс мәзірі · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s дайын"}
+{"name": "aoe2mc.lobby.you_play", "text": "Сіз %s ойнайсыз."}
+{"name": "aoe2mc.monk.converts", "text": "Монах %s-ді түрлендіреді."}
+{"name": "aoe2mc.monk.dies", "text": "%s өледі (Еретиктік)."}
+{"name": "aoe2mc.pause.continued", "text": "Ойыншы %s ойынды жалғастырды."}
+{"name": "aoe2mc.pause.paused", "text": "Ойыншы %s ойынды тоқтатты."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Команда %s (орташа рейтинг %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Ойын аяқталды. Нәтижелерді көру үшін қолыңыздағы Қорытынды кітабын оң батырмамен басыңыз. Ойын бағдарламасын консольде Ctrl-C арқылы тоқтатыңыз."}
+{"name": "aoe2mc.relic_victory.all", "text": "Ойыншы %s барлық қасиетті жәдігерлерді ұстап тұр."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Ойыншы %s жәдігерін жоғалтты."}
+{"name": "aoe2mc.repair.no_resources", "text": "%s жөндеуге ресурс жеткіліксіз."}
+{"name": "aoe2mc.replay.army", "text": "Әскер: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", аяқтағандағы әскер: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", жоғалды: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Құрылыс реті:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · гарнизон %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | %s %s тасымалдайды"}
+{"name": "aoe2mc.replay.eco_build", "text": "құрылыс %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "тамақ %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "алтын %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "бос %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "тас %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "ағаш %s"}
+{"name": "aoe2mc.replay.flare", "text": "Жарық"}
+{"name": "aoe2mc.replay.game_ends", "text": "Ойын аяқталады"}
+{"name": "aoe2mc.replay.game_time", "text": "Ойын уақыты %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · гарнизон %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Әск %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Халық %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Рес %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Тұр %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s монументті ұстап тұрды: Төбе патшасы жеңісі, %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s шабуыл %s/%s қорғаныс%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift екі рет басыңыз: көрермен көрінісі (блоктар арқылы ұшу). Жылдам панельдегі заттарға оң батырма: қайта ойнату басқаруы."}
+{"name": "aoe2mc.replay.king_died", "text": ": Патша %s-де қаза тапты. Патшаны жою: ойыншы шығады."}
+{"name": "aoe2mc.replay.king_killed", "text": "Патша %s-де өлтірілді"}
+{"name": "aoe2mc.replay.live_jump", "text": "Тікелей қайта ойнату: секіру ойыннан артта тұрған кідіріске дейін тоқталады."}
+{"name": "aoe2mc.replay.lost", "text": "Жоғалды: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " монументті %s-де ұстап тұр."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: монумент, %s жыл қалды"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: монумент, %s жыл қалды"}
+{"name": "aoe2mc.replay.no_camera", "text": "Бұл жазбада ойыншының камерасы жоқ."}
+{"name": "aoe2mc.replay.now", "text": " қазір"}
+{"name": "aoe2mc.replay.out", "text": "%s шықты"}
+{"name": "aoe2mc.replay.players", "text": "Ойыншылар"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " қасиетті жәдігерді монастырьге апарып, жеңеді."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Қайта ойнату аяқталды"}
+{"name": "aoe2mc.replay.research", "text": " %s зерттейді"}
+{"name": "aoe2mc.replay.resigns", "text": "%s бас тартты"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Секіруге сервер қайта іске қосылады: қайтадан қосылыңыз."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Ғимараттар %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Экономика %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Әскер %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Технологиялар %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Барлығы %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "замоктар %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "сатып алды %s, сатты %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "жәдігерлер %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "кереметтер %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Жұмсалған:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Салу %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Экон. %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Әскер %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Технология %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": дайындалған тұрғындар %s, жиналған %s, тұрғынның бос уақыты %s, орталықтың бос уақыты %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": монументті ұстап тұр (Төбе патшасы)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": монумент жеңісі %s (Төбе патшасы)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": дайындалған әскер %s, жоғалған бірлік %s, жоғалған ғимарат %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": патша өлтірілді %s (Патшаны жою)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": жеңеді, монастырьдегі жәдігер %s (Жәдігерді алу)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sсалық жіберілді %s, алынды %s, тұрғындар шыңы %s (бағалау)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": қала орталығы жоғалды %s (Кенеттен өлім)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, технологиялар %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": кереметтің таймері %s-нен, аяқталады %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Қорытынды (бағалау)"}
+{"name": "aoe2mc.replay.task_building", "text": "салу"}
+{"name": "aoe2mc.replay.task_following", "text": "ілесу"}
+{"name": "aoe2mc.replay.task_food", "text": "тамақ жинау"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "гарнизонда"}
+{"name": "aoe2mc.replay.task_gold", "text": "алтын жинау"}
+{"name": "aoe2mc.replay.task_guarding", "text": "күзету"}
+{"name": "aoe2mc.replay.task_idle", "text": "бос"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "патрульдеу"}
+{"name": "aoe2mc.replay.task_resources", "text": "ресурс жинау"}
+{"name": "aoe2mc.replay.task_stone", "text": "тас жинау"}
+{"name": "aoe2mc.replay.task_walking", "text": "жүру"}
+{"name": "aoe2mc.replay.task_wood", "text": "ағаш жинау"}
+{"name": "aoe2mc.replay.team", "text": "Команда %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Садақшы %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Садақшы сауыты %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Тасымалдау %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Атты әскер сауыты %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Егіс %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Алтын %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Жаяу әскер сауыты %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Станок %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Жақын шайқас %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Тас %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Ағаш %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Замок"}
+{"name": "aoe2mc.replay.tl_king", "text": "Патша өлтірілді"}
+{"name": "aoe2mc.replay.tl_military", "text": "1-әскер: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Жәдігер"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Бас тартты"}
+{"name": "aoe2mc.replay.town_fell", "text": ": қала орталығы %s-де құлады. Кенеттен өлім: ойыншы шығады."}
+{"name": "aoe2mc.replay.town_lost", "text": "Қала орталығы %s-де жоғалды"}
+{"name": "aoe2mc.replay.training", "text": "Дайындау: %s"}
+{"name": "aoe2mc.replay.university", "text": "Университет:"}
+{"name": "aoe2mc.replay.up_counts", "text": "экономика %s · Университет %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " %s-де керемет салды."}
+{"name": "aoe2mc.replay_input.fight", "text": "Шайқас: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s бірлік"}
+{"name": "aoe2mc.replay_input.fights", "text": "Ірі шайқастар:"}
+{"name": "aoe2mc.replay_input.help", "text": "Қайта ойнату: жылдам панельдегі заттарға оң батырма немесе басыңыз: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Басып алу: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s бірлік)"}
+{"name": "aoe2mc.replay_input.vs", "text": " қарсы "}
+{"name": "aoe2mc.resource.food", "text": "тамақ"}
+{"name": "aoe2mc.resource.gold", "text": "алтын"}
+{"name": "aoe2mc.resource.stone", "text": "тас"}
+{"name": "aoe2mc.resource.wood", "text": "ағаш"}
+{"name": "aoe2mc.run.back", "text": "%s қайта оралды"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Науқан аяқталды"}
+{"name": "aoe2mc.run.chat_hint", "text": "Чат: қарапайым хабар барлығына, /tm МӘТІН одақтастарға, /msg АТЫ МӘТІН бір адамға."}
+{"name": "aoe2mc.run.left_bot", "text": "%s кетті: бот ойыншы %s ойнайды"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Сценарий %s басталады. Қайтадан қосылыңыз."}
+{"name": "aoe2mc.run.starts_in", "text": "Ойын %s ішінде басталады"}
+{"name": "aoe2mc.run.wait_ready", "text": "\"Ойыншыңызды таңдаңыз\" терезесін ашып, \"Дайын\" түймесін басыңыз"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Барлық басқару: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Бірінші қадам: басқару таяқшасын ұстаңыз да тұрғындардың біреуіне оң батырма басыңыз."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Бірінші қадам: басқару таяқшасын ұстаңыз да тұрғындардың біреуіне сол батырма басыңыз."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Мақсат: ойынды жеңу. Жеңіс параметрі: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Ойын сақталды: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s бірлік шықты"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Авто барлау"}
+{"name": "aoe2mc.stance.formation", "text": "Құрылым: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ешбір бірлік жерге шабуыл жасай алмайды"}
+{"name": "aoe2mc.stance.unpack", "text": "Алдымен Тебетті ашыңыз"}
+{"name": "aoe2mc.train.active", "text": "%s белсенді."}
+{"name": "aoe2mc.train.rally", "text": "Жиналу нүктесі үшін жерді оң батырмамен басыңыз."}
+{"name": "aoe2mc.train.researched", "text": "%s зерттелді."}
+{"name": "aoe2mc.transport.out", "text": "%s бірлік шықты"}
+{"name": "aoe2mc.treaty.ended", "text": "Келісім аяқталды: ойыншылар енді шабуыл жасай алады."}
+{"name": "aoe2mc.treaty.refuse", "text": "Келісім: %s дейін шабуыл жасай алмайсыз."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Келісім: бұл ойында шабуыл жасай алмайсыз."}
+{"name": "aoe2mc.treaty.start", "text": "Келісім: %s дейін ешбір ойыншы басқа ойыншыға шабуыл жасай алмайды."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Келісім: бұл ойында ешбір ойыншы басқа ойыншыға шабуыл жасай алмайды."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Казарма салыңыз: таңдалған тұрғынға оң батырма, казарманы таңдап, орналастырыңыз. Жылдам панель үстіндегі әрекет жолағы қайда қою керегін көрсетеді."}
+{"name": "aoe2mc.tutorial.camera", "text": "Камерамен картаны тез шолыңыз: \"Камера\" затымен оң батырма, жүріңіз, сосын қайтадан оң батырма."}
+{"name": "aoe2mc.tutorial.camp", "text": "Картаның ортасындағы жау лагерін жойыңыз: жауынгеріңізді таңдап, ғимаратты оң батырмамен басыңыз. Жоғарыдағы босс жолағы қадамды көрсетеді."}
+{"name": "aoe2mc.tutorial.camps", "text": "Ағаш жанына ағаш кесу лагерін, жидек жанына диірмен салыңыз. Оң жақтағы бүйір панелі олардың құнын ағашпен көрсетеді."}
+{"name": "aoe2mc.tutorial.complete", "text": "Оқу аяқталды. Келесі: ботқа қарсы ойнаңыз: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Оқу аяқталды"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Феодалдық дәуірге өтіңіз: қала орталығыңызға оң батырма және Феодалдық дәуірді таңдаңыз. Оң жақ панель тамағыңызды көрсетеді."}
+{"name": "aoe2mc.tutorial.food", "text": "100 тамақ жинаңыз: тұрғынды жидекке жіберіңіз. Оң жақ панель тамағыңызды көрсетеді."}
+{"name": "aoe2mc.tutorial.house", "text": "Үй салыңыз: таңдалған тұрғынға оң батырма, үйді таңдап, орналастырыңыз. Жылдам панель үстіндегі әрекет жолағы қайда қою керегін көрсетеді."}
+{"name": "aoe2mc.tutorial.militia", "text": "3 Милиция дайындаңыз: казармаңызға оң батырма және милицияны таңдаңыз. Оң жақ панель тамақ пен алтынды көрсетеді."}
+{"name": "aoe2mc.tutorial.raid", "text": "Жау тұрғындарыңызға шабуыл жасайды! Чаттағы қызыл ескерту жолын басып, сонда барыңыз, сосын милицияны таңдап, жаудың үстіне оң батырма. Жоғарыдағы босс жолағы таңдалған бірліктің денсаулығын көрсетеді."}
+{"name": "aoe2mc.tutorial.select", "text": "Тұрғынды таңдаңыз: басқару таяқшасымен тұрғынның біреуіне сол батырма. Жоғарыдағы босс жолағы таңдалған бірлікті, жылдам панель үстіндегі әрекет жолағы келесі әрекетті көрсетеді."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Қадам орындалды"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Қадам %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "КЕҢЕС: казарма жаяу әскер дайындайды. Жаяу әскер арзан әрі ғимараттарға қарсы жақсы."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "КЕҢЕС: барлық бірліктеріңізбен бірге шабуыл жасаңыз. Шағын топ зиян келтіруге үлгермей өледі."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "КЕҢЕС: ресурстардың жанына жеткізу ғимараттарын салыңыз, сонда тұрғындар қысқа жол жүреді."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "КЕҢЕС: келесі дәуір жаңа ғимараттар, бірліктер және технологиялар ашады. Дәуірге өтіп жатқанда тұрғындарды жұмыста ұстаңыз."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "КЕҢЕС: диірмен жанындағы жидек — тамақтың сенімді бастауы. Кейінірек егіс тамақты үздіксіз береді."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "КЕҢЕС: үй 5 адамға орын береді. Халық санын жан-жақтан қараңыз және толмай тұрып үй салыңыз."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "КЕҢЕС: ресурс болған кезде ғимаратта 15 бірлікке дейін кезекке қоя аласыз."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "КЕҢЕС: AoE2-де қоңырау тұрғындарды қала орталығына жібереді. Жау қалаңызға шабуыл жасаса, соғыңыз."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "КЕҢЕС: оң жақ панельдегі Бос жолы жұмыссыз тұрғындарды санайды. Оларға жұмыс беріңіз."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "КЕҢЕС: алғашқы дәуірлерде әрқашан тұрғындар дайындаңыз. Көп тұрғын көп ресурс береді."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "КЕҢЕС: жеткізу ғимаратына жақын тұрғындар тезірек жинайды. Ағаштың жанына ағаш кесу лагерін салыңыз."}
+{"name": "aoe2mc.tutorial.villager", "text": "Тұрғын дайындаңыз: қала орталығына оң батырма және тұрғынды таңдаңыз. Оң жақ панель оның құнын тамақпен көрсетеді."}
+{"name": "aoe2mc.tutorial.wood", "text": "50 ағаш жинаңыз: тұрғынды таңдап, ағашқа оң батырма басыңыз. Оң жақ панель ағашыңызды көрсетеді."}
+{"name": "aoe2mc.victory", "text": "Жеңіс"}
+{"name": "aoe2mc.wonder.built", "text": "Ойыншы %s керемет салды."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Ойыншы %s кереметі жойылды."}
