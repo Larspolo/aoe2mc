@@ -46,11 +46,12 @@ def test_editor_starts_no_game_and_saves_at_the_stop(tiny_world, tmp_path, monke
     monkeypatch.setattr(run, "ctrl_c", lambda: None)
     monkeypatch.setattr(run, "play", lambda *a, **k: (_ for _ in ()).throw(AssertionError("play() runs")))
     monkeypatch.setattr(run, "console", lambda game: type("T", (), {"is_alive": lambda self: False})())
-    monkeypatch.setattr(export, "export", lambda folder, out: exported.append((folder, out)) or out)
+    monkeypatch.setattr(export, "export", lambda folder, out, **k: exported.append((folder, out, k)) or out)
     out = str(tmp_path / "out.aoe2scenario")
     with contextlib.redirect_stderr(io.StringIO()), contextlib.redirect_stdout(io.StringIO()):
         run.main([world, "--editor", out])
-    (folder, got), = exported
+    (folder, got, kw), = exported
+    assert kw == {"heights": True}                                  # the hills and holes of the editor (#6000)
     assert got == out and os.path.isdir(os.path.join(folder, "world"))
     assert getattr(games[0], "g", None) is None                     # no Gather: no gather tick, bot or victory
 

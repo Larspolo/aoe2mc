@@ -28,7 +28,7 @@ def save(game, out):
         folder = savegame.write(savegame.folder(game.world), game.world, None)
     finally:
         game.command("save-on")
-    path = export.export(folder, out)
+    path = export.export(folder, out, heights=True)
     game.command("tellraw @a " + json.dumps(lang.text("aoe2mc.editor.saved", os.path.abspath(path), color="green")))
     return path
 

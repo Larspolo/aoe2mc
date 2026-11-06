@@ -162,18 +162,21 @@ def is_loose(name, loose):
                              and any(k in name for k in LOOSE))
 
 
-def top_blocks(world, n, T, tops, loose):
+def top_blocks(world, n, T, tops, loose, ys=False):
     """(n*T, n*T) array of the highest ground block of each column: a terrain top, or "" for a block of no terrain.
-    Loose blocks on the ground (plants, snow, leaves, water) do not count."""
+    Loose blocks on the ground (plants, snow, leaves, water) do not count. ys: also the (n*T, n*T) Y of that block
+    (of any ground block, -1 for none)."""
     import numpy as np
     import world_reader
     w, size = world_reader.World(world), n * T
     out = np.full((size, size), "", dtype=object)
+    height = np.full((size, size), -1, dtype=np.int32)
     for (cx, cz), c in w.chunks().items():
         x0, z0 = cx * 16, cz * 16
         if x0 >= size or z0 >= size or x0 < 0 or z0 < 0:
             continue
         found = np.full((16, 16), "", dtype=object)                    # [z, x]
+        fy = np.full((16, 16), -1, dtype=np.int32)
         for sec in sorted(c.get("sections", []), key=lambda s: -int(s["Y"])):
             if "block_states" not in sec:
                 continue
@@ -195,11 +198,25 @@ def top_blocks(world, n, T, tops, loose):
                 new = hit[y] & (found == "")
                 if new.any():
                     found[new] = np.array(names, dtype=object)[idx[y][new]]
+                    fy[new] = int(sec["Y"]) * 16 + y
             if (found != "").all():
                 break
         found[~np.isin(found, list(tops))] = ""
+        height[z0:z0 + 16, x0:x0 + 16] = fy[:size - z0, :size - x0]
         out[z0:z0 + 16, x0:x0 + 16] = found[:size - z0, :size - x0]
-    return out
+    return (out, height) if ys else out
+
+
+def covered(data):
+    """The (x, y) tiles of the turned grid under an object: footprints, mines and tree heaps."""
+    T, skip = data["tile_size"], set()
+    for o in data["objects"]:
+        if "footprint" in o:
+            x0, z0, x1, z1 = o["footprint"]
+            skip |= {(x, y) for x in range(x0 // T, -(-x1 // T)) for y in range(z0 // T, -(-z1 // T))}
+        elif o["kind"] == "other":                                     # a mine or tree heap covers its tile
+            skip.add((int(o["tile"][0]), int(o["tile"][1])))
+    return skip
 
 
 def ground(world, data, terrain):
@@ -210,13 +227,7 @@ def ground(world, data, terrain):
     n, T = data["map_size"], data["tile_size"]
     tops, of, loose = terrain_tops()
     top = top_blocks(world, n, T, tops, loose)
-    skip = set()
-    for o in data["objects"]:
-        if "footprint" in o:
-            x0, z0, x1, z1 = o["footprint"]
-            skip |= {(x, y) for x in range(x0 // T, -(-x1 // T)) for y in range(z0 // T, -(-z1 // T))}
-        elif o["kind"] == "other":                                     # a mine or tree heap covers its tile
-            skip.add((int(o["tile"][0]), int(o["tile"][1])))
+    skip = covered(data)
     out = [list(r) for r in terrain]
     for y in range(n):
         for x in range(n):
@@ -226,6 +237,28 @@ def ground(world, data, terrain):
             b = Counter(cells).most_common(1)[0][0]
             if b and not same(b, of.get(terrain[y][x])):
                 out[y][x] = tops[b]
+    return out
+
+
+def heights(world, data, T, H):
+    """(n, n) AoE2 elevation of each tile of the turned grid, [y][x]: the median Y of the top ground block of its
+    T x T columns, round((Y - WATER_Y - 1) / H), clipped to the levels 0 to 7 (the land of aoe2mc.convert)."""
+    tops, _, loose = terrain_tops()
+    n = data["map_size"]
+    _, y = top_blocks(world, n, T, tops, loose, ys=True)
+    med = np.median(y.reshape(n, T, n, T), axis=(1, 3))
+    return np.clip(np.rint((med - aoe2mc.WATER_Y - 1) / H), 0, 7).astype(int)
+
+
+def raised(world, data, elevation):
+    """The elevation [y][x] with the new level of each tile whose height differs from the land of its level.
+    Footprint tiles of objects and the tiles of mines and trees keep their level."""
+    T = data["tile_size"]
+    new = heights(world, data, T, data.get("level_height", 3))
+    out, skip = elevation.copy(), covered(data)
+    for x, y in zip(*np.nonzero(new != elevation)[::-1]):
+        if (int(x), int(y)) not in skip:
+            out[y, x] = new[y, x]
     return out
 
 
@@ -240,8 +273,9 @@ def unit_id(name):
     return None
 
 
-def export(path, out):
-    """Write the scenario of the world or save folder path to out. Returns out."""
+def export(path, out, heights=False):
+    """Write the scenario of the world or save folder path to out. Returns out. heights: a tile whose ground height
+    the person changed gets the new elevation (the editor, #6000)."""
     world, state = folders(path)
     with open(os.path.join(world, "aoe2mc.json")) as f:
         data = json.load(f)
@@ -250,7 +284,10 @@ def export(path, out):
     back = (4 - data.get("turn", 0)) % 4                # the turn of --orientation, undone (#5674)
     terrain = ground(world, data, [[int(v) for v in row.split()] for row in data["terrain"]])  # in the turned grid
     terrain = np.rot90(np.array(terrain).T, back)
-    elevation = np.rot90(np.array([[int(v) for v in row.split()] for row in data["elevation"]]).T, back)
+    elevation = np.array([[int(v) for v in row.split()] for row in data["elevation"]])     # [y][x], turned grid
+    if heights:
+        elevation = raised(world, data, elevation)
+    elevation = np.rot90(elevation.T, back)
     for t in scn.map_manager.terrain:
         t.terrain_id, t.elevation = int(terrain[t.x, t.y]), int(elevation[t.x, t.y])
     players = [int(p) for p in data["players"] if int(p)]
