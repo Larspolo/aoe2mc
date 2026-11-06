@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Spiller %s álgá %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Korrupšuvdna váldá kárta ráji rájes guovddážii %s. Dat nohká buot ovdaneamit ja huksejumiid dan siste."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Mun ferte dál fas ii sáhte huksat %s."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Mun ii sáhte oahpahit dán ovdaneami: ii leat huksejupmi dasa."}
+{"name": "aoe2mc.bot.flare_two", "text": "Sádde guokte flare muoraid oktavuođas."}
+{"name": "aoe2mc.bot.no_flare", "text": "Mun in oaidnán ovttage flare."}
+{"name": "aoe2mc.bot.no_market", "text": "Ii leat márkan: mun ii sáhte sáddet tribuhta."}
+{"name": "aoe2mc.bot.no_onager", "text": "Ii leat onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Ii leat doarvvi resursa muoraide."}
+{"name": "aoe2mc.bot.no_water", "text": "Ii leat jávri/mearra lahka mu gávpogii: mun ii sáhte huksat flotta."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Mun onagerat eai sáhte gidnat máid."}
+{"name": "aoe2mc.build.cost", "text": "Ii leat doarvvi resursat: %s gohčču %s."}
+{"name": "aoe2mc.build.flat", "text": "%s ferte stáhtit sihkkel eanan."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s ferte stáhtit 4 rúhtas iežas muora ektui čuovgga linjjas dehe 3 diagonála rúhtasa."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Huksen: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s ferte stáhtit jávrri/mearra rádjái lahka."}
+{"name": "aoe2mc.build.space", "text": "Ii leat rievdi %s várás dás."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Ii leat doarvvi resursat: %s rúhtasa %s gohčču %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: klikke rivttas muora loppui."}
+{"name": "aoe2mc.build.water", "text": "%s ferte stáhtit jávrri/mearra čuovggas."}
+{"name": "aoe2mc.camera.fov", "text": "Vuolgga kamera lea dahkan vuolgginsiidda bálkkii. Dasa go dat biehttá, seta Valikat > Accessibility Settings > View Bobbing OFF. Kamera dahká maid govvidasa viidábut, nu ahte oaidnit eanet kártas. Normála govvidasa várás, seta Valikat > Accessibility Settings > FOV Effects 0 %:ii."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: ii doaimma"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: doaimma, javdda x%s. Shift rivttas klikke: boahtteáigi javdda."}
+{"name": "aoe2mc.camera.speed", "text": "Kamera javdda: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Čuovo buot vihkkovaš ovdaneami ja geahpe unnán ovdaneamit"}
+{"name": "aoe2mc.challenge.booming", "text": "Oahpat 100 bargoálbmoga ja álgga Imperialaš áigodaga"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Álgga Linnaáigodaga ja eallit vihkkovaš dállodagaid"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Nohká vihkkovaš linnna"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Čohke 200 biebmu, 200 áhkku, 100 gullu ja 200 gásku, oahpat 21 bargoálbmoga, huksa láigi ja mollaga ja álgga Feudala áigodaga"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Oahpat 27 bargoálbmoga, huksa 5 viesu ja álgga Linnaáigodaga"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Čuovo buot guokte vihkkovaš šaddu"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s ovdaneamit massojuvvon, bronsamedalje gitta %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s ovdaneamit massojuvvon, gullamedalje gitta %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s ovdaneamit massojuvvon, ii medalje"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s ovdaneamit massojuvvon, silbbamedalje gitta %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronsamedalje"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Gullamedalje"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Silbbamedalje"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Nohká buot vihkkovaš soađášskibiid"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Ii medalje"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Miehtte 5 vihkkovaš bargoálbmoga"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronsamedalje %s:s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Gullamedalje %s:s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Silbbamedalje %s:s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Suodjaleapmi ii doaimma"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Suodjaleapmi doaimma"}
+{"name": "aoe2mc.cheat.beyond", "text": "Teknologiijat: gitta 256 čielggadeapmái"}
+{"name": "aoe2mc.cheat.cpu", "text": "Álbmotrájá: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Sálášvuohta: ii doaimma"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Sálášvuohta: doaimma"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Teknologiijat leat bilkidis"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Juohkin lea buorre: du bálkkut mannet iežat liittolaččaide"}
+{"name": "aoe2mc.cheat.wonders", "text": "Don stivret luondduid: %s dieđusa"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Dušše liittolaččat leat jäknojuvvon: liittosat heaittihuvvojit. Maŋimus eallán spiller gaska."}
+{"name": "aoe2mc.conquest.defeated", "text": "Spiller %s lea nuhcojuvvon."}
+{"name": "aoe2mc.controls.attack", "text": "Ráhkkaneapmi: vállje soaldáhtaovdaneamit, klikke de rivttas vihkkovaš ovdaneapmái."}
+{"name": "aoe2mc.controls.build", "text": "Huksen: vállje bargoálbmogiid, klikke daid rivttas huksenmenuvai, vállje huksejumi ja klikke de vasttas eanan. Shift + vasttas klikke: sáddat eanet. Rivttas klikke: heaittát."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: rivttas klikke spyglass-kamerain (hotbar-boalu 2): don vuolgát jaskat ala oaivvi badjel kártta. Shift rivttas klikke: boahtteáigi javdda. Rivttas klikke fas: don lendet alla."}
+{"name": "aoe2mc.controls.garrison", "text": "Garnisuvdna: vállje ovdaneamit, klikke de rivttas iežat huksejumi. Dan menu lassána sudet. Gáhttomenu: Hebba gáhttoklokka."}
+{"name": "aoe2mc.controls.gather", "text": "Čohkket: vállje bargoálbmogiid, klikke de rivttas. Sáddedat muorra, mársá, minnji dehe fierkki."}
+{"name": "aoe2mc.controls.goto", "text": "Mana: rivttas klikke kompassain Mana (hotbar-boalu 3): menu du gáhtogávpogiid, du joavkkuid ja boahtteági bargoálbmoga dainna ii leat bargu."}
+{"name": "aoe2mc.controls.groups", "text": "Stivrenjoavkkut: vállje ovdaneamit, váldde joavkoeaiki (hotbar-boalut 5 gitta 9) ja Shift + rivttas klikke vállje gieđahallat. Rivttas klikke: vállje joavkku."}
+{"name": "aoe2mc.controls.head", "text": "Stivren (doalle moraheami gorti ruoktoga; doaibmanbállu čájeha boahtteáiggi:)"}
+{"name": "aoe2mc.controls.menu", "text": "Speallamenu: rivttas klikke Speallamenu-girjji (hotbar-boalu 4): diplomatiija ja tribuhta, flare, vurket, pausa ja teknologiijaguovdu."}
+{"name": "aoe2mc.controls.move", "text": "Sirdit: vállje ovdaneamit, rivttas klikke eanandiehtii."}
+{"name": "aoe2mc.controls.research", "text": "Čielggat ja álgget boahtteáigodaga: rivttas klikke iežat huksejumi ja vállje teknologiija dehe boahtteáigodaga dan menus."}
+{"name": "aoe2mc.controls.select", "text": "Vállje: vasttas klikke ovdaneami. Doalle vasttas klikke ja geahča eanan badjel: vállje-rámmi. Rivttas klikke: addi mearkkašumit."}
+{"name": "aoe2mc.controls.train", "text": "Oahpat: rivttas klikke iežat huksejumi (gáhttu, kasárne ...) ja vállje ovdaneami dan menus."}
+{"name": "aoe2mc.defeat", "text": "Nuhcan"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Liittolaš"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Spiller %s lea rievdadan du hálddu: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Vihkkovaš"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutrála"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Spiller %s lea settán speallajavdda %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Spiller %s sádde %s %s spiller %s:i."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Flare %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Čuovo: klikke iežat ovdaneami"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Vahttu: klikke iežat ovdaneami dehe huksejumi"}
+{"name": "aoe2mc.gaia.joins", "text": "%s liikká du lusa."}
+{"name": "aoe2mc.garrison.all_back", "text": "Buot fas barggus"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Gáhttoklokka soaitá: %s bargoálbmoga ohcet suodjaluvvon báikki"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Ii oktage bargoálbmot lea válljejuvvon."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Don ii leat bargoálbmogiid."}
+{"name": "aoe2mc.garrison.out", "text": "%s ovdaneamit leat boahtán olggos"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s bargoálbmot ohcet suodjaluvvon báikki"}
+{"name": "aoe2mc.gather.act_attack", "text": "ráhkkanit"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "huksenmenu"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garnisuvdna"}
+{"name": "aoe2mc.gather.act_gather", "text": "čohkket"}
+{"name": "aoe2mc.gather.act_hunt", "text": "vázzit"}
+{"name": "aoe2mc.gather.act_move", "text": "sirdit"}
+{"name": "aoe2mc.gather.act_select", "text": "vállje"}
+{"name": "aoe2mc.gather.act_select_type", "text": "vállje buot dan láhkai"}
+{"name": "aoe2mc.gather.act_trade", "text": "gaupmagit"}
+{"name": "aoe2mc.gather.act_train", "text": "oahpat"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Ráhkkaneapmi: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Vállje-rámmi: heaittihuvvon"}
+{"name": "aoe2mc.gather.bush", "text": "Marjabusk"}
+{"name": "aoe2mc.gather.carcass", "text": "Ruksis"}
+{"name": "aoe2mc.gather.corner", "text": "Vállje-rámmi: klikke eará čuvgii"}
+{"name": "aoe2mc.gather.enemy", "text": "Vihkkovaš %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Vihkkovaš huksejupmi"}
+{"name": "aoe2mc.gather.farm", "text": "Fierkki"}
+{"name": "aoe2mc.gather.ground", "text": "Eanan"}
+{"name": "aoe2mc.gather.group", "text": "Joavku %s: %s ovdaneamit"}
+{"name": "aoe2mc.gather.group_saved", "text": "Joavku %s: %s ovdaneamit vurkejuvvon"}
+{"name": "aoe2mc.gather.mine", "text": "%s minnji"}
+{"name": "aoe2mc.gather.paused", "text": "Spealla lea pausas."}
+{"name": "aoe2mc.gather.point", "text": "%s · Rivttas klikke: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Čuvvojuvvon vuoseanaid jerrojuvvon: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Válljejuvvon: %s ovdaneamit"}
+{"name": "aoe2mc.gather.tree", "text": "Muorra"}
+{"name": "aoe2mc.hill.holds", "text": "Spiller %s doalla monumeantta."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Ráhkkaneapmi eanan: rivttas klikke eanandiehtii"}
+{"name": "aoe2mc.hints.attack_move", "text": "Ráhkkaneapmi sirdin: rivttas klikke eanandiehtii"}
+{"name": "aoe2mc.hints.building", "text": "Sáddet %s: rivttas klikke eanandiehtii · Shift + rivttas klikke: eanet sáddet · Heaittit: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: vasttas klikke sáddet · Shift: eanet sáddet · Rivttas klikke: heaittát"}
+{"name": "aoe2mc.hints.corner", "text": "Vállje-rámmi: rivttas klikke eará čuvgii"}
+{"name": "aoe2mc.hints.count_military", "text": "%s soaldáhtaovdaneapmi"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s soaldáhtaovdaneamit"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s bargoálbmot"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s bargoálbmogat"}
+{"name": "aoe2mc.hints.deselect", "text": "Tuhtta rámmi: vállje heaittit"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Vasttas klikke: vállje heaittit"}
+{"name": "aoe2mc.hints.follow", "text": "Čuovo: rivttas klikke iežat dehe liittolaš ovdaneami"}
+{"name": "aoe2mc.hints.guard", "text": "Vahttu: rivttas klikke iežat dehe liittolaš ovdaneami dehe huksejumi"}
+{"name": "aoe2mc.hints.military", "text": "%s · Rivttas klikke: ráhkkan vihkkovažii, hálddu-menu · %s"}
+{"name": "aoe2mc.hints.none", "text": "Vasttas klikke: vállje ovdaneami · Doalle vasttas klikke: vállje-rámmi"}
+{"name": "aoe2mc.hints.none_wand", "text": "Rivttas klikke: vállje ovdaneami · Sáhpá: vállje-rámmi"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrulla: rivttas klikke eanandiehtii"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Rivttas klikke: čohkket, huksat, huksenmenu · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s valmis"}
+{"name": "aoe2mc.lobby.you_play", "text": "Don speallat %s."}
+{"name": "aoe2mc.monk.converts", "text": "Munnká ráfi %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s jámá (Heresy)."}
+{"name": "aoe2mc.pause.continued", "text": "Spiller %s joatkkii spealla."}
+{"name": "aoe2mc.pause.paused", "text": "Spiller %s pausiid spealla."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Joavku %s (miehtá rankeaddni %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Spealla lea loahpahuvvon. Rivttas klikke Recap-girjji dus gieđas, vai oaivvildat bohtosiid. Heaittit spealla-prográmma Ctrl-C:in dan konsollas."}
+{"name": "aoe2mc.relic_victory.all", "text": "Spiller %s doalla buot relikviijaid."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Spiller %s massii relikviija."}
+{"name": "aoe2mc.repair.no_resources", "text": "Ii leat doarvvi resursat %s:a leahkit."}
+{"name": "aoe2mc.replay.army", "text": "Armeea: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", armeea loahpas: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", massojuvvon: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Huksenárvu:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garnisuvdna %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | dákká %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "huksat %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "biebmu %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "gullu %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "bargoleaš %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "gásku %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "áhkku %s"}
+{"name": "aoe2mc.replay.flare", "text": "Flare"}
+{"name": "aoe2mc.replay.game_ends", "text": "Spealla loahpahuvvo"}
+{"name": "aoe2mc.replay.game_time", "text": "Spealla áigi %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · garnisuvdna %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Sol %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Álb %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Bar %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s doalai monumeantta: Gonagas bearraga-voiti %s:s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s ráh. %s/%s soalda%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Dupmo Shift dihto dihte: vuoigatvuođa-oainnu (lassát blokkaid rájes). Rivttas klikke hotbar-ovdaneamiin: replay-stivren."}
+{"name": "aoe2mc.replay.king_died", "text": ": gonagas jámii %s. Regicide: spiller lea olggos."}
+{"name": "aoe2mc.replay.king_killed", "text": "Gonagas nohkkojuvvui %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Live-replay: hyppen stoppá viiveáigodahkii spealla maŋŋil."}
+{"name": "aoe2mc.replay.lost", "text": "Massojuvvon: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " doalla monumeantta %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monumeanta, %s jahki fas"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monumeanta, %s jagi fas"}
+{"name": "aoe2mc.replay.no_camera", "text": "Dán čállosis ii leat spillera kamera."}
+{"name": "aoe2mc.replay.now", "text": " dál"}
+{"name": "aoe2mc.replay.out", "text": "%s lea olggos"}
+{"name": "aoe2mc.replay.players", "text": "Speallit"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " viežžá relikviija kloastera ja voittá."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Replay loahpahuvvui"}
+{"name": "aoe2mc.replay.research", "text": " čielggada %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s heaitá"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Serverr álgá fas hyppen dihte: leat fas dainna oktii."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Huksejumit %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekonomiija %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Soaldáhus %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Teknologiijat %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Oktiis %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": bargoálbmogat oahpahuvvon %s, čohkkejuvvon %s, bargoleaš áigi bargoálbmogiin %s, bargoleaš áigi gáhttus %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": doalla monumeantta (Gonagas bearraga)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monumeanta voitton %s (Gonagas bearraga)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": soaldáhusovdaneamit oahpahuvvon %s, ovdaneamit massojuvvon %s, huksejumit massojuvvon %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": gonagas nohkkojuvvui %s (Regicide)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": voittá, relikviija kloasterii %s (Capture the Relic)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sTribuhta sáddejuvvon %s, vuostáiváldon %s, bargoálbmogiid topp %s (árv.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": gáhttu massojuvvon %s (Sudden Death)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, teknologiijat %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": wonder-áigemearri %s rájes, loahpahuvvo %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Čoaggadus (árv.)"}
+{"name": "aoe2mc.replay.task_building", "text": "huksen"}
+{"name": "aoe2mc.replay.task_following", "text": "čuovvu"}
+{"name": "aoe2mc.replay.task_food", "text": "biebmu čohkkejeaddji"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "garnisuvdnas"}
+{"name": "aoe2mc.replay.task_gold", "text": "gullu čohkkejeaddji"}
+{"name": "aoe2mc.replay.task_guarding", "text": "vahttu"}
+{"name": "aoe2mc.replay.task_idle", "text": "bargoleaš"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrulla"}
+{"name": "aoe2mc.replay.task_resources", "text": "resurssaid čohkkejeaddji"}
+{"name": "aoe2mc.replay.task_stone", "text": "gásku čohkkejeaddji"}
+{"name": "aoe2mc.replay.task_walking", "text": "vázzi"}
+{"name": "aoe2mc.replay.task_wood", "text": "áhkku čohkkejeaddji"}
+{"name": "aoe2mc.replay.team", "text": "Joavku %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Bogeskuttár %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Bogeskuttára soahpat %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Dákkár %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Ridjá soahpat %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Fierkki %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Gullu %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Infanteriija soahpat %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Vearssa %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Lahkomeaddin %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Gásku %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Áhkku %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Linnna"}
+{"name": "aoe2mc.replay.tl_king", "text": "Gonagas nohkkojuvvui"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. soaldát: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relikviija"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Heaitá"}
+{"name": "aoe2mc.replay.town_fell", "text": ": gáhttu lobii %s. Sudden Death: spiller lea olggos."}
+{"name": "aoe2mc.replay.town_lost", "text": "Gáhttu massojuvvui %s"}
+{"name": "aoe2mc.replay.training", "text": "Oahpaheapmi: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitehta:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekonomiija %s · Universitehta %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " huksii wonder %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Dáidda: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s ovdaneamit"}
+{"name": "aoe2mc.replay_input.fights", "text": "Stuorra dáiddat:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: rivttas klikke hotbar-ovdaneamiid, dehe klikke: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Váldit ovddás: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s ovdaneamit)"}
+{"name": "aoe2mc.replay_input.vs", "text": " vs "}
+{"name": "aoe2mc.resource.food", "text": "biebmu"}
+{"name": "aoe2mc.resource.gold", "text": "gullu"}
+{"name": "aoe2mc.resource.stone", "text": "gásku"}
+{"name": "aoe2mc.resource.wood", "text": "áhkku"}
+{"name": "aoe2mc.run.back", "text": "%s lea fas máilmmis"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampánja loahpahuvvui"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: normála čállin lea buohkaide, /tm TEKSTA liittolaččaide, /msg NAMA TEKSTA okta olbmui."}
+{"name": "aoe2mc.run.left_bot", "text": "%s manai: bot speallá spillera %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenario %s álgá. Logge fas sisa."}
+{"name": "aoe2mc.run.starts_in", "text": "Spealla álgá %s geažes"}
+{"name": "aoe2mc.run.wait_ready", "text": "Rabas \"Choose your player\" ja klikke \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Buot stivrejumit: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Vuosttas vuoidda: doalle gáhttoruoktoga ja klikke rivttas okta du bargoálbmogis."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Vuosttas vuoidda: doalle gáhttoruoktoga ja klikke vasttas okta du bargoálbmogis."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Ulbmil: voittit spealla. Voittoheivehus: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Spealla vurkejuvvui: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s ovdaneamit leat boahtán olggos"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Automáhtalaš skovvodat"}
+{"name": "aoe2mc.stance.formation", "text": "Formašuvdna: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ii oktage ovdaneapmi sáhte ráhkkanit eanandiehtii"}
+{"name": "aoe2mc.stance.unpack", "text": "Vuosttas rahkkit Trebuchet"}
+{"name": "aoe2mc.train.active", "text": "%s lea aktiivalaš."}
+{"name": "aoe2mc.train.rally", "text": "Rivttas klikke eanandiehtii čohkkenbáikki dihte."}
+{"name": "aoe2mc.train.researched", "text": "%s lea čielggaduvvon."}
+{"name": "aoe2mc.transport.out", "text": "%s ovdaneamit leat boahtán olggos"}
+{"name": "aoe2mc.treaty.ended", "text": "Sohppoš lea loahpahuvvon: spillet sáhttet dál ráhkkanit."}
+{"name": "aoe2mc.treaty.refuse", "text": "Sohppoš: don it sáhte ráhkkanit ovdal %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Sohppoš: don it sáhte ráhkkanit dán spealain."}
+{"name": "aoe2mc.treaty.start", "text": "Sohppoš: ii oktage spiller sáhte ráhkkanit eará spiller ovdal %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Sohppoš: ii oktage spiller sáhte ráhkkanit eará spiller dán spealain."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Huks kasárne: rivttas klikke vállejuvvon bargoálbmogii, vállje kasárne ja sáddet dan. Doaibmanbállu hotbar bajás čájeha, gos."}
+{"name": "aoe2mc.tutorial.camera", "text": "Mana jaskat badjel kártta: rivttas klikke \"Kamera\"-ovdaneamiin, mana ja klikke fas rivttas dainna."}
+{"name": "aoe2mc.tutorial.camp", "text": "Nohká vihkkovaš leiri kártta gaskkas: vállje du Militia ja klikke rivttas huksejupmái. Boss-bállu bajás čájeha ádjá."}
+{"name": "aoe2mc.tutorial.camps", "text": "Huks áhkkodoaluid muorra lahkai ja mollaga márjá lahkai. Sidebállu rivttas čájeha, mii áhkku dat gohčču."}
+{"name": "aoe2mc.tutorial.complete", "text": "Tutorial lea loahpahuvvon. Boahtteáigi: speallat spiela bota vuostá: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutorial loahpahuvvon"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Álgga Feudala áigodahkii: rivttas klikke du gáhtui ja vállje Feudala áigodaga. Sidebállu rivttas čájeha du biebmu."}
+{"name": "aoe2mc.tutorial.food", "text": "Čohkke 100 biebmu: sádde bargoálbmoga marjabuskii. Sidebállu rivttas čájeha du biebmu."}
+{"name": "aoe2mc.tutorial.house", "text": "Huks viesu: rivttas klikke vállejuvvon bargoálbmogii, vállje viesu ja sáddet dan. Doaibmanbállu hotbar bajás čájeha, gos."}
+{"name": "aoe2mc.tutorial.militia", "text": "Oahpat 3 Militia: rivttas klikke du kasárnii ja vállje militia. Sidebállu rivttas čájeha du biebmu ja gullu."}
+{"name": "aoe2mc.tutorial.raid", "text": "Vihkkovaš ráhkkana du bargoálbmogiid! Klikke ráhkaneapmi-rivvii chatas, vai mannat dohko, vállje dán Militia ja klikke rivttas vihkkovažiid. Boss-bállu bajás čájeha vállejuvvon ovdaneami dearvvašvuođa."}
+{"name": "aoe2mc.tutorial.select", "text": "Vállje bargoálbmoga: vasttas klikke okta du bargoálbmogis gáhttoruoktoga ja. Boss-bállu bajás čájeha vállejuvvon ovdaneami, doaibmanbállu hotbar bajás boahtteáigi doaibmama."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Gaskaváldi loahpahuvvon"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Gaskaváldi %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIPPA: kasárne oahpaha infanteriija. Infanteriija lea halpa ja buorre huksejumiid vuostá."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIPPA: ráhkkan buot du ovdaneamiiguin ovttas. Unnán joavku jámá ovdal go sáhttá vahkku dahkat."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIPPA: huks biebmočuohppanhuksejumiid resurssaid lahkai, nu ahte bargoálbmogat vázzet unnán matka."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIPPA: boahtteáigodat rahpá ođđa huksejumiid, ovdaneamiid ja teknologiijaid. Doalla bargoálbmogiid bargui go álgat."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIPPA: marjabuskit mollaga lahkai leat čielga álgu biebmui. Maŋŋelis fierkkit addet biebmu mii ii loahpa."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIPPA: viesu addá sadjái 5 eanet olbmuid. Geahča álbmotrájá sidebállus ja huks viesuid ovdal go lea dárkkis."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIPPA: sáhtát čuohcat 15 ovdaneami huksejumi ree go leat resurssat."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIPPA: AoE2:s gáhttoklokka sádde bargoálbmogiid gáhttui. Soaitá dan go vihkkovaš ráhkkana du gávpoga."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIPPA: sidebállu rivttas Idle-čuoggá lohká du bargoleaš bargoálbmogiid. Attán sis bargu."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIPPA: oahpat bargoálbmogiid buot áiggi vuosttas áigodagain. Eanet bargoálbmogat addet eanet resurssaid."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIPPA: bargoálbmogat čohkkejit joutilis lahkai huksejupmái. Huks áhkkodoallu muorra lahkai."}
+{"name": "aoe2mc.tutorial.villager", "text": "Oahpat bargoálbmoga: rivttas klikke du gáhtui ja vállje bargoálbmoga. Sidebállu rivttas čájeha, mii biebmu dat gohčču."}
+{"name": "aoe2mc.tutorial.wood", "text": "Čohkke 50 áhkku: vállje bargoálbmoga ja rivttas klikke muorii. Sidebállu rivttas čájeha du áhkku."}
+{"name": "aoe2mc.victory", "text": "Voittu"}
+{"name": "aoe2mc.wonder.built", "text": "Spiller %s huksii wonderiid."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Spiller %s wonder nohkkojuvvui."}
+{"name": "aoe2mc.replay.soc_castle", "text": "linnnat %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "ostán %s, vurdán %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relikviijat %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "wonderat %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Geavahuvvon:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Huksen %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eko %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Sol %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tek %s"}

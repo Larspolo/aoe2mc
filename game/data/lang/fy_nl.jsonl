@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Spiler %s geane nei de %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: de Corruption nimt de kaart fan syn râne oant nei it midden yn %s. It ferneatiget alle ienheden en gebouwen dêrin."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ik kin dêr no gjin %s bouwe."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ik kin dy ienheid net opliede: ik haw dêr gjin gebou foar."}
+{"name": "aoe2mc.bot.flare_two", "text": "Set twa flares foar de muorre."}
+{"name": "aoe2mc.bot.no_flare", "text": "Ik sjoch gjin flare."}
+{"name": "aoe2mc.bot.no_market", "text": "Ik haw gjin merk: ik kin gjin tribút stjoere."}
+{"name": "aoe2mc.bot.no_onager", "text": "Ik haw gjin onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Ik haw net genôch grûnstoffen foar in muorre."}
+{"name": "aoe2mc.bot.no_water", "text": "Ik haw gjin wetter by myn stêd: ik kin gjin marine bouwe."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Myn onagers kinne gjin beammen kappe."}
+{"name": "aoe2mc.build.cost", "text": "Net genôch grûnstoffen: in %s kostet %s."}
+{"name": "aoe2mc.build.flat", "text": "De %s moat op flak lân stean."}
+{"name": "aoe2mc.build.gate_spot", "text": "In %s moat op 4 fjilden fan in eigen muorre yn in rjochte line stean, of op 3 diagonale fjilden."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Bouwe: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "In %s moat op it wetter stean, njonken de kust."}
+{"name": "aoe2mc.build.space", "text": "Hjir is gjin romte foar de %s."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Net genôch grûnstoffen: %s fjilden fan %s kostje %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: klik rjochts op it ein fan de muorre."}
+{"name": "aoe2mc.build.water", "text": "In %s moat op it wetter stean."}
+{"name": "aoe2mc.camera.fov", "text": "De flugge kamera lit it fêstholden item swaaie. Om it stil te hâlden, set Opsjes > Accessibility Settings > View Bobbing op OFF. De kamera makket it byld ek breder, sadat jo mear fan de kaart sjogge. Foar it gewoane byld, set Opsjes > Accessibility Settings > FOV Effects op 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: út"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: oan, snelheid x%s. Shift rjochtsklik: folgjende snelheid."}
+{"name": "aoe2mc.camera.speed", "text": "Kameraspeed: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Fersloegje alle fijannige ienheden en ferlies wat ienheden"}
+{"name": "aoe2mc.challenge.booming", "text": "Traine 100 boeren en gean nei it Ryksalderdom"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Gean nei it Kastielalderdom en oerlibje de oanfallen fan de fijân"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Ferneatigje it kastiel fan de fijân"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Samelje 200 iten, 200 hout, 100 goud en 200 stien, traine 21 boeren, bou in houtkamp en in mole, en gean nei it Feodale alderdom"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Traine 27 boeren, bou 5 huzen en gean nei it Kastielalderdom"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Fersloegje alle seis fijannige golven"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s ienheden ferlern, brûzen medalje oant %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s ienheden ferlern, gouden medalje oant %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s ienheden ferlern, gjin medalje"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s ienheden ferlern, sulveren medalje oant %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Brûzen medalje"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Gouden medalje"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Sulveren medalje"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Ferneatigje alle fijannige oarlochsskippen"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Gjin medalje"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Deadzje 5 fijannige boeren"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Brûzen medalje yn %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Gouden medalje yn %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Sulveren medalje yn %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Skyld út"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Skyld oan"}
+{"name": "aoe2mc.cheat.beyond", "text": "Technologyen: oant 256 ûndersiken"}
+{"name": "aoe2mc.cheat.cpu", "text": "Befolkingsgrins: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Mist fan oarloch: út"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Mist fan oarloch: oan"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Technologyen binne gratis"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Diele is sjen: jo ynkomsten gean nei jo bûnsmaten"}
+{"name": "aoe2mc.cheat.wonders", "text": "Jo binne de natoer: %s bisten"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Allinne bûnsmaten binne oer: de alliânsjes einigje. De lêste spiler dy't noch libbet, wint."}
+{"name": "aoe2mc.conquest.defeated", "text": "Spiler %s is ferslein."}
+{"name": "aoe2mc.controls.attack", "text": "Oanfal: kies militêre ienheden, klik dan rjochts op in fijân."}
+{"name": "aoe2mc.controls.build", "text": "Bouwe: kies boeren, klik rjochts op se foar it bouwmenu, kies in gebou, klik dan links op de grûn. Shift + links klik: mear pleatse. Rjochts klik: annulearje."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: rjochts klik mei de spyglass Kamera (hotbarkaai 2): jo rinne flugge heech boppe de kaart. Shift rjochtsklik: de folgjende snelheid. Noch ris rjochtsklik: jo fleane nei ûnderen."}
+{"name": "aoe2mc.controls.garrison", "text": "Garnizoen: kies ienheden, klik dan rjochts op jo eigen gebou. Its menu lit se der wer út. Stedshuismenu: Lûd de stedsklok."}
+{"name": "aoe2mc.controls.gather", "text": "Sammelje: kies boeren, klik dan rjochts op in beam, in fruitstruik, in myn of in lân."}
+{"name": "aoe2mc.controls.goto", "text": "Gean nei: rjochts klik mei it kompas Gean nei (hotbarkaai 3): in menu mei jo stedshuzen, jo kontrolegroepen en de folgjende boer sûnder wurk."}
+{"name": "aoe2mc.controls.groups", "text": "Kontrolegroepen: kies ienheden, pak in groepsitem (hotbarkaaien 5 oant 9) en Shift + rjochts klik om de kar op te slaan. Rjochts klik: de groep kieze."}
+{"name": "aoe2mc.controls.head", "text": "Besibbing (hâld de wortel op in stôk fêst; de aksjebalke lit de folgjende stap sjen):"}
+{"name": "aoe2mc.controls.menu", "text": "Spielmenu: rjochts klik mei it boek Spielmenu (hotbarkaai 4): diplomaasje en tribút, flare, bewarje, pauze en de technologybeam."}
+{"name": "aoe2mc.controls.move", "text": "Ferpleatse: mei in kar rjochts klikke op de grûn."}
+{"name": "aoe2mc.controls.research", "text": "Ûndersykje en nei in nij alderdom gean: rjochts klikke op jo eigen gebou en in technology of it folgjende alderdom yn syn menu kieze."}
+{"name": "aoe2mc.controls.select", "text": "Kieze: links klikke op in ienheid. Links klikke en fêsthâlde en oer de grûn sjen: in kaarvak. Rjochts klik: befelen jaan."}
+{"name": "aoe2mc.controls.train", "text": "Opliede: rjochts klikke op jo eigen gebou (stedshûs, kazerne ...) en in ienheid yn syn menu kieze."}
+{"name": "aoe2mc.defeat", "text": "Nederlaach"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Bûnsmaat"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Spiler %s hat syn hâlding nei dy feroare: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Fijân"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutraal"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Spiler %s hat de spielsnelheid op %s set."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Spiler %s hat %s %s nei spiler %s stjoerd."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Flare by %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Folgje: klik op in eigen ienheid"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Bewekke: klik op in eigen ienheid of gebou"}
+{"name": "aoe2mc.gaia.joins", "text": "In %s slacht him by dy."}
+{"name": "aoe2mc.garrison.all_back", "text": "Allegear wer oan it wurk"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "De stedsklok lûdt: %s boeren sykje skûlplak"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Gjin boer is selektearre."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Jo hawwe gjin boeren."}
+{"name": "aoe2mc.garrison.out", "text": "%s ienheden binne út kommen"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s boeren sykje skûlplak"}
+{"name": "aoe2mc.gather.act_attack", "text": "oanfalle"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "bouwmenu"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garnizoen"}
+{"name": "aoe2mc.gather.act_gather", "text": "sammelje"}
+{"name": "aoe2mc.gather.act_hunt", "text": "jeie"}
+{"name": "aoe2mc.gather.act_move", "text": "ferpleatse"}
+{"name": "aoe2mc.gather.act_select", "text": "kieze"}
+{"name": "aoe2mc.gather.act_select_type", "text": "alles fan de soarte kieze"}
+{"name": "aoe2mc.gather.act_trade", "text": "hannelje"}
+{"name": "aoe2mc.gather.act_train", "text": "opliede"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Oanfal: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Kaarvak: annulearre"}
+{"name": "aoe2mc.gather.bush", "text": "Bessestruik"}
+{"name": "aoe2mc.gather.carcass", "text": "Kadaver"}
+{"name": "aoe2mc.gather.corner", "text": "Kaarvak: klik op de oare hoeke"}
+{"name": "aoe2mc.gather.enemy", "text": "Fijân %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Fijannich gebou"}
+{"name": "aoe2mc.gather.farm", "text": "Lân"}
+{"name": "aoe2mc.gather.ground", "text": "Grûn"}
+{"name": "aoe2mc.gather.group", "text": "Groep %s: %s ienheden"}
+{"name": "aoe2mc.gather.group_saved", "text": "Groep %s: %s ienheden bewarre"}
+{"name": "aoe2mc.gather.mine", "text": "%s myn"}
+{"name": "aoe2mc.gather.paused", "text": "It spiel is ûnderbrutsen."}
+{"name": "aoe2mc.gather.point", "text": "%s · Rjochts klik: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Opnij siedzjes yn de wachtrige: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Selektearre: %s ienheden"}
+{"name": "aoe2mc.gather.tree", "text": "Beam"}
+{"name": "aoe2mc.hill.holds", "text": "Spiler %s hâldt it monumint."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Oanfal grûn: rjochts klik op de grûn"}
+{"name": "aoe2mc.hints.attack_move", "text": "Oanfalsbeweging: rjochts klik op de grûn"}
+{"name": "aoe2mc.hints.building", "text": "Pleats de %s: rjochts klik op de grûn · Shift + rjochts klik: mear pleatse · Annulearje: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: links klik om te pleatsen · Shift: mear pleatse · Rjochts klik: annulearje"}
+{"name": "aoe2mc.hints.corner", "text": "Kaarvak: rjochts klik op de oare hoeke"}
+{"name": "aoe2mc.hints.count_military", "text": "%s militêre ienheid"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s militêre ienheden"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s boer"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s boeren"}
+{"name": "aoe2mc.hints.deselect", "text": "Leech fak: kar ôfmeitsje"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Links klik: kar ôfmeitsje"}
+{"name": "aoe2mc.hints.follow", "text": "Folgje: rjochts klik op in eigen of bûnsmaatienheid"}
+{"name": "aoe2mc.hints.guard", "text": "Bewekke: rjochts klik op in eigen of bûnsmaatienheid of gebou"}
+{"name": "aoe2mc.hints.military", "text": "%s · Rjochts klik: in fijân oanfalle, hâldingsmenu · %s"}
+{"name": "aoe2mc.hints.none", "text": "Links klik: in ienheid kieze · Links klik fêsthâlde: kaarvak"}
+{"name": "aoe2mc.hints.none_wand", "text": "Rjochts klik: in ienheid kieze · Stôk: kaarvak"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrôlje: rjochts klik op de grûn"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Rjochts klik: sammelje, bouwe, bouwmenu · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s klear"}
+{"name": "aoe2mc.lobby.you_play", "text": "Jo spylje %s."}
+{"name": "aoe2mc.monk.converts", "text": "In muonts bekeart de %s."}
+{"name": "aoe2mc.monk.dies", "text": "De %s stjert (ketterij)."}
+{"name": "aoe2mc.pause.continued", "text": "Spiler %s hat it spiel fuortset."}
+{"name": "aoe2mc.pause.paused", "text": "Spiler %s hat it spiel stilsetten."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Team %s (gemiddelde rating %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "It spiel is klear. Klik rjochts mei it Recap-boek yn jo hân om de resultaten te sjen. Stopje it spielprogramma mei Ctrl-C yn syn konsole."}
+{"name": "aoe2mc.relic_victory.all", "text": "Spiler %s hâldt alle relikwyen."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Spiler %s hat in relikwy ferlern."}
+{"name": "aoe2mc.repair.no_resources", "text": "Net genôch grûnstoffen om de %s te reparearjen."}
+{"name": "aoe2mc.replay.army", "text": "Leger: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", leger oan it ein: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", ferlern: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Bouwoarder:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garnizoen %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | draacht %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "bouwe %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "iten %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "goud %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "lekke %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "stien %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "hout %s"}
+{"name": "aoe2mc.replay.flare", "text": "Flare"}
+{"name": "aoe2mc.replay.game_ends", "text": "It spiel einiget"}
+{"name": "aoe2mc.replay.game_time", "text": "Spieltiid %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · garnizoen %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Bef %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Grs %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Boer %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s hâlde it monumint: Kening fan de Heuvel-oerwinning op %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s oanv. %s/%s pant%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Dûbel tikje Shift: taskôger-sicht (troch blokken fleane). Rjochts klik op de hotbaritems: replaybesibbing."}
+{"name": "aoe2mc.replay.king_died", "text": ": de Kening is stoarn op %s. Regicide: de spiler is út."}
+{"name": "aoe2mc.replay.king_killed", "text": "Kening fermoarde op %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Live-replay: de sprong stopt by de fertraging efter it spiel."}
+{"name": "aoe2mc.replay.lost", "text": "Ferlern: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " hâldt it monumint op %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monumint, noch %s jier"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monumint, noch %s jierren"}
+{"name": "aoe2mc.replay.no_camera", "text": "Dizze opname hat gjin kamera fan syn spiler."}
+{"name": "aoe2mc.replay.now", "text": " no"}
+{"name": "aoe2mc.replay.out", "text": "%s is út"}
+{"name": "aoe2mc.replay.players", "text": "Spilers"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " bringt it relikwy nei in kleaster en wint."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Replay einige"}
+{"name": "aoe2mc.replay.research", "text": " ûndersiket %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s jout op"}
+{"name": "aoe2mc.replay.restart_jump", "text": "De server start opnij foar de sprong werom: doch dêr wer oan mei."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Gebouwen %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekonomy %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Militêr %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Technologyen %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Totaal %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": boeren oplaat %s, sammele %s, lekke tiid fan boeren %s, lekke tiid fan it stedshûs %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": hâldt it monumint (Kening fan de Heuvel)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monumint wûn %s (Kening fan de Heuvel)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": militêre ienheden oplaat %s, ienheden ferlern %s, gebouwen ferlern %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Kening fermoarde %s (Regicide)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": wint, relikwy yn in kleaster %s (Capture the Relic)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sTribút stjoerd %s, ûntfangen %s, boerepiek %s (skatting)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": stedshûs ferlern %s (Sudden Death)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, technologyen %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": wûnderteller fan %s, einiget %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Gearfetting (skatting)"}
+{"name": "aoe2mc.replay.task_building", "text": "bouwe"}
+{"name": "aoe2mc.replay.task_following", "text": "folget"}
+{"name": "aoe2mc.replay.task_food", "text": "iten sammelje"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "garnizoen"}
+{"name": "aoe2mc.replay.task_gold", "text": "goud sammelje"}
+{"name": "aoe2mc.replay.task_guarding", "text": "bewekke"}
+{"name": "aoe2mc.replay.task_idle", "text": "lekke"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrolje"}
+{"name": "aoe2mc.replay.task_resources", "text": "grûnstoffen sammelje"}
+{"name": "aoe2mc.replay.task_stone", "text": "stien sammelje"}
+{"name": "aoe2mc.replay.task_walking", "text": "rint"}
+{"name": "aoe2mc.replay.task_wood", "text": "hout sammelje"}
+{"name": "aoe2mc.replay.team", "text": "Team %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Boogskutter %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Boogskutterpantser %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Dragen %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Ruterpantser %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Lân %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Goud %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Ynfanteriepantser %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Weefstoel %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Nabyfjochten %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Stien %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Hout %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Kastiel"}
+{"name": "aoe2mc.replay.tl_king", "text": "Kening fermoarde"}
+{"name": "aoe2mc.replay.tl_military", "text": "1e militêr: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relikwy"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Jout op"}
+{"name": "aoe2mc.replay.town_fell", "text": ": it stedshûs foel op %s. Sudden Death: de spiler is út."}
+{"name": "aoe2mc.replay.town_lost", "text": "Stedshûs ferlern op %s"}
+{"name": "aoe2mc.replay.training", "text": "Opliedzje: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universiteit:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekonomy %s · Universiteit %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " hat in wûnder boud op %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Fjochtpartij: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s ienheden"}
+{"name": "aoe2mc.replay_input.fights", "text": "Grutte fjochtpartijen:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: rjochts klik op de items yn jo hotbar, of klik: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Oernimme: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s ienheden)"}
+{"name": "aoe2mc.replay_input.vs", "text": " tsjin "}
+{"name": "aoe2mc.resource.food", "text": "iten"}
+{"name": "aoe2mc.resource.gold", "text": "goud"}
+{"name": "aoe2mc.resource.stone", "text": "stien"}
+{"name": "aoe2mc.resource.wood", "text": "hout"}
+{"name": "aoe2mc.run.back", "text": "%s is werom"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampanje foltôge"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: in gewoane rigel giet nei elkenien, /tm TEXT nei jo bûnsmaten, /msg NAAM TEXT nei ien persoan."}
+{"name": "aoe2mc.run.left_bot", "text": "%s is fuort: in bot spilet spiler %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Senario %s begjint. Doch wer mei."}
+{"name": "aoe2mc.run.starts_in", "text": "It spiel begjint oer %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Iepenje \"Choose your player\" en klik op \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Alle besibbingen: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Earste stap: hâld de kommandostôk fêst en klik rjochts op ien fan jo boeren."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Earste stap: hâld de kommandostôk fêst en klik links op ien fan jo boeren."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Doel: it spiel winne. Oerwinningsynstelling: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Spiel bewarre: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s ienheden binne út kommen"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Automatysk ferkenne"}
+{"name": "aoe2mc.stance.formation", "text": "Formaasje: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Gjin ienheid kin de grûn oanfalle"}
+{"name": "aoe2mc.stance.unpack", "text": "Pak earst de Trebuchet út"}
+{"name": "aoe2mc.train.active", "text": "%s is aktyf."}
+{"name": "aoe2mc.train.rally", "text": "Rjochts klik op de grûn foar it samelpunt."}
+{"name": "aoe2mc.train.researched", "text": "%s is ûndersocht."}
+{"name": "aoe2mc.transport.out", "text": "%s ienheden binne út kommen"}
+{"name": "aoe2mc.treaty.ended", "text": "It ferdrach is ôfrûn: spilers kinne no oanfalle."}
+{"name": "aoe2mc.treaty.refuse", "text": "Ferdrach: jo kinne net oanfalle foar %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Ferdrach: jo kinne yn dit spiel net oanfalle."}
+{"name": "aoe2mc.treaty.start", "text": "Ferdrach: gjin spiler kin foar %s in oar oanfalle."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Ferdrach: gjin spiler kin yn dit spiel in oar oanfalle."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Bou in kazerne: rjochts klik op in selektearre boer, kies de kazerne en pleats him. De aksjebalke boppe de hotbar fertelt jo wêr."}
+{"name": "aoe2mc.tutorial.camera", "text": "Rin fluch oer de kaart: rjochts klik mei it item \"Kamera\", rin, en klik dan wer rjochts mei it."}
+{"name": "aoe2mc.tutorial.camp", "text": "Ferneatigje it fijannige kamp midden op de kaart: kies jo Militia en klik rjochts op in gebou. De bossbalke boppe lit de stap sjen."}
+{"name": "aoe2mc.tutorial.camps", "text": "Bou in houtkamp by de beammen en in mole by de bessen. De sidebalke rjochts lit sjen wat it hout kostet."}
+{"name": "aoe2mc.tutorial.complete", "text": "De tutorial is klear. Folgjende: spylje in spiel tsjin de bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutorial klear"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Gean nei it Feodale alderdom: rjochts klik op jo stedshûs en kies it Feodale alderdom. De sidebalke rjochts lit jo iten sjen."}
+{"name": "aoe2mc.tutorial.food", "text": "Samelje 100 iten: stjoer in boer nei de bessen. De sidebalke rjochts lit jo iten sjen."}
+{"name": "aoe2mc.tutorial.house", "text": "Bou in hûs: rjochts klik op in selektearre boer, kies it hûs en pleats it. De aksjebalke boppe de hotbar fertelt jo wêr."}
+{"name": "aoe2mc.tutorial.militia", "text": "Traine 3 Militia: rjochts klik op jo kazerne en kies de militia. De sidebalke rjochts lit jo iten en goud sjen."}
+{"name": "aoe2mc.tutorial.raid", "text": "De fijân falt jo boeren oan! Klik op de reade alarmrigel yn de chat om dêr hinne te gean, kies dan jo Militia en klik rjochts op de fijannen. De bossbalke boppe lit de sûnens fan de selektearre ienheid sjen."}
+{"name": "aoe2mc.tutorial.select", "text": "Kies in boer: links klik op ien fan jo boeren mei de kommandostôk. De bossbalke boppe lit de selektearre ienheid sjen, de aksjebalke boppe de hotbar de folgjende aksje."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Stap klear"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Stap %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIP: de kazerne opliedt ynfanterie. Ynfanterie is goedkeap en goed tsjin gebouwen."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIP: falt mei al jo ienheden tegelijk oan. In lytse groep stjert foardat it skea docht."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIP: bou de ôfleverplakken by de boarnen, sadat de boeren in koarte wei hawwe."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIP: it folgjende alderdom ûntsluit nije gebouwen, ienheden en technologyen. Hâld de boeren oan it wurk as jo foarútgeane."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIP: bessen by in mole binne in feilige start fan it iten. Letter jouwe lânen iten dat net opraakt."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIP: in hûs makket romte foar 5 mear befolking. Sjoch nei de befolking yn de sidebalke en bou huzen foardat it fol is."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIP: jo kinne maksimaal 15 ienheden yn in gebou yn de wachtrige setten as jo de grûnstoffen hawwe."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIP: yn AoE2 stjoert de stedsklok de boeren nei it stedshûs. Lûd hem as de fijân jo stêd oanfalt."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIP: de Idle-rigel fan de sidebalke rjochts telt jo boeren sûnder wurk. Jou se wurk."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIP: oplieding fan boeren de heule tiid yn de earste alderdommen. Mear boeren jouwe mear grûnstoffen."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIP: boeren sammelje flugger by in ôfleverplak. Bou in houtkamp njonken de beammen."}
+{"name": "aoe2mc.tutorial.villager", "text": "Traine in boer: rjochts klik op jo stedshûs en kies de boer. De sidebalke rjochts lit it iten sjen dat it kostet."}
+{"name": "aoe2mc.tutorial.wood", "text": "Samelje 50 hout: kies in boer en klik rjochts op in beam. De sidebalke rjochts lit jo hout sjen."}
+{"name": "aoe2mc.victory", "text": "Oerwinning"}
+{"name": "aoe2mc.wonder.built", "text": "Spiler %s hat in wûnder boud."}
+{"name": "aoe2mc.wonder.destroyed", "text": "It wûnder fan spiler %s is ferneatige."}
+{"name": "aoe2mc.replay.soc_castle", "text": "kastielen %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "kocht %s, ferkocht %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relikwyen %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "wûnders %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Besteegd:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Bouwe %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eko %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tech %s"}

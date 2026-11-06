@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Spiller %s erreecht d'%s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: D'Korruptioun hëlt d'Kaart an %s vum Rand bis an d'Mëtt. Si zerstéiert all Eenheeten a Gebaier dran."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ech kann do elo kee(n) %s bauen."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ech kann dës Eenheet net ausbilden: ech hunn kee Gebai dofir."}
+{"name": "aoe2mc.bot.flare_two", "text": "Zwou Flare setzen fir d'Mauer."}
+{"name": "aoe2mc.bot.no_flare", "text": "Ech gesinn keng Flare."}
+{"name": "aoe2mc.bot.no_market", "text": "Ech hunn kee Maart: ech kann kee Tribut schécken."}
+{"name": "aoe2mc.bot.no_onager", "text": "Ech hunn kee Onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Ech hunn net genuch Ressourcen fir eng Mauer."}
+{"name": "aoe2mc.bot.no_water", "text": "Ech hunn kee Waasser no bei menger Stad: ech kann keng Marine bauen."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Mäi Onagere kënnen keng Beem fëllen."}
+{"name": "aoe2mc.build.cost", "text": "Net genuch Ressourcen: en %s kascht %s."}
+{"name": "aoe2mc.build.flat", "text": "De(n) %s muss op flaachem Buedem stoen."}
+{"name": "aoe2mc.build.gate_spot", "text": "En %s muss op 4 Felder vun enger eegener Mauer a gerader Linn stoen, oder op 3 diagonal Felder."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Bauen: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "En %s muss am Waasser stoen, direkt um Ufer."}
+{"name": "aoe2mc.build.space", "text": "Hei gëtt et keen Plaz fir de(n) %s."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Net genuch Ressourcen: %s Felder vun %s kaschten %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: klick riets um Enn vun der Mauer."}
+{"name": "aoe2mc.build.water", "text": "En %s muss am Waasser stoen."}
+{"name": "aoe2mc.camera.fov", "text": "D'Schnellkamera léisst d'Gegestand an der Hand schwanken. Fir datt se roueg bleift, stell Optiounen > Accessibility Settings > View Bobbing op OFF. D'Kamera mécht och d'Siicht méi breet, sou datt een méi vun der Kaart gesäit. Fir déi normal Siicht, stell Optiounen > Accessibility Settings > FOV Effects op 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: aus"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: un, Geschwindegkeet x%s. Shift-Rechtsklick: nächst Geschwindegkeet."}
+{"name": "aoe2mc.camera.speed", "text": "Kamera-Geschwindegkeet: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "All feindlech Eenheeten besiegen an nëmmen e puer Eenheeten verléieren"}
+{"name": "aoe2mc.challenge.booming", "text": "100 Dierfer ausbilden an an d'Keeserlech Alter erreechen"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "An d'Buergalter erreechen an d'Attacke vum Feind iwwerliewen"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "D'Buerg vum Feind zerstéieren"}
+{"name": "aoe2mc.challenge.early-economy", "text": "200 Iessen, 200 Holz, 100 Gold a 200 Steen sammelen, 21 Dierfer ausbilden, en Holzlager an eng Mill bauen an an d'Feudal Alter erreechen"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "27 Dierfer ausbilden, 5 Haiser bauen an an d'Buergalter erreechen"}
+{"name": "aoe2mc.challenge.land-battle", "text": "All sechs feindlech Wellen besiegen"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s Eenheeten verluer, Bronzemedail bis %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s Eenheeten verluer, Goldmedail bis %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s Eenheeten verluer, keng Medail"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s Eenheeten verluer, Sëlwermedail bis %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronzemedail"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Goldmedail"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Sëlwermedail"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "All feindlech Krichsschëffe zerstéieren"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Keng Medail"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "5 feindlech Dierfer ëmbréngen"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronzemedail a(n) %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Goldmedail a(n) %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Sëlwermedail a(n) %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Schutz aus"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Schutz un"}
+{"name": "aoe2mc.cheat.beyond", "text": "Technologien: bis 256 Fuerschungen"}
+{"name": "aoe2mc.cheat.cpu", "text": "Bevëlkerungslimit: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Nieft vum Krich: aus"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Nieft vum Krich: un"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Technologien sinn gratis"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Gedeelt ass duebel: däin Akommes geet un deng Alliéierten"}
+{"name": "aoe2mc.cheat.wonders", "text": "Du kontrolléiers d'Natur: %s Déieren"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Nëmmen d'Alliéierten sinn iwwreg: d'Allianzen ophalen. De lëschte Spiller, deen nach lieft, gewënnt."}
+{"name": "aoe2mc.conquest.defeated", "text": "Spiller %s ass besiegt."}
+{"name": "aoe2mc.controls.attack", "text": "Attackéieren: Krichseenheeten auswielen, dann riets klicken op e Feind."}
+{"name": "aoe2mc.controls.build", "text": "Bauen: Dierfer auswielen, riets klicken op si fir d'Bau-Menü, e Gebai auswielen, dann lénks klicken op de Buedem. Shift + lénks klicken: méi setzen. Riets klicken: ofbriechen."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: Rechtsklick mat der Spyglass-Kamera (Hotbar-Taste 2): du gees séier héich iwwer d'Kaart. Shift-Rechtsklick: déi nächst Geschwindegkeet. Nach eng Kéier Rechtsklick: du fléie erof."}
+{"name": "aoe2mc.controls.garrison", "text": "Garnisoun: Eenheeten auswielen, dann riets klicken op ee vun denge Gebaier. Säi Menü léisst se eraus. Menü vum Stadhaus: Stadsklack ausléisen."}
+{"name": "aoe2mc.controls.gather", "text": "Sammelen: Dierfer auswielen, dann riets klicken op e Bam, e Fruchtbusch, eng Mine oder en Acker."}
+{"name": "aoe2mc.controls.goto", "text": "Goen op: Rechtsklick mat dem Kompass Goen op (Hotbar-Taste 3): e Menü mat dengen Stadhaiser, deng Gruppen an dem nächste Dierf, deen keng Aarbecht huet."}
+{"name": "aoe2mc.controls.groups", "text": "Kontrollgruppen: Eenheeten auswielen, en Gruppe-Géigestand huelen (Hotbar-Tasten 5 bis 9) a Shift + Rechtsklick fir d'Auswiel ze späicheren. Rechtsklick: d'Gruppe auswielen."}
+{"name": "aoe2mc.controls.head", "text": "Steierung (hal de Kaarotte op engem Steck; d'Aktiounsleescht weist den nächste Schrëtt):"}
+{"name": "aoe2mc.controls.menu", "text": "Spillmenü: Rechtsklick mam Buch Spillmenü (Hotbar-Taste 4): Diplomatie an Tribut, Flare, Späicheren, Paus an den Technologiebaum."}
+{"name": "aoe2mc.controls.move", "text": "Plënneren: mat enger Auswiel riets klicken op de Buedem."}
+{"name": "aoe2mc.controls.research", "text": "Fuerschen a Alter weiderginn: riets klicken op ee vun denge Gebaier a eng Technologie oder déi nächst Alter a sengem Menü uklicken."}
+{"name": "aoe2mc.controls.select", "text": "Auswielen: lénks klicken op eng Eenheet. Lénks klicken halen an iwwer de Buedem kucken: en Auswiel-Keescht. Rechtsklick: Befehle ginn."}
+{"name": "aoe2mc.controls.train", "text": "Ausbilden: riets klicken op ee vun denge Gebaier (Stadhaus, Kasär ...) a eng Eenheet a sengem Menü uklicken."}
+{"name": "aoe2mc.defeat", "text": "Néierlag"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Alliéierten"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Spiller %s huet seng Haltung zu dir geännert: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Feind"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutral"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Spiller %s huet d'Spillgeschwindegkeet op %s gesat."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Spiller %s huet %s %s un Spiller %s geschéckt."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Flare bei %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Folgen: klick op eng eegen Eenheet"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Bewaachen: klick op eng eegen Eenheet oder e Gebai"}
+{"name": "aoe2mc.gaia.joins", "text": "E(n) %s schléisst sech dir un."}
+{"name": "aoe2mc.garrison.all_back", "text": "All zréck op d'Aarbecht"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "D'Stadsklack klenkt: %s Dierfer sichen Ënnerdaach"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Kee Dierf ass ausgewielt."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Du hues keng Dierfer."}
+{"name": "aoe2mc.garrison.out", "text": "%s Eenheeten sinn eraus komm"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s Dierfer sichen Ënnerdaach"}
+{"name": "aoe2mc.gather.act_attack", "text": "attackéieren"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "Bau-Menü"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garnisoun"}
+{"name": "aoe2mc.gather.act_gather", "text": "sammelen"}
+{"name": "aoe2mc.gather.act_hunt", "text": "jagen"}
+{"name": "aoe2mc.gather.act_move", "text": "plënneren"}
+{"name": "aoe2mc.gather.act_select", "text": "auswielen"}
+{"name": "aoe2mc.gather.act_select_type", "text": "all vun der Zort auswielen"}
+{"name": "aoe2mc.gather.act_trade", "text": "handelen"}
+{"name": "aoe2mc.gather.act_train", "text": "ausbilden"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Attack: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Auswiel-Keescht: ofgebrach"}
+{"name": "aoe2mc.gather.bush", "text": "Beerebusch"}
+{"name": "aoe2mc.gather.carcass", "text": "Kadaver"}
+{"name": "aoe2mc.gather.corner", "text": "Auswiel-Keescht: klick op déi aner Eck"}
+{"name": "aoe2mc.gather.enemy", "text": "Feind %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Feindlecht Gebai"}
+{"name": "aoe2mc.gather.farm", "text": "Acker"}
+{"name": "aoe2mc.gather.ground", "text": "Buedem"}
+{"name": "aoe2mc.gather.group", "text": "Gruppe %s: %s Eenheeten"}
+{"name": "aoe2mc.gather.group_saved", "text": "Gruppe %s: %s Eenheeten gespäichert"}
+{"name": "aoe2mc.gather.mine", "text": "%s Mine"}
+{"name": "aoe2mc.gather.paused", "text": "D'Spiel ass a Paus."}
+{"name": "aoe2mc.gather.point", "text": "%s · Rechtsklick: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Nei Säen an der Rei: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Ausgewielt: %s Eenheeten"}
+{"name": "aoe2mc.gather.tree", "text": "Bam"}
+{"name": "aoe2mc.hill.holds", "text": "Spiller %s hält d'Monument."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Attack Ground: riets klicken op de Buedem"}
+{"name": "aoe2mc.hints.attack_move", "text": "Attack Move: riets klicken op de Buedem"}
+{"name": "aoe2mc.hints.building", "text": "Stell den %s: riets klicken op de Buedem · Shift + Rechtsklick: méi setzen · Ofbriechen: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: lénks klicken fir ze setzen · Shift: méi setzen · Rechtsklick: ofbriechen"}
+{"name": "aoe2mc.hints.corner", "text": "Auswiel-Keescht: riets klicken op déi aner Eck"}
+{"name": "aoe2mc.hints.count_military", "text": "%s Krichseenheet"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s Krichseenheeten"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s Dierf"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s Dierfer"}
+{"name": "aoe2mc.hints.deselect", "text": "Eidel Keescht: Auswiel ophiewen"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Lénks klicken: Auswiel ophiewen"}
+{"name": "aoe2mc.hints.follow", "text": "Folgen: riets klicken op eng eegen oder alliéiert Eenheet"}
+{"name": "aoe2mc.hints.guard", "text": "Bewaachen: riets klicken op eng eegen oder alliéiert Eenheet oder e Gebai"}
+{"name": "aoe2mc.hints.military", "text": "%s · Rechtsklick: e Feind attackéieren, Haltungs-Menü · %s"}
+{"name": "aoe2mc.hints.none", "text": "Lénks klicken: eng Eenheet auswielen · Lénks klicken halen: Auswiel-Keescht"}
+{"name": "aoe2mc.hints.none_wand", "text": "Rechtsklick: eng Eenheet auswielen · Stab: Auswiel-Keescht"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrouille: riets klicken op de Buedem"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Rechtsklick: sammelen, bauen, Bau-Menü · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s prett"}
+{"name": "aoe2mc.lobby.you_play", "text": "Du spills %s."}
+{"name": "aoe2mc.monk.converts", "text": "E Mönch bekeiert den %s."}
+{"name": "aoe2mc.monk.dies", "text": "De(n) %s stierft (Ketzerei)."}
+{"name": "aoe2mc.pause.continued", "text": "Spiller %s huet de Spill weiderlaf gelooss."}
+{"name": "aoe2mc.pause.paused", "text": "Spiller %s huet de Spill a Paus gesat."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Team %s (duerchschnëttlech Wäertung %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "D'Spiel ass eriwwer. Riets klicken mam Recap-Buch an denger Hand fir d'Resultater ze gesinn. Stopp d'Spillprogramm mat Ctrl-C an senger Konsol."}
+{"name": "aoe2mc.relic_victory.all", "text": "Spiller %s hält all Reliquie."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Spiller %s huet eng Reliquie verluer."}
+{"name": "aoe2mc.repair.no_resources", "text": "Net genuch Ressourcen fir de(n) %s ze reparéieren."}
+{"name": "aoe2mc.replay.army", "text": "Armee: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", Armee um Enn: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", verluer: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Bau-Rei:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garnisoun %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | dréit %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "bauen %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "Iessen %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "Gold %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "waart %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "Steen %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "Holz %s"}
+{"name": "aoe2mc.replay.flare", "text": "Flare"}
+{"name": "aoe2mc.replay.game_ends", "text": "D'Spiel endet"}
+{"name": "aoe2mc.replay.game_time", "text": "Spillzäit %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · garnisoun %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Bev %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Dierf %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s huet d'Monument gehalen: Victoire vum Kinnek vum Bierg um %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s Ang. %s/%s Rüst%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Zweemol Shift tippen: Zuschauer-Siicht (duerch Blocken fléien). Rechtsklick op d'Hotbar-Géigestänn: Replay-Steierung."}
+{"name": "aoe2mc.replay.king_died", "text": ": den Kinnek ass gestuerwen um %s. Kinnekmord: de Spiller ass drop."}
+{"name": "aoe2mc.replay.king_killed", "text": "Kinnek ëmbruecht um %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Live-Replay: de Sprong hält um Delai hannert dem Spill un."}
+{"name": "aoe2mc.replay.lost", "text": "Verluer: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " hält d'Monument um %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: Monument, nach %s Joer iwwreg"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: Monument, nach %s Joer iwwreg"}
+{"name": "aoe2mc.replay.no_camera", "text": "Dës Opnam huet keng Kamera vum Spiller."}
+{"name": "aoe2mc.replay.now", "text": " elo"}
+{"name": "aoe2mc.replay.out", "text": "%s ass ausgeschalt"}
+{"name": "aoe2mc.replay.players", "text": "Spiller"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " bréngt d'Reliquie an e Klouschter a gewënnt."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Replay ass eriwwer"}
+{"name": "aoe2mc.replay.research", "text": " fuerscht %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s gëtt op"}
+{"name": "aoe2mc.replay.restart_jump", "text": "De Server start fir de Sprong zeréck nei. Verbannt dech nees mat him."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Gebaier %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Wirtschaft %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Militär %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Technologien %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Total %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": Dierfer ausgebilt %s, gesammelt %s, Waartzäit vun de Dierfer %s, Waartzäit vum Stadhaus %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": hält d'Monument (Kinnek vum Bierg)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": Monument gewonnen %s (Kinnek vum Bierg)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": Krichseenheeten ausgebilt %s, Eenheeten verluer %s, Gebaier verluer %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Kinnek ëmbruecht %s (Kinnekmord)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": gewënnt, Reliquie an engem Klouschter %s (Reliquie huelen)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sTribut geschéckt %s, kritt %s, Dierfer-Héichpunkt %s (geschat)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": Stadhaus verluer %s (Plëtzleche Dout)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, Technologien %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": Wonner-Timer vun %s, endet %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Zesummefassung (geschat)"}
+{"name": "aoe2mc.replay.task_building", "text": "bauen"}
+{"name": "aoe2mc.replay.task_following", "text": "follegen"}
+{"name": "aoe2mc.replay.task_food", "text": "Iessen sammelen"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "garnisounéiert"}
+{"name": "aoe2mc.replay.task_gold", "text": "Gold sammelen"}
+{"name": "aoe2mc.replay.task_guarding", "text": "bewaachen"}
+{"name": "aoe2mc.replay.task_idle", "text": "waart"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrouilléieren"}
+{"name": "aoe2mc.replay.task_resources", "text": "Ressourcen sammelen"}
+{"name": "aoe2mc.replay.task_stone", "text": "Steen sammelen"}
+{"name": "aoe2mc.replay.task_walking", "text": "gitt"}
+{"name": "aoe2mc.replay.task_wood", "text": "Holz sammelen"}
+{"name": "aoe2mc.replay.team", "text": "Team %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Bogeschéizer %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Bogeschéizer-Rüstung %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Dréier %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Reiterrüstung %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Acker %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Gold %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Infanterie-Rüstung %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Webstull %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Nahkampf %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Steen %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Holz %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Buerg"}
+{"name": "aoe2mc.replay.tl_king", "text": "Kinnek ëmbruecht"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. Militär: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Reliquie"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Gëtt op"}
+{"name": "aoe2mc.replay.town_fell", "text": ": de Stadhaus ass gefall um %s. Plëtzleche Dout: de Spiller ass drop."}
+{"name": "aoe2mc.replay.town_lost", "text": "Stadhaus verluer um %s"}
+{"name": "aoe2mc.replay.training", "text": "Ausbildung: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitéit:"}
+{"name": "aoe2mc.replay.up_counts", "text": "Wirtschaft %s · Universitéit %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " huet e Wonner gebaut um %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Kampf: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s Eenheeten"}
+{"name": "aoe2mc.replay_input.fights", "text": "Grouss Kämpf:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: riets klicken op d'Géigestänn an denger Hotbar, oder klicken: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Iwwerhuelen: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s Eenheeten)"}
+{"name": "aoe2mc.replay_input.vs", "text": " géint "}
+{"name": "aoe2mc.resource.food", "text": "Iessen"}
+{"name": "aoe2mc.resource.gold", "text": "Gold"}
+{"name": "aoe2mc.resource.stone", "text": "Steen"}
+{"name": "aoe2mc.resource.wood", "text": "Holz"}
+{"name": "aoe2mc.run.back", "text": "%s ass zréck"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampagne fäerdeg"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: eng normal Zeil geet un all, /tm TEXT un är Alliéierten, /msg NAME TEXT un eng Persoun."}
+{"name": "aoe2mc.run.left_bot", "text": "%s ass fort: e Bot spillt Spiller %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Szenario %s fänkt un. Verbann dech nees."}
+{"name": "aoe2mc.run.starts_in", "text": "D'Spiel fänkt an %s un"}
+{"name": "aoe2mc.run.wait_ready", "text": "Maach \"Choose your player\" op a klick op \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "All Steierungen: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Éischte Schratt: hal de Befehlssteck a riets klicken op ee vun denge Dierfer."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Éischte Schratt: hal de Befehlssteck a lénks klicken op ee vun denge Dierfer."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Zil: d'Spiel gewannen. Victoire-Astellung: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Spill gespäichert: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s Eenheeten sinn eraus komm"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Automatesch Opklärung"}
+{"name": "aoe2mc.stance.formation", "text": "Formatioun: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Keng Eenheet kann de Buedem attackéieren"}
+{"name": "aoe2mc.stance.unpack", "text": "Packt fir d'éischt de Trebuchet aus"}
+{"name": "aoe2mc.train.active", "text": "%s ass aktiv."}
+{"name": "aoe2mc.train.rally", "text": "Riets klicken op de Buedem fir de Sammelpunkt."}
+{"name": "aoe2mc.train.researched", "text": "%s ass fuerscht."}
+{"name": "aoe2mc.transport.out", "text": "%s Eenheeten sinn eraus komm"}
+{"name": "aoe2mc.treaty.ended", "text": "De Vertrag ass eriwwer: d'Spiller kënnen elo attackéieren."}
+{"name": "aoe2mc.treaty.refuse", "text": "Vertrag: du kanns virun %s net attackéieren."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Vertrag: du kanns an dësem Spill net attackéieren."}
+{"name": "aoe2mc.treaty.start", "text": "Vertrag: kee Spiller kann viru(n) %s en anere Spiller attackéieren."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Vertrag: kee Spiller kann an dësem Spill en anere Spiller attackéieren."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Bau e Kasär: riets klicken op en ausgewielte Dierf, de Kasär auswielen an hannendrun setzen. D'Aktiounsleescht iwwer der Hotbar seet dir, wou."}
+{"name": "aoe2mc.tutorial.camera", "text": "Séier iwwer d'Kaart goen: riets klicken mam Géigestand \"Kamera\", goen, dann nees riets klicken mat him."}
+{"name": "aoe2mc.tutorial.camp", "text": "Zerstéiers dat feindlecht Lager an der Mëtt vun der Kaart: wiel däi Miliz aus a klick riets op e Gebai. D'Bossbar uewen weist de Schrëtt."}
+{"name": "aoe2mc.tutorial.camps", "text": "Bau e Holzlager no bei de Bëem an eng Mill no bei de Beeren. D'Säitleescht riets weist d'Holz, dat se kaschten."}
+{"name": "aoe2mc.tutorial.complete", "text": "D'Tutorial ass fäerdeg. Als Nächst: spill e Spill géint de Bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutorial fäerdeg"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Geh an d'Feudal Alter: riets klicken op däi Stadhaus a wiel d'Feudal Alter. D'Säitleescht riets weist däi Iessen."}
+{"name": "aoe2mc.tutorial.food", "text": "Sammel 100 Iessen: schéck e Dierf an d'Beeren. D'Säitleescht riets weist däi Iessen."}
+{"name": "aoe2mc.tutorial.house", "text": "Bau e Haus: riets klicken op en ausgewielte Dierf, dat Haus auswielen an setzen. D'Aktiounsleescht iwwer der Hotbar seet dir, wou."}
+{"name": "aoe2mc.tutorial.militia", "text": "Bild 3 Miliz aus: riets klicken op däi Kasär a wiel d'Miliz. D'Säitleescht riets weist däi Iessen a Gold."}
+{"name": "aoe2mc.tutorial.raid", "text": "Den Feind attackéiert deng Dierfer! Klick op déi rout Alarmzeil am Chat, fir dohinner ze goen, dann Miliz auswielen a riets klicken op d'Feinde. D'Bossbar uewen weist d'Gesondheet vun der ausgewielter Eenheet."}
+{"name": "aoe2mc.tutorial.select", "text": "Wiel e Dierf aus: lénks klicken op ee vun denge Dierfer mam Befehlssteck. D'Bossbar uewen weist d'ausgewielt Eenheet, d'Aktiounsleescht iwwer der Hotbar déi nächst Aktioun."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Schrëtt fäerdeg"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Schrëtt %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIPP: de Kasär bildet Infanterie aus. Infanterie ass bëlleg a gutt géint Gebaier."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIPP: attackéier mat all denge Eenheeten zesumme. Eng kleng Grupp stierft, ier se Schued maache kann."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIPP: bau d'Ofgabe-Gebaier no bei de Ressourcen, sou datt d'Dierfer e kuerzen Ewech hunn."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIPP: déi nächst Alter schalt nei Gebaier, Eenheeten a Technologien fräi. Hal d'Dierfer an der Aarbecht, wann s de virugees."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIPP: Beeren no bei enger Mill si e sécheren Ufank vum Iessen. Méi spéit ginn Äcker Iessen, dat net ophält."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIPP: en Haus gëtt Plaz fir 5 weider Leit. Kuck d'Bevëlkerung an der Säitleescht a bau Haiser, ier et voll ass."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIPP: du kanns bis zu 15 Eenheeten an engem Gebai an d'Schlaang setzen, wann s de d'Ressourcen hues."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIPP: an AoE2 schéckt d'Stadsklack d'Dierfer an den Stadhaus. Klenk se, wann den Feind däi Stad iwwerfält."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIPP: d'Zeil Waart an der Säitleescht riets zielt deng Dierfer ouni Aarbecht. Gëff hinnen Aarbecht."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIPP: bild an den éischte Alteren ëmmer Dierfer aus. Méi Dierfer ginn méi Ressourcen."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIPP: Dierfer sammelen méi séier no engem Ofgabe-Gebai. Bau e Holzlager nieft de Bëem."}
+{"name": "aoe2mc.tutorial.villager", "text": "Bild e Dierf aus: riets klicken op däi Stadhaus a wiel de Dierf. D'Säitleescht riets weist d'Iessen, dat et kascht."}
+{"name": "aoe2mc.tutorial.wood", "text": "Sammel 50 Holz: wiel e Dierf aus a riets klicken op e Bam. D'Säitleescht riets weist däi Holz."}
+{"name": "aoe2mc.victory", "text": "Victoire"}
+{"name": "aoe2mc.wonder.built", "text": "Spiller %s huet e Wonner gebaut."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Den Wonner vum Spiller %s ass zerstéiert."}
+{"name": "aoe2mc.replay.soc_castle", "text": "Buergen %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "kaaft %s, verkaaft %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "Reliquien %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "Wonner %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Ausgi:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Bauen %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Wirtschaft %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Militär %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Technologie %s"}
