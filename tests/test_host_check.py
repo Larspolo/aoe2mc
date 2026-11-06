@@ -45,3 +45,11 @@ def test_result_fail(i, value):
     args = list(ok_args())
     args[i] = value
     assert not all(ok for ok, _ in host_check.result(*args).values())
+
+
+def test_servers_dat(tmp_path):
+    import mc_shot
+    import nbtlib
+    mc_shot.servers_dat(tmp_path / "servers.dat", "10.0.0.5:25601")
+    s = nbtlib.load(tmp_path / "servers.dat", gzipped=False)["servers"]
+    assert [(str(x["ip"]), int(x["acceptTextures"])) for x in s] == [("10.0.0.5:25601", 1)]
