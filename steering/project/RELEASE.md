@@ -33,7 +33,8 @@ row), and these kinds of work (the owner moved them first, #4175):
 - extra replay modes (take over a player), extra commands, a nicer UI of the installer program;
 - new systems for the agents (more accounts) and work for later Minecraft versions.
 
-The ranking after v0.1.0 (#5582) put the held features of the other kinds into v0.2.0 (their rows are level `A`). A new
+The ranking after v0.1.0 (#5582) put the held features of the other kinds into v0.2.0 (their rows are level `A`), and
+the ranking after v0.2.0 (#5889) put `play:network` into v0.3.0 (`convert:editor` waits). A new
 feature of these kinds that is not a sub-issue of a ranked epic still waits by the rules below.
 
 Work that started goes on: a ticket with `in-progress` or an open PR gets no `after-release`. Let it finish and merge,
@@ -214,7 +215,7 @@ decision follows it. The roadmap review checks that each held ticket fits a kind
 | `play:music` | C | 3 | | |
 | `play:languages` | A | 5 | | |
 | `play:data-mods` | A | 5 | | |
-| `play:network` | C | 5 | | |
+| `play:network` | A | 5 | | |
 | `play-check-game` | B | 5 | An agent plays a full game against the bot with a script, from the Dark Age to a win or a loss (about 30 minutes): no server error, no stuck unit | #3324 |
 | `play-check-speed` | B | 2 | With 200 units of each player, the server keeps 20 ticks per second | #3325 |
 | `play-check-kit` | B | 2 | A play-test kit: how to start and join, the controls, how to report a bug | #3326 |
