@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Captain %s advances to th' %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: the Corruption takes the chart from its border to its centre in %s. It scuttles all crew an' buildings in it."}
+{"name": "aoe2mc.bot.cannot_build", "text": "I can nay build a %s thar now."}
+{"name": "aoe2mc.bot.cannot_train", "text": "I can nay train that crewman: I have no building fer it."}
+{"name": "aoe2mc.bot.flare_two", "text": "Flare two places fer the wall."}
+{"name": "aoe2mc.bot.no_flare", "text": "I spy no flare."}
+{"name": "aoe2mc.bot.no_market", "text": "I have no market: I can nay send tribute."}
+{"name": "aoe2mc.bot.no_onager", "text": "I have no onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "I have nay enough resources fer a wall."}
+{"name": "aoe2mc.bot.no_water", "text": "I have no water near me port: I can nay build a navy."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Me onagers can nay cut trees."}
+{"name": "aoe2mc.build.cost", "text": "Nay enough resources: a %s costs %s."}
+{"name": "aoe2mc.build.flat", "text": "The %s must stand on flat ground."}
+{"name": "aoe2mc.build.gate_spot", "text": "A %s must go on 4 tiles of an own wall in a straight line, or on 3 diagonal tiles."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Build: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "A %s must stand on water next to th' shore."}
+{"name": "aoe2mc.build.space", "text": "No space fer the %s here."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Nay enough resources: %s tiles of %s cost %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: right click the end o' th' wall."}
+{"name": "aoe2mc.build.water", "text": "A %s must stand on the water."}
+{"name": "aoe2mc.camera.fov", "text": "The smartly camera makes the held item swing. To keep it still, set Options > Accessibility Settings > View Bobbing to OFF. The camera also makes the view wider, which shows more o' th' chart. To keep the normal view, set Options > Accessibility Settings > FOV Effects to 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Camera: off"}
+{"name": "aoe2mc.camera.on", "text": "Camera: on, speed x%s. Shift right click: next speed."}
+{"name": "aoe2mc.camera.speed", "text": "Camera speed: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Defeat all scallywag crew an' lose few crew"}
+{"name": "aoe2mc.challenge.booming", "text": "Train 100 villagers an' advance to th' Imperial Age"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Advance to th' Castle Age an' survive the scallywags raids"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Scuttle the scallywags castle"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Gather 200 grub, 200 timber, 100 doubloons an' 200 rock, train 21 villagers, build a lumber camp an' a mill, an' advance to th' Feudal Age"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Train 27 villagers, build 5 houses an' advance to th' Castle Age"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Defeat all six scallywag waves"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s crew be sunk, bronze medal up to %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s crew be sunk, doubloons medal up to %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s crew be sunk, no medal"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s crew be sunk, silver medal up to %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronze medal"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Doubloons medal"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Silver medal"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Scuttle all scallywag warships"}
+{"name": "aoe2mc.challenge.no_medal", "text": "No medal"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Keelhaul 5 scallywag villagers"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronze medal in %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Doubloons medal in %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Silver medal in %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis off"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis on"}
+{"name": "aoe2mc.cheat.beyond", "text": "Technologies: up to 256 researches"}
+{"name": "aoe2mc.cheat.cpu", "text": "Population limit: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Fog of war: off"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Fog of war: on"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Technologies be free"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Sharing be caring: yer income goes to yer allies"}
+{"name": "aoe2mc.cheat.wonders", "text": "Ye control nature: %s animals"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Only allies be left: the alliances end. The last captain alive plunders the victory."}
+{"name": "aoe2mc.conquest.defeated", "text": "Captain %s be defeated."}
+{"name": "aoe2mc.controls.attack", "text": "Raid: select military crew, then right click an scallywag."}
+{"name": "aoe2mc.controls.build", "text": "Build: select villagers, right click 'em fer the build menu, select a building, then left click the ground. Shift + left click: place more. Right click: cancel."}
+{"name": "aoe2mc.controls.camera", "text": "Camera: right click with the spyglass Camera (hotbar key 2): ye walk smartly high above the chart. Shift right click: the next speed. Right click again: ye fly down."}
+{"name": "aoe2mc.controls.garrison", "text": "Garrison: select crew, then right click yer own building. Its menu lets 'em out. Port centre menu: Ring Port Bell."}
+{"name": "aoe2mc.controls.gather", "text": "Gather: select villagers, then right click a tree, a fruit bush, a mine or a farm."}
+{"name": "aoe2mc.controls.goto", "text": "Go to: right click with the compass Go to (hotbar key 3): a menu of yer port centres, yer control groups an' the next idle villager."}
+{"name": "aoe2mc.controls.groups", "text": "Control groups: select crew, take a group item (hotbar keys 5 to 9) an' Shift + right click to save the selection. Right click: select the group."}
+{"name": "aoe2mc.controls.head", "text": "Controls (hold the carrot on a stick; the action bar shows the next step):"}
+{"name": "aoe2mc.controls.menu", "text": "Game menu: right click with the book Game menu (hotbar key 4): diplomacy an' tribute, flare, save, pause an' the tech tree."}
+{"name": "aoe2mc.controls.move", "text": "Move: with a selection, right click the ground."}
+{"name": "aoe2mc.controls.research", "text": "Research an' age up: right click yer own building an' click a technology or the next age in its menu."}
+{"name": "aoe2mc.controls.select", "text": "Select: left click a crewman. Hold left click an' spy across the ground: a selection box. Right click: give orders."}
+{"name": "aoe2mc.controls.train", "text": "Train: right click yer own building (port centre, barracks ...) an' click a crewman in its menu."}
+{"name": "aoe2mc.defeat", "text": "Defeat"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Ally"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Captain %s changed its stance to ye: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Scallywag"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutral"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Captain %s set the game speed to %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Captain %s sent %s %s to captain %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Flare at %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Follow: click an own crewman"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Guard: click an own crewman or building"}
+{"name": "aoe2mc.gaia.joins", "text": "A %s joins ye."}
+{"name": "aoe2mc.garrison.all_back", "text": "All back to work"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "The port bell rings: %s villagers seek shelter"}
+{"name": "aoe2mc.garrison.no_villager", "text": "No villager be selected."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Ye have no villagers."}
+{"name": "aoe2mc.garrison.out", "text": "%s crew came out"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s villagers seek shelter"}
+{"name": "aoe2mc.gather.act_attack", "text": "raid"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "build menu"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garrison"}
+{"name": "aoe2mc.gather.act_gather", "text": "gather"}
+{"name": "aoe2mc.gather.act_hunt", "text": "hunt"}
+{"name": "aoe2mc.gather.act_move", "text": "move"}
+{"name": "aoe2mc.gather.act_select", "text": "select"}
+{"name": "aoe2mc.gather.act_select_type", "text": "select all o' th' type"}
+{"name": "aoe2mc.gather.act_trade", "text": "trade"}
+{"name": "aoe2mc.gather.act_train", "text": "train"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Raid: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Selection box: cancelled"}
+{"name": "aoe2mc.gather.bush", "text": "Berry bush"}
+{"name": "aoe2mc.gather.carcass", "text": "Carcass"}
+{"name": "aoe2mc.gather.corner", "text": "Selection box: click the other corner"}
+{"name": "aoe2mc.gather.enemy", "text": "Scallywag %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Scallywag building"}
+{"name": "aoe2mc.gather.farm", "text": "Farm"}
+{"name": "aoe2mc.gather.ground", "text": "Ground"}
+{"name": "aoe2mc.gather.group", "text": "Group %s: %s crew"}
+{"name": "aoe2mc.gather.group_saved", "text": "Group %s: %s crew saved"}
+{"name": "aoe2mc.gather.mine", "text": "%s mine"}
+{"name": "aoe2mc.gather.paused", "text": "The game be paused."}
+{"name": "aoe2mc.gather.point", "text": "%s · Right click: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Reseeds queued: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Selected: %s crew"}
+{"name": "aoe2mc.gather.tree", "text": "Tree"}
+{"name": "aoe2mc.hill.holds", "text": "Captain %s holds the monument."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Raid Ground: right click the ground"}
+{"name": "aoe2mc.hints.attack_move", "text": "Raid Move: right click the ground"}
+{"name": "aoe2mc.hints.building", "text": "Place the %s: right click the ground · Shift + right click: place more · Cancel: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: left click to place · Shift: place more · Right click: cancel"}
+{"name": "aoe2mc.hints.corner", "text": "Selection box: right click the other corner"}
+{"name": "aoe2mc.hints.count_military", "text": "%s military crewman"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s military crew"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s villager"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s villagers"}
+{"name": "aoe2mc.hints.deselect", "text": "Empty box: deselect"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Left click: deselect"}
+{"name": "aoe2mc.hints.follow", "text": "Follow: right click an own or allied crewman"}
+{"name": "aoe2mc.hints.guard", "text": "Guard: right click an own or allied crewman or building"}
+{"name": "aoe2mc.hints.military", "text": "%s · Right click: raid an scallywag, stance menu · %s"}
+{"name": "aoe2mc.hints.none", "text": "Left click: select a crewman · Hold left click: selection box"}
+{"name": "aoe2mc.hints.none_wand", "text": "Right click: select a crewman · Wand: selection box"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrol: right click the ground"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Right click: gather, build, build menu · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s ready"}
+{"name": "aoe2mc.lobby.you_play", "text": "Ye play %s."}
+{"name": "aoe2mc.monk.converts", "text": "A monk converts the %s."}
+{"name": "aoe2mc.monk.dies", "text": "The %s dies (Heresy)."}
+{"name": "aoe2mc.pause.continued", "text": "Captain %s continued the game."}
+{"name": "aoe2mc.pause.paused", "text": "Captain %s paused the game."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Team %s (mean rating %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "The game be over. Right click the Recap book in yer hand to spy the results. Avast the game program with Ctrl-C in its console."}
+{"name": "aoe2mc.relic_victory.all", "text": "Captain %s holds all relics."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Captain %s be sunk a relic."}
+{"name": "aoe2mc.repair.no_resources", "text": "Nay enough resources to repair the %s."}
+{"name": "aoe2mc.replay.army", "text": "Crew: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", crew at the end: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", be sunk: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Build order:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garrison %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | carries %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "build %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "grub %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "doubloons %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "idle %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "rock %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "timber %s"}
+{"name": "aoe2mc.replay.flare", "text": "Flare"}
+{"name": "aoe2mc.replay.game_ends", "text": "The game ends"}
+{"name": "aoe2mc.replay.game_time", "text": "Game time %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · garrison %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Vil %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s held the monument: King o' th' Hill victory at %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atk %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Double-tap Shift: spectator view (fly through blocks). Right click the hotbar items: replay control."}
+{"name": "aoe2mc.replay.king_died", "text": ": the King died at %s. Regicide: the captain be out."}
+{"name": "aoe2mc.replay.king_killed", "text": "King keelhauled at %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Live replay: the jump stops at the delay behind the game."}
+{"name": "aoe2mc.replay.lost", "text": "Be sunk: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " holds the monument at %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monument, %s year left"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monument, %s years left"}
+{"name": "aoe2mc.replay.no_camera", "text": "This record has no camera of its captain."}
+{"name": "aoe2mc.replay.now", "text": " now"}
+{"name": "aoe2mc.replay.out", "text": "%s be out"}
+{"name": "aoe2mc.replay.players", "text": "Captains"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " takes the relic to a monastery an' plunders the victory."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Replay ended"}
+{"name": "aoe2mc.replay.research", "text": " researches %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s resigns"}
+{"name": "aoe2mc.replay.restart_jump", "text": "The server restarts fer the jump back: join it again."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Buildings %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Economy %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Military %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Technologies %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Total %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "castles %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "bought %s, sold %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relics %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "wonders %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Spent:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Build %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eco %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tech %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": villagers trained %s, gathered %s, idle villager time %s, idle TC time %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": holds the monument (King o' th' Hill)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monument won %s (King o' th' Hill)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": military crew trained %s, crew be sunk %s, buildings be sunk %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": King keelhauled %s (Regicide)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": plunders the victory, relic in a monastery %s (Capture the Relic)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stribute sent %s, received %s, villager high %s (est.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": port centre be sunk %s (Sudden Death)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, technologies %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": wonder timer from %s, ends %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Summary (est.)"}
+{"name": "aoe2mc.replay.task_building", "text": "building"}
+{"name": "aoe2mc.replay.task_following", "text": "following"}
+{"name": "aoe2mc.replay.task_food", "text": "gathering grub"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "garrisoned"}
+{"name": "aoe2mc.replay.task_gold", "text": "gathering doubloons"}
+{"name": "aoe2mc.replay.task_guarding", "text": "guarding"}
+{"name": "aoe2mc.replay.task_idle", "text": "idle"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrolling"}
+{"name": "aoe2mc.replay.task_resources", "text": "gathering resources"}
+{"name": "aoe2mc.replay.task_stone", "text": "gathering rock"}
+{"name": "aoe2mc.replay.task_walking", "text": "walking"}
+{"name": "aoe2mc.replay.task_wood", "text": "gathering timber"}
+{"name": "aoe2mc.replay.team", "text": "Team %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Archer %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Archer armour %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Carry %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Cavalry armour %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Farm %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Doubloons %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Infantry armour %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Loom %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Melee %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Rock %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Timber %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castle"}
+{"name": "aoe2mc.replay.tl_king", "text": "King keelhauled"}
+{"name": "aoe2mc.replay.tl_military", "text": "1st military: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relic"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Resigns"}
+{"name": "aoe2mc.replay.town_fell", "text": ": the port centre fell at %s. Sudden Death: the captain be out."}
+{"name": "aoe2mc.replay.town_lost", "text": "Port centre be sunk at %s"}
+{"name": "aoe2mc.replay.training", "text": "Training: %s"}
+{"name": "aoe2mc.replay.university", "text": "University:"}
+{"name": "aoe2mc.replay.up_counts", "text": "economy %s · University %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " built a wonder at %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Fight: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s crew"}
+{"name": "aoe2mc.replay_input.fights", "text": "Large fights:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: right click the items in yer hotbar, or click: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Take over: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s crew)"}
+{"name": "aoe2mc.replay_input.vs", "text": " vs "}
+{"name": "aoe2mc.resource.food", "text": "grub"}
+{"name": "aoe2mc.resource.gold", "text": "doubloons"}
+{"name": "aoe2mc.resource.stone", "text": "rock"}
+{"name": "aoe2mc.resource.wood", "text": "timber"}
+{"name": "aoe2mc.run.back", "text": "%s be back"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Campaign complete"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: a normal line goes to all, /tm TEXT to yer allies, /msg NAME TEXT to one person."}
+{"name": "aoe2mc.run.left_bot", "text": "%s left: a bot plays captain %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenario %s sets sail. Join again."}
+{"name": "aoe2mc.run.starts_in", "text": "The game sets sail in %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Open \"Choose yer captain\" an' click \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "All controls: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "First step: hold the command stick an' right click one of yer villagers."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "First step: hold the command stick an' left click one of yer villagers."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Goal: triumph the game. Victory setting: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Saved the game: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s crew came out"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Auto Scout"}
+{"name": "aoe2mc.stance.formation", "text": "Formation: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "No crewman can raid the ground"}
+{"name": "aoe2mc.stance.unpack", "text": "Unpack the Trebuchet first"}
+{"name": "aoe2mc.train.active", "text": "%s be active."}
+{"name": "aoe2mc.train.rally", "text": "Right click the ground fer the rally point."}
+{"name": "aoe2mc.train.researched", "text": "%s be researched."}
+{"name": "aoe2mc.transport.out", "text": "%s crew came out"}
+{"name": "aoe2mc.treaty.ended", "text": "The treaty ended: captains can raid now."}
+{"name": "aoe2mc.treaty.refuse", "text": "Treaty: ye can nay raid before %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Treaty: ye can nay raid in this game."}
+{"name": "aoe2mc.treaty.start", "text": "Treaty: no captain can raid another captain before %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Treaty: no captain can raid another captain in this game."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Build a barracks: right click on a selected villager, choose the barracks an' place it. The action bar above the hotbar tells ye where to place it."}
+{"name": "aoe2mc.tutorial.camera", "text": "Move smartly over the chart: right click with the \"Camera\" item, walk, then right click with it again."}
+{"name": "aoe2mc.tutorial.camp", "text": "Scuttle the scallywags camp in the middle o' th' chart: select yer Militia an' right click on a building. The boss bar at the top shows the step."}
+{"name": "aoe2mc.tutorial.camps", "text": "Build a lumber camp near the trees an' a mill near the berries. The sidebar on the right shows the timber they cost."}
+{"name": "aoe2mc.tutorial.complete", "text": "The tutorial be complete. Next: play a game against the bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutorial complete"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Advance to th' Feudal Age: right click on yer port centre an' choose the Feudal Age. The sidebar on the right shows yer grub."}
+{"name": "aoe2mc.tutorial.food", "text": "Gather 100 grub: send a villager to th' berries. The sidebar on the right shows yer grub."}
+{"name": "aoe2mc.tutorial.house", "text": "Build a house: right click on a selected villager, choose the house an' place it. The action bar above the hotbar tells ye where to place it."}
+{"name": "aoe2mc.tutorial.militia", "text": "Train 3 Militia: right click on yer barracks an' choose the militia. The sidebar on the right shows yer grub an' doubloons."}
+{"name": "aoe2mc.tutorial.raid", "text": "The scallywags raids yer villagers! Click the red alert line in the chat to go thar, then select yer Militia an' right click on the scallywags. The boss bar at the top shows the health o' th' selected crewman."}
+{"name": "aoe2mc.tutorial.select", "text": "Select a villager: left click on one of yer villagers with the command stick. The boss bar at the top shows the selected crewman, the action bar above the hotbar shows the next action."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Step done"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Step %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIP: the barracks trains infantry. Infantry be cheap an' fine against buildings."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIP: raid with all yer crew together. A small group dies before it can do damage."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIP: build the drop-off buildings near the resources, so that the villagers walk a short way."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIP: the next age unlocks fresh buildings, crew an' technologies. Keep the villagers at work while ye advance."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIP: berries near a mill be a safe set sail of grub. Later, farms give grub that does nay end."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIP: a house gives room fer 5 more population. Spy at the population in the sidebar an' build houses before it be full."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIP: ye can queue up to 15 crew in a building when ye have the resources."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIP: in AoE2 the port bell sends the villagers into the port centre. Ring it when the scallywags raids yer port."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIP: the Idle line o' th' sidebar on the right counts yer villagers with no work. Give 'em work."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIP: train villagers all the time in the first ages. More villagers give more resources."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIP: villagers gather faster near a drop-off building. Build a lumber camp next to th' trees."}
+{"name": "aoe2mc.tutorial.villager", "text": "Train a villager: right click on yer port centre an' choose the villager. The sidebar on the right shows the grub it costs."}
+{"name": "aoe2mc.tutorial.wood", "text": "Gather 50 timber: select a villager an' right click on a tree. The sidebar on the right shows yer timber."}
+{"name": "aoe2mc.victory", "text": "Victory"}
+{"name": "aoe2mc.wonder.built", "text": "Captain %s built a wonder."}
+{"name": "aoe2mc.wonder.destroyed", "text": "The wonder of captain %s be scuttled."}
