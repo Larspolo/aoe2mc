@@ -6,16 +6,20 @@ Measure the time from a real mouse input to its result in the game program (#585
 first in that state (a check after each RCON command, `Recorder`), not at the next step of the loop (#5871). It
 prints a Markdown table: the median and the maximum of TRIES tries of each input, and the floor (the click to the
 plugin score aoe_input, no game loop). It also takes a screenshot during a held left drag and checks a left drag in
-the camera mode. --profile adds the RCON commands from each input to its result, with their count per try (#5871).
+the camera mode. --profile adds the RCON commands from each input to its result, with their count per try (#5871), and a cProfile of the
+first Gather.place call (#5866).
 
     python3 tools/measure_clicks.py OUT_DIR [--tries 20] [--profile]
 
 A test cannot give the table (a test gives pass or fail), so this is a tool. Own logic: none in the game.
 """
 import argparse
+import cProfile
+import io
 import json
 import math
 import os
+import pstats
 import re
 import shutil
 import statistics
@@ -210,6 +214,17 @@ def main():
         game.command("gamerule doDaylightCycle false")
         b = Bench(game, client, g)
         profiles = []
+        if a.profile:                                                  # cProfile of the first Gather.place (#5866)
+            place = g.place
+
+            def first(*args):
+                g.place = place
+                prof = cProfile.Profile()
+                prof.runcall(place, *args)
+                out = io.StringIO()
+                pstats.Stats(prof, stream=out).sort_stats("cumulative").print_stats(25)
+                profiles.append("First Gather.place (cProfile)\n\n```\n" + out.getvalue().strip() + "\n```\n")
+            g.place = first
 
         def add(row):                                                  # a timed input: its row and its profile
             rows.append(row)
