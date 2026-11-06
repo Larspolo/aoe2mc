@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "ຜູ້ຫຼິ້ນ %s ກ້າວໄປສູ່ຍຸກ %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "ການຕໍ່ສູ້ສຸດທ້າຍ: ຄວາມເສື່ອມເສຍເຂົ້າຍຶດແຜນທີ່ຈາກຂອບໄປຫາໃຈກາງໃນ %s. ມັນທຳລາຍທຸກໜ່ວຍ ແລະ ອາຄານທີ່ຢູ່ໃນນັ້ນ."}
+{"name": "aoe2mc.bot.cannot_build", "text": "ຕອນນີ້ຂ້ອຍສ້າງ %s ຢູ່ບ່ອນນັ້ນບໍ່ໄດ້."}
+{"name": "aoe2mc.bot.cannot_train", "text": "ຂ້ອຍຝຶກໜ່ວຍນັ້ນບໍ່ໄດ້: ຂ້ອຍບໍ່ມີອາຄານສຳລັບມັນ."}
+{"name": "aoe2mc.bot.flare_two", "text": "ສອງແສງສັນຍານວາງຈຸດສຳລັບກຳແພງ."}
+{"name": "aoe2mc.bot.no_flare", "text": "ຂ້ອຍບໍ່ເຫັນແສງສັນຍານ."}
+{"name": "aoe2mc.bot.no_market", "text": "ຂ້ອຍບໍ່ມີຕະຫຼາດ: ຂ້ອຍສົ່ງບັນນາການບໍ່ໄດ້."}
+{"name": "aoe2mc.bot.no_onager", "text": "ຂ້ອຍບໍ່ມີ onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "ຊັບພະຍາກອນຂອງຂ້ອຍບໍ່ພໍສຳລັບກຳແພງ."}
+{"name": "aoe2mc.bot.no_water", "text": "ຂ້ອຍບໍ່ມີນໍ້າໃກ້ເມືອງຂອງຂ້ອຍ: ຂ້ອຍສ້າງກອງທັບເຮືອບໍ່ໄດ້."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "onager ຂອງຂ້ອຍຕັດຕົ້ນໄມ້ບໍ່ໄດ້."}
+{"name": "aoe2mc.build.cost", "text": "ຊັບພະຍາກອນບໍ່ພໍ: %s ມີລາຄາ %s."}
+{"name": "aoe2mc.build.flat", "text": "%s ຕ້ອງຕັ້ງຢູ່ເທິງພື້ນທີ່ລຽບ."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s ຕ້ອງຢູ່ເທິງ 4 ບລັອກຂອງກຳແພງຂອງຕົນເອງເປັນເສັ້ນຊື່, ຫຼື ເທິງ 3 ບລັອກເສັ້ນຂວາງ."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "ສ້າງ: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s ຕ້ອງຕັ້ງຢູ່ເທິງນໍ້າຕິດກັບຝັ່ງ."}
+{"name": "aoe2mc.build.space", "text": "ບໍ່ມີບ່ອນສຳລັບ %s ຢູ່ບ່ອນນີ້."}
+{"name": "aoe2mc.build.tiles_cost", "text": "ຊັບພະຍາກອນບໍ່ພໍ: %s ບລັອກຂອງ %s ມີລາຄາ %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: ຄລິກຂວາທີ່ປາຍຂອງກຳແພງ."}
+{"name": "aoe2mc.build.water", "text": "%s ຕ້ອງຕັ້ງຢູ່ເທິງນໍ້າ."}
+{"name": "aoe2mc.camera.fov", "text": "ກ້ອງໄວເຮັດໃຫ້ສິ່ງທີ່ຖືແກ່ງໄປມາ. ເພື່ອໃຫ້ມັນນິ່ງ, ຕັ້ງ Options > Accessibility Settings > View Bobbing ເປັນ OFF. ກ້ອງຍັງເຮັດໃຫ້ມຸມມອງກວ້າງຂຶ້ນ, ເຊິ່ງສະແດງແຜນທີ່ໄດ້ຫຼາຍຂຶ້ນ. ເພື່ອໃຫ້ມຸມມອງປົກກະຕິ, ຕັ້ງ Options > Accessibility Settings > FOV Effects ເປັນ 0 %."}
+{"name": "aoe2mc.camera.off", "text": "ກ້ອງ: ປິດ"}
+{"name": "aoe2mc.camera.on", "text": "ກ້ອງ: ເປີດ, ຄວາມໄວ x%s. Shift ຄລິກຂວາ: ຄວາມໄວຖັດໄປ."}
+{"name": "aoe2mc.camera.speed", "text": "ຄວາມໄວກ້ອງ: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "ເອົາຊະນະໜ່ວຍຂອງສັດຕູທັງໝົດ ແລະ ເສຍໜ່ວຍໜ້ອຍ"}
+{"name": "aoe2mc.challenge.booming", "text": "ຝຶກຊາວບ້ານ 100 ຄົນ ແລະ ກ້າວໄປສູ່ຍຸກ Imperial"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "ກ້າວໄປສູ່ຍຸກ Castle ແລະ ລອດຈາກການໂຈມຕີຂອງສັດຕູ"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "ທຳລາຍ castle ຂອງສັດຕູ"}
+{"name": "aoe2mc.challenge.early-economy", "text": "ເກັບອາຫານ 200, ໄມ້ 200, ຄຳ 100 ແລະ ຫີນ 200, ຝຶກຊາວບ້ານ 21 ຄົນ, ສ້າງຄ່າຍຕັດໄມ້ ແລະ ໂຮງສີ, ແລະ ກ້າວໄປສູ່ຍຸກ Feudal"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "ຝຶກຊາວບ້ານ 27 ຄົນ, ສ້າງເຮືອນ 5 ຫຼັງ ແລະ ກ້າວໄປສູ່ຍຸກ Castle"}
+{"name": "aoe2mc.challenge.land-battle", "text": "ເອົາຊະນະທັງຫົກຄື້ນຂອງສັດຕູ"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "ເສຍ %s ໜ່ວຍ, ໄດ້ເຫຼຣຽນທອງແດງເຖິງ %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "ເສຍ %s ໜ່ວຍ, ໄດ້ເຫຼຣຽນທອງຄຳເຖິງ %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "ເສຍ %s ໜ່ວຍ, ບໍ່ມີເຫຼຣຽນ"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "ເສຍ %s ໜ່ວຍ, ໄດ້ເຫຼຣຽນເງິນເຖິງ %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "ເຫຼຣຽນທອງແດງ"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "ເຫຼຣຽນທອງຄຳ"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "ເຫຼຣຽນເງິນ"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "ທຳລາຍເຮືອຮົບຂອງສັດຕູທັງໝົດ"}
+{"name": "aoe2mc.challenge.no_medal", "text": "ບໍ່ມີເຫຼຣຽນ"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "ຂ້າຊາວບ້ານຂອງສັດຕູ 5 ຄົນ"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "ເຫຼຣຽນທອງແດງໃນ %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "ເຫຼຣຽນທອງຄຳໃນ %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "ເຫຼຣຽນເງິນໃນ %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis ປິດ"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis ເປີດ"}
+{"name": "aoe2mc.cheat.beyond", "text": "ເທັກໂນໂລຢີ: ເຖິງ 256 ການຄົ້ນຄວ້າ"}
+{"name": "aoe2mc.cheat.cpu", "text": "ຂີດຈຳກັດປະຊາກອນ: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "ໝອກສົງຄາມ: ປິດ"}
+{"name": "aoe2mc.cheat.fog_on", "text": "ໝອກສົງຄາມ: ເປີດ"}
+{"name": "aoe2mc.cheat.free_techs", "text": "ເທັກໂນໂລຢີບໍ່ເສຍຄ່າ"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "ການແບ່ງປັນຄືການດູແລ: ລາຍໄດ້ຂອງເຈົ້າໄປໃຫ້ພັນທະມິດ"}
+{"name": "aoe2mc.cheat.wonders", "text": "ເຈົ້າຄວບຄຸມທຳມະຊາດ: ສັດ %s ໂຕ"}
+{"name": "aoe2mc.conquest.allies_end", "text": "ເຫຼືອແຕ່ພັນທະມິດ: ພັນທະມິດສິ້ນສຸດລົງ. ຜູ້ຫຼິ້ນທີ່ຍັງມີຊີວິດຄົນສຸດທ້າຍຊະນະ."}
+{"name": "aoe2mc.conquest.defeated", "text": "ຜູ້ຫຼິ້ນ %s ພ່າຍແພ້."}
+{"name": "aoe2mc.controls.attack", "text": "ໂຈມຕີ: ເລືອກໜ່ວຍທະຫານ, ແລ້ວຄລິກຂວາທີ່ສັດຕູ."}
+{"name": "aoe2mc.controls.build", "text": "ສ້າງ: ເລືອກຊາວບ້ານ, ຄລິກຂວາໃສ່ພວກເຂົາເພື່ອເປີດເມນູສ້າງ, ເລືອກອາຄານ, ແລ້ວຄລິກຊ້າຍທີ່ພື້ນ. Shift + ຄລິກຊ້າຍ: ວາງເພີ່ມ. ຄລິກຂວາ: ຍົກເລີກ."}
+{"name": "aoe2mc.controls.camera", "text": "ກ້ອງ: ຄລິກຂວາດ້ວຍກ້ອງສ່ອງທາງໄກ (ປຸ່ມ hotbar 2): ເຈົ້າບິນໄວຢູ່ເທິງແຜນທີ່. Shift ຄລິກຂວາ: ຄວາມໄວຖັດໄປ. ຄລິກຂວາອີກຄັ້ງ: ເຈົ້າບິນລົງ."}
+{"name": "aoe2mc.controls.garrison", "text": "ເຂົ້າປ້ອງກັນ: ເລືອກໜ່ວຍ, ແລ້ວຄລິກຂວາໃສ່ອາຄານຂອງເຈົ້າ. ເມນູຂອງມັນໃຫ້ພວກມັນອອກມາ. ເມນູ Town center: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "ເກັບ: ເລືອກຊາວບ້ານ, ແລ້ວຄລິກຂວາໃສ່ຕົ້ນໄມ້, ພຸ່ມໝາກໄມ້, ເໝືອງ ຫຼື ໄຮ່."}
+{"name": "aoe2mc.controls.goto", "text": "ໄປທີ່: ຄລິກຂວາດ້ວຍເຂັມທິດ Go to (ປຸ່ມ hotbar 3): ເມນູຂອງ town center ຂອງເຈົ້າ, ກຸ່ມຄວບຄຸມ ແລະ ຊາວບ້ານທີ່ວ່າງຄົນຕໍ່ໄປ."}
+{"name": "aoe2mc.controls.groups", "text": "ກຸ່ມຄວບຄຸມ: ເລືອກໜ່ວຍ, ເອົາໄອເທັມກຸ່ມ (ປຸ່ມ hotbar 5 ຫາ 9) ແລະ Shift + ຄລິກຂວາເພື່ອບັນທຶກການເລືອກ. ຄລິກຂວາ: ເລືອກກຸ່ມ."}
+{"name": "aoe2mc.controls.head", "text": "ການຄວບຄຸມ (ຖືໄມ້ຄັນໃສ່ແຄ໋ວໄວ້; ແຖບການກະທຳຈະບອກຂັ້ນຕໍ່ໄປ):"}
+{"name": "aoe2mc.controls.menu", "text": "ເມນູເກມ: ຄລິກຂວາດ້ວຍປຶ້ມ Game menu (ປຸ່ມ hotbar 4): ການທູດ ແລະ ບັນນາການ, ແສງສັນຍານ, ບັນທຶກ, ຢຸດຊົ່ວຄາວ ແລະ ຕົ້ນໄມ້ເທັກໂນໂລຢີ."}
+{"name": "aoe2mc.controls.move", "text": "ເຄື່ອນທີ່: ເມື່ອມີການເລືອກ, ຄລິກຂວາທີ່ພື້ນ."}
+{"name": "aoe2mc.controls.research", "text": "ຄົ້ນຄວ້າ ແລະ ກ້າວໄປສູ່ຍຸກຖັດໄປ: ຄລິກຂວາໃສ່ອາຄານຂອງເຈົ້າ ແລ້ວຄລິກເທັກໂນໂລຢີ ຫຼື ຍຸກຖັດໄປໃນເມນູຂອງມັນ."}
+{"name": "aoe2mc.controls.select", "text": "ເລືອກ: ຄລິກຊ້າຍໃສ່ໜ່ວຍໜຶ່ງ. ກົດຄລິກຊ້າຍຄ້າງໄວ້ ແລ້ວເບິ່ງຂ້າມພື້ນ: ກ່ອງການເລືອກ. ຄລິກຂວາ: ໃຫ້ຄຳສັ່ງ."}
+{"name": "aoe2mc.controls.train", "text": "ຝຶກ: ຄລິກຂວາໃສ່ອາຄານຂອງເຈົ້າ (town center, barracks ...) ແລ້ວຄລິກໜ່ວຍໃນເມນູຂອງມັນ."}
+{"name": "aoe2mc.defeat", "text": "ພ່າຍແພ້"}
+{"name": "aoe2mc.diplomacy.ally", "text": "ພັນທະມິດ"}
+{"name": "aoe2mc.diplomacy.changed", "text": "ຜູ້ຫຼິ້ນ %s ປ່ຽນທ່າທີຂອງຕົນຕໍ່ເຈົ້າ: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "ສັດຕູ"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "ເປັນກາງ"}
+{"name": "aoe2mc.diplomacy.speed", "text": "ຜູ້ຫຼິ້ນ %s ຕັ້ງຄວາມໄວຂອງເກມເປັນ %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "ຜູ້ຫຼິ້ນ %s ສົ່ງ %s %s ໃຫ້ຜູ້ຫຼິ້ນ %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: ແສງສັນຍານທີ່ %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "ຕິດຕາມ: ຄລິກໜ່ວຍຂອງເຈົ້າ"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "ປ້ອງກັນ: ຄລິກໜ່ວຍ ຫຼື ອາຄານຂອງເຈົ້າ"}
+{"name": "aoe2mc.gaia.joins", "text": "%s ມາຮ່ວມກັບເຈົ້າ."}
+{"name": "aoe2mc.garrison.all_back", "text": "ທຸກຄົນກັບໄປເຮັດວຽກ"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "ລະຄັງເມືອງດັງ: ຊາວບ້ານ %s ຄົນຊອກບ່ອນລີ້"}
+{"name": "aoe2mc.garrison.no_villager", "text": "ບໍ່ໄດ້ເລືອກຊາວບ້ານ."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "ເຈົ້າບໍ່ມີຊາວບ້ານ."}
+{"name": "aoe2mc.garrison.out", "text": "ໜ່ວຍ %s ໜ່ວຍອອກມາແລ້ວ"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "ຊາວບ້ານ %s ຄົນຊອກບ່ອນລີ້"}
+{"name": "aoe2mc.gather.act_attack", "text": "ໂຈມຕີ"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "ເມນູສ້າງ"}
+{"name": "aoe2mc.gather.act_garrison", "text": "ເຂົ້າປ້ອງກັນ"}
+{"name": "aoe2mc.gather.act_gather", "text": "ເກັບ"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ລ່າສັດ"}
+{"name": "aoe2mc.gather.act_move", "text": "ເຄື່ອນທີ່"}
+{"name": "aoe2mc.gather.act_select", "text": "ເລືອກ"}
+{"name": "aoe2mc.gather.act_select_type", "text": "ເລືອກທັງໝົດປະເພດນີ້"}
+{"name": "aoe2mc.gather.act_trade", "text": "ຄ້າຂາຍ"}
+{"name": "aoe2mc.gather.act_train", "text": "ຝຶກ"}
+{"name": "aoe2mc.gather.attack_siege", "text": "ໂຈມຕີ: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "ກ່ອງການເລືອກ: ຍົກເລີກແລ້ວ"}
+{"name": "aoe2mc.gather.bush", "text": "ພຸ່ມໝາກເບີຣີ"}
+{"name": "aoe2mc.gather.carcass", "text": "ຊາກສັດ"}
+{"name": "aoe2mc.gather.corner", "text": "ກ່ອງການເລືອກ: ຄລິກອີກມຸມໜຶ່ງ"}
+{"name": "aoe2mc.gather.enemy", "text": "ສັດຕູ %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "ອາຄານຂອງສັດຕູ"}
+{"name": "aoe2mc.gather.farm", "text": "ໄຮ່"}
+{"name": "aoe2mc.gather.ground", "text": "ພື້ນ"}
+{"name": "aoe2mc.gather.group", "text": "ກຸ່ມ %s: ໜ່ວຍ %s"}
+{"name": "aoe2mc.gather.group_saved", "text": "ກຸ່ມ %s: ບັນທຶກໜ່ວຍ %s ແລ້ວ"}
+{"name": "aoe2mc.gather.mine", "text": "ເໝືອງ %s"}
+{"name": "aoe2mc.gather.paused", "text": "ເກມຢຸດຊົ່ວຄາວ."}
+{"name": "aoe2mc.gather.point", "text": "%s · ຄລິກຂວາ: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "ການປູກຄືນທີ່ຈັດຄິວ: %s"}
+{"name": "aoe2mc.gather.selected", "text": "ເລືອກແລ້ວ: ໜ່ວຍ %s"}
+{"name": "aoe2mc.gather.tree", "text": "ຕົ້ນໄມ້"}
+{"name": "aoe2mc.hill.holds", "text": "ຜູ້ຫຼິ້ນ %s ຖືອະນຸສາວະລີ."}
+{"name": "aoe2mc.hints.attack_ground", "text": "ໂຈມຕີພື້ນ: ຄລິກຂວາທີ່ພື້ນ"}
+{"name": "aoe2mc.hints.attack_move", "text": "ໂຈມຕີລະຫວ່າງເຄື່ອນທີ່: ຄລິກຂວາທີ່ພື້ນ"}
+{"name": "aoe2mc.hints.building", "text": "ວາງ %s: ຄລິກຂວາທີ່ພື້ນ · Shift + ຄລິກຂວາ: ວາງເພີ່ມ · ຍົກເລີກ: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: ຄລິກຊ້າຍເພື່ອວາງ · Shift: ວາງເພີ່ມ · ຄລິກຂວາ: ຍົກເລີກ"}
+{"name": "aoe2mc.hints.corner", "text": "ກ່ອງການເລືອກ: ຄລິກຂວາທີ່ອີກມຸມໜຶ່ງ"}
+{"name": "aoe2mc.hints.count_military", "text": "ໜ່ວຍທະຫານ %s ໜ່ວຍ"}
+{"name": "aoe2mc.hints.count_military_many", "text": "ໜ່ວຍທະຫານ %s ໜ່ວຍ"}
+{"name": "aoe2mc.hints.count_villager", "text": "ຊາວບ້ານ %s ຄົນ"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "ຊາວບ້ານ %s ຄົນ"}
+{"name": "aoe2mc.hints.deselect", "text": "ກ່ອງຫວ່າງ: ຍົກເລີກການເລືອກ"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "ຄລິກຊ້າຍ: ຍົກເລີກການເລືອກ"}
+{"name": "aoe2mc.hints.follow", "text": "ຕິດຕາມ: ຄລິກຂວາໃສ່ໜ່ວຍຂອງເຈົ້າ ຫຼື ພັນທະມິດ"}
+{"name": "aoe2mc.hints.guard", "text": "ປ້ອງກັນ: ຄລິກຂວາໃສ່ໜ່ວຍ ຫຼື ອາຄານຂອງເຈົ້າ ຫຼື ພັນທະມິດ"}
+{"name": "aoe2mc.hints.military", "text": "%s · ຄລິກຂວາ: ໂຈມຕີສັດຕູ, ເມນູທ່າທີ · %s"}
+{"name": "aoe2mc.hints.none", "text": "ຄລິກຊ້າຍ: ເລືອກໜ່ວຍ · ກົດຄລິກຊ້າຍຄ້າງໄວ້: ກ່ອງການເລືອກ"}
+{"name": "aoe2mc.hints.none_wand", "text": "ຄລິກຂວາ: ເລືອກໜ່ວຍ · ໄມ້ຄາຖາ: ກ່ອງການເລືອກ"}
+{"name": "aoe2mc.hints.patrol", "text": "ລາດຕະເວນ: ຄລິກຂວາທີ່ພື້ນ"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · ຄລິກຂວາ: ເກັບ, ສ້າງ, ເມນູສ້າງ · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s ພ້ອມແລ້ວ"}
+{"name": "aoe2mc.lobby.you_play", "text": "ເຈົ້າຫຼິ້ນ %s."}
+{"name": "aoe2mc.monk.converts", "text": "ພຣະສົງຈະປ່ຽນ %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s ຕາຍ (Heresy)."}
+{"name": "aoe2mc.pause.continued", "text": "ຜູ້ຫຼິ້ນ %s ສືບຕໍ່ເກມ."}
+{"name": "aoe2mc.pause.paused", "text": "ຜູ້ຫຼິ້ນ %s ຢຸດເກມຊົ່ວຄາວ."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "ທີມ %s (ຄະແນນສະເລ່ຍ %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "ເກມຈົບແລ້ວ. ຄລິກຂວາທີ່ປຶ້ມ Recap ໃນມືຂອງເຈົ້າເພື່ອເບິ່ງຜົນ. ຢຸດໂປຣແກຣມເກມດ້ວຍ Ctrl-C ໃນໜ້າຈໍຂອງມັນ."}
+{"name": "aoe2mc.relic_victory.all", "text": "ຜູ້ຫຼິ້ນ %s ຖືວັດຖຸໂບຮານທັງໝົດ."}
+{"name": "aoe2mc.relic_victory.lost", "text": "ຜູ້ຫຼິ້ນ %s ເສຍວັດຖຸໂບຮານໜຶ່ງຊິ້ນ."}
+{"name": "aoe2mc.repair.no_resources", "text": "ຊັບພະຍາກອນບໍ່ພໍສຳລັບສ້ອມແປງ %s."}
+{"name": "aoe2mc.replay.army", "text": "ກອງທັບ: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", ກອງທັບເມື່ອຈົບ: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", ເສຍ: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "ລຳດັບການສ້າງ:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · ເຂົ້າປ້ອງກັນ %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | ແບກ %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "ສ້າງ %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "ອາຫານ %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "ຄຳ %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "ວ່າງ %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "ຫີນ %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "ໄມ້ %s"}
+{"name": "aoe2mc.replay.flare", "text": "ແສງສັນຍານ"}
+{"name": "aoe2mc.replay.game_ends", "text": "ເກມຈົບລົງ"}
+{"name": "aoe2mc.replay.game_time", "text": "ເວລາໃນເກມ %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · ເຂົ້າປ້ອງກັນ %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "ທະຫານ %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "ປະຊາກອນ %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "ຊັບພະຍາກອນ %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "ຊາວບ້ານ %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s ຖືອະນຸສາວະລີ: ຊະນະແບບ King of the Hill ທີ່ %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atk %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "ກົດ Shift ສອງເທື່ອ: ມຸມມອງຜູ້ຊົມ (ບິນຜ່ານບລັອກ). ຄລິກຂວາທີ່ໄອເທັມ hotbar: ການຄວບຄຸມ replay."}
+{"name": "aoe2mc.replay.king_died", "text": ": ກະສັດຕາຍທີ່ %s. Regicide: ຜູ້ຫຼິ້ນອອກຈາກເກມ."}
+{"name": "aoe2mc.replay.king_killed", "text": "ກະສັດຖືກຂ້າທີ່ %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Replay ສົດ: ການກະໂດດຢຸດທີ່ເວລາຊ້າຫຼັງເກມ."}
+{"name": "aoe2mc.replay.lost", "text": "ເສຍ: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " ຖືອະນຸສາວະລີທີ່ %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: ອະນຸສາວະລີ, ເຫຼືອ %s ປີ"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: ອະນຸສາວະລີ, ເຫຼືອ %s ປີ"}
+{"name": "aoe2mc.replay.no_camera", "text": "Replay ນີ້ບໍ່ມີກ້ອງຂອງຜູ້ຫຼິ້ນຂອງມັນ."}
+{"name": "aoe2mc.replay.now", "text": " ດຽວນີ້"}
+{"name": "aoe2mc.replay.out", "text": "%s ອອກຈາກເກມແລ້ວ"}
+{"name": "aoe2mc.replay.players", "text": "ຜູ້ຫຼິ້ນ"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " ນຳວັດຖຸໂບຮານໄປວັດ ແລະ ຊະນະ."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Replay ຈົບແລ້ວ"}
+{"name": "aoe2mc.replay.research", "text": " ຄົ້ນຄວ້າ %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s ຍອມແພ້"}
+{"name": "aoe2mc.replay.restart_jump", "text": "ເຊີບເວີເລີ່ມໃໝ່ເພື່ອການກະໂດດກັບ: ເຂົ້າຮ່ວມອີກຄັ້ງ."}
+{"name": "aoe2mc.replay.share_buildings", "text": "ອາຄານ %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "ເສດຖະກິດ %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "ທະຫານ %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "ເທັກໂນໂລຢີ %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "ລວມ %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "castle %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "ຊື້ %s, ຂາຍ %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "ວັດຖຸໂບຮານ %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "ສິ່ງມະຫັດ %s, "}
+{"name": "aoe2mc.replay.spent", "text": "ໃຊ້ຈ່າຍ:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "ສ້າງ %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "ເສດຖະກິດ %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "ທະຫານ %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "ເທັກ %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": ຝຶກຊາວບ້ານ %s, ເກັບໄດ້ %s, ເວລາຊາວບ້ານວ່າງ %s, ເວລາ TC ວ່າງ %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": ຖືອະນຸສາວະລີ (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": ຊະນະອະນຸສາວະລີ %s (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": ຝຶກໜ່ວຍທະຫານ %s, ເສຍໜ່ວຍ %s, ເສຍອາຄານ %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": ຂ້າກະສັດ %s (Regicide)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": ຊະນະ, ວັດຖຸໂບຮານໃນວັດ %s (Capture the Relic)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sບັນນາການ ສົ່ງ %s, ໄດ້ຮັບ %s, ຊາວບ້ານສູງສຸດ %s (ປະມານ)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": ສູນເສຍ town center %s (Sudden Death)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, ເທັກໂນໂລຢີ %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": ເວລາສິ່ງມະຫັດຈາກ %s, ສິ້ນສຸດ %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "ສະຫຼຸບ (ປະມານ)"}
+{"name": "aoe2mc.replay.task_building", "text": "ກຳລັງສ້າງ"}
+{"name": "aoe2mc.replay.task_following", "text": "ກຳລັງຕິດຕາມ"}
+{"name": "aoe2mc.replay.task_food", "text": "ກຳລັງເກັບອາຫານ"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "ເຂົ້າປ້ອງກັນ"}
+{"name": "aoe2mc.replay.task_gold", "text": "ກຳລັງເກັບຄຳ"}
+{"name": "aoe2mc.replay.task_guarding", "text": "ກຳລັງປ້ອງກັນ"}
+{"name": "aoe2mc.replay.task_idle", "text": "ວ່າງ"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "ກຳລັງລາດຕະເວນ"}
+{"name": "aoe2mc.replay.task_resources", "text": "ກຳລັງເກັບຊັບພະຍາກອນ"}
+{"name": "aoe2mc.replay.task_stone", "text": "ກຳລັງເກັບຫີນ"}
+{"name": "aoe2mc.replay.task_walking", "text": "ກຳລັງຍ່າງ"}
+{"name": "aoe2mc.replay.task_wood", "text": "ກຳລັງເກັບໄມ້"}
+{"name": "aoe2mc.replay.team", "text": "ທີມ %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "ນັກທະນູ %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "ເກາະນັກທະນູ %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "ການແບກ %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "ເກາະທະຫານມ້າ %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "ໄຮ່ %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "ຄຳ %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "ເກາະທະຫານຮາບ %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "ກີ່ງທໍຜ້າ %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "ການໂຈມຕີໄລຍະໃກ້ %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "ຫີນ %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "ໄມ້ %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castle"}
+{"name": "aoe2mc.replay.tl_king", "text": "ຂ້າກະສັດ"}
+{"name": "aoe2mc.replay.tl_military", "text": "ທະຫານທຳອິດ: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "ວັດຖຸໂບຮານ"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "ຍອມແພ້"}
+{"name": "aoe2mc.replay.town_fell", "text": ": town center ລົ້ມລົງທີ່ %s. Sudden Death: ຜູ້ຫຼິ້ນອອກຈາກເກມ."}
+{"name": "aoe2mc.replay.town_lost", "text": "ເສຍ town center ທີ່ %s"}
+{"name": "aoe2mc.replay.training", "text": "ກຳລັງຝຶກ: %s"}
+{"name": "aoe2mc.replay.university", "text": "ມະຫາວິທະຍາໄລ:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ເສດຖະກິດ %s · ມະຫາວິທະຍາໄລ %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " ສ້າງສິ່ງມະຫັດທີ່ %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "ການສູ້: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", ໜ່ວຍ %s"}
+{"name": "aoe2mc.replay_input.fights", "text": "ການສູ້ໃຫຍ່:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: ຄລິກຂວາທີ່ໄອເທັມໃນ hotbar ຂອງເຈົ້າ, ຫຼື ຄລິກ: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "ເຂົ້າຄວບຄຸມ: "}
+{"name": "aoe2mc.replay_input.units", "text": " (ໜ່ວຍ %s)"}
+{"name": "aoe2mc.replay_input.vs", "text": " ປະທະ "}
+{"name": "aoe2mc.resource.food", "text": "ອາຫານ"}
+{"name": "aoe2mc.resource.gold", "text": "ຄຳ"}
+{"name": "aoe2mc.resource.stone", "text": "ຫີນ"}
+{"name": "aoe2mc.resource.wood", "text": "ໄມ້"}
+{"name": "aoe2mc.run.back", "text": "%s ກັບມາແລ້ວ"}
+{"name": "aoe2mc.run.campaign_complete", "text": "ການຮົບສຳເລັດແລ້ວ"}
+{"name": "aoe2mc.run.chat_hint", "text": "ແຊັດ: ຂໍ້ຄວາມປົກກະຕິໄປທຸກຄົນ, /tm ຂໍ້ຄວາມ ໄປພັນທະມິດ, /msg ຊື່ ຂໍ້ຄວາມ ໄປຄົນດຽວ."}
+{"name": "aoe2mc.run.left_bot", "text": "%s ອອກແລ້ວ: ບອດເກມຫຼິ້ນແທນຜູ້ຫຼິ້ນ %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "ສະຖານະການ %s ເລີ່ມແລ້ວ. ເຂົ້າຮ່ວມອີກຄັ້ງ."}
+{"name": "aoe2mc.run.starts_in", "text": "ເກມຈະເລີ່ມໃນ %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "ເປີດ \"Choose your player\" ແລ້ວຄລິກ \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "ການຄວບຄຸມທັງໝົດ: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "ຂັ້ນທຳອິດ: ຖືໄມ້ຄັນໃສ່ແຄ໋ວ ແລ້ວຄລິກຂວາໃສ່ຊາວບ້ານໜຶ່ງຄົນຂອງເຈົ້າ."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "ຂັ້ນທຳອິດ: ຖືໄມ້ຄັນໃສ່ແຄ໋ວ ແລ້ວຄລິກຊ້າຍໃສ່ຊາວບ້ານໜຶ່ງຄົນຂອງເຈົ້າ."}
+{"name": "aoe2mc.run.welcome_goal", "text": "ເປົ້າໝາຍ: ຊະນະເກມ. ການຕັ້ງຄ່າຊະນະ: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "ບັນທຶກເກມແລ້ວ: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "ໜ່ວຍ %s ໜ່ວຍອອກມາແລ້ວ"}
+{"name": "aoe2mc.stance.auto_scout", "text": "ສອດແນມອັດຕະໂນມັດ"}
+{"name": "aoe2mc.stance.formation", "text": "ແຖວ: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "ບໍ່ມີໜ່ວຍໃດໂຈມຕີພື້ນໄດ້"}
+{"name": "aoe2mc.stance.unpack", "text": "ແກະ Trebuchet ກ່ອນ"}
+{"name": "aoe2mc.train.active", "text": "%s ເຮັດວຽກຢູ່."}
+{"name": "aoe2mc.train.rally", "text": "ຄລິກຂວາທີ່ພື້ນເພື່ອຕັ້ງຈຸດລວມພົນ."}
+{"name": "aoe2mc.train.researched", "text": "%s ຄົ້ນຄວ້າແລ້ວ."}
+{"name": "aoe2mc.transport.out", "text": "ໜ່ວຍ %s ໜ່ວຍອອກມາແລ້ວ"}
+{"name": "aoe2mc.treaty.ended", "text": "ສັນຍາສິ້ນສຸດແລ້ວ: ຜູ້ຫຼິ້ນໂຈມຕີໄດ້ແລ້ວ."}
+{"name": "aoe2mc.treaty.refuse", "text": "ສັນຍາ: ເຈົ້າໂຈມຕີກ່ອນ %s ບໍ່ໄດ້."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "ສັນຍາ: ເຈົ້າໂຈມຕີໃນເກມນີ້ບໍ່ໄດ້."}
+{"name": "aoe2mc.treaty.start", "text": "ສັນຍາ: ບໍ່ມີຜູ້ຫຼິ້ນຄົນໃດໂຈມຕີຜູ້ຫຼິ້ນອີກຄົນໄດ້ກ່ອນ %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "ສັນຍາ: ບໍ່ມີຜູ້ຫຼິ້ນຄົນໃດໂຈມຕີຜູ້ຫຼິ້ນອີກຄົນໄດ້ໃນເກມນີ້."}
+{"name": "aoe2mc.tutorial.barracks", "text": "ສ້າງ barracks: ຄລິກຂວາໃສ່ຊາວບ້ານທີ່ເລືອກ, ເລືອກ barracks ແລ້ວວາງມັນ. ແຖບການກະທຳເທິງ hotbar ບອກບ່ອນທີ່ຈະວາງ."}
+{"name": "aoe2mc.tutorial.camera", "text": "ເຄື່ອນທີ່ຢູ່ເທິງແຜນທີ່ໄວ: ຄລິກຂວາດ້ວຍໄອເທັມ \"Camera\", ຍ່າງ, ແລ້ວຄລິກຂວາດ້ວຍມັນອີກຄັ້ງ."}
+{"name": "aoe2mc.tutorial.camp", "text": "ທຳລາຍຄ່າຍຂອງສັດຕູຢູ່ກາງແຜນທີ່: ເລືອກ Militia ຂອງເຈົ້າ ແລ້ວຄລິກຂວາໃສ່ອາຄານ. ແຖບ boss ເທິງສຸດສະແດງຂັ້ນຕອນ."}
+{"name": "aoe2mc.tutorial.camps", "text": "ສ້າງຄ່າຍຕັດໄມ້ໃກ້ຕົ້ນໄມ້ ແລະ ໂຮງສີໃກ້ພຸ່ມເບີຣີ. ແຖບດ້ານຂວາສະແດງໄມ້ທີ່ມັນຕ້ອງໃຊ້."}
+{"name": "aoe2mc.tutorial.complete", "text": "ບົດສອນສຳເລັດແລ້ວ. ຂັ້ນຕໍ່ໄປ: ຫຼິ້ນເກມກັບບອດ: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "ບົດສອນສຳເລັດແລ້ວ"}
+{"name": "aoe2mc.tutorial.feudal", "text": "ກ້າວໄປສູ່ຍຸກ Feudal: ຄລິກຂວາໃສ່ town center ຂອງເຈົ້າ ແລ້ວເລືອກຍຸກ Feudal. ແຖບດ້ານຂວາສະແດງອາຫານຂອງເຈົ້າ."}
+{"name": "aoe2mc.tutorial.food", "text": "ເກັບອາຫານ 100: ສົ່ງຊາວບ້ານໄປພຸ່ມເບີຣີ. ແຖບດ້ານຂວາສະແດງອາຫານຂອງເຈົ້າ."}
+{"name": "aoe2mc.tutorial.house", "text": "ສ້າງເຮືອນ: ຄລິກຂວາໃສ່ຊາວບ້ານທີ່ເລືອກ, ເລືອກເຮືອນ ແລ້ວວາງມັນ. ແຖບການກະທຳເທິງ hotbar ບອກບ່ອນທີ່ຈະວາງ."}
+{"name": "aoe2mc.tutorial.militia", "text": "ຝຶກ Militia 3 ໜ່ວຍ: ຄລິກຂວາໃສ່ barracks ຂອງເຈົ້າ ແລ້ວເລືອກ militia. ແຖບດ້ານຂວາສະແດງອາຫານ ແລະ ຄຳຂອງເຈົ້າ."}
+{"name": "aoe2mc.tutorial.raid", "text": "ສັດຕູໂຈມຕີຊາວບ້ານຂອງເຈົ້າ! ຄລິກແຖວແຈ້ງເຕືອນສີແດງໃນແຊັດເພື່ອໄປທີ່ນັ້ນ, ແລ້ວເລືອກ Militia ຂອງເຈົ້າ ແລະ ຄລິກຂວາໃສ່ສັດຕູ. ແຖບ boss ເທິງສຸດສະແດງພະລັງຊີວິດຂອງໜ່ວຍທີ່ເລືອກ."}
+{"name": "aoe2mc.tutorial.select", "text": "ເລືອກຊາວບ້ານ: ຄລິກຊ້າຍໃສ່ຊາວບ້ານໜຶ່ງຄົນດ້ວຍໄມ້ຄັນໃສ່ແຄ໋ວ. ແຖບ boss ເທິງສຸດສະແດງໜ່ວຍທີ່ເລືອກ, ແຖບການກະທຳເທິງ hotbar ສະແດງການກະທຳຕໍ່ໄປ."}
+{"name": "aoe2mc.tutorial.step_done", "text": "ຂັ້ນຕອນສຳເລັດແລ້ວ"}
+{"name": "aoe2mc.tutorial.step_of", "text": "ຂັ້ນຕອນ %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "ເຄັດລັບ: barracks ຝຶກທະຫານຮາບ. ທະຫານຮາບລາຄາຖືກ ແລະ ດີຕໍ່ອາຄານ."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "ເຄັດລັບ: ໂຈມຕີດ້ວຍໜ່ວຍທັງໝົດຮ່ວມກັນ. ກຸ່ມນ້ອຍຈະຕາຍກ່ອນທີ່ມັນຈະເຮັດຄວາມເສຍຫາຍໄດ້."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "ເຄັດລັບ: ສ້າງອາຄານຮັບຊັບພະຍາກອນໃກ້ແຫຼ່ງຊັບພະຍາກອນ, ເພື່ອໃຫ້ຊາວບ້ານເດີນທາງສັ້ນ."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "ເຄັດລັບ: ຍຸກຖັດໄປປົດລັອກອາຄານ, ໜ່ວຍ ແລະ ເທັກໂນໂລຢີໃໝ່. ໃຫ້ຊາວບ້ານເຮັດວຽກໄປພ້ອມກັບການກ້າວໜ້າ."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "ເຄັດລັບ: ພຸ່ມເບີຣີໃກ້ໂຮງສີເປັນການເລີ່ມອາຫານທີ່ປອດໄພ. ຕໍ່ມາ, ໄຮ່ໃຫ້ອາຫານທີ່ບໍ່ໝົດ."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "ເຄັດລັບ: ເຮືອນໃຫ້ບ່ອນວ່າງສຳລັບປະຊາກອນອີກ 5 ຄົນ. ເບິ່ງປະຊາກອນໃນແຖບດ້ານຂວາ ແລະ ສ້າງເຮືອນກ່ອນມັນເຕັມ."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "ເຄັດລັບ: ເຈົ້າສາມາດຈັດຄິວໜ່ວຍໄດ້ເຖິງ 15 ໜ່ວຍໃນອາຄານ ເມື່ອມີຊັບພະຍາກອນພໍ."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "ເຄັດລັບ: ໃນ AoE2 ລະຄັງເມືອງສົ່ງຊາວບ້ານເຂົ້າ town center. ຕີມັນເມື່ອສັດຕູບຸກເມືອງຂອງເຈົ້າ."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "ເຄັດລັບ: ແຖວ Idle ໃນແຖບດ້ານຂວາ ນັບຊາວບ້ານທີ່ບໍ່ມີວຽກ. ໃຫ້ພວກເຂົາມີວຽກ."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "ເຄັດລັບ: ຝຶກຊາວບ້ານຕະຫຼອດເວລາໃນຍຸກຕົ້ນ. ຊາວບ້ານຫຼາຍໃຫ້ຊັບພະຍາກອນຫຼາຍ."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "ເຄັດລັບ: ຊາວບ້ານເກັບໄດ້ໄວຂຶ້ນໃກ້ອາຄານຮັບຊັບພະຍາກອນ. ສ້າງຄ່າຍຕັດໄມ້ຂ້າງຕົ້ນໄມ້."}
+{"name": "aoe2mc.tutorial.villager", "text": "ຝຶກຊາວບ້ານ: ຄລິກຂວາໃສ່ town center ຂອງເຈົ້າ ແລ້ວເລືອກຊາວບ້ານ. ແຖບດ້ານຂວາສະແດງອາຫານທີ່ມັນໃຊ້."}
+{"name": "aoe2mc.tutorial.wood", "text": "ເກັບໄມ້ 50: ເລືອກຊາວບ້ານ ແລ້ວຄລິກຂວາໃສ່ຕົ້ນໄມ້. ແຖບດ້ານຂວາສະແດງໄມ້ຂອງເຈົ້າ."}
+{"name": "aoe2mc.victory", "text": "ຊະນະ"}
+{"name": "aoe2mc.wonder.built", "text": "ຜູ້ຫຼິ້ນ %s ສ້າງສິ່ງມະຫັດແລ້ວ."}
+{"name": "aoe2mc.wonder.destroyed", "text": "ສິ່ງມະຫັດຂອງຜູ້ຫຼິ້ນ %s ຖືກທຳລາຍແລ້ວ."}

@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Ciyaaryahan %s wuxuu u gudbayaa %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Musuqmaasuqu wuxuu khariidadda ka qaadayaa xadka ilaa dhexda %s. Wuxuu burburiyaa dhammaan ciidamada iyo dhismayaasha ku jira."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Hadda halkaas %s ma dhisi karo."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ciidankaas ma tababbari karo: ma haysto dhisme u gaar ah."}
+{"name": "aoe2mc.bot.flare_two", "text": "Flare labo ayaa goobta derbiga tilmaamaya."}
+{"name": "aoe2mc.bot.no_flare", "text": "Flare ma arko."}
+{"name": "aoe2mc.bot.no_market", "text": "Suuq ma haysto: canshuur ma diri karo."}
+{"name": "aoe2mc.bot.no_onager", "text": "Onager ma haysto."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Derbi u dhisanaya agabka ma haysto ee ku filan."}
+{"name": "aoe2mc.bot.no_water", "text": "Biyo magaaladayda ag ma jiraan: markaa markab dagaal ma dhisi karo."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Onagerkayga geedo ma gayn karaan."}
+{"name": "aoe2mc.build.cost", "text": "Agab kuma filna: %s wuxuu qiimihiisu yahay %s."}
+{"name": "aoe2mc.build.flat", "text": "%s waa inuu taagnaadaa dhul siman."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s waa inuu taagnaadaa 4 meel oo derbigaaga ah oo toosan, ama 3 meel oo jeex ah."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Dhis: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s waa inuu taagnaadaa biyo xagga xeebta."}
+{"name": "aoe2mc.build.space", "text": "Meel ma jirto %s halkan."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Agab kuma filna: %s kamid ah %s wuxuu qiimihiisu yahay %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: midig guji dhamaadka derbiga."}
+{"name": "aoe2mc.build.water", "text": "%s waa inuu taagnaadaa biyo."}
+{"name": "aoe2mc.camera.fov", "text": "Kamaradda degdega ah waxay ka dhigtaa shayga gacanta lagu hayo inuu ruxo. Si uu u istaago, deji Options > Accessibility Settings > View Bobbing ilaa OFF. Kamaraddu waxay sidoo kale ballaarisaa aragtida, taasoo muujisa khariidad badan. Si aragtida caadiga ah loo haayo, deji Options > Accessibility Settings > FOV Effects ilaa 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamaradda: damisay"}
+{"name": "aoe2mc.camera.on", "text": "Kamaradda: shidan, xawaare x%s. Midig guji Shift: xawaaraha xiga."}
+{"name": "aoe2mc.camera.speed", "text": "Xawaaraha kamaradda: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Ciidammada cadowga oo dhan ka adkaado, oo ciidamo yar ku lumi"}
+{"name": "aoe2mc.challenge.booming", "text": "Tababbar dadka reer miyiga 100, oo u gudub Imperial Age"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "U gudub Castle Age oo ka badbaado weeraradda cadowga"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Castle-ka cadowga burburi"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Ururi cunto 200, alwaax 200, dahab 100 iyo dhagax 200, tababbar dadka reer miyiga 21, dhis xero alwaax iyo mill, oo u gudub Feudal Age"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Tababbar dadka reer miyiga 27, dhis guryo 5, oo u gudub Castle Age"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Ka adkaado lix mawjadood oo cadow oo dhan"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "Ciidamo %s ayaa la lumay, abaalmarinta biraha ilaa %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "Ciidamo %s ayaa la lumay, abaalmarinta dahabka ilaa %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "Ciidamo %s ayaa la lumay, abaalmarin ma jiro"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "Ciidamo %s ayaa la lumay, abaalmarinta lacagta ilaa %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Abaalmarinta biraha"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Abaalmarinta dahabka"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Abaalmarinta lacagta"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Markabka dagaalka ee cadowga oo dhan burburi"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Abaalmarin ma jiro"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Dad reer miyi cadow 5 dil"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Abaalmarinta biraha goor %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Abaalmarinta dahabka goor %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Abaalmarinta lacagta goor %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis damisay"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis shidan"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tignoolajiyada: ilaa 256 cilmi-baadhis"}
+{"name": "aoe2mc.cheat.cpu", "text": "Xadka dadka: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Daruur dagaal: damisay"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Daruur dagaal: shidan"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Tignoolajiyadu waa bilaash"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Wadaagistu waa daryeel: dakhligaaga wuxuu u tagayaa saaxiibadaada"}
+{"name": "aoe2mc.cheat.wonders", "text": "Dabeecadda waad xakamaynaysaa: xayawaan %s"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Saaxiibada oo keliya ayaa hadhay: heshiisyadii way dhammaadeen. Ciyaaryahanka kaliya ee nool ayaa guuleysta."}
+{"name": "aoe2mc.conquest.defeated", "text": "Ciyaaryahan %s waa la jabiyay."}
+{"name": "aoe2mc.controls.attack", "text": "Weerar: dooro ciidammada dagaalka, kadibna midig guji cadow."}
+{"name": "aoe2mc.controls.build", "text": "Dhis: dooro dadka reer miyiga, midig ku guji si aad u furto menu-ga dhismaha, dooro dhismo, kadibna bidix dhulka guji. Shift + bidix guji: dhis badan. Midig guji: jooji."}
+{"name": "aoe2mc.controls.camera", "text": "Kamaradda: midig guji spyglass Camera (furaha hotbar 2): waxaad si degdeg ah ugu socotaa sare khariidadda. Shift midig guji: xawaaraha xiga. Midig mar kale guji: waad hoos u duushaa."}
+{"name": "aoe2mc.controls.garrison", "text": "Ilaalin: dooro ciidamada, kadibna midig guji dhismahaaga. Menu-giisu wuxuu u ogolaadaa inay soo baxaan. Menu-ga town center: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "Ururi: dooro dadka reer miyiga, kadibna midig guji geed, dhir midho, miin ama beer."}
+{"name": "aoe2mc.controls.goto", "text": "Tag: midig guji kombaaska Go to (furaha hotbar 3): menu-ga town center-kaaga, kooxaha kontoroolka iyo dadka reer miyiga ee fadhiga ah ee xiga."}
+{"name": "aoe2mc.controls.groups", "text": "Kooxaha kontoroolka: dooro ciidamada, qaado shay kooxeed (furaha hotbar 5 ilaa 9) oo Shift + midig guji si aad doorashada u kaydiso. Midig guji: dooro kooxda."}
+{"name": "aoe2mc.controls.head", "text": "Kontoroolka (qabo carrot on a stick; saf-ficilka ayaa tallaabada xigta muujinaya):"}
+{"name": "aoe2mc.controls.menu", "text": "Menu-ga ciyaarta: midig guji buugga Game menu (furaha hotbar 4): heshiisyada iyo canshuurta, flare, kaydi, joogsi iyo geedka tignoolajiyada."}
+{"name": "aoe2mc.controls.move", "text": "Dhaqaaq: doorasho jirta, midig guji dhulka."}
+{"name": "aoe2mc.controls.research", "text": "Cilmi-baadh oo u gudub age xiga: midig guji dhismahaaga, kadibna guji tignoolajiyada ama age xiga menu-kiisa."}
+{"name": "aoe2mc.controls.select", "text": "Dooro: bidix guji ciidan. Bidix ku hay oo dhulka eeg: sanduuq doorasho. Midig guji: sii amarro."}
+{"name": "aoe2mc.controls.train", "text": "Tababbar: midig guji dhismahaaga (town center, barracks ...) oo guji ciidan menu-kiisa ku jira."}
+{"name": "aoe2mc.defeat", "text": "Guuldarro"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Saaxiib"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Ciyaaryahan %s wuxuu u beddelay dabeecadiisa adiga: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Cadow"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Dhexdhexaad"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Ciyaaryahan %s wuxuu u dejiyay xawaaraha ciyaarta %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Ciyaaryahan %s wuxuu %s %s u diray ciyaaryahan %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Flare ee %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Raac: guji ciidankaaga"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Ilaali: guji ciidan ama dhismo oo leedahay"}
+{"name": "aoe2mc.gaia.joins", "text": "%s ayaa kugu biirta."}
+{"name": "aoe2mc.garrison.all_back", "text": "Dhammaantood shaqada ku noqdeen"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Hoodhada magaalada ayaa dhawaaqaysa: dadka reer miyiga %s waxay raadinayaan magangal"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Qof reer miyi ah lama dooran."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Dad reer miyi ma haysto."}
+{"name": "aoe2mc.garrison.out", "text": "Ciidamo %s ayaa soo baxay"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "Dadka reer miyiga %s waxay raadinayaan magangal"}
+{"name": "aoe2mc.gather.act_attack", "text": "weeri"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menu-ga dhismaha"}
+{"name": "aoe2mc.gather.act_garrison", "text": "ilaali"}
+{"name": "aoe2mc.gather.act_gather", "text": "ururi"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ugaadh"}
+{"name": "aoe2mc.gather.act_move", "text": "dhaqaaq"}
+{"name": "aoe2mc.gather.act_select", "text": "dooro"}
+{"name": "aoe2mc.gather.act_select_type", "text": "dooro dhammaan nooca"}
+{"name": "aoe2mc.gather.act_trade", "text": "ganacsi"}
+{"name": "aoe2mc.gather.act_train", "text": "tababbar"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Weerar: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Sanduuqa doorashada: waa la joojiyay"}
+{"name": "aoe2mc.gather.bush", "text": "Dhir midho"}
+{"name": "aoe2mc.gather.carcass", "text": "Jidhka xayawaanka"}
+{"name": "aoe2mc.gather.corner", "text": "Sanduuqa doorashada: guji geeska kale"}
+{"name": "aoe2mc.gather.enemy", "text": "Cadow %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Dhismo cadow"}
+{"name": "aoe2mc.gather.farm", "text": "Beer"}
+{"name": "aoe2mc.gather.ground", "text": "Dhul"}
+{"name": "aoe2mc.gather.group", "text": "Kooxda %s: ciidamo %s"}
+{"name": "aoe2mc.gather.group_saved", "text": "Kooxda %s: ciidamo %s waa la kaydiyay"}
+{"name": "aoe2mc.gather.mine", "text": "Miin %s"}
+{"name": "aoe2mc.gather.paused", "text": "Ciyaarta waa la joojiyay."}
+{"name": "aoe2mc.gather.point", "text": "%s · Midig guji: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Beer-beerinta la sugay: %s"}
+{"name": "aoe2mc.gather.selected", "text": "La doortay: ciidamo %s"}
+{"name": "aoe2mc.gather.tree", "text": "Geed"}
+{"name": "aoe2mc.hill.holds", "text": "Ciyaaryahan %s wuxuu haysta monument-ka."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Weerar dhul: midig guji dhulka"}
+{"name": "aoe2mc.hints.attack_move", "text": "Weerar markii la socdo: midig guji dhulka"}
+{"name": "aoe2mc.hints.building", "text": "Geli %s: midig guji dhulka · Shift + midig guji: geli badan · Jooji: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: bidix guji si aad u geliso · Shift: geli badan · Midig guji: jooji"}
+{"name": "aoe2mc.hints.corner", "text": "Sanduuqa doorashada: midig guji geeska kale"}
+{"name": "aoe2mc.hints.count_military", "text": "%s ciidan dagaal"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s ciidan dagaal"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s qof reer miyi"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s dad reer miyi"}
+{"name": "aoe2mc.hints.deselect", "text": "Sanduuq madhan: ka saar doorashada"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Bidix guji: ka saar doorashada"}
+{"name": "aoe2mc.hints.follow", "text": "Raac: midig guji ciidankaaga ama saaxiibkaaga"}
+{"name": "aoe2mc.hints.guard", "text": "Ilaali: midig guji ciidan ama dhismo oo leedahay ama saaxiib"}
+{"name": "aoe2mc.hints.military", "text": "%s · Midig guji: weeri cadow, menu-ga dabeecadda · %s"}
+{"name": "aoe2mc.hints.none", "text": "Bidix guji: dooro ciidan · Bidix ku hay: sanduuqa doorashada"}
+{"name": "aoe2mc.hints.none_wand", "text": "Midig guji: dooro ciidan · Wand: sanduuqa doorashada"}
+{"name": "aoe2mc.hints.patrol", "text": "Joogso: midig guji dhulka"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Midig guji: ururi, dhis, menu-ga dhismaha · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s diyaar ah"}
+{"name": "aoe2mc.lobby.you_play", "text": "Adigu waxaad ciyaareysaa %s."}
+{"name": "aoe2mc.monk.converts", "text": "Wadaad ayaa beddelaya %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s wuu dhintay (Heresy)."}
+{"name": "aoe2mc.pause.continued", "text": "Ciyaaryahan %s wuxuu ciyaarta ku sii waday."}
+{"name": "aoe2mc.pause.paused", "text": "Ciyaaryahan %s wuxuu ciyaarta joojiyay."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Kooxda %s (dhibcaha celceliska %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Ciyaartu way dhammaatay. Midig guji buuga Recap ee gacantaada si aad natiijooyinka u aragto. Ciyaarta programka ku joogso Ctrl-C console-kiisa."}
+{"name": "aoe2mc.relic_victory.all", "text": "Ciyaaryahan %s wuxuu haystaa dhammaan relic-yada."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Ciyaaryahan %s wuxuu lumiyay hal relic."}
+{"name": "aoe2mc.repair.no_resources", "text": "Agab kuma filna in %s la dayactiro."}
+{"name": "aoe2mc.replay.army", "text": "Ciidan: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", ciidan dhamaadka: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", lumay: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Amarka dhismaha:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · ilaali %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | wuxuu qaadayaa %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "dhis %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "cunto %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "dahab %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "fadhi %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "dhagax %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "alwaax %s"}
+{"name": "aoe2mc.replay.flare", "text": "Flare"}
+{"name": "aoe2mc.replay.game_ends", "text": "Ciyaartu way dhammaanaysaa"}
+{"name": "aoe2mc.replay.game_time", "text": "Waqtiga ciyaarta %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · ilaali %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Ciidan %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Dad %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Agab %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Reer miyi %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s wuxuu haystay monument-ka: guusha King of the Hill ee %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atk %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift laba jeer taabo: aragtida daawadayaasha (ku duul block-yada). Midig guji shayada hotbar: xakamaynta replay."}
+{"name": "aoe2mc.replay.king_died", "text": ": boqorku wuu dhintay %s. Regicide: ciyaaryahanku wuu baxay."}
+{"name": "aoe2mc.replay.king_killed", "text": "Boqorka waa la dilay %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Replay tooska ah: boodka wuxuu joogsanayaa dib-u-dhaca ka dambeeya ciyaarta."}
+{"name": "aoe2mc.replay.lost", "text": "Lumay: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " wuxuu haystaa monument-ka %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monument, sannad %s ayaa haray"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monument, sannad %s ayaa haray"}
+{"name": "aoe2mc.replay.no_camera", "text": "Replay-kan kamaradda ciyaaryahankiisa ma leh."}
+{"name": "aoe2mc.replay.now", "text": " hadda"}
+{"name": "aoe2mc.replay.out", "text": "%s wuu baxay"}
+{"name": "aoe2mc.replay.players", "text": "Ciyaaryahanno"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " wuxuu relic-ka u qaadayaa khaanqada oo wuu guuleystay."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Replay-ku wuu dhammaaday"}
+{"name": "aoe2mc.replay.research", "text": " wuxuu cilmi-baadhayaa %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s wuu iska casutay"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Server-ku dib buu u bilaabayaa boodka dib-u-noqoshada: ku biir mar kale."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Dhismayaasha %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Dhaqaalaha %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Ciidanka %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tignoolajiyada %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Wadarta %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "castle %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "iibsaday %s, iibiyay %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relic %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "yaabo %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Kharash:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Dhis %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Dhaqaale %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Ciidan %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tignoolajiyad %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": dadka reer miyiga ee la tababbaray %s, la ururiyay %s, waqtiga dadka reer miyiga fadhiga ah %s, waqtiga TC fadhiga ah %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": wuxuu haystaa monument-ka (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monument-ka la guuleystay %s (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": ciidamada dagaalka la tababbaray %s, ciidamo la lumiyay %s, dhismayaal la lumiyay %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": boqorka la dilay %s (Regicide)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": guuleysta, relic khaanqada %s (Capture the Relic)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sCanshuur la diray %s, la helay %s, dadka reer miyiga ugu sarreeya %s (qiyaas)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": town center la lumiyay %s (Sudden Death)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tignoolajiyad %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": waqtiga yaabada laga bilaabay %s, wuxuu dhammaanayaa %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Soo koobid (qiyaas)"}
+{"name": "aoe2mc.replay.task_building", "text": "dhisaya"}
+{"name": "aoe2mc.replay.task_following", "text": "raacaya"}
+{"name": "aoe2mc.replay.task_food", "text": "cunto ururinaya"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "ilaalinta ku jira"}
+{"name": "aoe2mc.replay.task_gold", "text": "dahab ururinaya"}
+{"name": "aoe2mc.replay.task_guarding", "text": "ilaalinaya"}
+{"name": "aoe2mc.replay.task_idle", "text": "fadhi"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "joogsanaya"}
+{"name": "aoe2mc.replay.task_resources", "text": "agab ururinaya"}
+{"name": "aoe2mc.replay.task_stone", "text": "dhagax ururinaya"}
+{"name": "aoe2mc.replay.task_walking", "text": "socdaya"}
+{"name": "aoe2mc.replay.task_wood", "text": "alwaax ururinaya"}
+{"name": "aoe2mc.replay.team", "text": "Kooxda %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Fallaagada %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Hubka fallaagada %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Qaadista %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Hubka fardaha %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Beer %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Dahab %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Hubka askarta cagta %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Hoolka hargaha %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Dagaalka gacanta %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Dhagax %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Alwaax %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castle"}
+{"name": "aoe2mc.replay.tl_king", "text": "Boqorka la dilay"}
+{"name": "aoe2mc.replay.tl_military", "text": "Ciidanka ugu horreeya: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relic"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Wuu iska casaystay"}
+{"name": "aoe2mc.replay.town_fell", "text": ": town center wuu dhacay %s. Sudden Death: ciyaaryahanku wuu baxay."}
+{"name": "aoe2mc.replay.town_lost", "text": "Town center la lumiyay %s"}
+{"name": "aoe2mc.replay.training", "text": "Tababbaraya: %s"}
+{"name": "aoe2mc.replay.university", "text": "Jaamacad:"}
+{"name": "aoe2mc.replay.up_counts", "text": "dhaqaale %s · Jaamacad %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " wuxuu dhisay yaabo %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Dagaal: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", ciidamo %s"}
+{"name": "aoe2mc.replay_input.fights", "text": "Dagaallo waaweyn:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: midig guji shayada hotbar-kaaga, ama guji: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Qabso xakamaynta: "}
+{"name": "aoe2mc.replay_input.units", "text": " (ciidamo %s)"}
+{"name": "aoe2mc.replay_input.vs", "text": " ka dhan "}
+{"name": "aoe2mc.resource.food", "text": "cunto"}
+{"name": "aoe2mc.resource.gold", "text": "dahab"}
+{"name": "aoe2mc.resource.stone", "text": "dhagax"}
+{"name": "aoe2mc.resource.wood", "text": "alwaax"}
+{"name": "aoe2mc.run.back", "text": "%s wuu soo noqday"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Olole waa dhammaatay"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: sadar caadi ah waxay u tagtaa dhammaan, /tm QORAAL saaxiibadaada, /msg MAGAC QORAAL qof keliya."}
+{"name": "aoe2mc.run.left_bot", "text": "%s wuu baxay: bot-ka ayaa ciyaaraya ciyaaryahanka %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Xaaladda %s way bilaabatay. Mar kale ku biir."}
+{"name": "aoe2mc.run.starts_in", "text": "Ciyaartu waxay bilaabataa %s gudahood"}
+{"name": "aoe2mc.run.wait_ready", "text": "Fur \"Choose your player\" oo guji \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Dhammaan kontoroolada: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Tallaabada koowaad: qabo ushka amarka oo midig guji mid ka mid ah dadkaaga reer miyiga."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Tallaabada koowaad: qabo ushka amarka oo bidix guji mid ka mid ah dadkaaga reer miyiga."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Hadafka: ciyaarta guuleyso. Dejinta guusha: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Ciyaarta waa la kaydiyay: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "Ciidamo %s ayaa soo baxay"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Baadhis toos ah"}
+{"name": "aoe2mc.stance.formation", "text": "Qaabka: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ciidan ma jiro oo dhulka weeri karta"}
+{"name": "aoe2mc.stance.unpack", "text": "Marka hore Trebuchet-ka fur"}
+{"name": "aoe2mc.train.active", "text": "%s waa shaqaynaysaa."}
+{"name": "aoe2mc.train.rally", "text": "Midig guji dhulka meesha isu-soo-ururinta."}
+{"name": "aoe2mc.train.researched", "text": "%s waa la cilmi-baadhay."}
+{"name": "aoe2mc.transport.out", "text": "Ciidamo %s ayaa soo baxay"}
+{"name": "aoe2mc.treaty.ended", "text": "Heshiiska wuu dhammaaday: ciyaaryahanku hadda way weeri karaan."}
+{"name": "aoe2mc.treaty.refuse", "text": "Heshiis: ka hor %s ma weeri kartid."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Heshiis: ciyaartan ma weeri kartid."}
+{"name": "aoe2mc.treaty.start", "text": "Heshiis: ciyaaryahan ma weeri karo ciyaaryahan kale ka hor %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Heshiis: ciyaaryahan ma weeri karo ciyaaryahan kale ciyaartan."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Dhis barracks: midig guji dadka reer miyiga la doortay, dooro barracks oo geli. Saftii amarka ee hotbar-ka sare ayaa kuu sheegaysa meesha lagu geliyo."}
+{"name": "aoe2mc.tutorial.camera", "text": "Khariidadda degdeg ugu gudub: midig guji shayga \"Camera\", soco, kadibna midig mar kale ku guji."}
+{"name": "aoe2mc.tutorial.camp", "text": "Burburi xerada cadowga dhexda khariidadda: dooro Militia-daada oo midig guji dhismo. Boss bar-ka sare ayaa tallaabada muujisa."}
+{"name": "aoe2mc.tutorial.camps", "text": "Dhis xero alwaax oo u dhow geedaha iyo mill oo u dhow dhirta midhaha. Sidebar-ka midig wuxuu muujinayaa alwaaxa ay qiimahooda yihiin."}
+{"name": "aoe2mc.tutorial.complete", "text": "Tababarku wuu dhammaaday. Xiga: ciyaar la bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tababarku wuu dhammaaday"}
+{"name": "aoe2mc.tutorial.feudal", "text": "U gudub Feudal Age: midig guji town center-kaaga oo dooro Feudal Age. Sidebar-ka midig wuxuu muujinayaa cuntadaada."}
+{"name": "aoe2mc.tutorial.food", "text": "Ururi cunto 100: u dir qof reer miyi dhirta midhaha. Sidebar-ka midig wuxuu muujinayaa cuntadaada."}
+{"name": "aoe2mc.tutorial.house", "text": "Dhis guri: midig guji qofka reer miyiga la doortay, dooro guriga oo geli. Saftii amarka ee hotbar-ka sare ayaa kuu sheegaysa meesha lagu geliyo."}
+{"name": "aoe2mc.tutorial.militia", "text": "Tababbar Militia 3: midig guji barracks-kaaga oo dooro militia. Sidebar-ka midig wuxuu muujinayaa cuntada iyo dahabkaaga."}
+{"name": "aoe2mc.tutorial.raid", "text": "Cadowgu dadkaaga reer miyiga ayuu weeraraya! Guji khadka digniinta ee casaanka ah chat-ka si aad halkaas u tagto, kadibna dooro Militia-daada oo midig guji cadowga. Boss bar-ka sare wuxuu muujinayaa caafimaadka ciidanka la doortay."}
+{"name": "aoe2mc.tutorial.select", "text": "Dooro qof reer miyi: bidix guji mid ka mid ah dadkaaga reer miyiga ushka amarka. Boss bar-ka sare wuxuu muujinayaa ciidanka la doortay, saftii amarka ee hotbar-ka sare wuxuu muujinayaa ficilka xiga."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Tallaabada waa la dhammeeyay"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Tallaabada %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TALO: barracks-ku wuxuu tababbaraa askarta cagta. Askarta cagta way jaban yihiin oo dhismayaasha ka adkaan karaan."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TALO: ciidamadaada oo dhan wada weeri. Koox yar ayaa dhimanaysa ka hor inta aysan dhibaato gaysan."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TALO: dhis dhismayaasha keenista agabka agabka ku dhow, si dadka reer miyiga ay waddo gaaban u mariyaan."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TALO: age-ka xiga wuxuu furayaa dhismayaal, ciidan iyo tignoolajiyad cusub. Dadka reer miyiga ka shaqaysiiya inta aad horumarineysid."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TALO: dhirta midhaha ee u dhow mill waa bilow cunto oo badbaado leh. Dambe, beeraha waxay siiyaan cunto aan dhammaanayn."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TALO: guri wuxuu siiyaa meel dad 5 ah oo dheeraad ah. Eeg tirada dadka sidebar-ka oo dhis guryo ka hor inta aysan buuxsamin."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TALO: waxaad isku dari kartaa ilaa 15 ciidan dhismo gudahiisa marka agabku kuu filan yahay."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TALO: AoE2 hoodhada magaaladu waxay dadka reer miyiga u dirtaa town center. Dhaqaaqi markay cadowgu magaaladaada weeraro."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TALO: khadka Idle ee sidebar-ka midig wuxuu tiriyaa dadka reer miyiga aan shaqo lahayn. U sii shaqo."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TALO: dadka reer miyiga mar walba tababbar waqtiga age-ka hore. Dadka reer miyiga badan waxay siiyaan agab badan."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TALO: dadka reer miyiga si dhakhso ah ayay u ururiyaan agabka dhismaha u dhow. Xero alwaax ku dhis geedaha agtooda."}
+{"name": "aoe2mc.tutorial.villager", "text": "Tababbar qof reer miyi: midig guji town center-kaaga oo dooro villager. Sidebar-ka midig wuxuu muujinayaa cuntada uu qaadanayo."}
+{"name": "aoe2mc.tutorial.wood", "text": "Ururi alwaax 50: dooro qof reer miyi oo midig guji geed. Sidebar-ka midig wuxuu muujinayaa alwaaxaada."}
+{"name": "aoe2mc.victory", "text": "Guul"}
+{"name": "aoe2mc.wonder.built", "text": "Ciyaaryahan %s wuxuu dhisay yaabo."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Yaabada ciyaaryahan %s waa la burburiyay."}
