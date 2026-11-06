@@ -234,11 +234,12 @@ class Client:
 
     SCALE = 3                       # GUI scale: slot() needs a fixed one
 
-    def __init__(self, port, version, size=(1280, 720), name="aoe2mc", chat=False, world=None):
+    def __init__(self, port, version, size=(1280, 720), name="aoe2mc", chat=False, world=None, host="127.0.0.1"):
         for tool in ("Xvfb", "import", "xdotool"):
             if not shutil.which(tool):
                 sys.exit(f"{tool} is not installed (apt-get install xvfb imagemagick xdotool)")
         self.port, self.version, self.size, self.name, self.chat = port, version, size, name, chat
+        self.host = host                # the address of the server: a --host game also on the network address (#5916)
         self.client = self.xvfb = self.log = None
         if world:
             forget(world, name)
@@ -263,7 +264,7 @@ class Client:
              "--version", self.version, "--gameDir", self.game, "--assetsDir", os.path.join(base, "assets"),
              "--assetIndex", vj["assetIndex"]["id"], "--uuid", "00000000-0000-0000-0000-000000000001",
              "--accessToken", "0", "--userType", "legacy", "--width", str(self.size[0]), "--height", str(self.size[1]),
-             "--quickPlayMultiplayer", f"127.0.0.1:{self.port}"],
+             "--quickPlayMultiplayer", f"{self.host}:{self.port}"],
             cwd=self.game, env=self.env, stdout=self.log, stderr=subprocess.STDOUT)
         return self
 
