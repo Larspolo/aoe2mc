@@ -256,6 +256,7 @@ NOT_SAVED = (                                                          # the fie
     "spectator_sent",                                                  # spectator.tick: a load sends them again
     "spectator_views",                                                 # spectator.views: each spectator chooses again
     "speed",                                                           # run.py: the --speed option
+    "stand_ins",                                                       # rejoin.py: the bots of people who left; a loaded game waits for the joins
     "sudden_death_at",                                                 # sudden_death.py: the next check time
     "tech_state_at",                                                   # scenario.py: the next check time
     "tech_state_sent",                                                 # scenario.tech_states: a load sends them again
