@@ -89,6 +89,7 @@ import near  # noqa: E402
 import record  # noqa: E402
 import regen  # noqa: E402
 import regicide  # noqa: E402
+import rejoin  # noqa: E402
 import relic_victory  # noqa: E402
 import repair  # noqa: E402
 import replay  # noqa: E402  (build imports it too)
@@ -2392,6 +2393,7 @@ class Gather:
             self.step()
             for b in self.bots:
                 b.step()
+            rejoin.tick(self)                                          # a bot for a person who left (#5893)
             conquest.tick(self)                                        # not in step(): the bot steps its own Gather
             music.tick(self)                                           # calm tracks in peace (#5341)
             if has_mode(self, "regicide"):                             # a player without its King loses (#2347)

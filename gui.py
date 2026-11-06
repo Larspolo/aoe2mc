@@ -36,6 +36,7 @@ GAME = Path(__file__).resolve().parent / "game" / "run.py"
 STOP_LINE = "\x03"                     # the byte of Ctrl-C on stdin: the Stop on Windows (run.STOP_LINE, #3003)
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)            # Windows: no empty console window of the game program
 PLAY_VALUES = (("server", "--server"), ("people", "--people"), ("reveal", "--reveal"))
+ON = ("play", "preview", "resource_pack")   # the boxes that start checked; the pack costs ~1 % (#5898)
 PLAY_FLAGS = (("play", "--play"), ("bot", "--bot"), ("cheats", "--cheats"))
 BOT_VALUES = (("bot_attack", "--bot-attack"),)                     # only with --bot (#1870)
 # The java binary of a JRE in the cache, in each layout: the same as mc_check.CACHED (#3054)
@@ -347,14 +348,14 @@ def window():
     v["server"].set("paper")
     v["people"].set("1")
     v["reveal"].set("normal")
-    v["play"].set(True)
     v["speed"].set("1")
     v["start"].set("0:00")
     v["bot_attack"].set("10:00")
     v["tile_size"].set("4")
     v["level_height"].set("3")
     v["seed"].set("1")
-    v["preview"].set(True)
+    for k in ON:
+        v[k].set(True)
 
     def pick_input():
         p = filedialog.askopenfilename(filetypes=[("AoE2 scenario or recorded game", " ".join("*" + e for e in INPUTS)),

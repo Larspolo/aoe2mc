@@ -6,3 +6,4 @@ select = ["F"]                  # the copied tools pass these rules; add more ru
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "framework/tests"]
+addopts = "--import-mode=importlib"   # a project test may have the name of a framework test (#5910)

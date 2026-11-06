@@ -81,6 +81,23 @@ def lint():
     return True
 
 
+SCANS = tuple(CONFIG.get("ci", {}).get("scans", ()))           # `[ci] scans`: tests that scan files, no import (#5908)
+SCAN_PATHS = tuple(CONFIG.get("ci", {}).get("scan_paths", ()))  # `[ci] scan_paths`: a change under them runs SCANS
+
+
+def scans(changed):
+    """The scan tests (SCANS) when a changed file is under SCAN_PATHS, also with `--tested`: no import connects such a
+    test to a changed module, so `checks()` misses it (a new Gather field with no savegame line: PR #5497, PR #5900).
+    True when they pass or do not apply."""
+    run = [f for f in SCANS if os.path.isfile(f)]
+    if not run or not any(f.startswith(SCAN_PATHS) for f in changed):
+        return True
+    r = subprocess.run([sys.executable, "-m", "pytest", "-q", *run], capture_output=True, text=True)
+    if r.returncode:
+        print("\n".join((r.stdout + r.stderr).strip().splitlines()[-15:]))
+    return r.returncode == 0
+
+
 def checks():
     """The test files of the branch and of its changed modules (more than `MAX_TESTS`: only the branch's).
     Never the full fast suite: the quick CI runs it on each push (owner, #4187). True when all pass."""
@@ -255,7 +272,7 @@ def main(argv=None):
     if bad := data_only_tests(changed):                  # also with --tested
         print(f"a change of data files only must not add or change tests: remove {' '.join(bad)} (docs/extend.md)")
         return 2
-    if not lint() or (not a.tested and not checks()):
+    if not lint() or not scans(changed) or (not a.tested and not checks()):
         return 2
     if not push(a.number):
         return 3

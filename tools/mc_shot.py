@@ -227,6 +227,22 @@ def forget(world, name):
                 os.remove(os.path.join(root, f))
 
 
+def servers_dat(path, address):
+    """Write the server list of the client (uncompressed NBT) with one server that accepts its resource pack
+    (acceptTextures 1): else the prompt of a server pack waits for a click and the join stops (#5916)."""
+    import struct
+
+    def text(t, name, value):
+        b = value.encode()
+        return bytes([t]) + struct.pack(">H", len(name)) + name.encode() + struct.pack(">H", len(b)) + b
+
+    server = (text(8, "ip", address) + text(8, "name", "aoe2mc") + b"\x01" + struct.pack(">H", 14)
+              + b"acceptTextures" + b"\x01" + b"\x00")
+    body = b"\x09" + struct.pack(">H", 7) + b"servers" + b"\x0a" + struct.pack(">i", 1) + server
+    with open(path, "wb") as f:
+        f.write(b"\x0a\x00\x00" + body + b"\x00")
+
+
 class Client:
     """The client as player "aoe2mc" on the server at 127.0.0.1:port (online-mode=false), in Xvfb. A context manager:
     the client is in the world when wait_join() returns (or the test sees the player in "list").
@@ -234,11 +250,12 @@ class Client:
 
     SCALE = 3                       # GUI scale: slot() needs a fixed one
 
-    def __init__(self, port, version, size=(1280, 720), name="aoe2mc", chat=False, world=None):
+    def __init__(self, port, version, size=(1280, 720), name="aoe2mc", chat=False, world=None, host="127.0.0.1"):
         for tool in ("Xvfb", "import", "xdotool"):
             if not shutil.which(tool):
                 sys.exit(f"{tool} is not installed (apt-get install xvfb imagemagick xdotool)")
         self.port, self.version, self.size, self.name, self.chat = port, version, size, name, chat
+        self.host = host                # the address of the server: a --host game also on the network address (#5916)
         self.client = self.xvfb = self.log = None
         if world:
             forget(world, name)
@@ -250,6 +267,7 @@ class Client:
         opts = OPTIONS | {"guiScale": self.SCALE} | ({"chatScale": "1.0"} if self.chat else {})
         with open(os.path.join(self.game, "options.txt"), "w") as f:
             f.writelines(f"{k}:{v}\n" for k, v in opts.items())
+        servers_dat(os.path.join(self.game, "servers.dat"), f"{self.host}:{self.port}")
         disp = free_display()
         self.env = dict(os.environ, DISPLAY=f":{disp}", LIBGL_ALWAYS_SOFTWARE="1")
         self.xvfb = subprocess.Popen(["Xvfb", f":{disp}", "-screen", "0", f"{self.size[0]}x{self.size[1]}x24"],
@@ -263,7 +281,7 @@ class Client:
              "--version", self.version, "--gameDir", self.game, "--assetsDir", os.path.join(base, "assets"),
              "--assetIndex", vj["assetIndex"]["id"], "--uuid", "00000000-0000-0000-0000-000000000001",
              "--accessToken", "0", "--userType", "legacy", "--width", str(self.size[0]), "--height", str(self.size[1]),
-             "--quickPlayMultiplayer", f"127.0.0.1:{self.port}"],
+             "--quickPlayMultiplayer", f"{self.host}:{self.port}"],
             cwd=self.game, env=self.env, stdout=self.log, stderr=subprocess.STDOUT)
         return self
 
