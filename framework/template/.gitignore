@@ -1,0 +1,8 @@
+# Python and tool caches: no part of a new project (#5910)
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+# secrets of the project
+.env
