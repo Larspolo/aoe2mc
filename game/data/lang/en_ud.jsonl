@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Ԁlɐʎǝɹ %s ɐpʌɐuɔǝs ʇo ʇɥǝ %s˙"}
+{"name": "aoe2mc.battle_royale.start", "text": "qɐʇʇlǝ ɹoʎɐlǝ: ʇɥǝ Ɔoɹɹndʇᴉou ʇɐʞǝs ʇɥǝ ɯɐd ɟɹoɯ ᴉʇs qoɹpǝɹ ʇo ᴉʇs ɔǝuʇǝɹ ᴉu %s˙ Iʇ pǝsʇɹoʎs ɐll nuᴉʇs ɐup qnᴉlpᴉuƃs ᴉu ᴉʇ˙"}
+{"name": "aoe2mc.bot.cannot_build", "text": "I ɔɐuuoʇ qnᴉlp ɐ %s ʇɥǝɹǝ uoʍ˙"}
+{"name": "aoe2mc.bot.cannot_train", "text": "I ɔɐuuoʇ ʇɹɐᴉu ʇɥɐʇ nuᴉʇ: I ɥɐʌǝ uo qnᴉlpᴉuƃ ɟoɹ ᴉʇ˙"}
+{"name": "aoe2mc.bot.flare_two", "text": "ɟlɐɹǝ ʇʍo dlɐɔǝs ɟoɹ ʇɥǝ ʍɐll˙"}
+{"name": "aoe2mc.bot.no_flare", "text": "I sǝǝ uo ɟlɐɹǝ˙"}
+{"name": "aoe2mc.bot.no_market", "text": "I ɥɐʌǝ uo ɯɐɹʞǝʇ: I ɔɐuuoʇ sǝup ʇɹᴉqnʇǝ˙"}
+{"name": "aoe2mc.bot.no_onager", "text": "I ɥɐʌǝ uo ouɐƃǝɹ˙"}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "I ɥɐʌǝ uoʇ ǝuonƃɥ ɹǝsonɹɔǝs ɟoɹ ɐ ʍɐll˙"}
+{"name": "aoe2mc.bot.no_water", "text": "I ɥɐʌǝ uo ʍɐʇǝɹ uǝɐɹ ɯʎ ʇoʍu: I ɔɐuuoʇ qnᴉlp ɐ uɐʌʎ˙"}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Wʎ ouɐƃǝɹs ɔɐuuoʇ ɔnʇ ʇɹǝǝs˙"}
+{"name": "aoe2mc.build.cost", "text": "Noʇ ǝuonƃɥ ɹǝsonɹɔǝs: ɐ %s ɔosʇs %s˙"}
+{"name": "aoe2mc.build.flat", "text": "┴ɥǝ %s ɯnsʇ sʇɐup ou ɟlɐʇ ƃɹonup˙"}
+{"name": "aoe2mc.build.gate_spot", "text": "∀ %s ɯnsʇ ƃo ou ㄣ ʇᴉlǝs oɟ ɐu oʍu ʍɐll ᴉu ɐ sʇɹɐᴉƃɥʇ lᴉuǝ' oɹ ou Ɛ pᴉɐƃouɐl ʇᴉlǝs˙"}
+{"name": "aoe2mc.build.locked", "text": "%s: %s˙"}
+{"name": "aoe2mc.build.menu_head", "text": "qnᴉlp: "}
+{"name": "aoe2mc.build.menu_line", "text": "/ʇɹᴉƃƃǝɹ ɐoǝ_qnᴉlp sǝʇ %s: %s ,%s)"}
+{"name": "aoe2mc.build.shore", "text": "∀ %s ɯnsʇ sʇɐup ou ʍɐʇǝɹ uǝxʇ ʇo ʇɥǝ sɥoɹǝ˙"}
+{"name": "aoe2mc.build.space", "text": "No sdɐɔǝ ɟoɹ ʇɥǝ %s ɥǝɹǝ˙"}
+{"name": "aoe2mc.build.tiles_cost", "text": "Noʇ ǝuonƃɥ ɹǝsonɹɔǝs: %s ʇᴉlǝs oɟ %s ɔosʇ %s˙"}
+{"name": "aoe2mc.build.wall_end", "text": "%s: ɹᴉƃɥʇ ɔlᴉɔʞ ʇɥǝ ǝup oɟ ʇɥǝ ʍɐll˙"}
+{"name": "aoe2mc.build.water", "text": "∀ %s ɯnsʇ sʇɐup ou ʇɥǝ ʍɐʇǝɹ˙"}
+{"name": "aoe2mc.camera.fov", "text": "┴ɥǝ ɟɐsʇ ɔɐɯǝɹɐ ɯɐʞǝs ʇɥǝ ɥǝlp ᴉʇǝɯ sʍᴉuƃ˙ ┴o ʞǝǝd ᴉʇ sʇᴉll' sǝʇ Odʇᴉous > ∀ɔɔǝssᴉqᴉlᴉʇʎ Sǝʇʇᴉuƃs > Λᴉǝʍ qoqqᴉuƃ ʇo Oɟɟ˙ ┴ɥǝ ɔɐɯǝɹɐ ɐlso ɯɐʞǝs ʇɥǝ ʌᴉǝʍ ʍᴉpǝɹ' ʍɥᴉɔɥ sɥoʍs ɯoɹǝ oɟ ʇɥǝ ɯɐd˙ ┴o ʞǝǝd ʇɥǝ uoɹɯɐl ʌᴉǝʍ' sǝʇ Odʇᴉous > ∀ɔɔǝssᴉqᴉlᴉʇʎ Sǝʇʇᴉuƃs > ɟOΛ Ǝɟɟǝɔʇs ʇo 0 %˙"}
+{"name": "aoe2mc.camera.off", "text": "Ɔɐɯǝɹɐ: oɟɟ"}
+{"name": "aoe2mc.camera.on", "text": "Ɔɐɯǝɹɐ: ou' sdǝǝp x%s˙ Sɥᴉɟʇ ɹᴉƃɥʇ ɔlᴉɔʞ: uǝxʇ sdǝǝp˙"}
+{"name": "aoe2mc.camera.speed", "text": "Ɔɐɯǝɹɐ sdǝǝp: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "pǝɟǝɐʇ ɐll ǝuǝɯʎ nuᴉʇs ɐup losǝ ɟǝʍ nuᴉʇs"}
+{"name": "aoe2mc.challenge.booming", "text": "┴ɹɐᴉu Ɩ00 ʌᴉllɐƃǝɹs ɐup ɐpʌɐuɔǝ ʇo ʇɥǝ Iɯdǝɹᴉɐl ∀ƃǝ"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "∀pʌɐuɔǝ ʇo ʇɥǝ Ɔɐsʇlǝ ∀ƃǝ ɐup snɹʌᴉʌǝ ʇɥǝ ǝuǝɯʎ ɐʇʇɐɔʞs"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "pǝsʇɹoʎ ʇɥǝ ǝuǝɯʎ ɔɐsʇlǝ"}
+{"name": "aoe2mc.challenge.early-economy", "text": "פɐʇɥǝɹ ᄅ00 ɟoop' ᄅ00 ʍoop' Ɩ00 ƃolp ɐup ᄅ00 sʇouǝ' ʇɹɐᴉu ᄅƖ ʌᴉllɐƃǝɹs' qnᴉlp ɐ lnɯqǝɹ ɔɐɯd ɐup ɐ ɯᴉll' ɐup ɐpʌɐuɔǝ ʇo ʇɥǝ ɟǝnpɐl ∀ƃǝ"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "┴ɹɐᴉu ᄅㄥ ʌᴉllɐƃǝɹs' qnᴉlp ϛ ɥonsǝs ɐup ɐpʌɐuɔǝ ʇo ʇɥǝ Ɔɐsʇlǝ ∀ƃǝ"}
+{"name": "aoe2mc.challenge.land-battle", "text": "pǝɟǝɐʇ ɐll sᴉx ǝuǝɯʎ ʍɐʌǝs"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s nuᴉʇs losʇ' qɹouzǝ ɯǝpɐl nd ʇo %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s nuᴉʇs losʇ' ƃolp ɯǝpɐl nd ʇo %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s nuᴉʇs losʇ' uo ɯǝpɐl"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s nuᴉʇs losʇ' sᴉlʌǝɹ ɯǝpɐl nd ʇo %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "qɹouzǝ ɯǝpɐl"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "פolp ɯǝpɐl"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Sᴉlʌǝɹ ɯǝpɐl"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "pǝsʇɹoʎ ɐll ǝuǝɯʎ ʍɐɹsɥᴉds"}
+{"name": "aoe2mc.challenge.no_medal", "text": "No ɯǝpɐl"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "ʞᴉll ϛ ǝuǝɯʎ ʌᴉllɐƃǝɹs"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "qɹouzǝ ɯǝpɐl ᴉu %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "פolp ɯǝpɐl ᴉu %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Sᴉlʌǝɹ ɯǝpɐl ᴉu %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "∀ǝƃᴉs oɟɟ"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "∀ǝƃᴉs ou"}
+{"name": "aoe2mc.cheat.beyond", "text": "┴ǝɔɥuoloƃᴉǝs: nd ʇo ᄅϛ9 ɹǝsǝɐɹɔɥǝs"}
+{"name": "aoe2mc.cheat.cpu", "text": "Ԁodnlɐʇᴉou lᴉɯᴉʇ: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "ɟoƃ oɟ ʍɐɹ: oɟɟ"}
+{"name": "aoe2mc.cheat.fog_on", "text": "ɟoƃ oɟ ʍɐɹ: ou"}
+{"name": "aoe2mc.cheat.free_techs", "text": "┴ǝɔɥuoloƃᴉǝs ɐɹǝ ɟɹǝǝ"}
+{"name": "aoe2mc.cheat.marco", "text": "dolo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Sɥɐɹᴉuƃ ᴉs ɔɐɹᴉuƃ: ʎonɹ ᴉuɔoɯǝ ƃoǝs ʇo ʎonɹ ɐllᴉǝs"}
+{"name": "aoe2mc.cheat.wonders", "text": "ʎon ɔouʇɹol uɐʇnɹǝ: %s ɐuᴉɯɐls"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Oulʎ ɐllᴉǝs ɐɹǝ lǝɟʇ: ʇɥǝ ɐllᴉɐuɔǝs ǝup˙ ┴ɥǝ lɐsʇ dlɐʎǝɹ ɐlᴉʌǝ ʍᴉus˙"}
+{"name": "aoe2mc.conquest.defeated", "text": "Ԁlɐʎǝɹ %s ᴉs pǝɟǝɐʇǝp˙"}
+{"name": "aoe2mc.controls.attack", "text": "∀ʇʇɐɔʞ: sǝlǝɔʇ ɯᴉlᴉʇɐɹʎ nuᴉʇs' ʇɥǝu ɹᴉƃɥʇ ɔlᴉɔʞ ɐu ǝuǝɯʎ˙"}
+{"name": "aoe2mc.controls.build", "text": "qnᴉlp: sǝlǝɔʇ ʌᴉllɐƃǝɹs' ɹᴉƃɥʇ ɔlᴉɔʞ ʇɥǝɯ ɟoɹ ʇɥǝ qnᴉlp ɯǝun' sǝlǝɔʇ ɐ qnᴉlpᴉuƃ' ʇɥǝu lǝɟʇ ɔlᴉɔʞ ʇɥǝ ƃɹonup˙ Sɥᴉɟʇ + lǝɟʇ ɔlᴉɔʞ: dlɐɔǝ ɯoɹǝ˙ ɹᴉƃɥʇ ɔlᴉɔʞ: ɔɐuɔǝl˙"}
+{"name": "aoe2mc.controls.camera", "text": "Ɔɐɯǝɹɐ: ɹᴉƃɥʇ ɔlᴉɔʞ ʍᴉʇɥ ʇɥǝ sdʎƃlɐss Ɔɐɯǝɹɐ ,ɥoʇqɐɹ ʞǝʎ ᄅ): ʎon ʍɐlʞ ɟɐsʇ ɥᴉƃɥ ɐqoʌǝ ʇɥǝ ɯɐd˙ Sɥᴉɟʇ ɹᴉƃɥʇ ɔlᴉɔʞ: ʇɥǝ uǝxʇ sdǝǝp˙ ɹᴉƃɥʇ ɔlᴉɔʞ ɐƃɐᴉu: ʎon ɟlʎ poʍu˙"}
+{"name": "aoe2mc.controls.garrison", "text": "פɐɹɹᴉsou: sǝlǝɔʇ nuᴉʇs' ʇɥǝu ɹᴉƃɥʇ ɔlᴉɔʞ ʎonɹ oʍu qnᴉlpᴉuƃ˙ Iʇs ɯǝun lǝʇs ʇɥǝɯ onʇ˙ ┴oʍu ɔǝuʇǝɹ ɯǝun: ɹᴉuƃ ┴oʍu qǝll˙"}
+{"name": "aoe2mc.controls.gather", "text": "פɐʇɥǝɹ: sǝlǝɔʇ ʌᴉllɐƃǝɹs' ʇɥǝu ɹᴉƃɥʇ ɔlᴉɔʞ ɐ ʇɹǝǝ' ɐ ɟɹnᴉʇ qnsɥ' ɐ ɯᴉuǝ oɹ ɐ ɟɐɹɯ˙"}
+{"name": "aoe2mc.controls.goto", "text": "פo ʇo: ɹᴉƃɥʇ ɔlᴉɔʞ ʍᴉʇɥ ʇɥǝ ɔoɯdɐss פo ʇo ,ɥoʇqɐɹ ʞǝʎ Ɛ): ɐ ɯǝun oɟ ʎonɹ ʇoʍu ɔǝuʇǝɹs' ʎonɹ ɔouʇɹol ƃɹonds ɐup ʇɥǝ uǝxʇ ᴉplǝ ʌᴉllɐƃǝɹ˙"}
+{"name": "aoe2mc.controls.groups", "text": "Ɔouʇɹol ƃɹonds: sǝlǝɔʇ nuᴉʇs' ʇɐʞǝ ɐ ƃɹond ᴉʇǝɯ ,ɥoʇqɐɹ ʞǝʎs ϛ ʇo 6) ɐup Sɥᴉɟʇ + ɹᴉƃɥʇ ɔlᴉɔʞ ʇo sɐʌǝ ʇɥǝ sǝlǝɔʇᴉou˙ ɹᴉƃɥʇ ɔlᴉɔʞ: sǝlǝɔʇ ʇɥǝ ƃɹond˙"}
+{"name": "aoe2mc.controls.head", "text": "Ɔouʇɹols ,ɥolp ʇɥǝ ɔɐɹɹoʇ ou ɐ sʇᴉɔʞ; ʇɥǝ ɐɔʇᴉou qɐɹ sɥoʍs ʇɥǝ uǝxʇ sʇǝd):"}
+{"name": "aoe2mc.controls.menu", "text": "פɐɯǝ ɯǝun: ɹᴉƃɥʇ ɔlᴉɔʞ ʍᴉʇɥ ʇɥǝ qooʞ פɐɯǝ ɯǝun ,ɥoʇqɐɹ ʞǝʎ ㄣ): pᴉdloɯɐɔʎ ɐup ʇɹᴉqnʇǝ' ɟlɐɹǝ' sɐʌǝ' dɐnsǝ ɐup ʇɥǝ ʇǝɔɥ ʇɹǝǝ˙"}
+{"name": "aoe2mc.controls.move", "text": "Woʌǝ: ʍᴉʇɥ ɐ sǝlǝɔʇᴉou' ɹᴉƃɥʇ ɔlᴉɔʞ ʇɥǝ ƃɹonup˙"}
+{"name": "aoe2mc.controls.research", "text": "ɹǝsǝɐɹɔɥ ɐup ɐƃǝ nd: ɹᴉƃɥʇ ɔlᴉɔʞ ʎonɹ oʍu qnᴉlpᴉuƃ ɐup ɔlᴉɔʞ ɐ ʇǝɔɥuoloƃʎ oɹ ʇɥǝ uǝxʇ ɐƃǝ ᴉu ᴉʇs ɯǝun˙"}
+{"name": "aoe2mc.controls.select", "text": "Sǝlǝɔʇ: lǝɟʇ ɔlᴉɔʞ ɐ nuᴉʇ˙ Holp lǝɟʇ ɔlᴉɔʞ ɐup looʞ ɐɔɹoss ʇɥǝ ƃɹonup: ɐ sǝlǝɔʇᴉou qox˙ ɹᴉƃɥʇ ɔlᴉɔʞ: ƃᴉʌǝ oɹpǝɹs˙"}
+{"name": "aoe2mc.controls.train", "text": "┴ɹɐᴉu: ɹᴉƃɥʇ ɔlᴉɔʞ ʎonɹ oʍu qnᴉlpᴉuƃ ,ʇoʍu ɔǝuʇǝɹ' qɐɹɹɐɔʞs ˙˙˙) ɐup ɔlᴉɔʞ ɐ nuᴉʇ ᴉu ᴉʇs ɯǝun˙"}
+{"name": "aoe2mc.defeat", "text": "pǝɟǝɐʇ"}
+{"name": "aoe2mc.diplomacy.ally", "text": "∀llʎ"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Ԁlɐʎǝɹ %s ɔɥɐuƃǝp ᴉʇs sʇɐuɔǝ ʇo ʎon: %s˙"}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Ǝuǝɯʎ"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Nǝnʇɹɐl"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Ԁlɐʎǝɹ %s sǝʇ ʇɥǝ ƃɐɯǝ sdǝǝp ʇo %s˙"}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Ԁlɐʎǝɹ %s sǝuʇ %s %s ʇo dlɐʎǝɹ %s˙"}
+{"name": "aoe2mc.flare.placed", "text": "%s: ɟlɐɹǝ ɐʇ %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "ɟolloʍ: ɔlᴉɔʞ ɐu oʍu nuᴉʇ"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "פnɐɹp: ɔlᴉɔʞ ɐu oʍu nuᴉʇ oɹ qnᴉlpᴉuƃ"}
+{"name": "aoe2mc.gaia.joins", "text": "∀ %s ɾoᴉus ʎon˙"}
+{"name": "aoe2mc.garrison.all_back", "text": "∀ll qɐɔʞ ʇo ʍoɹʞ"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "┴ɥǝ ʇoʍu qǝll ɹᴉuƃs: %s ʌᴉllɐƃǝɹs sǝǝʞ sɥǝlʇǝɹ"}
+{"name": "aoe2mc.garrison.no_villager", "text": "No ʌᴉllɐƃǝɹ ᴉs sǝlǝɔʇǝp˙"}
+{"name": "aoe2mc.garrison.no_villagers", "text": "ʎon ɥɐʌǝ uo ʌᴉllɐƃǝɹs˙"}
+{"name": "aoe2mc.garrison.out", "text": "%s nuᴉʇs ɔɐɯǝ onʇ"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s ʌᴉllɐƃǝɹs sǝǝʞ sɥǝlʇǝɹ"}
+{"name": "aoe2mc.gather.act_attack", "text": "ɐʇʇɐɔʞ"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "qnᴉlp ɯǝun"}
+{"name": "aoe2mc.gather.act_garrison", "text": "ƃɐɹɹᴉsou"}
+{"name": "aoe2mc.gather.act_gather", "text": "ƃɐʇɥǝɹ"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ɥnuʇ"}
+{"name": "aoe2mc.gather.act_move", "text": "ɯoʌǝ"}
+{"name": "aoe2mc.gather.act_select", "text": "sǝlǝɔʇ"}
+{"name": "aoe2mc.gather.act_select_type", "text": "sǝlǝɔʇ ɐll oɟ ʇɥǝ ʇʎdǝ"}
+{"name": "aoe2mc.gather.act_trade", "text": "ʇɹɐpǝ"}
+{"name": "aoe2mc.gather.act_train", "text": "ʇɹɐᴉu"}
+{"name": "aoe2mc.gather.attack_siege", "text": "∀ʇʇɐɔʞ: %s ,%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Sǝlǝɔʇᴉou qox: ɔɐuɔǝllǝp"}
+{"name": "aoe2mc.gather.bush", "text": "qǝɹɹʎ qnsɥ"}
+{"name": "aoe2mc.gather.carcass", "text": "Ɔɐɹɔɐss"}
+{"name": "aoe2mc.gather.corner", "text": "Sǝlǝɔʇᴉou qox: ɔlᴉɔʞ ʇɥǝ oʇɥǝɹ ɔoɹuǝɹ"}
+{"name": "aoe2mc.gather.enemy", "text": "Ǝuǝɯʎ %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Ǝuǝɯʎ qnᴉlpᴉuƃ"}
+{"name": "aoe2mc.gather.farm", "text": "ɟɐɹɯ"}
+{"name": "aoe2mc.gather.ground", "text": "פɹonup"}
+{"name": "aoe2mc.gather.group", "text": "פɹond %s: %s nuᴉʇs"}
+{"name": "aoe2mc.gather.group_saved", "text": "פɹond %s: %s nuᴉʇs sɐʌǝp"}
+{"name": "aoe2mc.gather.mine", "text": "%s ɯᴉuǝ"}
+{"name": "aoe2mc.gather.paused", "text": "┴ɥǝ ƃɐɯǝ ᴉs dɐnsǝp˙"}
+{"name": "aoe2mc.gather.point", "text": "%s · ɹᴉƃɥʇ ɔlᴉɔʞ: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "ɹǝsǝǝps bnǝnǝp: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Sǝlǝɔʇǝp: %s nuᴉʇs"}
+{"name": "aoe2mc.gather.tree", "text": "┴ɹǝǝ"}
+{"name": "aoe2mc.hill.holds", "text": "Ԁlɐʎǝɹ %s ɥolps ʇɥǝ ɯounɯǝuʇ˙"}
+{"name": "aoe2mc.hints.attack_ground", "text": "∀ʇʇɐɔʞ פɹonup: ɹᴉƃɥʇ ɔlᴉɔʞ ʇɥǝ ƃɹonup"}
+{"name": "aoe2mc.hints.attack_move", "text": "∀ʇʇɐɔʞ Woʌǝ: ɹᴉƃɥʇ ɔlᴉɔʞ ʇɥǝ ƃɹonup"}
+{"name": "aoe2mc.hints.building", "text": "Ԁlɐɔǝ ʇɥǝ %s: ɹᴉƃɥʇ ɔlᴉɔʞ ʇɥǝ ƃɹonup · Sɥᴉɟʇ + ɹᴉƃɥʇ ɔlᴉɔʞ: dlɐɔǝ ɯoɹǝ · Ɔɐuɔǝl: /ʇɹᴉƃƃǝɹ ɐoǝ_qnᴉlp sǝʇ 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: lǝɟʇ ɔlᴉɔʞ ʇo dlɐɔǝ · Sɥᴉɟʇ: dlɐɔǝ ɯoɹǝ · ɹᴉƃɥʇ ɔlᴉɔʞ: ɔɐuɔǝl"}
+{"name": "aoe2mc.hints.corner", "text": "Sǝlǝɔʇᴉou qox: ɹᴉƃɥʇ ɔlᴉɔʞ ʇɥǝ oʇɥǝɹ ɔoɹuǝɹ"}
+{"name": "aoe2mc.hints.count_military", "text": "%s ɯᴉlᴉʇɐɹʎ nuᴉʇ"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s ɯᴉlᴉʇɐɹʎ nuᴉʇs"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s ʌᴉllɐƃǝɹ"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s ʌᴉllɐƃǝɹs"}
+{"name": "aoe2mc.hints.deselect", "text": "Ǝɯdʇʎ qox: pǝsǝlǝɔʇ"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "˥ǝɟʇ ɔlᴉɔʞ: pǝsǝlǝɔʇ"}
+{"name": "aoe2mc.hints.follow", "text": "ɟolloʍ: ɹᴉƃɥʇ ɔlᴉɔʞ ɐu oʍu oɹ ɐllᴉǝp nuᴉʇ"}
+{"name": "aoe2mc.hints.guard", "text": "פnɐɹp: ɹᴉƃɥʇ ɔlᴉɔʞ ɐu oʍu oɹ ɐllᴉǝp nuᴉʇ oɹ qnᴉlpᴉuƃ"}
+{"name": "aoe2mc.hints.military", "text": "%s · ɹᴉƃɥʇ ɔlᴉɔʞ: ɐʇʇɐɔʞ ɐu ǝuǝɯʎ' sʇɐuɔǝ ɯǝun · %s"}
+{"name": "aoe2mc.hints.none", "text": "˥ǝɟʇ ɔlᴉɔʞ: sǝlǝɔʇ ɐ nuᴉʇ · Holp lǝɟʇ ɔlᴉɔʞ: sǝlǝɔʇᴉou qox"}
+{"name": "aoe2mc.hints.none_wand", "text": "ɹᴉƃɥʇ ɔlᴉɔʞ: sǝlǝɔʇ ɐ nuᴉʇ · Mɐup: sǝlǝɔʇᴉou qox"}
+{"name": "aoe2mc.hints.patrol", "text": "Ԁɐʇɹol: ɹᴉƃɥʇ ɔlᴉɔʞ ʇɥǝ ƃɹonup"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · ɹᴉƃɥʇ ɔlᴉɔʞ: ƃɐʇɥǝɹ' qnᴉlp' qnᴉlp ɯǝun · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s ɹǝɐpʎ"}
+{"name": "aoe2mc.lobby.you_play", "text": "ʎon dlɐʎ %s˙"}
+{"name": "aoe2mc.monk.converts", "text": "∀ ɯouʞ ɔouʌǝɹʇs ʇɥǝ %s˙"}
+{"name": "aoe2mc.monk.dies", "text": "┴ɥǝ %s pᴉǝs ,Hǝɹǝsʎ)˙"}
+{"name": "aoe2mc.pause.continued", "text": "Ԁlɐʎǝɹ %s ɔouʇᴉunǝp ʇɥǝ ƃɐɯǝ˙"}
+{"name": "aoe2mc.pause.paused", "text": "Ԁlɐʎǝɹ %s dɐnsǝp ʇɥǝ ƃɐɯǝ˙"}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "┴ǝɐɯ %s ,ɯǝɐu ɹɐʇᴉuƃ %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "┴ɥǝ ƃɐɯǝ ᴉs oʌǝɹ˙ ɹᴉƃɥʇ ɔlᴉɔʞ ʇɥǝ ɹǝɔɐd qooʞ ᴉu ʎonɹ ɥɐup ʇo sǝǝ ʇɥǝ ɹǝsnlʇs˙ Sʇod ʇɥǝ ƃɐɯǝ dɹoƃɹɐɯ ʍᴉʇɥ Ɔʇɹl-Ɔ ᴉu ᴉʇs ɔousolǝ˙"}
+{"name": "aoe2mc.relic_victory.all", "text": "Ԁlɐʎǝɹ %s ɥolps ɐll ɹǝlᴉɔs˙"}
+{"name": "aoe2mc.relic_victory.lost", "text": "Ԁlɐʎǝɹ %s losʇ ɐ ɹǝlᴉɔ˙"}
+{"name": "aoe2mc.repair.no_resources", "text": "Noʇ ǝuonƃɥ ɹǝsonɹɔǝs ʇo ɹǝdɐᴉɹ ʇɥǝ %s˙"}
+{"name": "aoe2mc.replay.army", "text": "∀ɹɯʎ: %s"}
+{"name": "aoe2mc.replay.army_end", "text": "' ɐɹɯʎ ɐʇ ʇɥǝ ǝup: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": "' losʇ: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "qnᴉlp oɹpǝɹ:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · ƃɐɹɹᴉsou %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s ,%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | ɔɐɹɹᴉǝs %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "qnᴉlp %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "ɟoop %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "ƃolp %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "ᴉplǝ %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "sʇouǝ %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "ʍoop %s"}
+{"name": "aoe2mc.replay.flare", "text": "ɟlɐɹǝ"}
+{"name": "aoe2mc.replay.game_ends", "text": "┴ɥǝ ƃɐɯǝ ǝups"}
+{"name": "aoe2mc.replay.game_time", "text": "פɐɯǝ ʇᴉɯǝ %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · ƃɐɹɹᴉsou %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Wᴉl %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Ԁod %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "ɹǝs %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Λᴉl %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s ɥǝlp ʇɥǝ ɯounɯǝuʇ: ʞᴉuƃ oɟ ʇɥǝ Hᴉll ʌᴉɔʇoɹʎ ɐʇ %s˙"}
+{"name": "aoe2mc.replay.inspect", "text": "%s ,%s): %s/%s | %s%s | %s ɐʇʞ %s/%s ɐɹɯ%s"}
+{"name": "aoe2mc.replay.join_help", "text": "ponqlǝ-ʇɐd Sɥᴉɟʇ: sdǝɔʇɐʇoɹ ʌᴉǝʍ ,ɟlʎ ʇɥɹonƃɥ qloɔʞs)˙ ɹᴉƃɥʇ ɔlᴉɔʞ ʇɥǝ ɥoʇqɐɹ ᴉʇǝɯs: ɹǝdlɐʎ ɔouʇɹol˙"}
+{"name": "aoe2mc.replay.king_died", "text": ": ʇɥǝ ʞᴉuƃ pᴉǝp ɐʇ %s˙ ɹǝƃᴉɔᴉpǝ: ʇɥǝ dlɐʎǝɹ ᴉs onʇ˙"}
+{"name": "aoe2mc.replay.king_killed", "text": "ʞᴉuƃ ʞᴉllǝp ɐʇ %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "˥ᴉʌǝ ɹǝdlɐʎ: ʇɥǝ ɾnɯd sʇods ɐʇ ʇɥǝ pǝlɐʎ qǝɥᴉup ʇɥǝ ƃɐɯǝ˙"}
+{"name": "aoe2mc.replay.lost", "text": "˥osʇ: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " ɥolps ʇɥǝ ɯounɯǝuʇ ɐʇ %s˙"}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: ɯounɯǝuʇ' %s ʎǝɐɹ lǝɟʇ"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: ɯounɯǝuʇ' %s ʎǝɐɹs lǝɟʇ"}
+{"name": "aoe2mc.replay.no_camera", "text": "┴ɥᴉs ɹǝɔoɹp ɥɐs uo ɔɐɯǝɹɐ oɟ ᴉʇs dlɐʎǝɹ˙"}
+{"name": "aoe2mc.replay.now", "text": " uoʍ"}
+{"name": "aoe2mc.replay.out", "text": "%s ᴉs onʇ"}
+{"name": "aoe2mc.replay.players", "text": "Ԁlɐʎǝɹs"}
+{"name": "aoe2mc.replay.range", "text": " ɹ%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " ʇɐʞǝs ʇɥǝ ɹǝlᴉɔ ʇo ɐ ɯouɐsʇǝɹʎ ɐup ʍᴉus˙"}
+{"name": "aoe2mc.replay.replay_ended", "text": "ɹǝdlɐʎ ǝupǝp"}
+{"name": "aoe2mc.replay.research", "text": " ɹǝsǝɐɹɔɥǝs %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s ɹǝsᴉƃus"}
+{"name": "aoe2mc.replay.restart_jump", "text": "┴ɥǝ sǝɹʌǝɹ ɹǝsʇɐɹʇs ɟoɹ ʇɥǝ ɾnɯd qɐɔʞ: ɾoᴉu ᴉʇ ɐƃɐᴉu˙"}
+{"name": "aoe2mc.replay.share_buildings", "text": "qnᴉlpᴉuƃs %s ,%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ǝɔouoɯʎ %s ,%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Wᴉlᴉʇɐɹʎ %s ,%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "┴ǝɔɥuoloƃᴉǝs %s ,%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "┴oʇɐl %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "ɔɐsʇlǝs %s' "}
+{"name": "aoe2mc.replay.soc_market", "text": "qonƃɥʇ %s' solp %s' "}
+{"name": "aoe2mc.replay.soc_relics", "text": "ɹǝlᴉɔs %s' "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "ʍoupǝɹs %s' "}
+{"name": "aoe2mc.replay.spent", "text": "Sdǝuʇ:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "qnᴉlp %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Ǝɔo %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Wᴉl %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "┴ǝɔɥ %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": ʌᴉllɐƃǝɹs ʇɹɐᴉuǝp %s' ƃɐʇɥǝɹǝp %s' ᴉplǝ ʌᴉllɐƃǝɹ ʇᴉɯǝ %s' ᴉplǝ ┴Ɔ ʇᴉɯǝ %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": ɥolps ʇɥǝ ɯounɯǝuʇ ,ʞᴉuƃ oɟ ʇɥǝ Hᴉll)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": ɯounɯǝuʇ ʍou %s ,ʞᴉuƃ oɟ ʇɥǝ Hᴉll)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": ɯᴉlᴉʇɐɹʎ nuᴉʇs ʇɹɐᴉuǝp %s' nuᴉʇs losʇ %s' qnᴉlpᴉuƃs losʇ %s' ∀ԀW %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": ʞᴉuƃ ʞᴉllǝp %s ,ɹǝƃᴉɔᴉpǝ)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": ʍᴉus' ɹǝlᴉɔ ᴉu ɐ ɯouɐsʇǝɹʎ %s ,Ɔɐdʇnɹǝ ʇɥǝ ɹǝlᴉɔ)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sʇɹᴉqnʇǝ sǝuʇ %s' ɹǝɔǝᴉʌǝp %s' ʌᴉllɐƃǝɹ ɥᴉƃɥ %s ,ǝsʇ˙)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": ʇoʍu ɔǝuʇǝɹ losʇ %s ,Snppǝu pǝɐʇɥ)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s' ʇǝɔɥuoloƃᴉǝs %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": ʍoupǝɹ ʇᴉɯǝɹ ɟɹoɯ %s' ǝups %s ,%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Snɯɯɐɹʎ ,ǝsʇ˙)"}
+{"name": "aoe2mc.replay.task_building", "text": "qnᴉlpᴉuƃ"}
+{"name": "aoe2mc.replay.task_following", "text": "ɟolloʍᴉuƃ"}
+{"name": "aoe2mc.replay.task_food", "text": "ƃɐʇɥǝɹᴉuƃ ɟoop"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "ƃɐɹɹᴉsouǝp"}
+{"name": "aoe2mc.replay.task_gold", "text": "ƃɐʇɥǝɹᴉuƃ ƃolp"}
+{"name": "aoe2mc.replay.task_guarding", "text": "ƃnɐɹpᴉuƃ"}
+{"name": "aoe2mc.replay.task_idle", "text": "ᴉplǝ"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "dɐʇɹollᴉuƃ"}
+{"name": "aoe2mc.replay.task_resources", "text": "ƃɐʇɥǝɹᴉuƃ ɹǝsonɹɔǝs"}
+{"name": "aoe2mc.replay.task_stone", "text": "ƃɐʇɥǝɹᴉuƃ sʇouǝ"}
+{"name": "aoe2mc.replay.task_walking", "text": "ʍɐlʞᴉuƃ"}
+{"name": "aoe2mc.replay.task_wood", "text": "ƃɐʇɥǝɹᴉuƃ ʍoop"}
+{"name": "aoe2mc.replay.team", "text": "┴ǝɐɯ %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "∀ɹɔɥǝɹ %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "∀ɹɔɥǝɹ ɐɹɯoɹ %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Ɔɐɹɹʎ %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Ɔɐʌɐlɹʎ ɐɹɯoɹ %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "ɟɐɹɯ %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "פolp %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Iuɟɐuʇɹʎ ɐɹɯoɹ %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "˥ooɯ %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Wǝlǝǝ %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Sʇouǝ %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Moop %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Ɔɐsʇlǝ"}
+{"name": "aoe2mc.replay.tl_king", "text": "ʞᴉuƃ ʞᴉllǝp"}
+{"name": "aoe2mc.replay.tl_military", "text": "Ɩsʇ ɯᴉlᴉʇɐɹʎ: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "ɹǝlᴉɔ"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "ɹǝsᴉƃus"}
+{"name": "aoe2mc.replay.town_fell", "text": ": ʇɥǝ ʇoʍu ɔǝuʇǝɹ ɟǝll ɐʇ %s˙ Snppǝu pǝɐʇɥ: ʇɥǝ dlɐʎǝɹ ᴉs onʇ˙"}
+{"name": "aoe2mc.replay.town_lost", "text": "┴oʍu ɔǝuʇǝɹ losʇ ɐʇ %s"}
+{"name": "aoe2mc.replay.training", "text": "┴ɹɐᴉuᴉuƃ: %s"}
+{"name": "aoe2mc.replay.university", "text": "∩uᴉʌǝɹsᴉʇʎ:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ǝɔouoɯʎ %s · ∩uᴉʌǝɹsᴉʇʎ %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " qnᴉlʇ ɐ ʍoupǝɹ ɐʇ %s˙"}
+{"name": "aoe2mc.replay_input.fight", "text": "ɟᴉƃɥʇ: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": "' %s nuᴉʇs"}
+{"name": "aoe2mc.replay_input.fights", "text": "˥ɐɹƃǝ ɟᴉƃɥʇs:"}
+{"name": "aoe2mc.replay_input.help", "text": "ɹǝdlɐʎ: ɹᴉƃɥʇ ɔlᴉɔʞ ʇɥǝ ᴉʇǝɯs ᴉu ʎonɹ ɥoʇqɐɹ' oɹ ɔlᴉɔʞ: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "┴ɐʞǝ oʌǝɹ: "}
+{"name": "aoe2mc.replay_input.units", "text": " ,%s nuᴉʇs)"}
+{"name": "aoe2mc.replay_input.vs", "text": " ʌs "}
+{"name": "aoe2mc.resource.food", "text": "ɟoop"}
+{"name": "aoe2mc.resource.gold", "text": "ƃolp"}
+{"name": "aoe2mc.resource.stone", "text": "sʇouǝ"}
+{"name": "aoe2mc.resource.wood", "text": "ʍoop"}
+{"name": "aoe2mc.run.back", "text": "%s ᴉs qɐɔʞ"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Ɔɐɯdɐᴉƃu ɔoɯdlǝʇǝ"}
+{"name": "aoe2mc.run.chat_hint", "text": "Ɔɥɐʇ: ɐ uoɹɯɐl lᴉuǝ ƃoǝs ʇo ɐll' /ʇɯ ┴ƎX┴ ʇo ʎonɹ ɐllᴉǝs' /ɯsƃ N∀WƎ ┴ƎX┴ ʇo ouǝ dǝɹsou˙"}
+{"name": "aoe2mc.run.left_bot", "text": "%s lǝɟʇ: ɐ qoʇ dlɐʎs dlɐʎǝɹ %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Sɔǝuɐɹᴉo %s sʇɐɹʇs˙ ɾoᴉu ɐƃɐᴉu˙"}
+{"name": "aoe2mc.run.starts_in", "text": "┴ɥǝ ƃɐɯǝ sʇɐɹʇs ᴉu %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Odǝu \"Ɔɥoosǝ ʎonɹ dlɐʎǝɹ\" ɐup ɔlᴉɔʞ \"ɹǝɐpʎ\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "∀ll ɔouʇɹols: /ɔouʇɹols"}
+{"name": "aoe2mc.run.welcome_first", "text": "ɟᴉɹsʇ sʇǝd: ɥolp ʇɥǝ ɔoɯɯɐup sʇᴉɔʞ ɐup ɹᴉƃɥʇ ɔlᴉɔʞ ouǝ oɟ ʎonɹ ʌᴉllɐƃǝɹs˙"}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "ɟᴉɹsʇ sʇǝd: ɥolp ʇɥǝ ɔoɯɯɐup sʇᴉɔʞ ɐup lǝɟʇ ɔlᴉɔʞ ouǝ oɟ ʎonɹ ʌᴉllɐƃǝɹs˙"}
+{"name": "aoe2mc.run.welcome_goal", "text": "פoɐl: ʍᴉu ʇɥǝ ƃɐɯǝ˙ Λᴉɔʇoɹʎ sǝʇʇᴉuƃ: %s˙"}
+{"name": "aoe2mc.savegame.saved", "text": "Sɐʌǝp ʇɥǝ ƃɐɯǝ: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s nuᴉʇs ɔɐɯǝ onʇ"}
+{"name": "aoe2mc.stance.auto_scout", "text": "∀nʇo Sɔonʇ"}
+{"name": "aoe2mc.stance.formation", "text": "ɟoɹɯɐʇᴉou: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "No nuᴉʇ ɔɐu ɐʇʇɐɔʞ ʇɥǝ ƃɹonup"}
+{"name": "aoe2mc.stance.unpack", "text": "∩udɐɔʞ ʇɥǝ ┴ɹǝqnɔɥǝʇ ɟᴉɹsʇ"}
+{"name": "aoe2mc.train.active", "text": "%s ᴉs ɐɔʇᴉʌǝ˙"}
+{"name": "aoe2mc.train.rally", "text": "ɹᴉƃɥʇ ɔlᴉɔʞ ʇɥǝ ƃɹonup ɟoɹ ʇɥǝ ɹɐllʎ doᴉuʇ˙"}
+{"name": "aoe2mc.train.researched", "text": "%s ᴉs ɹǝsǝɐɹɔɥǝp˙"}
+{"name": "aoe2mc.transport.out", "text": "%s nuᴉʇs ɔɐɯǝ onʇ"}
+{"name": "aoe2mc.treaty.ended", "text": "┴ɥǝ ʇɹǝɐʇʎ ǝupǝp: dlɐʎǝɹs ɔɐu ɐʇʇɐɔʞ uoʍ˙"}
+{"name": "aoe2mc.treaty.refuse", "text": "┴ɹǝɐʇʎ: ʎon ɔɐuuoʇ ɐʇʇɐɔʞ qǝɟoɹǝ %s˙"}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "┴ɹǝɐʇʎ: ʎon ɔɐuuoʇ ɐʇʇɐɔʞ ᴉu ʇɥᴉs ƃɐɯǝ˙"}
+{"name": "aoe2mc.treaty.start", "text": "┴ɹǝɐʇʎ: uo dlɐʎǝɹ ɔɐu ɐʇʇɐɔʞ ɐuoʇɥǝɹ dlɐʎǝɹ qǝɟoɹǝ %s˙"}
+{"name": "aoe2mc.treaty.start_endless", "text": "┴ɹǝɐʇʎ: uo dlɐʎǝɹ ɔɐu ɐʇʇɐɔʞ ɐuoʇɥǝɹ dlɐʎǝɹ ᴉu ʇɥᴉs ƃɐɯǝ˙"}
+{"name": "aoe2mc.tutorial.barracks", "text": "qnᴉlp ɐ qɐɹɹɐɔʞs: ɹᴉƃɥʇ ɔlᴉɔʞ ou ɐ sǝlǝɔʇǝp ʌᴉllɐƃǝɹ' ɔɥoosǝ ʇɥǝ qɐɹɹɐɔʞs ɐup dlɐɔǝ ᴉʇ˙ ┴ɥǝ ɐɔʇᴉou qɐɹ ɐqoʌǝ ʇɥǝ ɥoʇqɐɹ ʇǝlls ʎon ʍɥǝɹǝ ʇo dlɐɔǝ ᴉʇ˙"}
+{"name": "aoe2mc.tutorial.camera", "text": "Woʌǝ ɟɐsʇ oʌǝɹ ʇɥǝ ɯɐd: ɹᴉƃɥʇ ɔlᴉɔʞ ʍᴉʇɥ ʇɥǝ \"Ɔɐɯǝɹɐ\" ᴉʇǝɯ' ʍɐlʞ' ʇɥǝu ɹᴉƃɥʇ ɔlᴉɔʞ ʍᴉʇɥ ᴉʇ ɐƃɐᴉu˙"}
+{"name": "aoe2mc.tutorial.camp", "text": "pǝsʇɹoʎ ʇɥǝ ǝuǝɯʎ ɔɐɯd ᴉu ʇɥǝ ɯᴉpplǝ oɟ ʇɥǝ ɯɐd: sǝlǝɔʇ ʎonɹ Wᴉlᴉʇᴉɐ ɐup ɹᴉƃɥʇ ɔlᴉɔʞ ou ɐ qnᴉlpᴉuƃ˙ ┴ɥǝ qoss qɐɹ ɐʇ ʇɥǝ ʇod sɥoʍs ʇɥǝ sʇǝd˙"}
+{"name": "aoe2mc.tutorial.camps", "text": "qnᴉlp ɐ lnɯqǝɹ ɔɐɯd uǝɐɹ ʇɥǝ ʇɹǝǝs ɐup ɐ ɯᴉll uǝɐɹ ʇɥǝ qǝɹɹᴉǝs˙ ┴ɥǝ sᴉpǝqɐɹ ou ʇɥǝ ɹᴉƃɥʇ sɥoʍs ʇɥǝ ʍoop ʇɥǝʎ ɔosʇ˙"}
+{"name": "aoe2mc.tutorial.complete", "text": "┴ɥǝ ʇnʇoɹᴉɐl ᴉs ɔoɯdlǝʇǝ˙ Nǝxʇ: dlɐʎ ɐ ƃɐɯǝ ɐƃɐᴉusʇ ʇɥǝ qoʇ: dʎʇɥouƐ ƃɐɯǝ/ɹnu˙dʎ O∩┴Moɹlp --dlɐʎ --qoʇ"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "┴nʇoɹᴉɐl ɔoɯdlǝʇǝ"}
+{"name": "aoe2mc.tutorial.feudal", "text": "∀pʌɐuɔǝ ʇo ʇɥǝ ɟǝnpɐl ∀ƃǝ: ɹᴉƃɥʇ ɔlᴉɔʞ ou ʎonɹ ʇoʍu ɔǝuʇǝɹ ɐup ɔɥoosǝ ʇɥǝ ɟǝnpɐl ∀ƃǝ˙ ┴ɥǝ sᴉpǝqɐɹ ou ʇɥǝ ɹᴉƃɥʇ sɥoʍs ʎonɹ ɟoop˙"}
+{"name": "aoe2mc.tutorial.food", "text": "פɐʇɥǝɹ Ɩ00 ɟoop: sǝup ɐ ʌᴉllɐƃǝɹ ʇo ʇɥǝ qǝɹɹᴉǝs˙ ┴ɥǝ sᴉpǝqɐɹ ou ʇɥǝ ɹᴉƃɥʇ sɥoʍs ʎonɹ ɟoop˙"}
+{"name": "aoe2mc.tutorial.house", "text": "qnᴉlp ɐ ɥonsǝ: ɹᴉƃɥʇ ɔlᴉɔʞ ou ɐ sǝlǝɔʇǝp ʌᴉllɐƃǝɹ' ɔɥoosǝ ʇɥǝ ɥonsǝ ɐup dlɐɔǝ ᴉʇ˙ ┴ɥǝ ɐɔʇᴉou qɐɹ ɐqoʌǝ ʇɥǝ ɥoʇqɐɹ ʇǝlls ʎon ʍɥǝɹǝ ʇo dlɐɔǝ ᴉʇ˙"}
+{"name": "aoe2mc.tutorial.militia", "text": "┴ɹɐᴉu Ɛ Wᴉlᴉʇᴉɐ: ɹᴉƃɥʇ ɔlᴉɔʞ ou ʎonɹ qɐɹɹɐɔʞs ɐup ɔɥoosǝ ʇɥǝ ɯᴉlᴉʇᴉɐ˙ ┴ɥǝ sᴉpǝqɐɹ ou ʇɥǝ ɹᴉƃɥʇ sɥoʍs ʎonɹ ɟoop ɐup ƃolp˙"}
+{"name": "aoe2mc.tutorial.raid", "text": "┴ɥǝ ǝuǝɯʎ ɐʇʇɐɔʞs ʎonɹ ʌᴉllɐƃǝɹs¡ Ɔlᴉɔʞ ʇɥǝ ɹǝp ɐlǝɹʇ lᴉuǝ ᴉu ʇɥǝ ɔɥɐʇ ʇo ƃo ʇɥǝɹǝ' ʇɥǝu sǝlǝɔʇ ʎonɹ Wᴉlᴉʇᴉɐ ɐup ɹᴉƃɥʇ ɔlᴉɔʞ ou ʇɥǝ ǝuǝɯᴉǝs˙ ┴ɥǝ qoss qɐɹ ɐʇ ʇɥǝ ʇod sɥoʍs ʇɥǝ ɥǝɐlʇɥ oɟ ʇɥǝ sǝlǝɔʇǝp nuᴉʇ˙"}
+{"name": "aoe2mc.tutorial.select", "text": "Sǝlǝɔʇ ɐ ʌᴉllɐƃǝɹ: lǝɟʇ ɔlᴉɔʞ ou ouǝ oɟ ʎonɹ ʌᴉllɐƃǝɹs ʍᴉʇɥ ʇɥǝ ɔoɯɯɐup sʇᴉɔʞ˙ ┴ɥǝ qoss qɐɹ ɐʇ ʇɥǝ ʇod sɥoʍs ʇɥǝ sǝlǝɔʇǝp nuᴉʇ' ʇɥǝ ɐɔʇᴉou qɐɹ ɐqoʌǝ ʇɥǝ ɥoʇqɐɹ sɥoʍs ʇɥǝ uǝxʇ ɐɔʇᴉou˙"}
+{"name": "aoe2mc.tutorial.step_done", "text": "Sʇǝd pouǝ"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Sʇǝd %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "┴IԀ: ʇɥǝ qɐɹɹɐɔʞs ʇɹɐᴉus ᴉuɟɐuʇɹʎ˙ Iuɟɐuʇɹʎ ᴉs ɔɥǝɐd ɐup ƃoop ɐƃɐᴉusʇ qnᴉlpᴉuƃs˙"}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "┴IԀ: ɐʇʇɐɔʞ ʍᴉʇɥ ɐll ʎonɹ nuᴉʇs ʇoƃǝʇɥǝɹ˙ ∀ sɯɐll ƃɹond pᴉǝs qǝɟoɹǝ ᴉʇ ɔɐu po pɐɯɐƃǝ˙"}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "┴IԀ: qnᴉlp ʇɥǝ pɹod-oɟɟ qnᴉlpᴉuƃs uǝɐɹ ʇɥǝ ɹǝsonɹɔǝs' so ʇɥɐʇ ʇɥǝ ʌᴉllɐƃǝɹs ʍɐlʞ ɐ sɥoɹʇ ʍɐʎ˙"}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "┴IԀ: ʇɥǝ uǝxʇ ɐƃǝ nuloɔʞs uǝʍ qnᴉlpᴉuƃs' nuᴉʇs ɐup ʇǝɔɥuoloƃᴉǝs˙ ʞǝǝd ʇɥǝ ʌᴉllɐƃǝɹs ɐʇ ʍoɹʞ ʍɥᴉlǝ ʎon ɐpʌɐuɔǝ˙"}
+{"name": "aoe2mc.tutorial.tip_food", "text": "┴IԀ: qǝɹɹᴉǝs uǝɐɹ ɐ ɯᴉll ɐɹǝ ɐ sɐɟǝ sʇɐɹʇ oɟ ɟoop˙ ˥ɐʇǝɹ' ɟɐɹɯs ƃᴉʌǝ ɟoop ʇɥɐʇ poǝs uoʇ ǝup˙"}
+{"name": "aoe2mc.tutorial.tip_house", "text": "┴IԀ: ɐ ɥonsǝ ƃᴉʌǝs ɹooɯ ɟoɹ ϛ ɯoɹǝ dodnlɐʇᴉou˙ ˥ooʞ ɐʇ ʇɥǝ dodnlɐʇᴉou ᴉu ʇɥǝ sᴉpǝqɐɹ ɐup qnᴉlp ɥonsǝs qǝɟoɹǝ ᴉʇ ᴉs ɟnll˙"}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "┴IԀ: ʎon ɔɐu bnǝnǝ nd ʇo Ɩϛ nuᴉʇs ᴉu ɐ qnᴉlpᴉuƃ ʍɥǝu ʎon ɥɐʌǝ ʇɥǝ ɹǝsonɹɔǝs˙"}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "┴IԀ: ᴉu ∀oƎᄅ ʇɥǝ ʇoʍu qǝll sǝups ʇɥǝ ʌᴉllɐƃǝɹs ᴉuʇo ʇɥǝ ʇoʍu ɔǝuʇǝɹ˙ ɹᴉuƃ ᴉʇ ʍɥǝu ʇɥǝ ǝuǝɯʎ ɹɐᴉps ʎonɹ ʇoʍu˙"}
+{"name": "aoe2mc.tutorial.tip_select", "text": "┴IԀ: ʇɥǝ Iplǝ lᴉuǝ oɟ ʇɥǝ sᴉpǝqɐɹ ou ʇɥǝ ɹᴉƃɥʇ ɔonuʇs ʎonɹ ʌᴉllɐƃǝɹs ʍᴉʇɥ uo ʍoɹʞ˙ פᴉʌǝ ʇɥǝɯ ʍoɹʞ˙"}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "┴IԀ: ʇɹɐᴉu ʌᴉllɐƃǝɹs ɐll ʇɥǝ ʇᴉɯǝ ᴉu ʇɥǝ ɟᴉɹsʇ ɐƃǝs˙ Woɹǝ ʌᴉllɐƃǝɹs ƃᴉʌǝ ɯoɹǝ ɹǝsonɹɔǝs˙"}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "┴IԀ: ʌᴉllɐƃǝɹs ƃɐʇɥǝɹ ɟɐsʇǝɹ uǝɐɹ ɐ pɹod-oɟɟ qnᴉlpᴉuƃ˙ qnᴉlp ɐ lnɯqǝɹ ɔɐɯd uǝxʇ ʇo ʇɥǝ ʇɹǝǝs˙"}
+{"name": "aoe2mc.tutorial.villager", "text": "┴ɹɐᴉu ɐ ʌᴉllɐƃǝɹ: ɹᴉƃɥʇ ɔlᴉɔʞ ou ʎonɹ ʇoʍu ɔǝuʇǝɹ ɐup ɔɥoosǝ ʇɥǝ ʌᴉllɐƃǝɹ˙ ┴ɥǝ sᴉpǝqɐɹ ou ʇɥǝ ɹᴉƃɥʇ sɥoʍs ʇɥǝ ɟoop ᴉʇ ɔosʇs˙"}
+{"name": "aoe2mc.tutorial.wood", "text": "פɐʇɥǝɹ ϛ0 ʍoop: sǝlǝɔʇ ɐ ʌᴉllɐƃǝɹ ɐup ɹᴉƃɥʇ ɔlᴉɔʞ ou ɐ ʇɹǝǝ˙ ┴ɥǝ sᴉpǝqɐɹ ou ʇɥǝ ɹᴉƃɥʇ sɥoʍs ʎonɹ ʍoop˙"}
+{"name": "aoe2mc.victory", "text": "Λᴉɔʇoɹʎ"}
+{"name": "aoe2mc.wonder.built", "text": "Ԁlɐʎǝɹ %s qnᴉlʇ ɐ ʍoupǝɹ˙"}
+{"name": "aoe2mc.wonder.destroyed", "text": "┴ɥǝ ʍoupǝɹ oɟ dlɐʎǝɹ %s ᴉs pǝsʇɹoʎǝp˙"}
