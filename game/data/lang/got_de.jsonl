@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Der Spilamma %s gaggiþ til %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Die Fraqiþs nimiþ die Mapa fram iren Marka til iren Midja in %s. Sei fraqistjaiþ allai Wulþus und Gabauæn darinne."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ik mag jainar nu ni %s bauan."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ik mag ainana Wulþu ni ufbiaudan: ik habaiþ ainn Gabauæn ni."}
+{"name": "aoe2mc.bot.flare_two", "text": "Setja tvai Liuhtjans fram Wigg."}
+{"name": "aoe2mc.bot.no_flare", "text": "Ik saiƕ ainn Liuhtjan ni."}
+{"name": "aoe2mc.bot.no_market", "text": "Ik habaiþ ainn Markt ni: ik mag ni sandjan Gilstr."}
+{"name": "aoe2mc.bot.no_onager", "text": "Ik habaiþ ainn Onager ni."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Ik habaiþ ni genuhsame Gilstr für ainan Wigg."}
+{"name": "aoe2mc.bot.no_water", "text": "Ik habaiþ ni Wato nehvai meinizaim: ik mag ni Skipa bauan."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Mein Onagers mag ni Trewa skaþjan."}
+{"name": "aoe2mc.build.cost", "text": "Ni genuhsame Gilstr: ain %s kostjiþ %s."}
+{"name": "aoe2mc.build.flat", "text": "Der %s skal stan auf ebanai Grund."}
+{"name": "aoe2mc.build.gate_spot", "text": "Ain %s skal stan auf 4 Felda fram einamma Wigg in aina Linja, oda auf 3 diagonalai Felda."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Bauan: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Ain %s skal stan auf Wato nehvai Strand."}
+{"name": "aoe2mc.build.space", "text": "Hier ist ni Rum für den %s."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Ni genuhsame Gilstr: %s Felda fram %s kostjand %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: Rehts klikk das Enda fram dem Wigg."}
+{"name": "aoe2mc.build.water", "text": "Ain %s skal stan auf dem Wato."}
+{"name": "aoe2mc.camera.fov", "text": "Die flinka Kamera bringiþ das gahaldana Stikka zum Swiggwan. Ei ist ains stilla, setja Optionen > Barrierefreiheit > View Bobbing auf OFF. Die Kamera macht auch das Sehfeld breiter, so sjaist du mais fram der Mapa. Ei normalan Sehfeld, setja Optionen > Barrierefreiheit > FOV Effects auf 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: aus"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: an, Snelei x%s. Shift Rehts-klikk: nasta Snelei."}
+{"name": "aoe2mc.camera.speed", "text": "Kamera-Snelei: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Vrakja alla Wulþus fram Fijands und verleis wenig Wulþus"}
+{"name": "aoe2mc.challenge.booming", "text": "Triggwais 100 Wulþus und gaggiþ til dem Keisara-Alþei"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Gagg til dem Burgs-Alþei und überleb die Angriffs des Fijands"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Vrakja die Burg des Fijands"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Samna 200 Matjan, 200 Trewa, 100 Gulþ und 200 Stains, triggws 21 Wulþus, bauei ein Holzlager und ein Mulja, und gagg til dem Fraujan-Alþei"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Triggws 27 Wulþus, bauei 5 Haims und gagg til dem Burgs-Alþei"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Vrakja alle sex Fijands-Wellins"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s Wulþus fraliusan, Bronz-Medaljo bis %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s Wulþus fraliusan, Gulþ-Medaljo bis %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s Wulþus fraliusan, ni Medaljo"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s Wulþus fraliusan, Silubr-Medaljo bis %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronz-Medaljo"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Gulþ-Medaljo"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Silubr-Medaljo"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Vrakja alle Kriegaskipa des Fijands"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Ni Medaljo"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Dauþjan 5 Wulþus des Fijands"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronz-Medaljo in %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Gulþ-Medaljo in %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Silubr-Medaljo in %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aigis aus"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aigis an"}
+{"name": "aoe2mc.cheat.beyond", "text": "Techniks: bis 256 Forskungs"}
+{"name": "aoe2mc.cheat.cpu", "text": "Mannamaht-Grenza: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Nebul: aus"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Nebul: an"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Techniks sind umsuns"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Teiljan ist gods: dein Gewinn gaggiþ zu deiname Gahaimam"}
+{"name": "aoe2mc.cheat.wonders", "text": "Du waldais die Natura: %s Tiuza"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Blaiþ nur Gahaimamma: die Gahaimskaftjo endiþ. Der letzta Spilamma lebanda gawinnat."}
+{"name": "aoe2mc.conquest.defeated", "text": "Der Spilamma %s ist unterlegan."}
+{"name": "aoe2mc.controls.attack", "text": "Angreifan: wahl die Kriegs-Wulþus, dann rehts klikk einen Fijand."}
+{"name": "aoe2mc.controls.build", "text": "Bauan: wahl die Wulþus, rehts klikk sie für das Bau-Menü, wahl ein Haims, dann links klikk den Grund. Shift + links klikk: mais setjan. Rehts klikk: abbrechan."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: rehts klikk mit dem Fernrohr Kamera (Schnellwal 2): du gaisk snel hoh über der Mapa. Shift rehts klikk: nasta Snelei. Nochmals rehts klikk: du fliugst niþar."}
+{"name": "aoe2mc.controls.garrison", "text": "Inneshaldan: wahl Wulþus, dann rehts klikk dein eigen Haims. Sein Menü lat sie ut. Menü der Burg: Dorn-Glocka schlagen."}
+{"name": "aoe2mc.controls.gather", "text": "Samnan: wahl die Wulþus, dann rehts klikk einen Bagm, ein Beeren-Strauch, ein Bargwerk oder einen Akkar."}
+{"name": "aoe2mc.controls.goto", "text": "Gaggan zu: rehts klikk mit dem Kompass Gaggan zu (Schnellwal 3): ein Menü deiner Burgen, deiner Gruppen und der nasta untätigen Wulþus."}
+{"name": "aoe2mc.controls.groups", "text": "Gruppen: wahl Wulþus, nimm ein Gruppen-Ding (Schnellwal 5 bis 9) und Shift + rehts klikk, um die Wahl zu speichern. Rehts klikk: wahl die Gruppe."}
+{"name": "aoe2mc.controls.head", "text": "Steurungs (halt die Gersta am Stikka; die Handlungs-Leist zeigt den nasta Schritt):"}
+{"name": "aoe2mc.controls.menu", "text": "Spil-Menü: rehts klikk mit dem Bok Spil-Menü (Schnellwal 4): Diplomatija und Tribut, Liuhtjan, Speichern, Pausa und der Techniks-Baum."}
+{"name": "aoe2mc.controls.move", "text": "Gahn: mit einer Wahl, rehts klikk den Grund."}
+{"name": "aoe2mc.controls.research", "text": "Forschan und aufsteigan: rehts klikk dein eigen Haims und klikk eine Techniks oder die nasta Alþei in seinem Menü."}
+{"name": "aoe2mc.controls.select", "text": "Wählan: links klikk einen Wulþu. Halt links klikk und blicka über den Grund: ein Wahl-Kasten. Rehts klikk: gib Befehle."}
+{"name": "aoe2mc.controls.train", "text": "Ausbilden: rehts klikk dein eigen Haims (Burg, Kasarna ...) und klikk eine Wulþu in seinem Menü."}
+{"name": "aoe2mc.defeat", "text": "Unterlegan"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Gahaimamma"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Der Spilamma %s hat sein Standpunkt zu dir gewandelt: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Fijands"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutral"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Der Spilamma %s hat die Spil-Snelei auf %s gesetzt."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Der Spilamma %s sandjiþ %s %s zum Spilamma %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Liuhtjan bei %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Folgan: klikk einen eigen Wulþu"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Bewachan: klikk einen eigen Wulþu oder ein Haims"}
+{"name": "aoe2mc.gaia.joins", "text": "Ein %s gaggiþ mit dir."}
+{"name": "aoe2mc.garrison.all_back", "text": "Alle gahs wieder zur Arbeid"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Die Burg-Glocka klingat: %s Wulþus suchand Skirms"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Kein Wulþu ist gewählt."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Du habaiþ keine Wulþus."}
+{"name": "aoe2mc.garrison.out", "text": "%s Wulþus gaggun ut"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s Wulþus suchand Skirms"}
+{"name": "aoe2mc.gather.act_attack", "text": "angreifan"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "Bau-Menü"}
+{"name": "aoe2mc.gather.act_garrison", "text": "inneshaldan"}
+{"name": "aoe2mc.gather.act_gather", "text": "samnan"}
+{"name": "aoe2mc.gather.act_hunt", "text": "jagon"}
+{"name": "aoe2mc.gather.act_move", "text": "gahn"}
+{"name": "aoe2mc.gather.act_select", "text": "wählan"}
+{"name": "aoe2mc.gather.act_select_type", "text": "alle dieser Art wählan"}
+{"name": "aoe2mc.gather.act_trade", "text": "handljan"}
+{"name": "aoe2mc.gather.act_train", "text": "ausbilden"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Angreifan: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Wahl-Kasten: abbrochan"}
+{"name": "aoe2mc.gather.bush", "text": "Beeren-Strauch"}
+{"name": "aoe2mc.gather.carcass", "text": "Hrǫs"}
+{"name": "aoe2mc.gather.corner", "text": "Wahl-Kasten: klikk die andra Ekka"}
+{"name": "aoe2mc.gather.enemy", "text": "Fijands-%s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Fijands-Haims"}
+{"name": "aoe2mc.gather.farm", "text": "Akkar"}
+{"name": "aoe2mc.gather.ground", "text": "Grund"}
+{"name": "aoe2mc.gather.group", "text": "Gruppo %s: %s Wulþus"}
+{"name": "aoe2mc.gather.group_saved", "text": "Gruppo %s: %s Wulþus gaspeicherts"}
+{"name": "aoe2mc.gather.mine", "text": "%s-Bargwerk"}
+{"name": "aoe2mc.gather.paused", "text": "Das Spil ist in Pausa."}
+{"name": "aoe2mc.gather.point", "text": "%s · Rehts klikk: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Nei-Sēdjan in Warteschlanga: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Gewählt: %s Wulþus"}
+{"name": "aoe2mc.gather.tree", "text": "Trewa"}
+{"name": "aoe2mc.hill.holds", "text": "Der Spilamma %s hält das Denkmal."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Grund angreifan: rehts klikk den Grund"}
+{"name": "aoe2mc.hints.attack_move", "text": "Angriffs-Gang: rehts klikk den Grund"}
+{"name": "aoe2mc.hints.building", "text": "Setja den %s: rehts klikk den Grund · Shift + rehts klikk: mais setjan · Abbrechan: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: links klikk zum Setjan · Shift: mais setjan · Rehts klikk: abbrechan"}
+{"name": "aoe2mc.hints.corner", "text": "Wahl-Kasten: rehts klikk die andra Ekka"}
+{"name": "aoe2mc.hints.count_military", "text": "%s Kriegs-Wulþus"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s Kriegs-Wulþus"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s Wulþus"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s Wulþus"}
+{"name": "aoe2mc.hints.deselect", "text": "Leer Kasten: abwählan"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Links klikk: abwählan"}
+{"name": "aoe2mc.hints.follow", "text": "Folgan: rehts klikk einen eigen oder verbündetan Wulþu"}
+{"name": "aoe2mc.hints.guard", "text": "Bewachan: rehts klikk einen eigen oder verbündetan Wulþu oder ein Haims"}
+{"name": "aoe2mc.hints.military", "text": "%s · Rehts klikk: einen Fijand angreifan, Haltung-Menü · %s"}
+{"name": "aoe2mc.hints.none", "text": "Links klikk: einen Wulþu wählan · Halt links klikk: Wahl-Kasten"}
+{"name": "aoe2mc.hints.none_wand", "text": "Rehts klikk: einen Wulþu wählan · Stap: Wahl-Kasten"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrullja: rehts klikk den Grund"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Rehts klikk: samnan, bauan, Bau-Menü · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s bereit"}
+{"name": "aoe2mc.lobby.you_play", "text": "Du spilist %s."}
+{"name": "aoe2mc.monk.converts", "text": "Ein Munks bikeritiþ den %s."}
+{"name": "aoe2mc.monk.dies", "text": "Der %s stirbiþ (Ketzerei)."}
+{"name": "aoe2mc.pause.continued", "text": "Der Spilamma %s hat das Spil widar angafangan."}
+{"name": "aoe2mc.pause.paused", "text": "Der Spilamma %s hat das Spil in Pausa gasett."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Hiufa %s (mitlaþ Stiga %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Das Spil ist aus. Rehts klikk das Buk Rückblick in deiner Hand, um die Ergebnisse zu sehan. Stopp das Spil-Programm mit Ctrl-C in seiner Konsola."}
+{"name": "aoe2mc.relic_victory.all", "text": "Der Spilamma %s hält alle Heiligtums-Dinga."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Der Spilamma %s hat ein Heiligtum verlorans."}
+{"name": "aoe2mc.repair.no_resources", "text": "Ni genuhsame Gilstr, um den %s zu flikan."}
+{"name": "aoe2mc.replay.army", "text": "Harjis: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", Harjis am Enda: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", verlorans: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Bau-Reihafolga:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · inneshaldan %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | traghit %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "bauan %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "Matjan %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "Gulþ %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "untätig %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "Stains %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "Trewa %s"}
+{"name": "aoe2mc.replay.flare", "text": "Liuhtjan"}
+{"name": "aoe2mc.replay.game_ends", "text": "Das Spil endiþ"}
+{"name": "aoe2mc.replay.game_time", "text": "Spil-Zeit %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · inneshaldan %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Harji %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Manna %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Gawaurds %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Wulþus %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s hielt das Denkmal: Sigr des Hügel-Kunings bei %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s Angrif %s/%s Rüstung%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Doppel-Shift: Zuschauer-Sicht (flig durch Blokka). Rehts klikk die Hotbar-Dinga: Wiederhol-Steurung."}
+{"name": "aoe2mc.replay.king_died", "text": ": der Kunings starb bei %s. Kuninga-Mord: der Spilamma ist draußen."}
+{"name": "aoe2mc.replay.king_killed", "text": "Kunings bei %s erslagan"}
+{"name": "aoe2mc.replay.live_jump", "text": "Lebendes Wiederhol: der Sprung hält an der Verzögerung hinter dem Spil."}
+{"name": "aoe2mc.replay.lost", "text": "Verlorans: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " hält das Denkmal bei %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: Denkmal, %s Jar übrig"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: Denkmal, %s Jaru übrig"}
+{"name": "aoe2mc.replay.no_camera", "text": "Dieses Wiederhol hat keine Kamera seines Spilammans."}
+{"name": "aoe2mc.replay.now", "text": " nu"}
+{"name": "aoe2mc.replay.out", "text": "%s ist draußen"}
+{"name": "aoe2mc.replay.players", "text": "Spilamman"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " bringt das Heiligtum zum Klaustra und gawinnt."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Wiederhol endiþ"}
+{"name": "aoe2mc.replay.research", "text": " forscht %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s gibt auf"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Der Server startet neu für den Sprung zurück: tritt ihm wieder bei."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Haims %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Wirtschaft %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Harjis %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Techniks %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Gasamt %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "Burgen %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "kaufta %s, verkaufta %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "Heiligtums-Dinga %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "Wundrs %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Ausgegeban:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Bau %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Wirt %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Harji %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Techn %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": Wulþus ausgebildet %s, gesamalt %s, untätige Wulþus-Zeit %s, untätige Burg-Zeit %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": hält das Denkmal (Hügel-Kunings)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": Denkmal gawunnan %s (Hügel-Kunings)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": Harjis-Wulþus ausgebildet %s, Wulþus verlorans %s, Haims verlorans %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Kunings erslagan %s (Kuninga-Mord)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": gawinnt, Heiligtum im Klaustra %s (Heiligtum-Nehmen)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sTribut gesandt %s, erhalten %s, Wulþus-Spitza %s (gischatzt)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": Burg verlorans %s (Plötzlicher Tod)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, Techniks %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": Wundrs-Zeitgeber von %s, endiþ %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Gazamaunga (gischatzt)"}
+{"name": "aoe2mc.replay.task_building", "text": "bauan"}
+{"name": "aoe2mc.replay.task_following", "text": "folgand"}
+{"name": "aoe2mc.replay.task_food", "text": "samnand Matjan"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "inneshaldan"}
+{"name": "aoe2mc.replay.task_gold", "text": "samnand Gulþ"}
+{"name": "aoe2mc.replay.task_guarding", "text": "bewachand"}
+{"name": "aoe2mc.replay.task_idle", "text": "untätig"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrullijand"}
+{"name": "aoe2mc.replay.task_resources", "text": "samnand Gawaurds"}
+{"name": "aoe2mc.replay.task_stone", "text": "samnand Stains"}
+{"name": "aoe2mc.replay.task_walking", "text": "gangand"}
+{"name": "aoe2mc.replay.task_wood", "text": "samnand Trewa"}
+{"name": "aoe2mc.replay.team", "text": "Hiufa %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Bogaskutja %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Bogaskutja-Rüstung %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Traghan %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Ridja-Rüstung %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Akkar %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Gulþ %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Fotgaggja-Rüstung %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Waibstuhl %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Nahkamp %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Stains %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Trewa %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Burg"}
+{"name": "aoe2mc.replay.tl_king", "text": "Kunings erslagan"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. Harji: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Heiligtum"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Gibt auf"}
+{"name": "aoe2mc.replay.town_fell", "text": ": die Burg fiel bei %s. Plötzlicher Tod: der Spilamma ist draußen."}
+{"name": "aoe2mc.replay.town_lost", "text": "Burg verlorans bei %s"}
+{"name": "aoe2mc.replay.training", "text": "Ausbildan: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitat:"}
+{"name": "aoe2mc.replay.up_counts", "text": "Wirtschaft %s · Universitat %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " bauta ein Wundr bei %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Kampf: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s Wulþus"}
+{"name": "aoe2mc.replay_input.fights", "text": "Grosse Kampfa:"}
+{"name": "aoe2mc.replay_input.help", "text": "Wiederhol: rehts klikk die Dinga in deiner Hotbar, oder klikk: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Übernemma: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s Wulþus)"}
+{"name": "aoe2mc.replay_input.vs", "text": " gegen "}
+{"name": "aoe2mc.resource.food", "text": "Matjan"}
+{"name": "aoe2mc.resource.gold", "text": "Gulþ"}
+{"name": "aoe2mc.resource.stone", "text": "Stains"}
+{"name": "aoe2mc.resource.wood", "text": "Trewa"}
+{"name": "aoe2mc.run.back", "text": "%s ist wieder da"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Feldzug vollendet"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: eine gewöhnliche Zeile geht an alle, /tm TEXT an deine Gahaimamma, /msg NAME TEXT an einen Spilamman."}
+{"name": "aoe2mc.run.left_bot", "text": "%s ist gegaggen: ein Bot spilt den Spilamma %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Szenario %s fangt an. Tritt wieder bei."}
+{"name": "aoe2mc.run.starts_in", "text": "Das Spil fangt an in %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Öffne \"Wähle deinen Spilamma\" und klikk \"Bereit\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Alle Steurungs: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Erster Schritt: halt den Befehls-Stikka und rehts klikk einen deiner Wulþus."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Erster Schritt: halt den Befehls-Stikka und links klikk einen deiner Wulþus."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Ziel: gawinn das Spil. Siegs-Einstellung: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Spil gaspeicherts: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s Wulþus gaggun ut"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Auto-Späher"}
+{"name": "aoe2mc.stance.formation", "text": "Fylking: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Kein Wulþu kann den Grund angreifan"}
+{"name": "aoe2mc.stance.unpack", "text": "Entpack zuerst den Trebuchet"}
+{"name": "aoe2mc.train.active", "text": "%s ist aktiv."}
+{"name": "aoe2mc.train.rally", "text": "Rehts klikk den Grund für den Sammel-Punkt."}
+{"name": "aoe2mc.train.researched", "text": "%s ist erforscht."}
+{"name": "aoe2mc.transport.out", "text": "%s Wulþus gaggun ut"}
+{"name": "aoe2mc.treaty.ended", "text": "Der Friþu endiþ: die Spilammans kunnan nu angreifan."}
+{"name": "aoe2mc.treaty.refuse", "text": "Friþu: du kannst nicht vor %s angreifan."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Friþu: du kannst in diesem Spil nicht angreifan."}
+{"name": "aoe2mc.treaty.start", "text": "Friþu: kein Spilamma kann vor %s einen anderan Spilamman angreifan."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Friþu: kein Spilamma kann in diesem Spil einen anderan Spilamman angreifan."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Bau eine Kasarna: rehts klikk einen gewählten Wulþu, wahl die Kasarna und setz sie. Die Handlungs-Leist über der Hotbar sagt dir, wo du sie setzt."}
+{"name": "aoe2mc.tutorial.camera", "text": "Gah schnell über die Mapa: rehts klikk mit dem Ding \"Kamera\", gah, dann rehts klikk wieder damit."}
+{"name": "aoe2mc.tutorial.camp", "text": "Vrakja das Fijands-Lager in der Mitta der Mapa: wahl deine Milizia und rehts klikk ein Haims. Die Boss-Leist oben zeigt den Schritt."}
+{"name": "aoe2mc.tutorial.camps", "text": "Bau ein Holzlager nahe den Trewa und eine Mulja nahe den Beeren. Die Seitenleist rechts zeigt das Trewa, das sie kosten."}
+{"name": "aoe2mc.tutorial.complete", "text": "Das Tutorium ist vollendet. Nasta: spil ein Spil gegen den Bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutorium vollendet"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Gagg zur Lehens-Alþei: rehts klikk auf deine Burg und wahl die Lehens-Alþei. Die Seitenleist rechts zeigt deine Matjan."}
+{"name": "aoe2mc.tutorial.food", "text": "Samna 100 Matjan: schick einen Wulþu zu den Beeren. Die Seitenleist rechts zeigt deine Matjan."}
+{"name": "aoe2mc.tutorial.house", "text": "Bau ein Haus: rehts klikk einen gewählten Wulþu, wahl das Haus und setz es. Die Handlungs-Leist über der Hotbar sagt dir, wo du es setzt."}
+{"name": "aoe2mc.tutorial.militia", "text": "Bilde 3 Milizia aus: rehts klikk deine Kasarna und wahl die Milizia. Die Seitenleist rechts zeigt deine Matjan und Gulþ."}
+{"name": "aoe2mc.tutorial.raid", "text": "Der Fijand greift deine Wulþus an! Klikk die rote Warnzeile im Chat, um dorthin zu gehen, dann wahl deine Milizia und rehts klikk die Fijands. Die Boss-Leist oben zeigt die Lebenskraft des gewählten Wulþu."}
+{"name": "aoe2mc.tutorial.select", "text": "Wähl einen Wulþu: links klikk einen deiner Wulþus mit dem Befehls-Stikka. Die Boss-Leist oben zeigt den gewählten Wulþu, die Handlungs-Leist über der Hotbar zeigt die nasta Handlung."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Schritt vollendet"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Schritt %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIPP: die Kasarna bildet Fotgaggjans aus. Fotgaggjans sind billig und gut gegen Haims."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIPP: greif mit allen deinen Wulþus gemeinsam an. Eine kleine Schar stirbt, bevor sie Schaden macht."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIPP: bau die Abgabe-Haims nahe bei den Gawaurds, damit die Wulþus einen kurzen Weg haben."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIPP: die nasta Alþei schaltet neue Haims, Wulþus und Techniks frei. Halt die Wulþus bei der Arbeid, während du aufsteigst."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIPP: Beeren nahe einer Mulja sind ein sicherer Anfang der Matjan. Spater geben Akkars Matjan, das nicht endiþ."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIPP: ein Haus gibt Platz für 5 mehr Manna. Sieh die Manna in der Seitenleist und bau Haus, bevor es voll ist."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIPP: du kannst bis zu 15 Wulþus in einem Haims in die Schlange stellen, wenn du die Gawaurds hast."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIPP: in AoE2 schickt die Dorn-Glocka die Wulþus in die Burg. Schlag sie, wenn der Fijand deine Stadt überfallt."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIPP: die Zeile Untätig der Seitenleist rechts zählt deine Wulþus ohne Arbeid. Gib ihnen Arbeid."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIPP: bilde in den ersten Alþeis immer Wulþus aus. Mehr Wulþus geben mehr Gawaurds."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIPP: Wulþus samnen schneller nahe einem Abgabe-Haims. Bau ein Holzlager neben den Trewa."}
+{"name": "aoe2mc.tutorial.villager", "text": "Bilde einen Wulþu aus: rehts klikk deine Burg und wahl den Wulþu. Die Seitenleist rechts zeigt die Matjan, die er kostet."}
+{"name": "aoe2mc.tutorial.wood", "text": "Samna 50 Trewa: wahl einen Wulþu und rehts klikk einen Trewa. Die Seitenleist rechts zeigt dein Trewa."}
+{"name": "aoe2mc.victory", "text": "Sigr"}
+{"name": "aoe2mc.wonder.built", "text": "Der Spilamma %s bauta ein Wundr."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Das Wundr des Spilammans %s ist vrakjan."}

@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Eldar %s tuluva i %s-aldë."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: i Morgoth-langa tulë i Mappa ó i rantë i ruscë i Ilya e %s. Ilya mavë i nórë ar i tyelië nar i ilyë."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ú-ben mavë i %s sinomë nú."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ú-ben horë i tyelë sina: ú-ben i ohtar ilyë."}
+{"name": "aoe2mc.bot.flare_two", "text": "Hosta tyeller i sindanóriello."}
+{"name": "aoe2mc.bot.no_flare", "text": "Ú-hírë i tyelë."}
+{"name": "aoe2mc.bot.no_market", "text": "Ú-ben i marta: ú-ben quetë i ezellë."}
+{"name": "aoe2mc.bot.no_onager", "text": "Ú-ben i onagar."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Ú-ben i sandar nó i mavë i mûrë."}
+{"name": "aoe2mc.bot.no_water", "text": "Ú-ben i ear ar i ostë: ú-ben i mavë i fanar."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "I onagar-nyar ú-ben i mavë i ammar."}
+{"name": "aoe2mc.build.cost", "text": "Ú-ben i sandar: i %s ní %s."}
+{"name": "aoe2mc.build.flat", "text": "I %s mauya tëa i talë."}
+{"name": "aoe2mc.build.gate_spot", "text": "I %s mauya ar i mûrë ni 4 tilë i lenta, nó 3 tilë ilmë."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Mavë: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "I %s mauya tëa i ear ar i cirya."}
+{"name": "aoe2mc.build.space", "text": "Ú-ben i lóce i %s sinomë."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Ú-ben i sandar: %s tilë i %s ní %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: ca-nó i mûrë-nessë."}
+{"name": "aoe2mc.build.water", "text": "I %s mauya tëa i ear."}
+{"name": "aoe2mc.camera.fov", "text": "I lenda kamera caita i horë ya tyelë. Ar i lassë sin ú-ca, tyelë Options > Accessibility Settings > View Bobbing ní OFF. I kamera tyelë ilya i ilya, ar i ilya ilya i Mappa. Ar i lenda ya nórë, tyelë Options > Accessibility Settings > FOV Effects ní 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: ú-lenda"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: lenda, lúmë x%s. Shift ca-nó: i tyelë lúmë."}
+{"name": "aoe2mc.camera.speed", "text": "Lúmë i kamera: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Nyar ilya i ohtar enyar ar lanta lassë i horë"}
+{"name": "aoe2mc.challenge.booming", "text": "Horë 100 tencar ar tuluva i Imperial-aldë"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Tuluva i Castle-aldë ar lasta i ohtar enyar"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Nyar i enyar caistë"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Coira 200 maitë, 200 vaxë, 100 ondo ar 200 cevë, horë 21 tencar, mavë i ammar-cerindë ar i mýllë, ar tuluva i Feudal-aldë"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Horë 27 tencar, mavë 5 cóta, ar tuluva i Castle-aldë"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Nyar ilya i nétë enyar-rúcë"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s horë lantanë, i conc i urwa ní %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s horë lantanë, i conc i ondo ní %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s horë lantanë, ú-conc"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s horë lantanë, i conc i airë ní %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Conc urwa"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Conc ondo"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Conc airë"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Nyar ilya i enyar ter-ceolë"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Ú-conc"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Quáre 5 tencar enyar"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Conc urwa ar %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Conc ondo ar %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Conc airë ar %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis ú-ca"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis ca"}
+{"name": "aoe2mc.cheat.beyond", "text": "Cárë: tyellë i 256 tyeller"}
+{"name": "aoe2mc.cheat.cpu", "text": "Ontë i quentë: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "I fanya-rúcë: ú-ca"}
+{"name": "aoe2mc.cheat.fog_on", "text": "I fanya-rúcë: ca"}
+{"name": "aoe2mc.cheat.free_techs", "text": "I cárë i tyeller ú-cólë ondo"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "I tyeller i ilya i maiwë: i ezellë ilya lanta i tyulindar"}
+{"name": "aoe2mc.cheat.wonders", "text": "Ilya i tyelië i Ardë: %s hravë"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Ilya i tyulindar naiwë: i tyulindar ilmë. I mamë ilya ú-caitë coira."}
+{"name": "aoe2mc.conquest.defeated", "text": "I quentë %s ilyar."}
+{"name": "aoe2mc.controls.attack", "text": "Nyë: i horë i ohtar ilyë, ar i nyë ar i enyar."}
+{"name": "aoe2mc.controls.build", "text": "Mavë: i tencar, nyë ilmë ar i enyar i mavë, cu i tyelë i mavëlë, nyë ar i talë. Shift + nyë ar: mavë ilya. Nyë-ca: nyë."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: nyë ar i kamera i tyelë (caitë 2), ilya i ilya i Ardë. Shift + nyë-ca: i lúmë ondo. Nyë ilya: i ilya nosë."}
+{"name": "aoe2mc.controls.garrison", "text": "Rúcë: i horë, nyë ar i tyelë ilya. I tyelë ilya i tyulindar. Cárë ilya: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "Coira: i tencar, nyë ar i ammar, i maitë, i ondo nó i pasta."}
+{"name": "aoe2mc.controls.goto", "text": "Tulë: nyë ar i ceuta (caitë 3): i tyelë i ilya i tyulindar, i horë i mavë ar i tencar ú-cólë ní."}
+{"name": "aoe2mc.controls.groups", "text": "Horë-mbalë: horë i horë, horë ilya i caitë (caitë 5 tyeller 9) ar Shift + nyë-ca. Nyë: horë i mbalë."}
+{"name": "aoe2mc.controls.head", "text": "I nyë (horë i caraitë i ilya nan; i nyë i tyelë ilya ilya):"}
+{"name": "aoe2mc.controls.menu", "text": "I tyelë i cárë: nyë ar i parma (caitë 4): i tyulindar ar i quentë, i tyelë, i rúcë, i sóra ar i tyelë i tyeller."}
+{"name": "aoe2mc.controls.move", "text": "Lúmë: i horë, nyë ar i talë."}
+{"name": "aoe2mc.controls.research", "text": "Tyellë ar i aldë: nyë ar i tyelë i tyulindar, ar nyë i tyeller nó i aldë ilya."}
+{"name": "aoe2mc.controls.select", "text": "Horë: nyë ar i ohtar. Hold i nyë ar i talë: i horë i sindë. Nyë-ca: i quentë."}
+{"name": "aoe2mc.controls.train", "text": "Horë: nyë ar i tyelë (i caitë tencar, i tyelë i enyar), ar nyë i ohtar i tyelë."}
+{"name": "aoe2mc.defeat", "text": "Ilya"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Tyulindë"}
+{"name": "aoe2mc.diplomacy.changed", "text": "I quentë %s tyelë i morë: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Enyar"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Tyelë"}
+{"name": "aoe2mc.diplomacy.speed", "text": "I quentë %s tyelë i lúmë i cárë: %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "I quentë %s ezelle %s %s ar i quentë %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Sindanóriello ar %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Tanya: nyë ar i horë i tyelë"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Rúcë: nyë ar i horë i tyelë nó i tyelë"}
+{"name": "aoe2mc.gaia.joins", "text": "Ilya %s tulë lenta."}
+{"name": "aoe2mc.garrison.all_back", "text": "Ilya tulë ar i mavë"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "I mýllë rimë: i tencar %s ctë i rúcë"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Ú-ben i tencar i horë."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Ú-ben i tencar."}
+{"name": "aoe2mc.garrison.out", "text": "Horë %s tulë"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "Tencar %s ctë i rúcë"}
+{"name": "aoe2mc.gather.act_attack", "text": "nyë"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "parma i mavë"}
+{"name": "aoe2mc.gather.act_garrison", "text": "rúcë"}
+{"name": "aoe2mc.gather.act_gather", "text": "coira"}
+{"name": "aoe2mc.gather.act_hunt", "text": "hunta"}
+{"name": "aoe2mc.gather.act_move", "text": "lúmë"}
+{"name": "aoe2mc.gather.act_select", "text": "horë"}
+{"name": "aoe2mc.gather.act_select_type", "text": "horë ilya i tyelë"}
+{"name": "aoe2mc.gather.act_trade", "text": "ezelle"}
+{"name": "aoe2mc.gather.act_train", "text": "horë"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Nyë: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "I sindë: quentë"}
+{"name": "aoe2mc.gather.bush", "text": "Maitë-pasta"}
+{"name": "aoe2mc.gather.carcass", "text": "Carca"}
+{"name": "aoe2mc.gather.corner", "text": "I sindë: nyë i nessë ilmë"}
+{"name": "aoe2mc.gather.enemy", "text": "Enyar %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Enyar-cóta"}
+{"name": "aoe2mc.gather.farm", "text": "Pasta"}
+{"name": "aoe2mc.gather.ground", "text": "Talë"}
+{"name": "aoe2mc.gather.group", "text": "Mbalë %s: %s horë"}
+{"name": "aoe2mc.gather.group_saved", "text": "Mbalë %s: %s horë caitë"}
+{"name": "aoe2mc.gather.mine", "text": "%s ondo"}
+{"name": "aoe2mc.gather.paused", "text": "I cárë sóra."}
+{"name": "aoe2mc.gather.point", "text": "%s · Nyë-ca: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Sindë-tyelë ar mavë: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Horë: %s horë"}
+{"name": "aoe2mc.gather.tree", "text": "Ammar"}
+{"name": "aoe2mc.hill.holds", "text": "I quentë %s rúcë i mahtë."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Nyë i talë: nyë-ca ar i talë"}
+{"name": "aoe2mc.hints.attack_move", "text": "Nyë-lúmë: nyë-ca ar i talë"}
+{"name": "aoe2mc.hints.building", "text": "Tyelë i %s: nyë-ca ar i talë · Shift + nyë-ca: mavë ilya · Ca-nó: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: nyë ar i talë ar tyelë · Shift: mavë ilya · Nyë-ca: quentë"}
+{"name": "aoe2mc.hints.corner", "text": "I sindë: nyë-ca ar i nessë ilmë"}
+{"name": "aoe2mc.hints.count_military", "text": "%s ohtar"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s ohtar"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s tencar"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s tencar"}
+{"name": "aoe2mc.hints.deselect", "text": "I sindë ú-cólë: quentë i horë"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Nyë-ca: quentë i horë"}
+{"name": "aoe2mc.hints.follow", "text": "Tanya: nyë-ca ar i tyelë tyulindë"}
+{"name": "aoe2mc.hints.guard", "text": "Rúcë: nyë-ca ar i tyelë nó i cóta i tyulindë"}
+{"name": "aoe2mc.hints.military", "text": "%s · Nyë-ca: nyë i enyar, i parma i tyelë · %s"}
+{"name": "aoe2mc.hints.none", "text": "Nyë-ca: horë i ohtar · Hold i nyë-ca: i sindë"}
+{"name": "aoe2mc.hints.none_wand", "text": "Nyë-ca: horë i ohtar · Lóme: i sindë"}
+{"name": "aoe2mc.hints.patrol", "text": "Ahtë: nyë-ca ar i talë"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Nyë-ca: coira, mavë, parma i mavë · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s tyelë"}
+{"name": "aoe2mc.lobby.you_play", "text": "Lye tyelë %s."}
+{"name": "aoe2mc.monk.converts", "text": "I tyelë i quentë tulë i %s."}
+{"name": "aoe2mc.monk.dies", "text": "I %s ilmë (Heresy)."}
+{"name": "aoe2mc.pause.continued", "text": "I quentë %s tyelë i cárë."}
+{"name": "aoe2mc.pause.paused", "text": "I quentë %s sóra i cárë."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Mbalë %s (i ranta lúmë %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "I cárë ilmë. Nyë-ca ar i parma-tyelë i tyelë i caitë. Quentë i tyelë ar Ctrl-C ar i ohtar."}
+{"name": "aoe2mc.relic_victory.all", "text": "I quentë %s rúcë ilya i ahtar."}
+{"name": "aoe2mc.relic_victory.lost", "text": "I quentë %s lantanë i ahtar."}
+{"name": "aoe2mc.repair.no_resources", "text": "Ú-ben i sandar i ceuta i %s."}
+{"name": "aoe2mc.replay.army", "text": "Ohtar: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", ohtar i telë: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", lantanë: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "I horë i mavë:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · rúcë %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | cola %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "mavë %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "maitë %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "ondo %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "ú-coira %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "cevë %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "vaxë %s"}
+{"name": "aoe2mc.replay.flare", "text": "Sindanóriello"}
+{"name": "aoe2mc.replay.game_ends", "text": "I cárë ilmë"}
+{"name": "aoe2mc.replay.game_time", "text": "Lúmë i cárë %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · rúcë %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Ohtar %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Quentë %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Sandar %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Tencar %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s rúcë i mahtë: i ránë i Hír-aran ar %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s nyë %s/%s arma%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Dóla-caitë i Shift: i nyë i tyelë (lenda i cóta). Nyë-ca ar i horë-caitë: i tyelë i cárë."}
+{"name": "aoe2mc.replay.king_died", "text": ": i aran ilmë ar %s. Aran-ilmë: i quentë sinomë."}
+{"name": "aoe2mc.replay.king_killed", "text": "Aran nyarnë ar %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "I cárë tyelë: i tulë sóra ar i tyelë ar i cárë."}
+{"name": "aoe2mc.replay.lost", "text": "Lantanë: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " rúcë i mahtë ar %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: mahtë, %s loa lantë"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: mahtë, %s loar lantë"}
+{"name": "aoe2mc.replay.no_camera", "text": "Ú-ben i kamera i quentë i cárë sina."}
+{"name": "aoe2mc.replay.now", "text": " nú"}
+{"name": "aoe2mc.replay.out", "text": "%s ilmë"}
+{"name": "aoe2mc.replay.players", "text": "Quentë"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " tulë i ahtar i monastë ar ránë."}
+{"name": "aoe2mc.replay.replay_ended", "text": "I cárë-tyelë ilmë"}
+{"name": "aoe2mc.replay.research", "text": " tyella %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s quentë"}
+{"name": "aoe2mc.replay.restart_jump", "text": "I ohtar tyelë ar i nóta: tulë ar ilya."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Cóta %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ammar %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Ohtar %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tyeller %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Ilya %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "enyar-cótë %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "ezelle %s, quetë %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "ahtar %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "hravë %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Coirë:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Mavë %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Ammar %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Ohtar %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tyeller %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": tencar horë %s, coirë %s, ú-coira lúmë tencar %s, ú-coira lúmë cóta-tulë %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": rúcë i mahtë (Hír-aran)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": mahtë ránë %s (Hír-aran)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": ohtar horë %s, ohtar lantanë %s, cótar lantanë %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": aran nyarnë %s (Aran-ilmë)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": ránë, ahtar i monastë %s (Ahtar-tulë)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sezellë %s, camnë %s, tencar-rasë %s (ranta)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": cóta-tulë lantanë %s (Lúmë-ilmë)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tyeller %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": hravë-lúmë ar %s, telë %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Nesta (ranta)"}
+{"name": "aoe2mc.replay.task_building", "text": "mavë"}
+{"name": "aoe2mc.replay.task_following", "text": "tanya"}
+{"name": "aoe2mc.replay.task_food", "text": "coira maitë"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "rúcë"}
+{"name": "aoe2mc.replay.task_gold", "text": "coira ondo"}
+{"name": "aoe2mc.replay.task_guarding", "text": "rúcë"}
+{"name": "aoe2mc.replay.task_idle", "text": "ú-coira"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "ahtë"}
+{"name": "aoe2mc.replay.task_resources", "text": "coira sandar"}
+{"name": "aoe2mc.replay.task_stone", "text": "coira cevë"}
+{"name": "aoe2mc.replay.task_walking", "text": "lúmë"}
+{"name": "aoe2mc.replay.task_wood", "text": "coira vaxë"}
+{"name": "aoe2mc.replay.team", "text": "Mbalë %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Enyar-nécë %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armar enyar-nécë %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Cola %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armar nótë %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Pasta %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Ondo %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armar tyelë %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Ahtar-lamya %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Hrávë %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Cevë %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Vaxë %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Enyar-cóta"}
+{"name": "aoe2mc.replay.tl_king", "text": "Aran nyarnë"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. ohtar: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Ahtar"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Quentë"}
+{"name": "aoe2mc.replay.town_fell", "text": ": i cóta-tulë ilmë ar %s. Lúmë-ilmë: i quentë sinomë."}
+{"name": "aoe2mc.replay.town_lost", "text": "Cóta-tulë lantanë ar %s"}
+{"name": "aoe2mc.replay.training", "text": "Horë: %s"}
+{"name": "aoe2mc.replay.university", "text": "Ostë-tyelë:"}
+{"name": "aoe2mc.replay.up_counts", "text": "Ammar %s · Ostë-tyelë %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " mavë hravë ar %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Mahtë: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s horë"}
+{"name": "aoe2mc.replay_input.fights", "text": "I mahtë rassë:"}
+{"name": "aoe2mc.replay_input.help", "text": "Cárë-tyelë: nyë ar i caitë i parmë, nó nyë: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Ammë: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s horë)"}
+{"name": "aoe2mc.replay_input.vs", "text": " ar "}
+{"name": "aoe2mc.resource.food", "text": "maitë"}
+{"name": "aoe2mc.resource.gold", "text": "ondo"}
+{"name": "aoe2mc.resource.stone", "text": "cevë"}
+{"name": "aoe2mc.resource.wood", "text": "vaxë"}
+{"name": "aoe2mc.run.back", "text": "%s tulë ar"}
+{"name": "aoe2mc.run.campaign_complete", "text": "I rassë ilmë"}
+{"name": "aoe2mc.run.chat_hint", "text": "Quetë: i quetë tulë ilya; /tm TEXT ar i tyulindar; /msg NAME TEXT ar quentë sinomë."}
+{"name": "aoe2mc.run.left_bot", "text": "%s quentë: i bot i ahtë ar i quentë %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "I rassë %s tuluva. Tulë ar nóta."}
+{"name": "aoe2mc.run.starts_in", "text": "I cárë tuluva i %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Pata \"Choose your player\" ar nyë \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Ilya i nyë: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "I minë: horë i tyelë i tyelë ar nyë-ca ar i tencar."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "I minë: horë i tyelë i tyelë ar nyë ar i tencar."}
+{"name": "aoe2mc.run.welcome_goal", "text": "I tyelë: ránë i cárë. Ránë-tyelë: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Rúcë i cárë: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "Horë %s tulë"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Tyelë-tirë"}
+{"name": "aoe2mc.stance.formation", "text": "Parma: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ú-ben ohtar nyë i talë"}
+{"name": "aoe2mc.stance.unpack", "text": "Ahyë i onagar"}
+{"name": "aoe2mc.train.active", "text": "%s ná tyelë."}
+{"name": "aoe2mc.train.rally", "text": "Nyë-ca ar i talë i tulë-ceuta."}
+{"name": "aoe2mc.train.researched", "text": "%s ná tyellë."}
+{"name": "aoe2mc.transport.out", "text": "Horë %s tulë"}
+{"name": "aoe2mc.treaty.ended", "text": "I quetë tyelë: i quentë nútë nyë."}
+{"name": "aoe2mc.treaty.refuse", "text": "Quetë: ú-nyë ar %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Quetë: ú-nyë i cárë ni."}
+{"name": "aoe2mc.treaty.start", "text": "Quetë: ú-ben quentë nyë quentë sinomë ar %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Quetë: ú-ben quentë nyë quentë sinomë i cárë ni."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Mavë i ohtar-cóta: nyë ar i tencar horë, horë i cóta ar tyelë. I parma i ahtë nyë i mavë."}
+{"name": "aoe2mc.tutorial.camera", "text": "Lúmë ar i Ardë: nyë ar i \"Kamera\", lúmë, ar nyë ar i ilya."}
+{"name": "aoe2mc.tutorial.camp", "text": "Nyar i enyar-camp i nessë i Ardë: horë i ohtar, nyë ar i cóta. I quetë i nesta tyelë i ceuta."}
+{"name": "aoe2mc.tutorial.camps", "text": "Mavë i ammar-cerindë nar i ammar, i mýllë nar i maitë. I parma i lenta tyelë i vaxë i ní."}
+{"name": "aoe2mc.tutorial.complete", "text": "I tyelë ilmë. Tulë: cárë ar i bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tyelë ilmë"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Tuluva i Feudal-aldë: nyë ar i caitë tencar, horë i Feudal-aldë. I parma i lenta tyelë i maitë."}
+{"name": "aoe2mc.tutorial.food", "text": "Coira 100 maitë: tulë i tencar ar i maitë-pasta. I parma i lenta tyelë i maitë."}
+{"name": "aoe2mc.tutorial.house", "text": "Mavë i cóta: horë i tencar, horë i cóta ar tyelë. I parma i ahtë nyë i mavë."}
+{"name": "aoe2mc.tutorial.militia", "text": "Horë 3 Militia: nyë ar i ohtar-cóta, horë i militia. I parma i lenta tyelë i maitë ar ondo."}
+{"name": "aoe2mc.tutorial.raid", "text": "I enyar nyar i tencar! Nyë ar i quetë i ruscë i quetë tulë ar i ohtar; ar i nyë ar i enyar. I quetë i mahtë tyelë i maiwë i nyë-horë."}
+{"name": "aoe2mc.tutorial.select", "text": "Horë i tencar: nyë-ca ar i tencar ar i caraitë. I quetë i mahtë tyelë i horë, i ahtë tyelë i nesta nyë."}
+{"name": "aoe2mc.tutorial.step_done", "text": "I minë ná ilmë"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Minë %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIP: i ohtar-cóta mavë i ohtar. I ohtar ná ondo, ar mauya nar i cótar."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIP: nyë ar i ilya i horë tyelë. I nó horë ilmë ar ú-tyelë ní."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIP: mavë i cóta-caitë nar i ammar, i tencar lúmë ter."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIP: i aldë tuluva i cóta, ohtar, ar tyeller. Tyelë i tencar ar i coirë i tuluva."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIP: i pasta nar i mýllë ná i maitë-tyelë. Ar i pasta ná i maitë ú-ilmë."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIP: i cóta ná room ar 5 quentë. Ahtë i quentë i parma ar mavë i cótar ar ú-lenta."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIP: ar i ondo, i cóta tyelë 15 horë ar i ceuta."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIP: ar AoE2, i mýllë tulë i tencar i mýllë-cóta. Rimë ar i enyar nyar i tyelë."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIP: i ilyë i parma i caitë ahtë i tencar úcoira. Ánë coirë ar i tencar."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIP: mavë i tencar ilya i aldë-minë. I tencar mauya i sandar."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIP: i tencar coira ter mavë i cóta-caitë. Mavë i vaxë-cóta nar i ammar."}
+{"name": "aoe2mc.tutorial.villager", "text": "Horë i tencar: nyë ar i caitë tencar, horë i tencar. I parma i lenta tyelë i maitë."}
+{"name": "aoe2mc.tutorial.wood", "text": "Coira 50 vaxë: horë i tencar, nyë ar i ammar. I parma i lenta tyelë i vaxë."}
+{"name": "aoe2mc.victory", "text": "Ránë"}
+{"name": "aoe2mc.wonder.built", "text": "I quentë %s mavë hravë."}
+{"name": "aoe2mc.wonder.destroyed", "text": "I hravë i quentë %s ilmë."}
