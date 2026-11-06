@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Ẹrọ orin %s ń lọ sí %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Ìbàjẹ́ gba maapu láti etí dé àárín ní %s. Ó pa gbogbo ẹ̀ṣọ́ àti ilé tó wà nínú rẹ̀ run."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Mi ò lè kọ́ %s síbẹ̀ báyìí."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Mi ò lè kọ́ ẹ̀ṣọ́ yẹn: mi ò ní ilé fún un."}
+{"name": "aoe2mc.bot.flare_two", "text": "Flare meji fi ibi odi hàn."}
+{"name": "aoe2mc.bot.no_flare", "text": "Mi ò rí flare kankan."}
+{"name": "aoe2mc.bot.no_market", "text": "Mi ò ní ọjà: mi ò lè fi owó ránṣẹ́."}
+{"name": "aoe2mc.bot.no_onager", "text": "Mi ò ní onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Ohun èlò mi ò tó fún odi."}
+{"name": "aoe2mc.bot.no_water", "text": "Omi ò sí nítòsí ìlú mi: mi ò lè kọ́ ọkọ̀ ojú omi."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Àwọn onager mi ò lè gé igi."}
+{"name": "aoe2mc.build.cost", "text": "Ohun èlò ò tó: %s náà jẹ́ %s."}
+{"name": "aoe2mc.build.flat", "text": "%s gbọ́dọ̀ dúró lórí ilẹ̀ pẹ̀lẹ́."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s gbọ́dọ̀ lọ sí orí àwọn ibi 4 ti odi tìrẹ ní ìlà tààrà, tàbí orí ibi 3 lọ́nà ìdàkejì."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Kọ́: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s gbọ́dọ̀ dúró lórí omi tó sún mọ́ etí omi."}
+{"name": "aoe2mc.build.space", "text": "Ààyè fún %s ò sí níbí."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Ohun èlò ò tó: %s ti %s náà jẹ́ %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: tẹ ọ̀tún lórí ìpẹ̀kun odi."}
+{"name": "aoe2mc.build.water", "text": "%s gbọ́dọ̀ dúró lórí omi."}
+{"name": "aoe2mc.camera.fov", "text": "Kamẹra tó yára mú kí ohun tí o gbé mì. Láti jẹ́ kó dúró jẹ́ẹ́, ṣètò Options > Accessibility Settings > View Bobbing sí OFF. Kamẹra náà tún mú kí ojú wíwo gbòòrò sí i, ó sì fi maapu púpọ̀ sí i hàn. Láti pa ojú wíwo déédé mọ́, ṣètò Options > Accessibility Settings > FOV Effects sí 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamẹra: pa"}
+{"name": "aoe2mc.camera.on", "text": "Kamẹra: ṣí, iyara x%s. Shift tẹ ọ̀tún: iyara tó tẹ̀lé."}
+{"name": "aoe2mc.camera.speed", "text": "Iyara kamẹra: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Ṣẹ́gun gbogbo ẹ̀ṣọ́ ọ̀tá, kí o sì pàdánù díẹ̀"}
+{"name": "aoe2mc.challenge.booming", "text": "Kọ́ ará abúlé 100, kí o sì lọ sí Imperial Age"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Lọ sí Castle Age, kí o sì yè àwọn ìkọlù ọ̀tá"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Pa castle ọ̀tá run"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Kó oúnjẹ 200, igi 200, wúrà 100 àti òkúta 200, kọ́ ará abúlé 21, kọ́ ibùdó igi àti ọlọ, kí o sì lọ sí Feudal Age"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Kọ́ ará abúlé 27, kọ́ ilé 5, kí o sì lọ sí Castle Age"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Ṣẹ́gun gbogbo ìgbì ọ̀tá mẹ́fẹ̀ẹ̀ta"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "Ẹ̀ṣọ́ %s ti sọnù, àmì ẹ̀yẹ idẹ títí dé %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "Ẹ̀ṣọ́ %s ti sọnù, àmì ẹ̀yẹ wúrà títí dé %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "Ẹ̀ṣọ́ %s ti sọnù, kò sí àmì ẹ̀yẹ"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "Ẹ̀ṣọ́ %s ti sọnù, àmì ẹ̀yẹ fàdákà títí dé %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Àmì ẹ̀yẹ idẹ"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Àmì ẹ̀yẹ wúrà"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Àmì ẹ̀yẹ fàdákà"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Pa gbogbo ọkọ̀ ogun ọ̀tá run"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Kò sí àmì ẹ̀yẹ"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Pa ará abúlé ọ̀tá 5"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Àmì ẹ̀yẹ idẹ ní %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Àmì ẹ̀yẹ wúrà ní %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Àmì ẹ̀yẹ fàdákà ní %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis pa"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis ṣí"}
+{"name": "aoe2mc.cheat.beyond", "text": "Ìmọ̀ ẹ̀rọ: títí dé ìwádìí 256"}
+{"name": "aoe2mc.cheat.cpu", "text": "Ìwọ̀n ènìyàn: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Ìkùukùu ogun: pa"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Ìkùukùu ogun: ṣí"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Ìmọ̀ ẹ̀rọ kò ná owó"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Pínpín ni ìtọ́jú: owó rẹ ń lọ sí àwọn ọ̀rẹ́ rẹ"}
+{"name": "aoe2mc.cheat.wonders", "text": "O ń darí ìseda: ẹranko %s"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Àwọn ọ̀rẹ́ nìkan ló kù: àdéhùn ọ̀rẹ́ parí. Ẹrọ orin tó kẹ́hìn láàyè ló borí."}
+{"name": "aoe2mc.conquest.defeated", "text": "Ẹrọ orin %s ti ṣẹ́gun."}
+{"name": "aoe2mc.controls.attack", "text": "Kọlu: yan àwọn ẹ̀ṣọ́ ogun, lẹ́yìn náà tẹ ọ̀tún lórí ọ̀tá."}
+{"name": "aoe2mc.controls.build", "text": "Kọ́: yan ará abúlé, tẹ ọ̀tún lórí wọn fún àkójọ kíkọ́, yan ilé, lẹ́yìn náà tẹ òsì lórí ilẹ̀. Shift + tẹ òsì: gbé ọ̀pọ̀ sí i. Tẹ ọ̀tún: fagilé."}
+{"name": "aoe2mc.controls.camera", "text": "Kamẹra: tẹ ọ̀tún pẹ̀lú spyglass Camera (bọ́tìnì hotbar 2): o ń rìn kíákíá lókè maapu. Shift tẹ ọ̀tún: iyara tó tẹ̀lé. Tẹ ọ̀tún lẹ́ẹ̀kan sí i: o ń fò sílẹ̀."}
+{"name": "aoe2mc.controls.garrison", "text": "Ìdáàbòbò: yan àwọn ẹ̀ṣọ́, lẹ́yìn náà tẹ ọ̀tún lórí ilé tìrẹ. Àkójọ rẹ̀ jẹ́ kí wọ́n jáde. Àkójọ town center: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "Kó jọ: yan ará abúlé, lẹ́yìn náà tẹ ọ̀tún lórí igi, igbó èso, ibi ìwakùsà tàbí oko."}
+{"name": "aoe2mc.controls.goto", "text": "Lọ sí: tẹ ọ̀tún pẹ̀lú kọ́mpáàsì Go to (bọ́tìnì hotbar 3): àkójọ àwọn town center rẹ, àwọn ẹgbẹ́ iṣakoso rẹ àti ará abúlé aláìṣiṣẹ́ tó kàn."}
+{"name": "aoe2mc.controls.groups", "text": "Àwọn ẹgbẹ́ iṣakoso: yan àwọn ẹ̀ṣọ́, mú ohun ẹgbẹ́ (bọ́tìnì hotbar 5 sí 9) kí o sì tẹ Shift + ọ̀tún láti fi yíyan pamọ́. Tẹ ọ̀tún: yan ẹgbẹ́ náà."}
+{"name": "aoe2mc.controls.head", "text": "Ìṣakoso (di carrot on a stick mú; ọ̀pá ìgbésẹ̀ fi ìgbésẹ̀ tó tẹ̀lé hàn):"}
+{"name": "aoe2mc.controls.menu", "text": "Àkójọ eré: tẹ ọ̀tún pẹ̀lú ìwé Game menu (bọ́tìnì hotbar 4): ìbáṣepọ̀ àti owó, flare, fipamọ́, dá dúró àti igi ìmọ̀ ẹ̀rọ."}
+{"name": "aoe2mc.controls.move", "text": "Rìn: pẹ̀lú yíyan kan, tẹ ọ̀tún lórí ilẹ̀."}
+{"name": "aoe2mc.controls.research", "text": "Ṣe ìwádìí àti lọ sí ọjọ́ orí tó tẹ̀lé: tẹ ọ̀tún lórí ilé tìrẹ, lẹ́yìn náà tẹ ìmọ̀ ẹ̀rọ tàbí ọjọ́ orí tó tẹ̀lé nínú àkójọ rẹ̀."}
+{"name": "aoe2mc.controls.select", "text": "Yan: tẹ òsì lórí ẹ̀ṣọ́ kan. Di tẹ òsì mú kí o sì wo ilẹ̀: àpótí yíyan. Tẹ ọ̀tún: fún àwọn àṣẹ."}
+{"name": "aoe2mc.controls.train", "text": "Kọ́ ẹ̀ṣọ́: tẹ ọ̀tún lórí ilé tìrẹ (town center, barracks ...) kí o sì tẹ ẹ̀ṣọ́ kan nínú àkójọ rẹ̀."}
+{"name": "aoe2mc.defeat", "text": "Ìṣẹ́gun ọ̀tá"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Ọ̀rẹ́"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Ẹrọ orin %s yí ìhùwàsí rẹ̀ sí ọ pa: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Ọ̀tá"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Aláìdásí"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Ẹrọ orin %s ṣètò iyara eré sí %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Ẹrọ orin %s fi %s %s ránṣẹ́ sí ẹrọ orin %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Flare ní %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Tẹ̀lé: tẹ ẹ̀ṣọ́ tìrẹ"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Ṣọ́: tẹ ẹ̀ṣọ́ tàbí ilé tìrẹ"}
+{"name": "aoe2mc.gaia.joins", "text": "%s dara pọ̀ mọ́ ọ."}
+{"name": "aoe2mc.garrison.all_back", "text": "Gbogbo wọn padà sí iṣẹ́"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Agogo ìlú ń lù: ará abúlé %s ń wá ibi ìsádi"}
+{"name": "aoe2mc.garrison.no_villager", "text": "A kò yan ará abúlé kankan."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "O ò ní ará abúlé kankan."}
+{"name": "aoe2mc.garrison.out", "text": "Àwọn ẹ̀ṣọ́ %s ti jáde"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "Ará abúlé %s ń wá ibi ìsádi"}
+{"name": "aoe2mc.gather.act_attack", "text": "kọlù"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "àkójọ kíkọ́"}
+{"name": "aoe2mc.gather.act_garrison", "text": "ìdáàbòbò"}
+{"name": "aoe2mc.gather.act_gather", "text": "kó jọ"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ṣọdẹ"}
+{"name": "aoe2mc.gather.act_move", "text": "rìn"}
+{"name": "aoe2mc.gather.act_select", "text": "yan"}
+{"name": "aoe2mc.gather.act_select_type", "text": "yan gbogbo irú yìí"}
+{"name": "aoe2mc.gather.act_trade", "text": "ṣòwò"}
+{"name": "aoe2mc.gather.act_train", "text": "kọ́ ẹ̀ṣọ́"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Kọlu: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Àpótí yíyan: ti fagilé"}
+{"name": "aoe2mc.gather.bush", "text": "Igbó Berry"}
+{"name": "aoe2mc.gather.carcass", "text": "Òkú ẹranko"}
+{"name": "aoe2mc.gather.corner", "text": "Àpótí yíyan: tẹ igun mìíràn"}
+{"name": "aoe2mc.gather.enemy", "text": "Ọ̀tá %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Ilé ọ̀tá"}
+{"name": "aoe2mc.gather.farm", "text": "Oko"}
+{"name": "aoe2mc.gather.ground", "text": "Ilẹ̀"}
+{"name": "aoe2mc.gather.group", "text": "Ẹgbẹ́ %s: ẹ̀ṣọ́ %s"}
+{"name": "aoe2mc.gather.group_saved", "text": "Ẹgbẹ́ %s: ẹ̀ṣọ́ %s ti pamọ́"}
+{"name": "aoe2mc.gather.mine", "text": "Ibi ìwakùsà %s"}
+{"name": "aoe2mc.gather.paused", "text": "Eré náà dúró."}
+{"name": "aoe2mc.gather.point", "text": "%s · Tẹ ọ̀tún: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Àwọn irúgbìn tí a tò: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Ti yan: ẹ̀ṣọ́ %s"}
+{"name": "aoe2mc.gather.tree", "text": "Igi"}
+{"name": "aoe2mc.hill.holds", "text": "Ẹrọ orin %s di monument mú."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Kọlu Ilẹ̀: tẹ ọ̀tún lórí ilẹ̀"}
+{"name": "aoe2mc.hints.attack_move", "text": "Kọlu Nígbà Rìn: tẹ ọ̀tún lórí ilẹ̀"}
+{"name": "aoe2mc.hints.building", "text": "Gbé %s sí: tẹ ọ̀tún lórí ilẹ̀ · Shift + tẹ ọ̀tún: gbé ọ̀pọ̀ sí i · Fagilé: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: tẹ òsì láti gbé · Shift: gbé ọ̀pọ̀ sí i · Tẹ ọ̀tún: fagilé"}
+{"name": "aoe2mc.hints.corner", "text": "Àpótí yíyan: tẹ ọ̀tún lórí igun mìíràn"}
+{"name": "aoe2mc.hints.count_military", "text": "ẹ̀ṣọ́ ogun %s"}
+{"name": "aoe2mc.hints.count_military_many", "text": "àwọn ẹ̀ṣọ́ ogun %s"}
+{"name": "aoe2mc.hints.count_villager", "text": "ará abúlé %s"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "àwọn ará abúlé %s"}
+{"name": "aoe2mc.hints.deselect", "text": "Àpótí òfo: yọ yíyan kúrò"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Tẹ òsì: yọ yíyan kúrò"}
+{"name": "aoe2mc.hints.follow", "text": "Tẹ̀lé: tẹ ọ̀tún lórí ẹ̀ṣọ́ tìrẹ tàbí ọ̀rẹ́"}
+{"name": "aoe2mc.hints.guard", "text": "Ṣọ́: tẹ ọ̀tún lórí ẹ̀ṣọ́ tàbí ilé tìrẹ tàbí ọ̀rẹ́"}
+{"name": "aoe2mc.hints.military", "text": "%s · Tẹ ọ̀tún: kọlu ọ̀tá, àkójọ ìhùwàsí · %s"}
+{"name": "aoe2mc.hints.none", "text": "Tẹ òsì: yan ẹ̀ṣọ́ kan · Di tẹ òsì mú: àpótí yíyan"}
+{"name": "aoe2mc.hints.none_wand", "text": "Tẹ ọ̀tún: yan ẹ̀ṣọ́ kan · Wand: àpótí yíyan"}
+{"name": "aoe2mc.hints.patrol", "text": "Ṣọ́ ààlà: tẹ ọ̀tún lórí ilẹ̀"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Tẹ ọ̀tún: kó jọ, kọ́, àkójọ kíkọ́ · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s ti múra"}
+{"name": "aoe2mc.lobby.you_play", "text": "O ń ṣeré %s."}
+{"name": "aoe2mc.monk.converts", "text": "Àlùfáà kan ń yí %s padà."}
+{"name": "aoe2mc.monk.dies", "text": "%s kú (Heresy)."}
+{"name": "aoe2mc.pause.continued", "text": "Ẹrọ orin %s tẹ̀ síwájú nínú eré náà."}
+{"name": "aoe2mc.pause.paused", "text": "Ẹrọ orin %s dá eré náà dúró."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Ẹgbẹ́ %s (ìwọ̀n àpapọ̀ %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Eré ti parí. Tẹ ọ̀tún lórí ìwé Recap ní ọwọ́ rẹ láti rí àbájáde. Dá programu eré dúró pẹ̀lú Ctrl-C nínú console rẹ̀."}
+{"name": "aoe2mc.relic_victory.all", "text": "Ẹrọ orin %s di gbogbo ohun ìní ìgbàanì mú."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Ẹrọ orin %s pàdánù ohun ìní ìgbàanì kan."}
+{"name": "aoe2mc.repair.no_resources", "text": "Ohun èlò ò tó láti tún %s ṣe."}
+{"name": "aoe2mc.replay.army", "text": "Ogun: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", ogun ní òpin: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", sọnù: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Ìtòlẹ́sẹẹsẹ kíkọ́:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · ìdáàbòbò %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | ń gbé %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "kọ́ %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "oúnjẹ %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "wúrà %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "aláìṣiṣẹ́ %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "òkúta %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "igi %s"}
+{"name": "aoe2mc.replay.flare", "text": "Flare"}
+{"name": "aoe2mc.replay.game_ends", "text": "Eré náà parí"}
+{"name": "aoe2mc.replay.game_time", "text": "Àkókò eré %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · ìdáàbòbò %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Ogun %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Olugbe %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Ohun èlò %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Ará abúlé %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s di monument mú: ìṣẹ́gun King of the Hill ní %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atk %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Tẹ Shift lẹ́ẹ̀mejì: ojú wíwo olùwòran (fò kọjá àwọn block). Tẹ ọ̀tún lórí àwọn ohun hotbar: ìṣakoso replay."}
+{"name": "aoe2mc.replay.king_died", "text": ": ọba kú ní %s. Regicide: ẹrọ orin ti jáde."}
+{"name": "aoe2mc.replay.king_killed", "text": "A pa ọba ní %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Replay ààyè: fo náà dúró ní àkókò ìdádúró lẹ́yìn eré náà."}
+{"name": "aoe2mc.replay.lost", "text": "Sọnù: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " di monument mú ní %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monument, ọdún %s kù"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monument, ọdún %s kù"}
+{"name": "aoe2mc.replay.no_camera", "text": "Replay yìí kò ní kamẹra ẹrọ orin rẹ̀."}
+{"name": "aoe2mc.replay.now", "text": " báyìí"}
+{"name": "aoe2mc.replay.out", "text": "%s ti jáde"}
+{"name": "aoe2mc.replay.players", "text": "Àwọn ẹrọ orin"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " gbé ohun ìní ìgbàanì lọ sí monastery, ó sì borí."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Replay ti parí"}
+{"name": "aoe2mc.replay.research", "text": " ṣe ìwádìí %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s fi sílẹ̀"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Olupin tun bẹ̀rẹ̀ fún fo padà: darapọ̀ mọ́ ọ lẹ́ẹ̀kan sí i."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Àwọn ilé %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ọrọ̀ ajé %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Ogun %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Ìmọ̀ ẹ̀rọ %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Àpapọ̀ %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "castle %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "ra %s, ta %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "ohun ìní ìgbàanì %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "iyanu %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Ná:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Kọ́ %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Ọrọ̀ ajé %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Ogun %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Ìmọ̀ ẹ̀rọ %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": ará abúlé tí a kọ́ %s, tí a kó jọ %s, àkókò ará abúlé aláìṣiṣẹ́ %s, àkókò TC aláìṣiṣẹ́ %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": di monument mú (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monument tí a borí %s (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": ẹ̀ṣọ́ ogun tí a kọ́ %s, ẹ̀ṣọ́ tí a pàdánù %s, ilé tí a pàdánù %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": ọba tí a pa %s (Regicide)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": ìṣẹ́gun, ohun ìní ìgbàanì nínú monastery %s (Capture the Relic)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sẹ̀bùn ránṣẹ́ %s, gbà %s, ìwọ̀n ará abúlé tó ga jùlọ %s (ìṣirò)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": town center tí a pàdánù %s (Sudden Death)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, ìmọ̀ ẹ̀rọ %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": àkókò iyanu láti %s, ó parí %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Àkópọ̀ (ìṣirò)"}
+{"name": "aoe2mc.replay.task_building", "text": "ń kọ́"}
+{"name": "aoe2mc.replay.task_following", "text": "ń tẹ̀lé"}
+{"name": "aoe2mc.replay.task_food", "text": "ń kó oúnjẹ jọ"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "ní ìdáàbòbò"}
+{"name": "aoe2mc.replay.task_gold", "text": "ń kó wúrà jọ"}
+{"name": "aoe2mc.replay.task_guarding", "text": "ń ṣọ́"}
+{"name": "aoe2mc.replay.task_idle", "text": "aláìṣiṣẹ́"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "ń ṣọ́ ààlà"}
+{"name": "aoe2mc.replay.task_resources", "text": "ń kó ohun èlò jọ"}
+{"name": "aoe2mc.replay.task_stone", "text": "ń kó òkúta jọ"}
+{"name": "aoe2mc.replay.task_walking", "text": "ń rìn"}
+{"name": "aoe2mc.replay.task_wood", "text": "ń kó igi jọ"}
+{"name": "aoe2mc.replay.team", "text": "Ẹgbẹ́ %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Tafàtafà %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Ihamọra tafàtafà %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Gbígbé %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Ihamọra ẹlẹ́ṣin %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Oko %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Wúrà %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Ihamọra ológun ẹlẹ́sẹ̀ %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Ẹ̀rọ híhun %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Ìjà ojú-ọwọ́ %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Òkúta %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Igi %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castle"}
+{"name": "aoe2mc.replay.tl_king", "text": "A pa ọba"}
+{"name": "aoe2mc.replay.tl_military", "text": "Ogun àkọ́kọ́: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Ohun ìní ìgbàanì"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Fi sílẹ̀"}
+{"name": "aoe2mc.replay.town_fell", "text": ": town center ṣubú ní %s. Sudden Death: ẹrọ orin ti jáde."}
+{"name": "aoe2mc.replay.town_lost", "text": "A pàdánù town center ní %s"}
+{"name": "aoe2mc.replay.training", "text": "Ń kọ́: %s"}
+{"name": "aoe2mc.replay.university", "text": "Yunifásítì:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ọrọ̀ ajé %s · Yunifásítì %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " kọ́ iyanu ní %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Ìjà: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", ẹ̀ṣọ́ %s"}
+{"name": "aoe2mc.replay_input.fights", "text": "Àwọn ìjà ńlá:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: tẹ ọ̀tún lórí àwọn ohun tó wà nínú hotbar rẹ, tàbí tẹ: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Gbà ìṣakoso: "}
+{"name": "aoe2mc.replay_input.units", "text": " (ẹ̀ṣọ́ %s)"}
+{"name": "aoe2mc.replay_input.vs", "text": " lòdì sí "}
+{"name": "aoe2mc.resource.food", "text": "oúnjẹ"}
+{"name": "aoe2mc.resource.gold", "text": "wúrà"}
+{"name": "aoe2mc.resource.stone", "text": "òkúta"}
+{"name": "aoe2mc.resource.wood", "text": "igi"}
+{"name": "aoe2mc.run.back", "text": "%s ti padà"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Ìpolongo parí"}
+{"name": "aoe2mc.run.chat_hint", "text": "Ìbánisọ̀rọ̀: ìlà déédé lọ sí gbogbo ènìyàn, /tm ỌRỌ sí àwọn ọ̀rẹ́ rẹ, /msg ORÚKỌ ỌRỌ sí ẹnìkan."}
+{"name": "aoe2mc.run.left_bot", "text": "%s ti lọ: bot ń ṣeré fún ẹrọ orin %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Ipò %s bẹ̀rẹ̀. Darapọ̀ mọ́ lẹ́ẹ̀kan sí i."}
+{"name": "aoe2mc.run.starts_in", "text": "Eré náà bẹ̀rẹ̀ ní %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Ṣí \"Choose your player\" kí o sì tẹ \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Gbogbo ìṣakoso: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Ìgbésẹ̀ àkọ́kọ́: di ọ̀pá àṣẹ mú kí o sì tẹ ọ̀tún lórí ará abúlé kan tìrẹ."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Ìgbésẹ̀ àkọ́kọ́: di ọ̀pá àṣẹ mú kí o sì tẹ òsì lórí ará abúlé kan tìrẹ."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Ète: borí eré náà. Ètò ìṣẹ́gun: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "A ti fi eré pamọ́: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "Àwọn ẹ̀ṣọ́ %s ti jáde"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Ṣíṣe amí aládàáṣe"}
+{"name": "aoe2mc.stance.formation", "text": "Ìṣètò: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Kò sí ẹ̀ṣọ́ kan tó lè kọlu ilẹ̀"}
+{"name": "aoe2mc.stance.unpack", "text": "Kọ́kọ́ ṣí Trebuchet sílẹ̀"}
+{"name": "aoe2mc.train.active", "text": "%s ń ṣiṣẹ́."}
+{"name": "aoe2mc.train.rally", "text": "Tẹ ọ̀tún lórí ilẹ̀ fún ibi ìpéjọ."}
+{"name": "aoe2mc.train.researched", "text": "A ti ṣe ìwádìí %s."}
+{"name": "aoe2mc.transport.out", "text": "Àwọn ẹ̀ṣọ́ %s ti jáde"}
+{"name": "aoe2mc.treaty.ended", "text": "Àdéhùn parí: àwọn ẹrọ orin lè kọlù báyìí."}
+{"name": "aoe2mc.treaty.refuse", "text": "Àdéhùn: o ò lè kọlù ṣáájú %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Àdéhùn: o ò lè kọlù nínú eré yìí."}
+{"name": "aoe2mc.treaty.start", "text": "Àdéhùn: kò sí ẹrọ orin kankan tó lè kọlu ẹrọ orin mìíràn ṣáájú %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Àdéhùn: kò sí ẹrọ orin kankan tó lè kọlu ẹrọ orin mìíràn nínú eré yìí."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Kọ́ barracks: tẹ ọ̀tún lórí ará abúlé tí a yàn, yan barracks kí o sì gbé e kalẹ̀. Ọ̀pá ìgbésẹ̀ lórí hotbar sọ ibi tí o ó gbé e sí."}
+{"name": "aoe2mc.tutorial.camera", "text": "Rìn kíákíá lórí maapu: tẹ ọ̀tún pẹ̀lú ohun \"Camera\", rìn, lẹ́yìn náà tẹ ọ̀tún pẹ̀lú rẹ̀ lẹ́ẹ̀kan sí i."}
+{"name": "aoe2mc.tutorial.camp", "text": "Pa ibùdó ọ̀tá tó wà ní àárín maapu run: yan Militia rẹ kí o sì tẹ ọ̀tún lórí ilé kan. Ọ̀pá boss lókè fi ìgbésẹ̀ hàn."}
+{"name": "aoe2mc.tutorial.camps", "text": "Kọ́ ibùdó igi nítòsí igi àti ọlọ nítòsí igbó berry. Ọ̀pá ẹ̀gbẹ́ ọ̀tún fi igi tí wọ́n ná hàn."}
+{"name": "aoe2mc.tutorial.complete", "text": "Ìkẹ́kọ̀ọ́ parí. Tó tẹ̀lé: ṣeré pẹ̀lú bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Ìkẹ́kọ̀ọ́ parí"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Lọ sí Feudal Age: tẹ ọ̀tún lórí town center rẹ kí o sì yan Feudal Age. Ọ̀pá ẹ̀gbẹ́ ọ̀tún fi oúnjẹ rẹ hàn."}
+{"name": "aoe2mc.tutorial.food", "text": "Kó oúnjẹ 100 jọ: rán ará abúlé kan lọ sí igbó berry. Ọ̀pá ẹ̀gbẹ́ ọ̀tún fi oúnjẹ rẹ hàn."}
+{"name": "aoe2mc.tutorial.house", "text": "Kọ́ ilé: tẹ ọ̀tún lórí ará abúlé tí a yàn, yan ilé kí o sì gbé e kalẹ̀. Ọ̀pá ìgbésẹ̀ lórí hotbar sọ ibi tí o ó gbé e sí."}
+{"name": "aoe2mc.tutorial.militia", "text": "Kọ́ Militia 3: tẹ ọ̀tún lórí barracks rẹ kí o sì yan militia. Ọ̀pá ẹ̀gbẹ́ ọ̀tún fi oúnjẹ àti wúrà rẹ hàn."}
+{"name": "aoe2mc.tutorial.raid", "text": "Ọ̀tá ń kọlu àwọn ará abúlé rẹ! Tẹ ìlà ìkìlọ̀ pupa nínú ìbánisọ̀rọ̀ láti lọ síbẹ̀, lẹ́yìn náà yan Militia rẹ kí o sì tẹ ọ̀tún lórí àwọn ọ̀tá. Ọ̀pá boss lókè fi ìlera ẹ̀ṣọ́ tí a yàn hàn."}
+{"name": "aoe2mc.tutorial.select", "text": "Yan ará abúlé: tẹ òsì lórí ọ̀kan nínú àwọn ará abúlé rẹ pẹ̀lú ọ̀pá àṣẹ. Ọ̀pá boss lókè fi ẹ̀ṣọ́ tí a yàn hàn, ọ̀pá ìgbésẹ̀ lórí hotbar fi ìgbésẹ̀ tó tẹ̀lé hàn."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Ìgbésẹ̀ parí"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Ìgbésẹ̀ %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "ÀMỌ̀RÀN: barracks ń kọ́ ẹlẹ́sẹ̀. Ẹlẹ́sẹ̀ kò gbowó púpọ̀ ó sì dára sí àwọn ilé."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "ÀMỌ̀RÀN: kọlu pẹ̀lú gbogbo ẹ̀ṣọ́ rẹ pọ̀. Ẹgbẹ́ kékeré kan máa ń kú kí ó tó ṣe ìpalára kankan."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "ÀMỌ̀RÀN: kọ́ àwọn ilé ìkójọpọ̀ nítòsí àwọn ohun èlò, kí àwọn ará abúlé rìn ọ̀nà kúkúrú."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "ÀMỌ̀RÀN: ọjọ́ orí tó tẹ̀lé ń ṣí àwọn ilé, ẹ̀ṣọ́ àti ìmọ̀ ẹ̀rọ tuntun sílẹ̀. Jẹ́ kí àwọn ará abúlé máa ṣiṣẹ́ bí o ṣe ń tẹ̀ síwájú."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "ÀMỌ̀RÀN: igbó berry nítòsí ọlọ jẹ́ ìbẹ̀rẹ̀ oúnjẹ tó dára. Nígbà tó yá, àwọn oko ń fún oúnjẹ tí kò ní parí."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "ÀMỌ̀RÀN: ilé kan ń fún ní àyè fún ènìyàn 5 sí i. Wo iye olugbe nínú ọ̀pá ẹ̀gbẹ́ kí o sì kọ́ ilé ṣáájú kí ó kún."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "ÀMỌ̀RÀN: o lè to ẹ̀ṣọ́ tó tó 15 sínú ilé nígbà tí ohun èlò bá tó."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "ÀMỌ̀RÀN: nínú AoE2 agogo ìlú ń rán àwọn ará abúlé lọ sí town center. Lù ú nígbà tí ọ̀tá bá kọlu ìlú rẹ."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "ÀMỌ̀RÀN: ìlà Idle ní ọ̀pá ẹ̀gbẹ́ ọ̀tún ń ka àwọn ará abúlé aláìṣiṣẹ́. Fún wọn ní iṣẹ́."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "ÀMỌ̀RÀN: kọ́ àwọn ará abúlé nígbà gbogbo ní àwọn ọjọ́ orí àkọ́kọ́. Àwọn ará abúlé púpọ̀ ń fún ní ohun èlò púpọ̀ sí i."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "ÀMỌ̀RÀN: àwọn ará abúlé ń kó jọ kíákíá nítòsí ilé ìkójọpọ̀. Kọ́ ibùdó igi lẹ́bàá àwọn igi."}
+{"name": "aoe2mc.tutorial.villager", "text": "Kọ́ ará abúlé: tẹ ọ̀tún lórí town center rẹ kí o sì yan ará abúlé. Ọ̀pá ẹ̀gbẹ́ ọ̀tún fi oúnjẹ tó ń ná hàn."}
+{"name": "aoe2mc.tutorial.wood", "text": "Kó igi 50 jọ: yan ará abúlé kan kí o sì tẹ ọ̀tún lórí igi. Ọ̀pá ẹ̀gbẹ́ ọ̀tún fi igi rẹ hàn."}
+{"name": "aoe2mc.victory", "text": "Ìṣẹ́gun"}
+{"name": "aoe2mc.wonder.built", "text": "Ẹrọ orin %s kọ́ iyanu kan."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Iyanu ẹrọ orin %s ti parun."}

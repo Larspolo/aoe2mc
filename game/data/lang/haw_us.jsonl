@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Ke hoʻokele nei %s e hele ana i ka %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Ke hoʻopilikia nei e lawe ana i ka palapala mai ka palena a i ke kikowaena ma %s. Hoʻopau ia i nā pūʻali a me nā hale a pau i loko."}
+{"name": "aoe2mc.bot.cannot_build", "text": "ʻaʻole hiki iaʻu ke kūkulu i %s ma laila i kēia manawa."}
+{"name": "aoe2mc.bot.cannot_train", "text": "ʻAʻole hiki iaʻu ke aʻo i kēlā pūʻali: ʻaʻohe hale no ia."}
+{"name": "aoe2mc.bot.flare_two", "text": "Hōʻike ʻo flare ʻelua i kahi o ka pā."}
+{"name": "aoe2mc.bot.no_flare", "text": "ʻAʻole wau ʻike i ka flare."}
+{"name": "aoe2mc.bot.no_market", "text": "ʻAʻohe aʻu mākeke: ʻaʻole hiki iaʻu ke hoʻouna i ka uku."}
+{"name": "aoe2mc.bot.no_onager", "text": "ʻAʻohe aʻu onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "ʻAʻole nui koʻu waiwai no ka pā."}
+{"name": "aoe2mc.bot.no_water", "text": "ʻAʻohe wai ma kahi kokoke i koʻu kūlanakauhale: ʻaʻole hiki iaʻu ke kūkulu i ka moku."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "ʻAʻole hiki i koʻu mau onager ke ʻoki i nā lāʻau."}
+{"name": "aoe2mc.build.cost", "text": "ʻAʻole nui ka waiwai: ua koʻikoʻi ka %s i %s."}
+{"name": "aoe2mc.build.flat", "text": "Pono e kū ka %s ma luna o ka honua pālahalaha."}
+{"name": "aoe2mc.build.gate_spot", "text": "Pono e kū ka %s ma 4 wahi o kou pā ma ke kaula pololei, a i ʻole ma 3 wahi diagonal."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Kūkulu: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Pono e kū ka %s ma luna o ke kai kokoke i ke kahakai."}
+{"name": "aoe2mc.build.space", "text": "ʻAʻohe wahi no ka %s ma aneʻi."}
+{"name": "aoe2mc.build.tiles_cost", "text": "ʻAʻole nui ka waiwai: ua koʻikoʻi nā %s o ka %s i %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: pāwehe ʻakau ma ka hopena o ka pā."}
+{"name": "aoe2mc.build.water", "text": "Pono e kū ka %s ma luna o ke kai."}
+{"name": "aoe2mc.camera.fov", "text": "Hoʻoneʻe koke ka kāmera i ka mea i paʻa ʻia i ka lima. No ka mālie ʻana, e hoʻonohonoho i Options > Accessibility Settings > View Bobbing i OFF. Hoʻopāhā pū ka kāmera i ke kiʻi, a hōʻike ia i ka palapala nui. No ke kiʻi maʻamau, e hoʻonohonoho i Options > Accessibility Settings > FOV Effects i 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kāmera: pio"}
+{"name": "aoe2mc.camera.on", "text": "Kāmera: ʻoki, wikiwiki x%s. Pāwehe ʻakau me Shift: wikiwiki aʻe."}
+{"name": "aoe2mc.camera.speed", "text": "Wikiwiki o ke kāmera: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "E lanakila i nā pūʻali ʻenemi a pau a e nalowale ʻole i nā pūʻali he nui"}
+{"name": "aoe2mc.challenge.booming", "text": "E aʻo i nā kānaka mahiʻai 100 a e hele i ka Imperial Age"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "E hele i ka Castle Age a e ola i nā hoʻouka ʻenemi"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "E luku i ka castle ʻenemi"}
+{"name": "aoe2mc.challenge.early-economy", "text": "E hōʻiliʻili i ka ʻai 200, ka lāʻau 200, ke gula 100 a me ka pōhaku 200, e aʻo i nā kānaka mahiʻai 21, e kūkulu i kahi ʻoki lāʻau a me kahi mill, a e hele i ka Feudal Age"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "E aʻo i nā kānaka mahiʻai 27, e kūkulu i nā hale 5, a e hele i ka Castle Age"}
+{"name": "aoe2mc.challenge.land-battle", "text": "E lanakila i nā nalu ʻenemi ʻeono a pau"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "Ua nalowale nā pūʻali %s, ke kiʻekiʻe a hiki i ka mekala keleawe %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "Ua nalowale nā pūʻali %s, ke kiʻekiʻe a hiki i ka mekala gula %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "Ua nalowale nā pūʻali %s, ʻaʻohe mekala"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "Ua nalowale nā pūʻali %s, ke kiʻekiʻe a hiki i ka mekala kālā %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Mekala keleawe"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Mekala gula"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Mekala kālā"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "E luku i nā moku kaua ʻenemi a pau"}
+{"name": "aoe2mc.challenge.no_medal", "text": "ʻAʻohe mekala"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "E make i nā kānaka mahiʻai ʻenemi 5"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Mekala keleawe ma loko o %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Mekala gula ma loko o %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Mekala kālā ma loko o %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis pio"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis ʻoki"}
+{"name": "aoe2mc.cheat.beyond", "text": "ʻEnehana: a hiki i 256 noiʻi"}
+{"name": "aoe2mc.cheat.cpu", "text": "Palena kanaka: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Ka ʻūnahi kaua: pio"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Ka ʻūnahi kaua: ʻoki"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Manuahi nā ʻenehana"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "ʻO ka hoʻopaʻa pū ʻana ke mālama: hele kāu loaʻa i kāu mau hoa"}
+{"name": "aoe2mc.cheat.wonders", "text": "Ke hoʻomalu nei ʻoe i ke ʻano: holoholona %s"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Ua koe nā hoa wale nō: pau nā hui. Ke lanakila ka mea pāʻani ola hope loa."}
+{"name": "aoe2mc.conquest.defeated", "text": "Ua pio ka mea pāʻani %s."}
+{"name": "aoe2mc.controls.attack", "text": "Hoʻouka: koho i nā pūʻali kaua, a laila pāwehe ʻakau ma luna o ka ʻenemi."}
+{"name": "aoe2mc.controls.build", "text": "Kūkulu: koho i nā kānaka mahiʻai, pāwehe ʻakau iā lākou no ka papa kuhikuhi kūkulu, koho i kahi hale, a laila pāwehe ʻaoʻao hema ma ka honua. Shift + pāwehe hema: kūkulu hou aku. Pāwehe ʻakau: hoʻopau."}
+{"name": "aoe2mc.controls.camera", "text": "Kāmera: pāwehe ʻakau me ka spyglass Camera (kī hotbar 2): holo wikiwiki ʻoe ma luna o ka palapala. Shift pāwehe ʻakau: wikiwiki aʻe. Pāwehe ʻakau hou: lele ʻoe i lalo."}
+{"name": "aoe2mc.controls.garrison", "text": "Pūʻali kiaʻi: koho i nā pūʻali, a laila pāwehe ʻakau i kāu hale. Hāʻawi kāna papa i ko lākou puka ʻana. Papa town center: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "Hōʻiliʻili: koho i nā kānaka mahiʻai, a laila pāwehe ʻakau i kahi lāʻau, kahi lāʻau hua, kahi mine a i ʻole kahi mahiʻai."}
+{"name": "aoe2mc.controls.goto", "text": "E hele i: pāwehe ʻakau me ke compass Go to (kī hotbar 3): papa o kāu mau town center, kāu mau pūʻulu mana a me ke kanaka mahiʻai noho ʻole aʻe."}
+{"name": "aoe2mc.controls.groups", "text": "Nā pūʻulu mana: koho i nā pūʻali, lawe i kahi mea pūʻulu (kī hotbar 5 a 9) a me Shift + pāwehe ʻakau e mālama i ke koho. Pāwehe ʻakau: koho i ka pūʻulu."}
+{"name": "aoe2mc.controls.head", "text": "Nā mana (paʻa i ka carrot on a stick; hōʻike ka action bar i ke kaʻina aʻe):"}
+{"name": "aoe2mc.controls.menu", "text": "Papa pāʻani: pāwehe ʻakau me ka puke Game menu (kī hotbar 4): ʻaelike a me ka uku, flare, mālama, kāpae a me ka lāʻau ʻenehana."}
+{"name": "aoe2mc.controls.move", "text": "Neʻe: me kahi koho, pāwehe ʻakau ma ka honua."}
+{"name": "aoe2mc.controls.research", "text": "Noiʻi a hele i ka au aʻe: pāwehe ʻakau ma kāu hale, a laila pāwehe i kahi ʻenehana a i ʻole ka au aʻe ma kāna papa."}
+{"name": "aoe2mc.controls.select", "text": "Koho: pāwehe hema ma kahi pūʻali. Paʻa i ka pāwehe hema a nānā ma ka honua: kahua koho. Pāwehe ʻakau: hāʻawi kauoha."}
+{"name": "aoe2mc.controls.train", "text": "Aʻo: pāwehe ʻakau ma kāu hale (town center, barracks ...) a pāwehe i kahi pūʻali ma kāna papa."}
+{"name": "aoe2mc.defeat", "text": "Pio"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Hoa"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Ua hoʻololi ka mea pāʻani %s i kona kūlana iā ʻoe: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "ʻEnemi"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Kūʻokoʻa"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Ua hoʻonohonoho ka mea pāʻani %s i ka wikiwiki o ka pāʻani i %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Ua hoʻouna ka mea pāʻani %s i %s %s i ka mea pāʻani %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Flare ma %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Hahai: pāwehe i kāu pūʻali"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Kiaʻi: pāwehe i kahi pūʻali a i ʻole hale o kāu"}
+{"name": "aoe2mc.gaia.joins", "text": "Ke komo nei %s iā ʻoe."}
+{"name": "aoe2mc.garrison.all_back", "text": "Ua hoʻi lākou a pau i ka hana"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Ke kani nei ke kani o ke kūlanakauhale: ke huli nei nā kānaka mahiʻai %s i wahi malu"}
+{"name": "aoe2mc.garrison.no_villager", "text": "ʻAʻohe kanaka mahiʻai i koho ʻia."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "ʻAʻohe aʻu kānaka mahiʻai."}
+{"name": "aoe2mc.garrison.out", "text": "Ua puka mai nā pūʻali %s"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "Ke huli nei nā kānaka mahiʻai %s i wahi malu"}
+{"name": "aoe2mc.gather.act_attack", "text": "hoʻouka"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "papa kūkulu"}
+{"name": "aoe2mc.gather.act_garrison", "text": "pūʻali kiaʻi"}
+{"name": "aoe2mc.gather.act_gather", "text": "hōʻiliʻili"}
+{"name": "aoe2mc.gather.act_hunt", "text": "hahai holoholona"}
+{"name": "aoe2mc.gather.act_move", "text": "neʻe"}
+{"name": "aoe2mc.gather.act_select", "text": "koho"}
+{"name": "aoe2mc.gather.act_select_type", "text": "koho i nā mea a pau o kēia ʻano"}
+{"name": "aoe2mc.gather.act_trade", "text": "kālepa"}
+{"name": "aoe2mc.gather.act_train", "text": "aʻo"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Hoʻouka: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Kahua koho: ua hoʻopau ʻia"}
+{"name": "aoe2mc.gather.bush", "text": "Lāʻau hua"}
+{"name": "aoe2mc.gather.carcass", "text": "Kino holoholona make"}
+{"name": "aoe2mc.gather.corner", "text": "Kahua koho: pāwehe i ka kihi ʻē aʻe"}
+{"name": "aoe2mc.gather.enemy", "text": "ʻEnemi %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Hale ʻenemi"}
+{"name": "aoe2mc.gather.farm", "text": "Mahiʻai"}
+{"name": "aoe2mc.gather.ground", "text": "Honua"}
+{"name": "aoe2mc.gather.group", "text": "Pūʻulu %s: pūʻali %s"}
+{"name": "aoe2mc.gather.group_saved", "text": "Pūʻulu %s: ua mālama ʻia nā pūʻali %s"}
+{"name": "aoe2mc.gather.mine", "text": "Mine %s"}
+{"name": "aoe2mc.gather.paused", "text": "Ua kāpae ʻia ka pāʻani."}
+{"name": "aoe2mc.gather.point", "text": "%s · Pāwehe ʻakau: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Nā hua hou i kū ʻia: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Ua koho ʻia: pūʻali %s"}
+{"name": "aoe2mc.gather.tree", "text": "Lāʻau"}
+{"name": "aoe2mc.hill.holds", "text": "Ke paʻa nei ka mea pāʻani %s i ka monument."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Hoʻouka i ka honua: pāwehe ʻakau ma ka honua"}
+{"name": "aoe2mc.hints.attack_move", "text": "Hoʻouka i ka neʻe ʻana: pāwehe ʻakau ma ka honua"}
+{"name": "aoe2mc.hints.building", "text": "E kau i ka %s: pāwehe ʻakau ma ka honua · Shift + pāwehe ʻakau: kau hou aku · Hoʻopau: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: pāwehe hema e kau · Shift: kau hou aku · Pāwehe ʻakau: hoʻopau"}
+{"name": "aoe2mc.hints.corner", "text": "Kahua koho: pāwehe ʻakau ma ka kihi ʻē aʻe"}
+{"name": "aoe2mc.hints.count_military", "text": "%s pūʻali kaua"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s pūʻali kaua"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s kanaka mahiʻai"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s kānaka mahiʻai"}
+{"name": "aoe2mc.hints.deselect", "text": "Kahua hakahaka: wehe i ke koho"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Pāwehe hema: wehe i ke koho"}
+{"name": "aoe2mc.hints.follow", "text": "Hahai: pāwehe ʻakau i kāu pūʻali a i ʻole hoa"}
+{"name": "aoe2mc.hints.guard", "text": "Kiaʻi: pāwehe ʻakau i kahi pūʻali a i ʻole hale o kāu a i ʻole hoa"}
+{"name": "aoe2mc.hints.military", "text": "%s · Pāwehe ʻakau: hoʻouka i ka ʻenemi, papa kūlana · %s"}
+{"name": "aoe2mc.hints.none", "text": "Pāwehe hema: koho i kahi pūʻali · Paʻa i ka pāwehe hema: kahua koho"}
+{"name": "aoe2mc.hints.none_wand", "text": "Pāwehe ʻakau: koho i kahi pūʻali · Wand: kahua koho"}
+{"name": "aoe2mc.hints.patrol", "text": "Kaʻapuni: pāwehe ʻakau ma ka honua"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Pāwehe ʻakau: hōʻiliʻili, kūkulu, papa kūkulu · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s mākaukau"}
+{"name": "aoe2mc.lobby.you_play", "text": "Ke pāʻani nei ʻoe i ka %s."}
+{"name": "aoe2mc.monk.converts", "text": "Ke hoʻololi nei kahi kahuna i ka %s."}
+{"name": "aoe2mc.monk.dies", "text": "Make ka %s (Heresy)."}
+{"name": "aoe2mc.pause.continued", "text": "Ua hoʻomau ka mea pāʻani %s i ka pāʻani."}
+{"name": "aoe2mc.pause.paused", "text": "Ua kāpae ka mea pāʻani %s i ka pāʻani."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Pūʻulu %s (ka helu awelika %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Ua pau ka pāʻani. Pāwehe ʻakau i ka puke Recap ma kou lima e nānā i nā hopena. E kāpae i ka polokalamu pāʻani me Ctrl-C ma kona console."}
+{"name": "aoe2mc.relic_victory.all", "text": "Ke paʻa nei ka mea pāʻani %s i nā relic a pau."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Ua nalowale ka mea pāʻani %s i kahi relic."}
+{"name": "aoe2mc.repair.no_resources", "text": "ʻAʻole nui ka waiwai e hoʻoponopono ai i ka %s."}
+{"name": "aoe2mc.replay.army", "text": "Pūʻali: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", pūʻali i ka hopena: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", nalowale: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Ke kaʻina kūkulu:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · pūʻali kiaʻi %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | ke lawe nei %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "kūkulu %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "ʻai %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "gula %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "noho ʻole %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "pōhaku %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "lāʻau %s"}
+{"name": "aoe2mc.replay.flare", "text": "Flare"}
+{"name": "aoe2mc.replay.game_ends", "text": "Pau ka pāʻani"}
+{"name": "aoe2mc.replay.game_time", "text": "Ka manawa pāʻani %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · pūʻali kiaʻi %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Kaua %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Kanaka %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Waiwai %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Mahiʻai %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "Ua paʻa ka mea pāʻani %s i ka monument: ka lanakila King of the Hill ma %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atk %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Kāʻili Shift ʻelua manawa: ka ʻike o ka mea nānā (lele ma waena o nā block). Pāwehe ʻakau i nā mea hotbar: mana replay."}
+{"name": "aoe2mc.replay.king_died", "text": ": make ke aliʻi ma %s. Regicide: ua puka waho ka mea pāʻani."}
+{"name": "aoe2mc.replay.king_killed", "text": "Ua pepehi ʻia ke aliʻi ma %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Replay ola: ke kū ka lele ma ka lohi ma hope o ka pāʻani."}
+{"name": "aoe2mc.replay.lost", "text": "Nalowale: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " ke paʻa nei i ka monument ma %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monument, ʻelua makahiki %s i koe"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monument, ʻelua makahiki %s i koe"}
+{"name": "aoe2mc.replay.no_camera", "text": "ʻAʻohe kāmera o kēia replay no kāna mea pāʻani."}
+{"name": "aoe2mc.replay.now", "text": " i kēia manawa"}
+{"name": "aoe2mc.replay.out", "text": "Ua puka waho ʻo %s"}
+{"name": "aoe2mc.replay.players", "text": "Nā mea pāʻani"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " ke lawe nei i ka relic i ka monastery a ke lanakila nei."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Pau ka replay"}
+{"name": "aoe2mc.replay.research", "text": " ke noiʻi nei i ka %s"}
+{"name": "aoe2mc.replay.resigns", "text": "Ua haʻalele ʻo %s"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Ke hoʻomaka hou nei ka server no ka lele hoʻi: e komo hou."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Nā hale %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ka waiwai %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Nā pūʻali kaua %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Nā ʻenehana %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Ka huina %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "castle %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "kūʻai %s, kūʻai aku %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relic %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "kupanaha %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Ka lilo:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Kūkulu %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Waiwai %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Kaua %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "ʻEnehana %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": aʻo ʻia nā kānaka mahiʻai %s, hōʻiliʻili ʻia %s, ka manawa noho ʻole o nā kānaka mahiʻai %s, ka manawa noho ʻole o ka TC %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": ke paʻa nei i ka monument (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": ua lanakila i ka monument %s (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": ua aʻo ʻia nā pūʻali kaua %s, nalowale nā pūʻali %s, nalowale nā hale %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": ua pepehi ʻia ke aliʻi %s (Regicide)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": lanakila, relic ma ka monastery %s (Capture the Relic)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sua hoʻouna ʻia ka uku %s, ua loaʻa %s, ke kiʻekiʻe o nā kānaka mahiʻai %s (kuhi)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": ua nalowale ka town center %s (Sudden Death)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, nā ʻenehana %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": ka manawa kupanaha mai %s, pau ma %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Hoʻopiʻi (kuhi)"}
+{"name": "aoe2mc.replay.task_building", "text": "ke kūkulu nei"}
+{"name": "aoe2mc.replay.task_following", "text": "ke hahai nei"}
+{"name": "aoe2mc.replay.task_food", "text": "ke hōʻiliʻili nei i ka ʻai"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "ma ka pūʻali kiaʻi"}
+{"name": "aoe2mc.replay.task_gold", "text": "ke hōʻiliʻili nei i ke gula"}
+{"name": "aoe2mc.replay.task_guarding", "text": "ke kiaʻi nei"}
+{"name": "aoe2mc.replay.task_idle", "text": "noho ʻole"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "ke kaʻapuni nei"}
+{"name": "aoe2mc.replay.task_resources", "text": "ke hōʻiliʻili nei i nā waiwai"}
+{"name": "aoe2mc.replay.task_stone", "text": "ke hōʻiliʻili nei i ka pōhaku"}
+{"name": "aoe2mc.replay.task_walking", "text": "ke hele nei"}
+{"name": "aoe2mc.replay.task_wood", "text": "ke hōʻiliʻili nei i ka lāʻau"}
+{"name": "aoe2mc.replay.team", "text": "Pūʻulu %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Pana %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Pale pana %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Lawe %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Pale holoholona %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Mahiʻai %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Gula %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Pale pūʻali kaua %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Lole %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Kaua lima %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Pōhaku %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Lāʻau %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castle"}
+{"name": "aoe2mc.replay.tl_king", "text": "Ua pepehi ʻia ke aliʻi"}
+{"name": "aoe2mc.replay.tl_military", "text": "Ka pūʻali kaua mua: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relic"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Haʻalele"}
+{"name": "aoe2mc.replay.town_fell", "text": ": hāʻule ka town center ma %s. Sudden Death: ua puka waho ka mea pāʻani."}
+{"name": "aoe2mc.replay.town_lost", "text": "Ua nalowale ka town center ma %s"}
+{"name": "aoe2mc.replay.training", "text": "Ke aʻo nei: %s"}
+{"name": "aoe2mc.replay.university", "text": "Kulanui:"}
+{"name": "aoe2mc.replay.up_counts", "text": "waiwai %s · Kulanui %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " ua kūkulu i kupanaha ma %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Kaua: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", pūʻali %s"}
+{"name": "aoe2mc.replay_input.fights", "text": "Nā kaua nui:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: pāwehe ʻakau i nā mea ma kāu hotbar, a i ʻole pāwehe i: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Lawe i ka mana: "}
+{"name": "aoe2mc.replay_input.units", "text": " (pūʻali %s)"}
+{"name": "aoe2mc.replay_input.vs", "text": " kūʻē iā "}
+{"name": "aoe2mc.resource.food", "text": "ʻai"}
+{"name": "aoe2mc.resource.gold", "text": "gula"}
+{"name": "aoe2mc.resource.stone", "text": "pōhaku"}
+{"name": "aoe2mc.resource.wood", "text": "lāʻau"}
+{"name": "aoe2mc.run.back", "text": "Ua hoʻi mai ʻo %s"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Pau ka hoʻolaha kaua"}
+{"name": "aoe2mc.run.chat_hint", "text": "Kamaʻilio: ʻo ka leka maʻamau i nā mea a pau, /tm KIKOKIKO i kāu mau hoa, /msg INOA KIKOKIKO i kekahi kanaka."}
+{"name": "aoe2mc.run.left_bot", "text": "Ua haʻalele ʻo %s: ke pāʻani nei ka bot no ka mea pāʻani %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Ua hoʻomaka ka hihia %s. E komo hou."}
+{"name": "aoe2mc.run.starts_in", "text": "E hoʻomaka ka pāʻani i loko o %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "E wehe i \"Choose your player\" a pāwehe i \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Nā mana a pau: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Ka hana mua: paʻa i ke kumu kauoha a pāwehe ʻakau i kekahi o kāu kānaka mahiʻai."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Ka hana mua: paʻa i ke kumu kauoha a pāwehe hema i kekahi o kāu kānaka mahiʻai."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Ka pahuhopu: lanakila i ka pāʻani. Ke ʻano o ka lanakila: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Ua mālama ʻia ka pāʻani: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "Ua puka mai nā pūʻali %s"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Nānā akamai ʻia"}
+{"name": "aoe2mc.stance.formation", "text": "Hoʻonohonoho: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "ʻAʻohe pūʻali hiki ke hoʻouka i ka honua"}
+{"name": "aoe2mc.stance.unpack", "text": "E wehe mua i ka Trebuchet"}
+{"name": "aoe2mc.train.active", "text": "Ke hana nei ka %s."}
+{"name": "aoe2mc.train.rally", "text": "Pāwehe ʻakau ma ka honua no ka wahi hui."}
+{"name": "aoe2mc.train.researched", "text": "Ua noiʻi ʻia ka %s."}
+{"name": "aoe2mc.transport.out", "text": "Ua puka mai nā pūʻali %s"}
+{"name": "aoe2mc.treaty.ended", "text": "Ua pau ka ʻaelike: hiki i nā mea pāʻani ke hoʻouka i kēia manawa."}
+{"name": "aoe2mc.treaty.refuse", "text": "ʻAelike: ʻaʻole hiki iā ʻoe ke hoʻouka ma mua o %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "ʻAelike: ʻaʻole hiki iā ʻoe ke hoʻouka i kēia pāʻani."}
+{"name": "aoe2mc.treaty.start", "text": "ʻAelike: ʻaʻohe mea pāʻani hiki ke hoʻouka i kekahi mea pāʻani ma mua o %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "ʻAelike: ʻaʻohe mea pāʻani hiki ke hoʻouka i kekahi mea pāʻani i kēia pāʻani."}
+{"name": "aoe2mc.tutorial.barracks", "text": "E kūkulu i ka barracks: pāwehe ʻakau i kekahi kanaka mahiʻai i koho ʻia, koho i ka barracks a kau iā ia. Hōʻike ka action bar ma luna o ka hotbar i kahi e kau ai."}
+{"name": "aoe2mc.tutorial.camera", "text": "E holo wikiwiki ma luna o ka palapala: pāwehe ʻakau me ka mea \"Camera\", hele, a laila pāwehe ʻakau me ia hou."}
+{"name": "aoe2mc.tutorial.camp", "text": "E luku i ka camp ʻenemi ma waena o ka palapala: koho i kāu Militia a pāwehe ʻakau ma kahi hale. Hōʻike ka boss bar ma luna i ka pae."}
+{"name": "aoe2mc.tutorial.camps", "text": "E kūkulu i kahi ʻoki lāʻau kokoke i nā lāʻau a me kahi mill kokoke i nā lāʻau hua. Hōʻike ka sidebar ma ka ʻaoʻao ʻākau i ka lāʻau a lākou e koi ai."}
+{"name": "aoe2mc.tutorial.complete", "text": "Pau ke aʻo. Ka mea aʻe: pāʻani me ka bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Pau ke aʻo"}
+{"name": "aoe2mc.tutorial.feudal", "text": "E hele i ka Feudal Age: pāwehe ʻakau ma kāu town center a koho i ka Feudal Age. Hōʻike ka sidebar ma ka ʻaoʻao ʻākau i kāu ʻai."}
+{"name": "aoe2mc.tutorial.food", "text": "E hōʻiliʻili i ka ʻai 100: hoʻouna i kekahi kanaka mahiʻai i nā lāʻau hua. Hōʻike ka sidebar ma ka ʻaoʻao ʻākau i kāu ʻai."}
+{"name": "aoe2mc.tutorial.house", "text": "E kūkulu i kahi hale: pāwehe ʻakau i kekahi kanaka mahiʻai i koho ʻia, koho i ka hale a kau iā ia. Hōʻike ka action bar ma luna o ka hotbar i kahi e kau ai."}
+{"name": "aoe2mc.tutorial.militia", "text": "E aʻo i 3 Militia: pāwehe ʻakau ma kāu barracks a koho i ka militia. Hōʻike ka sidebar ma ka ʻaoʻao ʻākau i kāu ʻai a me kāu gula."}
+{"name": "aoe2mc.tutorial.raid", "text": "Ke hoʻouka nei ka ʻenemi i kāu mau kānaka mahiʻai! Pāwehe i ka laina anuenue ʻulaʻula ma ke kamaʻilio e hele ai i laila, a laila koho i kāu Militia a pāwehe ʻakau i nā ʻenemi. Hōʻike ka boss bar ma luna i ke ola o ka pūʻali i koho ʻia."}
+{"name": "aoe2mc.tutorial.select", "text": "E koho i kahi kanaka mahiʻai: pāwehe hema i kekahi o kāu kānaka mahiʻai me ke kumu kauoha. Hōʻike ka boss bar ma luna i ka pūʻali i koho ʻia, hōʻike ka action bar ma luna o ka hotbar i ka hana aʻe."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Ua pau ka pae"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Pae %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "ʻŌLELO AKONA: aʻo ka barracks i nā pūʻali hele wāwae. He haʻahaʻa ke kumukūʻai o nā pūʻali hele wāwae a maikaʻi lākou e kūʻē i nā hale."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "ʻŌLELO AKONA: e hoʻouka pū me kāu mau pūʻali a pau. Make ka pūʻulu liʻiliʻi ma mua o ka hana ʻana i ka pōʻino."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "ʻŌLELO AKONA: e kūkulu i nā hale lawe kokoke i nā waiwai, i hele pōkole ai nā kānaka mahiʻai."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "ʻŌLELO AKONA: wehe ka au aʻe i nā hale, pūʻali a me nā ʻenehana hou. E mālama i nā kānaka mahiʻai ma ka hana i ka wā e holomua ai ʻoe."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "ʻŌLELO AKONA: ʻo nā lāʻau hua kokoke i ka mill he hoʻomaka ʻai palekana. Ma hope, hāʻawi nā mahiʻai i ka ʻai ʻaʻole pau."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "ʻŌLELO AKONA: hāʻawi kahi hale i wahi no ka poʻe ʻē aʻe 5. E nānā i ka helu kanaka ma ka sidebar a kūkulu i nā hale ma mua o ka piha ʻana."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "ʻŌLELO AKONA: hiki iā ʻoe ke hoʻonoho i ka pūʻali a hiki i 15 i loko o kahi hale ke loaʻa ka waiwai."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "ʻŌLELO AKONA: ma AoE2 ke kani o ke kūlanakauhale e hoʻouna i nā kānaka mahiʻai i ka town center. E kani ia ke hoʻouka ka ʻenemi i kāu kūlanakauhale."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "ʻŌLELO AKONA: ʻo ka laina Idle ma ka sidebar ma ka ʻaoʻao ʻākau e helu ana i nā kānaka mahiʻai noho ʻole. E hāʻawi iā lākou i ka hana."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "ʻŌLELO AKONA: e aʻo mau i nā kānaka mahiʻai i nā au mua. ʻOi aku ka waiwai o ka nui o nā kānaka mahiʻai."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "ʻŌLELO AKONA: hōʻiliʻili wikiwiki nā kānaka mahiʻai kokoke i ka hale lawe. E kūkulu i kahi ʻoki lāʻau ma ka pili o nā lāʻau."}
+{"name": "aoe2mc.tutorial.villager", "text": "E aʻo i kekahi kanaka mahiʻai: pāwehe ʻakau ma kāu town center a koho i ka villager. Hōʻike ka sidebar ma ka ʻaoʻao ʻākau i ka ʻai āna e koi ai."}
+{"name": "aoe2mc.tutorial.wood", "text": "E hōʻiliʻili i ka lāʻau 50: koho i kekahi kanaka mahiʻai a pāwehe ʻakau i kahi lāʻau. Hōʻike ka sidebar ma ka ʻaoʻao ʻākau i kāu lāʻau."}
+{"name": "aoe2mc.victory", "text": "Lanakila"}
+{"name": "aoe2mc.wonder.built", "text": "Ua kūkulu ka mea pāʻani %s i kupanaha."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Ua luku ʻia ke kupanaha o ka mea pāʻani %s."}

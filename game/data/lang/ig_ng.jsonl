@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Onye ọkpụkpọ %s na-aga n'oge %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Mkpochapụ na-ewe ala site n'ókè ruo n'etiti n'ime %s. Ọ na-ebibi ndị agha niile na ụlọ niile dị n'ime ya."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Enweghị m ike iwu %s ebe ahụ ugbu a."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Enweghị m ike izu ndị agha ahụ: enweghị m ụlọ maka ya."}
+{"name": "aoe2mc.bot.flare_two", "text": "Flare abụọ na-egosi ebe maka mgbidi."}
+{"name": "aoe2mc.bot.no_flare", "text": "Ahụghị m flare."}
+{"name": "aoe2mc.bot.no_market", "text": "Enweghị m ahịa: enweghị m ike iziga ụgwọ."}
+{"name": "aoe2mc.bot.no_onager", "text": "Enweghị m onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Enweghị m ihe ndị ezuru maka mgbidi."}
+{"name": "aoe2mc.bot.no_water", "text": "Enweghị m mmiri nso obodo m: enweghị m ike iwu ụgbọ mmiri."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Onager m enweghị ike ịkpụ osisi."}
+{"name": "aoe2mc.build.cost", "text": "Ihe ndị ezuru adịghị: %s na-eji %s."}
+{"name": "aoe2mc.build.flat", "text": "%s ga-eguzo n'ala nke na-enwegh ugwu."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s ga-eguzo n'ihe 4 nke mgbidi nke gị n'ahịrị ngwa, ma ọ bụ n'ihe 3 n'akụkụ."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Wuo: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s ga-eguzo n'mmiri nso ụsọ osimiri."}
+{"name": "aoe2mc.build.space", "text": "Enweghị ohere maka %s ebe a."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Ihe ndị ezuru adịghị: ihe %s nke %s na-eji %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: pịa nri nri na njedebe nke mgbidi."}
+{"name": "aoe2mc.build.water", "text": "%s ga-eguzo n'mmiri."}
+{"name": "aoe2mc.camera.fov", "text": "Kamera ngwa ngwa na-eme ka ihe a na-ejide na-agagharị. Iji mee ka ọ kwụsie ike, tọọ Options > Accessibility Settings > View Bobbing ka OFF. Kamera ahụ na-eme ka ọhụụ dị obanyere, nke na-egosi ọtụtụ maapụ. Iji nweta ọhụụ nkịtị, tọọ Options > Accessibility Settings > FOV Effects ka 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: gbanyụọ"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: mepụta, ọsọ x%s. Shift pịa nri aka nri: ọsọ ọzọ."}
+{"name": "aoe2mc.camera.speed", "text": "Ọsọ kamera: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Merie ndị agha ndị iro niile ma furu ndị agha ole na ole"}
+{"name": "aoe2mc.challenge.booming", "text": "Zuo ndị ọrụ ugbo 100 ma gaa n'oge Imperial"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Gaa n'oge Castle ma lanarị mwakpo ndị iro"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Bibie castle ndị iro"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Chịkọta nri 200, osisi 200, ọla edo 100 na nkume 200, zuo ndị ọrụ ugbo 21, wuo ụlọ ọrụ osisi na igwe ọka, ma gaa n'oge Feudal"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Zuo ndị ọrụ ugbo 27, wuo ụlọ 5 ma gaa n'oge Castle"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Merie ngalaba iro isii niile"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "Ndị agha %s furu, ọkwa ọla agba ruo %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "Ndị agha %s furu, ọkwa ọla edo ruo %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "Ndị agha %s furu, enweghị ọkwa"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "Ndị agha %s furu, ọkwa ọla ọcha ruo %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Ọkwa ọla agba"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Ọkwa ọla edo"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Ọkwa ọla ọcha"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Bibie ụgbọ agha iro niile"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Enweghị ọkwa"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Gbuo ndị ọrụ ugbo iro 5"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Ọkwa ọla agba n'ime %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Ọkwa ọla edo n'ime %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Ọkwa ọla ọcha n'ime %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis gbanyụọ"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis mepụtara"}
+{"name": "aoe2mc.cheat.beyond", "text": "Teknọlọjị: ruo nchọpụta 256"}
+{"name": "aoe2mc.cheat.cpu", "text": "Oke ndị mmadụ: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Ọchịchịrị agha: gbanyụọ"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Ọchịchịrị agha: mepụta"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Teknọlọjị bụ n'efu"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Nkekọrịta bụ nlekọta: ego gị na-aga ndị enyi gị"}
+{"name": "aoe2mc.cheat.wonders", "text": "Ị na-achịkwa okike: anụmanụ %s"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Naanị ndị enyi ka fọrọ: nkwekọrịta ndị enyi kwụsịrị. Onye ọkpụkpọ ndụ ikpeazụ na-emeri."}
+{"name": "aoe2mc.conquest.defeated", "text": "Onye ọkpụkpọ %s emerie."}
+{"name": "aoe2mc.controls.attack", "text": "Wakpo: họrọ ndị agha, wee pịa nri aka nri n'onye iro."}
+{"name": "aoe2mc.controls.build", "text": "Wuo: họrọ ndị ọrụ ugbo, pịa ha aka nri maka menu nke wuo, họrọ ụlọ, wee pịa aka ekpe n'ala. Shift + pịa aka ekpe: tinye ọzọ. Pịa aka nri: kagbuo."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: pịa aka nri na spyglass Camera (igodo hotbar 2): ị na-aga ngwa ngwa n'elu maapụ. Shift pịa aka nri: ọsọ ọzọ. Pịa aka nri ọzọ: ị na-efe ala."}
+{"name": "aoe2mc.controls.garrison", "text": "Nchekwa: họrọ ndị agha, wee pịa aka nri n'ụlọ gị. Menu ya na-ewepụ ha. Menu town center: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "Chịkọta: họrọ ndị ọrụ ugbo, wee pịa aka nri n'osisi, osisi mkpụrụ, ọmụmụ ma ọ bụ ugbo."}
+{"name": "aoe2mc.controls.goto", "text": "Gaa: pịa aka nri na kọmpasị Go to (igodo hotbar 3): menu nke town center gị, otu nhịkwa gị na ọrụ ugbo ọzọ na-ezughị oke."}
+{"name": "aoe2mc.controls.groups", "text": "Otu nhịkwa: họrọ ndị agha, were ihe otu (igodo hotbar 5 ruo 9) ma Shift + pịa aka nri iji chekwaa nhọrọ. Pịa aka nri: họrọ otu ahụ."}
+{"name": "aoe2mc.controls.head", "text": "Njikwa (jide carrot na stick; bar omume na-egosi nzọụkwụ ọzọ):"}
+{"name": "aoe2mc.controls.menu", "text": "Menu egwuregwu: pịa aka nri na akwụkwọ Game menu (igodo hotbar 4): ndokwa na ụgwọ, flare, chekwa, kwụsị na osisi teknọlọjị."}
+{"name": "aoe2mc.controls.move", "text": "Kwaga: n'ihe a họrọ, pịa aka nri n'ala."}
+{"name": "aoe2mc.controls.research", "text": "Nyochaa na gaa n'oge ọzọ: pịa aka nri n'ụlọ gị wee pịa teknọlọjị ma ọ bụ oge ọzọ n'menu ya."}
+{"name": "aoe2mc.controls.select", "text": "Họrọ: pịa aka ekpe n'otu agha. Jide pịa aka ekpe wee lee n'ala: igbe nhọrọ. Pịa aka nri: nye iwu."}
+{"name": "aoe2mc.controls.train", "text": "Zuo: pịa aka nri n'ụlọ gị (town center, barracks ...) wee pịa otu agha n'menu ya."}
+{"name": "aoe2mc.defeat", "text": "Mmeri iro"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Enyi"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Onye ọkpụkpọ %s gbanwere ọnọdụ ya gị: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Iro"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Nke a na-anọghị n'akụkụ"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Onye ọkpụkpọ %s tọrọ ọsọ egwuregwu ka %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Onye ọkpụkpọ %s zipụrụ %s %s n'ebe onye ọkpụkpọ %s nọ."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Flare n'ebe %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Soro: pịa otu agha gị"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Chebe: pịa otu agha ma ọ bụ ụlọ gị"}
+{"name": "aoe2mc.gaia.joins", "text": "%s na-esonye gị."}
+{"name": "aoe2mc.garrison.all_back", "text": "Ha niile laghachi n'ọrụ"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Ọkpọ obodo na-akpọ: ndị ọrụ ugbo %s na-achọ ebe nchekwa"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Ahọrọghị onye ọrụ ugbo."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Enweghị m ndị ọrụ ugbo."}
+{"name": "aoe2mc.garrison.out", "text": "Ndị agha %s pụrụ"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "Ndị ọrụ ugbo %s na-achọ ebe nchekwa"}
+{"name": "aoe2mc.gather.act_attack", "text": "wakpo"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menu nke wuo"}
+{"name": "aoe2mc.gather.act_garrison", "text": "nchekwa"}
+{"name": "aoe2mc.gather.act_gather", "text": "chịkọta"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ịchụ anụ"}
+{"name": "aoe2mc.gather.act_move", "text": "kwaga"}
+{"name": "aoe2mc.gather.act_select", "text": "họrọ"}
+{"name": "aoe2mc.gather.act_select_type", "text": "họrọ ihe niile n'ụdị a"}
+{"name": "aoe2mc.gather.act_trade", "text": "azụmahịa"}
+{"name": "aoe2mc.gather.act_train", "text": "zuo"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Wakpo: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Igbe nhọrọ: akagburu"}
+{"name": "aoe2mc.gather.bush", "text": "Osisi mkpụrụ"}
+{"name": "aoe2mc.gather.carcass", "text": "Ụbụrụ anụ"}
+{"name": "aoe2mc.gather.corner", "text": "Igbe nhọrọ: pịa akụkụ ọzọ"}
+{"name": "aoe2mc.gather.enemy", "text": "Iro %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Ụlọ iro"}
+{"name": "aoe2mc.gather.farm", "text": "Ugbo"}
+{"name": "aoe2mc.gather.ground", "text": "Ala"}
+{"name": "aoe2mc.gather.group", "text": "Otu %s: ndị agha %s"}
+{"name": "aoe2mc.gather.group_saved", "text": "Otu %s: ndị agha %s echekwara"}
+{"name": "aoe2mc.gather.mine", "text": "Ọmụmụ %s"}
+{"name": "aoe2mc.gather.paused", "text": "Egwuregwu kwụsịrị."}
+{"name": "aoe2mc.gather.point", "text": "%s · Pịa aka nri: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Ọzọ kọọrọ ụgwọ: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Ahọrọ: ndị agha %s"}
+{"name": "aoe2mc.gather.tree", "text": "Osisi"}
+{"name": "aoe2mc.hill.holds", "text": "Onye ọkpụkpọ %s na-ejide arịrịọ ebe a."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Wakpo Ala: pịa aka nri n'ala"}
+{"name": "aoe2mc.hints.attack_move", "text": "Wakpo n'ụzọ: pịa aka nri n'ala"}
+{"name": "aoe2mc.hints.building", "text": "Tinye %s: pịa aka nri n'ala · Shift + pịa aka nri: tinye ọzọ · Kagbuo: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: pịa aka ekpe iji tinye · Shift: tinye ọzọ · Pịa aka nri: kagbuo"}
+{"name": "aoe2mc.hints.corner", "text": "Igbe nhọrọ: pịa akụkụ ọzọ aka nri"}
+{"name": "aoe2mc.hints.count_military", "text": "%s agha"}
+{"name": "aoe2mc.hints.count_military_many", "text": "ndị agha %s"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s onye ọrụ ugbo"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "ndị ọrụ ugbo %s"}
+{"name": "aoe2mc.hints.deselect", "text": "Igbe efu: kagbuo nhọrọ"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Pịa aka ekpe: kagbuo nhọrọ"}
+{"name": "aoe2mc.hints.follow", "text": "Soro: pịa aka nri n'otu agha gị ma ọ bụ enyi"}
+{"name": "aoe2mc.hints.guard", "text": "Chebe: pịa aka nri n'otu agha ma ọ bụ ụlọ gị ma ọ bụ enyi"}
+{"name": "aoe2mc.hints.military", "text": "%s · Pịa aka nri: wakpo iro, menu ọnọdụ · %s"}
+{"name": "aoe2mc.hints.none", "text": "Pịa aka ekpe: họrọ otu agha · Jide pịa aka ekpe: igbe nhọrọ"}
+{"name": "aoe2mc.hints.none_wand", "text": "Pịa aka nri: họrọ otu agha · Wand: igbe nhọrọ"}
+{"name": "aoe2mc.hints.patrol", "text": "Ọrụ nche: pịa aka nri n'ala"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Pịa aka nri: chịkọta, wuo, menu wuo · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s dị njikere"}
+{"name": "aoe2mc.lobby.you_play", "text": "Ị na-egwu %s."}
+{"name": "aoe2mc.monk.converts", "text": "Onye ụkọchukwu na-agbanwe %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s nwụrụ (Heresy)."}
+{"name": "aoe2mc.pause.continued", "text": "Onye ọkpụkpọ %s gara n'ihu n'egwuregwu ahụ."}
+{"name": "aoe2mc.pause.paused", "text": "Onye ọkpụkpọ %s kwụsịrị egwuregwu ahụ."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Otu %s (ihe ndị ọ nwere n'ụzọ nkezi %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Egwuregwu agwụla. Pịa aka nri na akwụkwọ Recap n'aka gị iji hụ nsonaazụ. Kwụsị programu egwuregwu site na Ctrl-C n'ihe nkiri ya."}
+{"name": "aoe2mc.relic_victory.all", "text": "Onye ọkpụkpọ %s na-ejide ihe nketa niile."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Onye ọkpụkpọ %s furu otu ihe nketa."}
+{"name": "aoe2mc.repair.no_resources", "text": "Ihe ndị ezuru adịghị iji dozie %s."}
+{"name": "aoe2mc.replay.army", "text": "Ndị agha: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", ndị agha n'ọgwụgwụ: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", furu: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Usoro nwuo:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · nchekwa %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | na-ebu %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "wuo %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "nri %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "ọla edo %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "ọ na-enweghị ọrụ %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "nkume %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "osisi %s"}
+{"name": "aoe2mc.replay.flare", "text": "Flare"}
+{"name": "aoe2mc.replay.game_ends", "text": "Egwuregwu na-agwụ"}
+{"name": "aoe2mc.replay.game_time", "text": "Oge egwuregwu %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · nchekwa %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Agha %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Ndị mmadụ %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Ihe ndị ezuru %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Ndị ọrụ ugbo %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s jidere arịrịọ ebe a: mmeri King of the Hill n'ebe %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atk %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Pịa Shift ugboro abụọ: ọhụụ onye ọgbaghara (fegharịa site na block). Pịa aka nri na ihe hotbar: njikwa replay."}
+{"name": "aoe2mc.replay.king_died", "text": ": eze nwụrụ n'ebe %s. Regicide: onye ọkpụkpọ apụla."}
+{"name": "aoe2mc.replay.king_killed", "text": "Egbuola eze n'ebe %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Replay ndụ: ịgafe na-akwụsị n'oge oge azụ egwuregwu."}
+{"name": "aoe2mc.replay.lost", "text": "Furu: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " na-ejide arịrịọ ebe a n'ebe %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: arịrịọ ebe a, afọ %s ka fọrọ"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: arịrịọ ebe a, afọ %s ka fọrọ"}
+{"name": "aoe2mc.replay.no_camera", "text": "Replay a enweghị kamera nke onye ọkpụkpọ ya."}
+{"name": "aoe2mc.replay.now", "text": " ugbu a"}
+{"name": "aoe2mc.replay.out", "text": "%s apụla"}
+{"name": "aoe2mc.replay.players", "text": "Ndị ọkpụkpọ"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " na-ebu ihe nketa ruo n'ụlọ nzuzo wee merie."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Replay agwụla"}
+{"name": "aoe2mc.replay.research", "text": " nyochaa %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s kwụsịrị"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Ihe nkwado na-amalite ọzọ maka ịgafe azụ: sonyere ya ọzọ."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Ụlọ %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Akụ na ụba %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Agha %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Teknọlọjị %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Ngụkọta %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "castle %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "zụrụ %s, reere %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "ihe nketa %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "ihe dị ebube %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Ṅọpụta:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Wuo %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Akụ na ụba %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Agha %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Teknọlọjị %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": zuru ndị ọrụ ugbo %s, chịkọtara %s, oge ndị ọrụ ugbo na-enweghị ọrụ %s, oge TC na-enweghị ọrụ %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": na-ejide arịrịọ ebe a (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": arịrịọ ebe a meriri %s (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": zuru ndị agha %s, furu ndị agha %s, furu ụlọ %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": egbuola eze %s (Regicide)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": mmeri, ihe nketa n'ụlọ nzuzo %s (Capture the Relic)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stribute zipụrụ %s, natara %s, ndị ọrụ ugbo kacha elu %s (ihe e chere)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": town center furu %s (Sudden Death)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, teknọlọjị %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": oge ihe dị ebube site na %s, na-agwụ %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Nchịkọta (e chere)"}
+{"name": "aoe2mc.replay.task_building", "text": "na-ewu"}
+{"name": "aoe2mc.replay.task_following", "text": "na-eso"}
+{"name": "aoe2mc.replay.task_food", "text": "na-achịkọta nri"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "nọ n'nchekwa"}
+{"name": "aoe2mc.replay.task_gold", "text": "na-achịkọta ọla edo"}
+{"name": "aoe2mc.replay.task_guarding", "text": "na-echebe"}
+{"name": "aoe2mc.replay.task_idle", "text": "enweghị ọrụ"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "na-eme nlegharị anya"}
+{"name": "aoe2mc.replay.task_resources", "text": "na-achịkọta ihe ndị ezuru"}
+{"name": "aoe2mc.replay.task_stone", "text": "na-achịkọta nkume"}
+{"name": "aoe2mc.replay.task_walking", "text": "na-aga ije"}
+{"name": "aoe2mc.replay.task_wood", "text": "na-achịkọta osisi"}
+{"name": "aoe2mc.replay.team", "text": "Otu %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Ogbu ụta %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Ihe nchebe ogbu ụta %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Ibu %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Ihe nchebe ndị ịnyịnya %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Ugbo %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Ọla edo %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Ihe nchebe ndị agha ụkwụ %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Igwe ude %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Nlụso aka ogologo %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Nkume %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Osisi %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castle"}
+{"name": "aoe2mc.replay.tl_king", "text": "Egbuola eze"}
+{"name": "aoe2mc.replay.tl_military", "text": "Agha mbụ: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Ihe nketa"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Kwụsịrị"}
+{"name": "aoe2mc.replay.town_fell", "text": ": town center dara n'ebe %s. Sudden Death: onye ọkpụkpọ apụla."}
+{"name": "aoe2mc.replay.town_lost", "text": "Town center furu n'ebe %s"}
+{"name": "aoe2mc.replay.training", "text": "Na-azụ: %s"}
+{"name": "aoe2mc.replay.university", "text": "Mahadum:"}
+{"name": "aoe2mc.replay.up_counts", "text": "akụ na ụba %s · Mahadum %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " wuru ihe dị ebube n'ebe %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Agha: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", ndị agha %s"}
+{"name": "aoe2mc.replay_input.fights", "text": "Agha buru ibu:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: pịa aka nri na ihe dị na hotbar gị, ma ọ bụ pịa: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Were ọchịchị: "}
+{"name": "aoe2mc.replay_input.units", "text": " (ndị agha %s)"}
+{"name": "aoe2mc.replay_input.vs", "text": " megide "}
+{"name": "aoe2mc.resource.food", "text": "nri"}
+{"name": "aoe2mc.resource.gold", "text": "ọla edo"}
+{"name": "aoe2mc.resource.stone", "text": "nkume"}
+{"name": "aoe2mc.resource.wood", "text": "osisi"}
+{"name": "aoe2mc.run.back", "text": "%s alaghachiri"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Ọgụ emecharala"}
+{"name": "aoe2mc.run.chat_hint", "text": "Mkparịta ụka: akara nkịtị na-aga n'ebe niile, /tm TEXT ruo ndị enyi gị, /msg NAME TEXT ruo otu onye."}
+{"name": "aoe2mc.run.left_bot", "text": "%s apụla: bot na-egwu maka onye ọkpụkpọ %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Ọnọdụ %s amalitela. Sonyere ọzọ."}
+{"name": "aoe2mc.run.starts_in", "text": "Egwuregwu na-amalite n'ime %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Mepụta \"Choose your player\" wee pịa \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Njikwa niile: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Nzọụkwụ mbụ: jide stick iwu wee pịa aka nri n'otu onye ọrụ ugbo gị."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Nzọụkwụ mbụ: jide stick iwu wee pịa aka ekpe n'otu onye ọrụ ugbo gị."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Ebumnuche: meri egwuregwu. Ntọala mmeri: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Chekwara egwuregwu: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "Ndị agha %s pụrụ"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Nlegharị anya akpaaka"}
+{"name": "aoe2mc.stance.formation", "text": "Usoro: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Enweghị agha ọ bụla nwere ike iwakpo ala"}
+{"name": "aoe2mc.stance.unpack", "text": "Mepụta Trebuchet tupu ị gaa"}
+{"name": "aoe2mc.train.active", "text": "%s na-arụ ọrụ."}
+{"name": "aoe2mc.train.rally", "text": "Pịa aka nri n'ala maka ebe nzukọ."}
+{"name": "aoe2mc.train.researched", "text": "%s enyochala."}
+{"name": "aoe2mc.transport.out", "text": "Ndị agha %s pụrụ"}
+{"name": "aoe2mc.treaty.ended", "text": "Nkwekọrịta kwụsịrị: ndị ọkpụkpọ nwere ike iwakpo ugbu a."}
+{"name": "aoe2mc.treaty.refuse", "text": "Nkwekọrịta: ị nwere ike iwakpo tupu %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Nkwekọrịta: ị nwere ike iwakpo n'egwuregwu a."}
+{"name": "aoe2mc.treaty.start", "text": "Nkwekọrịta: enweghị onye ọkpụkpọ ọ bụla nwere ike iwakpo onye ọkpụkpọ ọzọ tupu %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Nkwekọrịta: enweghị onye ọkpụkpọ ọ bụla nwere ike iwakpo onye ọkpụkpọ ọzọ n'egwuregwu a."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Wuo barracks: pịa aka nri n'onye ọrụ ugbo a họrọ, họrọ barracks wee tinye ya. Bar omume n'elu hotbar na-agwa gị ebe ị ga-etinye ya."}
+{"name": "aoe2mc.tutorial.camera", "text": "Gaa ngwa ngwa n'elu maapụ: pịa aka nri na \"Camera\", jee ije, wee pịa aka nri na ya ọzọ."}
+{"name": "aoe2mc.tutorial.camp", "text": "Bibie ụlọ ọrụ iro n'etiti maapụ: họrọ Militia gị wee pịa aka nri n'ụlọ. Bar boss n'elu na-egosi nzọụkwụ."}
+{"name": "aoe2mc.tutorial.camps", "text": "Wuo ụlọ ọrụ osisi nso osisi na igwe ọka nso osisi mkpụrụ. Akụkụ aka nri na sidebar na-egosi osisi ha ga-eji."}
+{"name": "aoe2mc.tutorial.complete", "text": "Ọzụzụ emechara. Ihe na-esote: kpọọ egwuregwu megide bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Ọzụzụ emechara"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Gaa n'oge Feudal: pịa aka nri n'town center gị wee họrọ oge Feudal. Sidebar aka nri na-egosi nri gị."}
+{"name": "aoe2mc.tutorial.food", "text": "Chịkọta nri 100: zipụ onye ọrụ ugbo gaa n'osisi mkpụrụ. Sidebar aka nri na-egosi nri gị."}
+{"name": "aoe2mc.tutorial.house", "text": "Wuo ụlọ: pịa aka nri n'onye ọrụ ugbo a họrọ, họrọ ụlọ wee tinye ya. Bar omume n'elu hotbar na-agwa gị ebe ị ga-etinye ya."}
+{"name": "aoe2mc.tutorial.militia", "text": "Zuo Militia 3: pịa aka nri n'barracks gị wee họrọ militia. Sidebar aka nri na-egosi nri na ọla edo gị."}
+{"name": "aoe2mc.tutorial.raid", "text": "Ndị iro na-awakpo ndị ọrụ ugbo gị! Pịa akara ọbara uhie n'mkparịta ụka ka ị gaa ebe ahụ, wee họrọ Militia gị ma pịa aka nri n'ndị iro. Bar boss n'elu na-egosi ahụike nke otu agha a họrọ."}
+{"name": "aoe2mc.tutorial.select", "text": "Họrọ onye ọrụ ugbo: pịa aka ekpe n'otu onye ọrụ ugbo gị site na stick iwu. Bar boss n'elu na-egosi agha a họrọ, bar omume n'elu hotbar na-egosi omume na-esote."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Nzọụkwụ emechara"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Nzọụkwụ %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "NDỤMỌDỤ: barracks na-azụ ndị agha ụkwụ. Ndị agha ụkwụ dị ọnụ ala ma dị mma megide ụlọ."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "NDỤMỌDỤ: wakpo na ndị agha gị niile n'otu. Otu obere otu na-anwụ tupu ha emee mmebi."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "NDỤMỌDỤ: wuo ụlọ ntinye ihe nso ihe ndị ezuru, ka ndị ọrụ ugbo jee ije nso."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "NDỤMỌDỤ: oge ọzọ na-emeghe ụlọ, agha na teknọlọjị ọhụrụ. Debe ndị ọrụ ugbo n'ọrụ mgbe ị na-aga n'ihu."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "NDỤMỌDỤ: osisi mkpụrụ nso igwe ọka bụ mmalite nri dị nchebe. Mgbe e mesịrị, ugbo na-enye nri nke na-adịghị agwụ."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "NDỤMỌDỤ: ụlọ na-enye ohere maka ndị mmadụ ọzọ 5. Lee ọnụ ọgụgụ ndị mmadụ n'sidebar ma wuo ụlọ tupu ọ juputa."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "NDỤMỌDỤ: ị nwere ike ịtọ ndị agha ruo 15 n'ime ụlọ mgbe ị nwere ihe ndị ezuru."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "NDỤMỌDỤ: n'AoE2 ọkpọ obodo na-ezipụ ndị ọrụ ugbo n'town center. Kpọọ ya mgbe iro na-awakpo obodo gị."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "NDỤMỌDỤ: akara Idle n'sidebar aka nri na-agụta ndị ọrụ ugbo na-enweghị ọrụ. Nye ha ọrụ."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "NDỤMỌDỤ: zuo ndị ọrụ ugbo mgbe niile n'oge mbụ. Ndị ọrụ ugbo karị na-enye ihe ndị ezuru karị."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "NDỤMỌDỤ: ndị ọrụ ugbo na-achịkọta ngwa ngwa nso ụlọ ntinye ihe. Wuo ụlọ ọrụ osisi nso osisi."}
+{"name": "aoe2mc.tutorial.villager", "text": "Zuo onye ọrụ ugbo: pịa aka nri n'town center gị wee họrọ onye ọrụ ugbo. Sidebar aka nri na-egosi nri ọ na-eji."}
+{"name": "aoe2mc.tutorial.wood", "text": "Chịkọta osisi 50: họrọ onye ọrụ ugbo wee pịa aka nri n'osisi. Sidebar aka nri na-egosi osisi gị."}
+{"name": "aoe2mc.victory", "text": "Mmeri"}
+{"name": "aoe2mc.wonder.built", "text": "Onye ọkpụkpọ %s wuru ihe dị ebube."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Ihe dị ebube nke onye ọkpụkpọ %s bibiri."}
