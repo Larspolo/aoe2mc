@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "بازیکن %s به عصر %s می‌رسد."}
+{"name": "aoe2mc.battle_royale.start", "text": "نبرد بزرگ: فساد نقشه را از مرز تا مرکز در %s می‌گیرد. همه واحدها و ساختمان‌های داخل آن را نابود می‌کند."}
+{"name": "aoe2mc.bot.cannot_build", "text": "الان نمی‌توانم آنجا %s بسازم."}
+{"name": "aoe2mc.bot.cannot_train", "text": "نمی‌توانم آن واحد را آموزش دهم: ساختمانی برای آن ندارم."}
+{"name": "aoe2mc.bot.flare_two", "text": "برای دیوار دو نشانگر بگذار."}
+{"name": "aoe2mc.bot.no_flare", "text": "هیچ نشانگری نمی‌بینم."}
+{"name": "aoe2mc.bot.no_market", "text": "بازار ندارم: نمی‌توانم خراج بفرستم."}
+{"name": "aoe2mc.bot.no_onager", "text": "منجنیق اونجر ندارم."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "منابع کافی برای دیوار ندارم."}
+{"name": "aoe2mc.bot.no_water", "text": "نزدیک شهرم آب ندارم: نمی‌توانم نیروی دریایی بسازم."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "اونجرهای من نمی‌توانند درخت ببرند."}
+{"name": "aoe2mc.build.cost", "text": "منابع کافی نیست: یک %s هزینه دارد %s."}
+{"name": "aoe2mc.build.flat", "text": "%s باید روی زمین صاف قرار گیرد."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s باید روی ۴ خانه از دیوار خودی در یک خط مستقیم، یا روی ۳ خانه مورب قرار گیرد."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "ساختن: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s باید روی آب کنار ساحل قرار گیرد."}
+{"name": "aoe2mc.build.space", "text": "اینجا جا برای %s نیست."}
+{"name": "aoe2mc.build.tiles_cost", "text": "منابع کافی نیست: %s خانه از %s هزینه دارد %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: روی انتهای دیوار راست‌کلیک کن."}
+{"name": "aoe2mc.build.water", "text": "%s باید روی آب قرار گیرد."}
+{"name": "aoe2mc.camera.fov", "text": "دوربین سریع باعث تاب خوردن وسیله‌ی در دست می‌شود. برای ثابت ماندن آن، به Options > Accessibility Settings > View Bobbing بروید و آن را روی OFF بگذارید. دوربین نما را هم وسیع‌تر می‌کند که نقشه‌ی بیشتری را نشان می‌دهد. برای نمای عادی، به Options > Accessibility Settings > FOV Effects بروید و آن را روی 0 % بگذارید."}
+{"name": "aoe2mc.camera.off", "text": "دوربین: خاموش"}
+{"name": "aoe2mc.camera.on", "text": "دوربین: روشن، سرعت x%s. Shift + راست‌کلیک: سرعت بعدی."}
+{"name": "aoe2mc.camera.speed", "text": "سرعت دوربین: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "همه‌ی واحدهای دشمن را شکست بده و واحدهای کمی از دست بده"}
+{"name": "aoe2mc.challenge.booming", "text": "۱۰۰ روستایی آموزش بده و به عصر امپراتوری برس"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "به عصر قلعه برس و حمله‌های دشمن را تاب بیاور"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "قلعه‌ی دشمن را نابود کن"}
+{"name": "aoe2mc.challenge.early-economy", "text": "۲۰۰ غذا، ۲۰۰ چوب، ۱۰۰ طلا و ۲۰۰ سنگ جمع کن، ۲۱ روستایی آموزش بده، یک اردوگاه چوب و یک آسیاب بساز و به عصر فئودال برس"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "۲۷ روستایی آموزش بده، ۵ خانه بساز و به عصر قلعه برس"}
+{"name": "aoe2mc.challenge.land-battle", "text": "هر شش موج دشمن را شکست بده"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s واحد از دست رفت، مدال برنز تا %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s واحد از دست رفت، مدال طلا تا %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s واحد از دست رفت، بدون مدال"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s واحد از دست رفت، مدال نقره تا %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "مدال برنز"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "مدال طلا"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "مدال نقره"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "همه‌ی کشتی‌های جنگی دشمن را نابود کن"}
+{"name": "aoe2mc.challenge.no_medal", "text": "بدون مدال"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "۵ روستایی دشمن را بکش"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "مدال برنز در %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "مدال طلا در %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "مدال نقره در %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "سپر خاموش"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "سپر روشن"}
+{"name": "aoe2mc.cheat.beyond", "text": "فناوری‌ها: تا ۲۵۶ تحقیق"}
+{"name": "aoe2mc.cheat.cpu", "text": "سقف جمعیت: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "مه‌ی جنگ: خاموش"}
+{"name": "aoe2mc.cheat.fog_on", "text": "مه‌ی جنگ: روشن"}
+{"name": "aoe2mc.cheat.free_techs", "text": "فناوری‌ها رایگان هستند"}
+{"name": "aoe2mc.cheat.marco", "text": "پولو"}
+{"name": "aoe2mc.cheat.sharing", "text": "به اشتراک گذاشتن: درآمد تو به متحدانت می‌رسد"}
+{"name": "aoe2mc.cheat.wonders", "text": "تو طبیعت را کنترل می‌کنی: %s حیوان"}
+{"name": "aoe2mc.conquest.allies_end", "text": "فقط متحدان باقی مانده‌اند: اتحادها پایان می‌یابد. آخرین بازیکن زنده برنده است."}
+{"name": "aoe2mc.conquest.defeated", "text": "بازیکن %s شکست خورد."}
+{"name": "aoe2mc.controls.attack", "text": "حمله: واحدهای نظامی را انتخاب کن، سپس روی یک دشمن راست‌کلیک کن."}
+{"name": "aoe2mc.controls.build", "text": "ساختن: روستاییان را انتخاب کن، با راست‌کلیک روی آن‌ها منوی ساخت را باز کن، یک ساختمان را انتخاب کن و سپس روی زمین چپ‌کلیک کن. Shift + چپ‌کلیک: ساختن بیشتر. راست‌کلیک: لغو."}
+{"name": "aoe2mc.controls.camera", "text": "دوربین: با دوربین (کلید نوار ۲) راست‌کلیک کن: تو سریع و بالای نقشه حرکت می‌کنی. Shift + راست‌کلیک: سرعت بعدی. دوباره راست‌کلیک: پایین می‌آیی."}
+{"name": "aoe2mc.controls.garrison", "text": "پادگان: واحدها را انتخاب کن، سپس روی ساختمان خودت راست‌کلیک کن. منوی آن به آن‌ها اجازه‌ی خروج می‌دهد. منوی مرکز شهر: زنگ شهر را بزن."}
+{"name": "aoe2mc.controls.gather", "text": "جمع‌آوری: روستاییان را انتخاب کن، سپس روی یک درخت، بوته‌ی میوه، معدن یا مزرعه راست‌کلیک کن."}
+{"name": "aoe2mc.controls.goto", "text": "برو به: با قطب‌نما (کلید نوار ۳) راست‌کلیک کن: منویی از مراکز شهر، گروه‌های کنترل و روستایی بیکار بعدی."}
+{"name": "aoe2mc.controls.groups", "text": "گروه‌های کنترل: واحدها را انتخاب کن، یک آیتم گروه بردار (کلیدهای نوار ۵ تا ۹) و Shift + راست‌کلیک کن تا انتخاب ذخیره شود. راست‌کلیک: انتخاب گروه."}
+{"name": "aoe2mc.controls.head", "text": "کنترل‌ها (هویج روی چوب را نگه دار؛ نوار عمل، مرحله‌ی بعدی را نشان می‌دهد):"}
+{"name": "aoe2mc.controls.menu", "text": "منوی بازی: با کتاب (کلید نوار ۴) راست‌کلیک کن: دیپلماسی و خراج، نشانگر، ذخیره، توقف و درخت فناوری."}
+{"name": "aoe2mc.controls.move", "text": "حرکت: با انتخاب، روی زمین راست‌کلیک کن."}
+{"name": "aoe2mc.controls.research", "text": "تحقیق و ارتقای عصر: روی ساختمان خودت راست‌کلیک کن و در منویش یک فناوری یا عصر بعدی را انتخاب کن."}
+{"name": "aoe2mc.controls.select", "text": "انتخاب: روی یک واحد چپ‌کلیک کن. چپ‌کلیک را نگه دار و روی زمین حرکت کن: یک کادر انتخاب. راست‌کلیک: دستور بده."}
+{"name": "aoe2mc.controls.train", "text": "آموزش: روی ساختمان خودت (مرکز شهر، سربازخانه ...) راست‌کلیک کن و در منویش یک واحد را انتخاب کن."}
+{"name": "aoe2mc.defeat", "text": "شکست"}
+{"name": "aoe2mc.diplomacy.ally", "text": "متحد"}
+{"name": "aoe2mc.diplomacy.changed", "text": "بازیکن %s موضعش را نسبت به تو تغییر داد: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "دشمن"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "بی‌طرف"}
+{"name": "aoe2mc.diplomacy.speed", "text": "بازیکن %s سرعت بازی را روی %s گذاشت."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "بازیکن %s %s %s را به بازیکن %s فرستاد."}
+{"name": "aoe2mc.flare.placed", "text": "%s: نشانگر در %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "دنبال کردن: روی یک واحد خودی کلیک کن"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "محافظت: روی یک واحد یا ساختمان خودی کلیک کن"}
+{"name": "aoe2mc.gaia.joins", "text": "یک %s به تو می‌پیوندد."}
+{"name": "aoe2mc.garrison.all_back", "text": "همه به کار برگردند"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "زنگ شهر به صدا درآمد: %s روستایی به پناهگاه می‌روند"}
+{"name": "aoe2mc.garrison.no_villager", "text": "هیچ روستایی انتخاب نشده است."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "تو روستایی نداری."}
+{"name": "aoe2mc.garrison.out", "text": "%s واحد بیرون آمدند"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s روستایی به پناهگاه می‌روند"}
+{"name": "aoe2mc.gather.act_attack", "text": "حمله"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "منوی ساخت"}
+{"name": "aoe2mc.gather.act_garrison", "text": "پادگان"}
+{"name": "aoe2mc.gather.act_gather", "text": "جمع‌آوری"}
+{"name": "aoe2mc.gather.act_hunt", "text": "شکار"}
+{"name": "aoe2mc.gather.act_move", "text": "حرکت"}
+{"name": "aoe2mc.gather.act_select", "text": "انتخاب"}
+{"name": "aoe2mc.gather.act_select_type", "text": "انتخاب همه‌ی این نوع"}
+{"name": "aoe2mc.gather.act_trade", "text": "تجارت"}
+{"name": "aoe2mc.gather.act_train", "text": "آموزش"}
+{"name": "aoe2mc.gather.attack_siege", "text": "حمله: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "کادر انتخاب: لغو شد"}
+{"name": "aoe2mc.gather.bush", "text": "بوته‌ی میوه"}
+{"name": "aoe2mc.gather.carcass", "text": "لاشه"}
+{"name": "aoe2mc.gather.corner", "text": "کادر انتخاب: گوشه‌ی دیگر را کلیک کن"}
+{"name": "aoe2mc.gather.enemy", "text": "دشمن %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "ساختمان دشمن"}
+{"name": "aoe2mc.gather.farm", "text": "مزرعه"}
+{"name": "aoe2mc.gather.ground", "text": "زمین"}
+{"name": "aoe2mc.gather.group", "text": "گروه %s: %s واحد"}
+{"name": "aoe2mc.gather.group_saved", "text": "گروه %s: %s واحد ذخیره شد"}
+{"name": "aoe2mc.gather.mine", "text": "معدن %s"}
+{"name": "aoe2mc.gather.paused", "text": "بازی متوقف است."}
+{"name": "aoe2mc.gather.point", "text": "%s · راست‌کلیک: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "کاشت دوباره در صف: %s"}
+{"name": "aoe2mc.gather.selected", "text": "انتخاب‌شده: %s واحد"}
+{"name": "aoe2mc.gather.tree", "text": "درخت"}
+{"name": "aoe2mc.hill.holds", "text": "بازیکن %s یادبود را نگه داشته است."}
+{"name": "aoe2mc.hints.attack_ground", "text": "حمله به زمین: روی زمین راست‌کلیک کن"}
+{"name": "aoe2mc.hints.attack_move", "text": "حرکت حمله‌ای: روی زمین راست‌کلیک کن"}
+{"name": "aoe2mc.hints.building", "text": "%s را بگذار: روی زمین راست‌کلیک کن · Shift + راست‌کلیک: بیشتر بگذار · لغو: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: برای گذاشتن چپ‌کلیک کن · Shift: بیشتر بگذار · راست‌کلیک: لغو"}
+{"name": "aoe2mc.hints.corner", "text": "کادر انتخاب: گوشه‌ی دیگر را راست‌کلیک کن"}
+{"name": "aoe2mc.hints.count_military", "text": "%s واحد نظامی"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s واحد نظامی"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s روستایی"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s روستایی"}
+{"name": "aoe2mc.hints.deselect", "text": "کادر خالی: لغو انتخاب"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "چپ‌کلیک: لغو انتخاب"}
+{"name": "aoe2mc.hints.follow", "text": "دنبال کردن: روی یک واحد یا متحد خودی راست‌کلیک کن"}
+{"name": "aoe2mc.hints.guard", "text": "محافظت: روی یک واحد یا ساختمان خودی یا متحد راست‌کلیک کن"}
+{"name": "aoe2mc.hints.military", "text": "%s · راست‌کلیک: حمله به دشمن، منوی موضع · %s"}
+{"name": "aoe2mc.hints.none", "text": "چپ‌کلیک: انتخاب واحد · چپ‌کلیک را نگه دار: کادر انتخاب"}
+{"name": "aoe2mc.hints.none_wand", "text": "راست‌کلیک: انتخاب واحد · چوبدستی: کادر انتخاب"}
+{"name": "aoe2mc.hints.patrol", "text": "گشت: روی زمین راست‌کلیک کن"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · راست‌کلیک: جمع‌آوری، ساختن، منوی ساخت · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s آماده"}
+{"name": "aoe2mc.lobby.you_play", "text": "تو %s بازی می‌کنی."}
+{"name": "aoe2mc.monk.converts", "text": "یک راهب %s را تبدیل می‌کند."}
+{"name": "aoe2mc.monk.dies", "text": "%s می‌میرد (بدعت)."}
+{"name": "aoe2mc.pause.continued", "text": "بازیکن %s بازی را ادامه داد."}
+{"name": "aoe2mc.pause.paused", "text": "بازیکن %s بازی را متوقف کرد."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "تیم %s (میانگین رتبه %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "بازی تمام شده است. برای دیدن نتایج، روی کتاب خلاصه‌ی بازی در دستت راست‌کلیک کن. برنامه‌ی بازی را در کنسولش با Ctrl-C متوقف کن."}
+{"name": "aoe2mc.relic_victory.all", "text": "بازیکن %s همه‌ی یادگاری‌ها را نگه داشته است."}
+{"name": "aoe2mc.relic_victory.lost", "text": "بازیکن %s یک یادگاری را از دست داد."}
+{"name": "aoe2mc.repair.no_resources", "text": "منابع کافی برای تعمیر %s نیست."}
+{"name": "aoe2mc.replay.army", "text": "ارتش: %s"}
+{"name": "aoe2mc.replay.army_end", "text": "، ارتش در پایان: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": "، از دست‌رفته: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "ترتیب ساختن:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · پادگان %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | حمل %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "ساختن %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "غذا %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "طلا %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "بیکار %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "سنگ %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "چوب %s"}
+{"name": "aoe2mc.replay.flare", "text": "نشانگر"}
+{"name": "aoe2mc.replay.game_ends", "text": "بازی تمام می‌شود"}
+{"name": "aoe2mc.replay.game_time", "text": "زمان بازی %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · پادگان %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "نظامی %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "جمعیت %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "منابع %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "روستایی %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s یادبود را نگه داشت: پیروزی تپه‌ی پادشاه در %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s حمله %s/%s زره%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift را دوبار بزن: نمای تماشاگر (پرواز از میان بلوک‌ها). روی آیتم‌های نوار راست‌کلیک کن: کنترل بازپخش."}
+{"name": "aoe2mc.replay.king_died", "text": ": پادشاه در %s مرد. کشتن پادشاه: بازیکن حذف شد."}
+{"name": "aoe2mc.replay.king_killed", "text": "پادشاه در %s کشته شد"}
+{"name": "aoe2mc.replay.live_jump", "text": "بازپخش زنده: پرش در تأخیر پشت بازی متوقف می‌شود."}
+{"name": "aoe2mc.replay.lost", "text": "از دست رفته: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " یادبود را در %s نگه داشته است."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: یادبود، %s سال مانده"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: یادبود، %s سال مانده"}
+{"name": "aoe2mc.replay.no_camera", "text": "این ضبط دوربینی از بازیکنش ندارد."}
+{"name": "aoe2mc.replay.now", "text": " اکنون"}
+{"name": "aoe2mc.replay.out", "text": "%s حذف شد"}
+{"name": "aoe2mc.replay.players", "text": "بازیکنان"}
+{"name": "aoe2mc.replay.range", "text": " برد %s"}
+{"name": "aoe2mc.replay.relic_won", "text": " یادگاری را به صومعه می‌برد و برنده می‌شود."}
+{"name": "aoe2mc.replay.replay_ended", "text": "بازپخش تمام شد"}
+{"name": "aoe2mc.replay.research", "text": " تحقیق می‌کند %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s تسلیم شد"}
+{"name": "aoe2mc.replay.restart_jump", "text": "سرور برای پرش به عقب راه‌اندازی مجدد می‌شود: دوباره به آن بپیوند."}
+{"name": "aoe2mc.replay.share_buildings", "text": "ساختمان‌ها %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "اقتصاد %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "نظامی %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "فناوری‌ها %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "کل %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "قلعه‌ها %s، "}
+{"name": "aoe2mc.replay.soc_market", "text": "خرید %s، فروش %s، "}
+{"name": "aoe2mc.replay.soc_relics", "text": "یادگاری‌ها %s، "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "شگفتی‌ها %s، "}
+{"name": "aoe2mc.replay.spent", "text": "خرج‌شده:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "ساختمان %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "اقتصاد %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "نظامی %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "فناوری %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": روستاییان آموزش‌دیده %s، جمع‌آوری‌شده %s، زمان بیکاری روستایی %s، زمان بیکاری مرکز شهر %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": یادبود را نگه داشته (تپه‌ی پادشاه)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": یادبود برده شده %s (تپه‌ی پادشاه)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": واحدهای نظامی آموزش‌دیده %s، واحدهای از دست‌رفته %s، ساختمان‌های از دست‌رفته %s، APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": پادشاه کشته‌شده %s (کشتن پادشاه)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": پیروزی، یادگاری در صومعه %s (گرفتن یادگاری)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sخراج فرستاده %s، دریافت %s، اوج روستایی %s (تخمین)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": مرکز شهر از دست رفته %s (مرگ ناگهانی)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s، فناوری‌ها %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": تایمر شگفتی از %s، پایان %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "خلاصه (تخمین)"}
+{"name": "aoe2mc.replay.task_building", "text": "در حال ساختن"}
+{"name": "aoe2mc.replay.task_following", "text": "در حال دنبال کردن"}
+{"name": "aoe2mc.replay.task_food", "text": "جمع‌آوری غذا"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "در پادگان"}
+{"name": "aoe2mc.replay.task_gold", "text": "جمع‌آوری طلا"}
+{"name": "aoe2mc.replay.task_guarding", "text": "در حال محافظت"}
+{"name": "aoe2mc.replay.task_idle", "text": "بیکار"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "در حال گشت"}
+{"name": "aoe2mc.replay.task_resources", "text": "جمع‌آوری منابع"}
+{"name": "aoe2mc.replay.task_stone", "text": "جمع‌آوری سنگ"}
+{"name": "aoe2mc.replay.task_walking", "text": "در حال راه رفتن"}
+{"name": "aoe2mc.replay.task_wood", "text": "جمع‌آوری چوب"}
+{"name": "aoe2mc.replay.team", "text": "تیم %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "کماندار %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "زره کماندار %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "حمل %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "زره سواره %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "مزرعه %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "طلا %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "زره پیاده %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "بافندگی %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "نبرد تن‌به‌تن %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "سنگ %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "چوب %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "قلعه"}
+{"name": "aoe2mc.replay.tl_king", "text": "پادشاه کشته شد"}
+{"name": "aoe2mc.replay.tl_military", "text": "اولین نظامی: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "یادگاری"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "تسلیم"}
+{"name": "aoe2mc.replay.town_fell", "text": ": مرکز شهر در %s سقوط کرد. مرگ ناگهانی: بازیکن حذف شد."}
+{"name": "aoe2mc.replay.town_lost", "text": "مرکز شهر در %s از دست رفت"}
+{"name": "aoe2mc.replay.training", "text": "آموزش: %s"}
+{"name": "aoe2mc.replay.university", "text": "دانشگاه:"}
+{"name": "aoe2mc.replay.up_counts", "text": "اقتصاد %s · دانشگاه %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " شگفتی را در %s ساخت."}
+{"name": "aoe2mc.replay_input.fight", "text": "نبرد: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": "، %s واحد"}
+{"name": "aoe2mc.replay_input.fights", "text": "نبردهای بزرگ:"}
+{"name": "aoe2mc.replay_input.help", "text": "بازپخش: روی آیتم‌های نوارت راست‌کلیک کن، یا کلیک کن: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "تصرف: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s واحد)"}
+{"name": "aoe2mc.replay_input.vs", "text": " در برابر "}
+{"name": "aoe2mc.resource.food", "text": "غذا"}
+{"name": "aoe2mc.resource.gold", "text": "طلا"}
+{"name": "aoe2mc.resource.stone", "text": "سنگ"}
+{"name": "aoe2mc.resource.wood", "text": "چوب"}
+{"name": "aoe2mc.run.back", "text": "%s برگشت"}
+{"name": "aoe2mc.run.campaign_complete", "text": "کمپین کامل شد"}
+{"name": "aoe2mc.run.chat_hint", "text": "گفتگو: یک خط عادی به همه می‌رود، /tm TEXT به متحدانت، /msg NAME TEXT به یک نفر."}
+{"name": "aoe2mc.run.left_bot", "text": "%s رفت: یک ربات بازیکن %s را بازی می‌کند"}
+{"name": "aoe2mc.run.scenario_starts", "text": "سناریوی %s شروع می‌شود. دوباره بپیوند."}
+{"name": "aoe2mc.run.starts_in", "text": "بازی در %s شروع می‌شود"}
+{"name": "aoe2mc.run.wait_ready", "text": "پنجره‌ی «Choose your player» را باز کن و روی «Ready» کلیک کن"}
+{"name": "aoe2mc.run.welcome_controls", "text": "همه‌ی کنترل‌ها: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "گام اول: دستور را در دست نگه دار و روی یکی از روستاییانت راست‌کلیک کن."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "گام اول: دستور را در دست نگه دار و روی یکی از روستاییانت چپ‌کلیک کن."}
+{"name": "aoe2mc.run.welcome_goal", "text": "هدف: بردن بازی. تنظیم پیروزی: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "بازی ذخیره شد: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s واحد بیرون آمدند"}
+{"name": "aoe2mc.stance.auto_scout", "text": "پیش‌قراول خودکار"}
+{"name": "aoe2mc.stance.formation", "text": "آرایش: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "هیچ واحدی نمی‌تواند به زمین حمله کند"}
+{"name": "aoe2mc.stance.unpack", "text": "اول منجنیق تربوشه را باز کن"}
+{"name": "aoe2mc.train.active", "text": "%s فعال است."}
+{"name": "aoe2mc.train.rally", "text": "برای نقطه‌ی تجمع روی زمین راست‌کلیک کن."}
+{"name": "aoe2mc.train.researched", "text": "%s تحقیق شد."}
+{"name": "aoe2mc.transport.out", "text": "%s واحد بیرون آمدند"}
+{"name": "aoe2mc.treaty.ended", "text": "پیمان پایان یافت: بازیکنان اکنون می‌توانند حمله کنند."}
+{"name": "aoe2mc.treaty.refuse", "text": "پیمان: پیش از %s نمی‌توانی حمله کنی."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "پیمان: در این بازی نمی‌توانی حمله کنی."}
+{"name": "aoe2mc.treaty.start", "text": "پیمان: هیچ بازیکنی پیش از %s نمی‌تواند به بازیکن دیگر حمله کند."}
+{"name": "aoe2mc.treaty.start_endless", "text": "پیمان: در این بازی هیچ بازیکنی نمی‌تواند به بازیکن دیگر حمله کند."}
+{"name": "aoe2mc.tutorial.barracks", "text": "سربازخانه بساز: روی یک روستایی انتخاب‌شده راست‌کلیک کن، سربازخانه را انتخاب کن و آن را بگذار. نوار عمل بالای نوار کلید می‌گوید کجا بگذاری."}
+{"name": "aoe2mc.tutorial.camera", "text": "سریع روی نقشه حرکت کن: با آیتم «Camera» راست‌کلیک کن، راه برو و دوباره با آن راست‌کلیک کن."}
+{"name": "aoe2mc.tutorial.camp", "text": "اردوگاه دشمن وسط نقشه را نابود کن: میلیشیای خود را انتخاب کن و روی یک ساختمان راست‌کلیک کن. نوار رئیس بالای صفحه مرحله را نشان می‌دهد."}
+{"name": "aoe2mc.tutorial.camps", "text": "یک اردوگاه چوب نزدیک درخت‌ها و یک آسیاب نزدیک بوته‌های میوه بساز. نوار کناری سمت راست هزینه‌ی چوب آن‌ها را نشان می‌دهد."}
+{"name": "aoe2mc.tutorial.complete", "text": "آموزش کامل شد. بعد: با ربات بازی کن: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "آموزش کامل شد"}
+{"name": "aoe2mc.tutorial.feudal", "text": "به عصر فئودال برس: روی مرکز شهرت راست‌کلیک کن و عصر فئودال را انتخاب کن. نوار کناری سمت راست غذای تو را نشان می‌دهد."}
+{"name": "aoe2mc.tutorial.food", "text": "۱۰۰ غذا جمع کن: یک روستایی را به سمت بوته‌های میوه بفرست. نوار کناری سمت راست غذای تو را نشان می‌دهد."}
+{"name": "aoe2mc.tutorial.house", "text": "یک خانه بساز: روی یک روستایی انتخاب‌شده راست‌کلیک کن، خانه را انتخاب کن و آن را بگذار. نوار عمل بالای نوار کلید می‌گوید کجا بگذاری."}
+{"name": "aoe2mc.tutorial.militia", "text": "۳ میلیشیا آموزش بده: روی سربازخانه‌ات راست‌کلیک کن و میلیشیا را انتخاب کن. نوار کناری سمت راست غذا و طلای تو را نشان می‌دهد."}
+{"name": "aoe2mc.tutorial.raid", "text": "دشمن به روستاییان حمله می‌کند! روی خط هشدار قرمز در گفتگو کلیک کن تا به آنجا بروی، سپس میلیشیای خود را انتخاب کن و روی دشمنان راست‌کلیک کن. نوار رئیس بالای صفحه سلامت واحد انتخاب‌شده را نشان می‌دهد."}
+{"name": "aoe2mc.tutorial.select", "text": "یک روستایی انتخاب کن: با دستور روی یکی از روستاییانت چپ‌کلیک کن. نوار رئیس بالای صفحه واحد انتخاب‌شده را نشان می‌دهد و نوار عمل بالای نوار کلید، عمل بعدی را."}
+{"name": "aoe2mc.tutorial.step_done", "text": "مرحله انجام شد"}
+{"name": "aoe2mc.tutorial.step_of", "text": "مرحله %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "نکته: سربازخانه پیاده آموزش می‌دهد. پیاده ارزان است و در برابر ساختمان‌ها خوب است."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "نکته: همه‌ی واحدهایت را با هم حمله بده. یک گروه کوچک پیش از آنکه آسیب بزند، می‌میرد."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "نکته: ساختمان‌های تحویل را نزدیک منابع بساز تا روستاییان مسیر کوتاهی بروند."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "نکته: عصر بعدی ساختمان‌ها، واحدها و فناوری‌های تازه باز می‌کند. هنگام ارتقا، روستاییان را سر کار نگه دار."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "نکته: بوته‌های میوه نزدیک آسیاب شروع امنی برای غذا هستند. بعداً، مزرعه‌ها غذایی می‌دهند که تمام نمی‌شود."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "نکته: یک خانه جا برای ۵ جمعیت بیشتر می‌دهد. جمعیت را در نوار کناری ببین و پیش از پر شدن، خانه بساز."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "نکته: وقتی منابع داری، می‌توانی تا ۱۵ واحد را در یک ساختمان در صف بگذاری."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "نکته: در AoE2 زنگ شهر روستاییان را به مرکز شهر می‌فرستد. وقتی دشمن شهرت را غارت می‌کند، آن را بزن."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "نکته: خط بیکار در نوار کناری سمت راست، روستاییان بی‌کار را می‌شمارد. به آن‌ها کار بده."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "نکته: در عصرهای اول همیشه روستایی آموزش بده. روستاییان بیشتر، منابع بیشتری می‌دهند."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "نکته: روستاییان نزدیک یک ساختمان تحویل سریع‌تر کار می‌کنند. یک اردوگاه چوب کنار درخت‌ها بساز."}
+{"name": "aoe2mc.tutorial.villager", "text": "یک روستایی آموزش بده: روی مرکز شهرت راست‌کلیک کن و روستایی را انتخاب کن. نوار کناری سمت راست غذایی که هزینه دارد را نشان می‌دهد."}
+{"name": "aoe2mc.tutorial.wood", "text": "۵۰ چوب جمع کن: یک روستایی را انتخاب کن و روی یک درخت راست‌کلیک کن. نوار کناری سمت راست چوب تو را نشان می‌دهد."}
+{"name": "aoe2mc.victory", "text": "پیروزی"}
+{"name": "aoe2mc.wonder.built", "text": "بازیکن %s یک شگفتی ساخت."}
+{"name": "aoe2mc.wonder.destroyed", "text": "شگفتی بازیکن %s نابود شد."}
