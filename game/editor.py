@@ -14,18 +14,42 @@ import re
 import time
 
 import export
+import gather
 import lang
+import menu
 import savegame
 
 CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> save\s*$")   # the chat word, as the server logs it
 
 
-def save(game, out):
-    """Write the world into a save folder and export it to out. Returns out."""
+class State:
+    """The light state of the editor (#6012): no Gather, but what menu, build.free and build.found need: the map of
+    aoe2mc.json, the open chest menus, command, and the list of placed objects (AoE2 unit ID, owner, tile)."""
+
+    def __init__(self, game, data=None):
+        if data is None:
+            with open(os.path.join(game.world, "aoe2mc.json")) as f:
+                data = json.load(f)
+        self.game, self.data, self.map = game, data, gather.Map(data)
+        self.menus, self.placed, self.person = {}, [], None
+
+    def command(self, cmd):
+        return self.game.command(cmd)
+
+    def place(self, unit_id, player, tile):
+        """Add an object to the save: tile (x, y) in the tiles of the world."""
+        self.placed.append({"id": int(unit_id), "player": int(player), "tile": [float(v) for v in tile]})
+
+    def dump(self):
+        return {"placed": list(self.placed)}
+
+
+def save(game, out, state=None):
+    """Write the world and the placed objects of state into a save folder and export it to out. Returns out."""
     game.command("save-off")
     game.command("save-all flush")
     try:
-        folder = savegame.write(savegame.folder(game.world), game.world, None)
+        folder = savegame.write(savegame.folder(game.world), game.world, state.dump() if state else None)
     finally:
         game.command("save-on")
     path = export.export(folder, out, heights=True)
@@ -39,11 +63,19 @@ def words(game, seen):
     return len(log), sum(1 for line in log[seen:] if CHAT.search(line))
 
 
-def run(game, out, alive):
-    """Answer the chat word `save` while alive() (the console thread of run.main is alive)."""
+def tick(state):
+    """One click tick: the clicks of the open menus reach their handlers."""
+    return menu.clicks(state) if state.menus else []
+
+
+def run(game, out, alive, state=None):
+    """Answer the chat word `save` and the menu clicks while alive() (the console thread of run.main is alive)."""
+    state = state or State(game)
+    game.editor = state                                                # the save at the stop of run.main
     seen = len(game.server.log)
     while alive():
+        tick(state)
         seen, n = words(game, seen)
         if n:
-            print(f"Saved the map: {save(game, out)}")
+            print(f"Saved the map: {save(game, out, state)}")
         time.sleep(0.5)

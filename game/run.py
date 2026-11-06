@@ -1785,7 +1785,7 @@ def main(argv=None, scenario=None):
         state = savegame.dump(game.g) if getattr(game, "g", None) else None
         if a.editor and getattr(game, "rcon", None):    # the map at the stop (#5999)
             import editor
-            print(f"Saved the map: {editor.save(game, a.editor)}", file=sys.stderr)
+            print(f"Saved the map: {editor.save(game, a.editor, getattr(game, 'editor', None))}", file=sys.stderr)
         game.stop()                                  # the server writes the world when it stops
         if state:
             print(f"Saved the game: {program()} {a.world} --play --load "

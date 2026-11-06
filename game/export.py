@@ -66,8 +66,11 @@ def alive(state):
 
 
 def objects(data, state, pos):
-    """The objects at the end of the game: dicts with "id", "player", "tile" (x, y) and "rotation"."""
+    """The objects at the end of the game: dicts with "id", "player", "tile" (x, y) and "rotation". A save of the
+    editor has only "placed": the objects that the person placed (editor.State, #6012), no game state."""
     T, out = data["tile_size"], []
+    placed = (state or {}).get("placed", [])
+    state = state if state and "players" in state else None
     live = alive(state) if state else None
     ruins, empty, done = set(), set(), []
     seen, left = set(), set()                                          # trees, bushes and fish (#5672)
@@ -112,6 +115,7 @@ def objects(data, state, pos):
         if (i := unit_id(s["name"])) is not None and not any(tuple(o.get("footprint", ())) == (x0, z0, x1, z1)
                                                              for o in data["objects"]):
             out.append({"id": i, "player": s["player"], "tile": ((x0 + x1) / 2 / T, (z0 + z1) / 2 / T), "rotation": 0.0})
+    out += [{"id": int(o["id"]), "player": int(o["player"]), "tile": tuple(o["tile"]), "rotation": 0.0} for o in placed]
     import aoe2mc  # the tiles of the world are turned (#5674)
     back, turn = (4 - data.get("turn", 0)) % 4, data.get("turn", 0)
     for o in out:
@@ -297,7 +301,7 @@ def export(path, out, heights=False):
         if civ in Civilization.__members__:
             scn.player_manager.players[p].civilization = Civilization[civ]
         pl, info = scn.player_manager.players[p], data["players"][str(p)]
-        if state and str(p) in state["players"]:           # the end of the game (#5673)
+        if state and str(p) in state.get("players", {}):           # the end of the game (#5673)
             s = state["players"][str(p)]
             for r in RESOURCES:
                 setattr(pl, r, int(s.get("stock", {}).get(r, 0)))
