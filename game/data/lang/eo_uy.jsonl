@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Ludanto %s atingas la %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: la Korupto prenas la mapon de ĝia rando ĝis ĝia centro en %s. Ĝi detruas ĉiujn unuojn kaj konstruaĵojn en ĝi."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Mi ne povas konstrui %s tie nun."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Mi ne povas trejni tiun unuon: mi ne havas konstruaĵon por ĝi."}
+{"name": "aoe2mc.bot.flare_two", "text": "Signu du lokojn por la muro."}
+{"name": "aoe2mc.bot.no_flare", "text": "Mi vidas neniun signon."}
+{"name": "aoe2mc.bot.no_market", "text": "Mi ne havas merkaton: mi ne povas sendi tributon."}
+{"name": "aoe2mc.bot.no_onager", "text": "Mi ne havas onagron."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Mi ne havas sufiĉe da rimedoj por muro."}
+{"name": "aoe2mc.bot.no_water", "text": "Mi ne havas akvon proksime de mia urbo: mi ne povas konstrui floton."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Miaj onagroj ne povas tranĉi arbojn."}
+{"name": "aoe2mc.build.cost", "text": "Nesufiĉaj rimedoj: %s kostas %s."}
+{"name": "aoe2mc.build.flat", "text": "La %s devas stari sur plata tero."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s devas stari sur 4 kvadratoj de propra muro en rekta linio, aŭ sur 3 diagonalaj kvadratoj."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Konstrui: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s devas stari sur akvo apud la bordo."}
+{"name": "aoe2mc.build.space", "text": "Neniu spaco por la %s ĉi tie."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Nesufiĉaj rimedoj: %s kvadratoj de %s kostas %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: dekstreklaku la finon de la muro."}
+{"name": "aoe2mc.build.water", "text": "%s devas stari sur la akvo."}
+{"name": "aoe2mc.camera.fov", "text": "La rapida kamero igas la tenatan objekton balanciĝi. Por ke ĝi restu senmova, agordu Opcioj > Alirebla agordo > View Bobbing al OFF. La kamero ankaŭ larĝigas la vidon, kio montras pli da la mapo. Por konservi la normalan vidon, agordu Opcioj > Alirebla agordo > FOV Effects al 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamero: malŝaltita"}
+{"name": "aoe2mc.camera.on", "text": "Kamero: ŝaltita, rapido x%s. Shift + dekstre klaku: sekva rapido."}
+{"name": "aoe2mc.camera.speed", "text": "Rapido de la kamero: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Venku ĉiujn malamikajn unuojn kaj perdu malmultajn unuojn"}
+{"name": "aoe2mc.challenge.booming", "text": "Trejnu 100 vilaĝanojn kaj atingu la Imperian Epokon"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Atingu la Kastelan Epokon kaj pluvivu la atakojn de la malamiko"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Detruu la kastelon de la malamiko"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Kolektu 200 manĝaĵon, 200 lignon, 100 da oro kaj 200 da ŝtono, trejnu 21 vilaĝanojn, konstruu lignotranĉejon kaj muelejon, kaj atingu la Feŭdan Epokon"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Trejnu 27 vilaĝanojn, konstruu 5 domojn kaj atingu la Kastelan Epokon"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Venku ĉiujn ses malamikajn ondojn"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s unuoj perditaj, bronza medalo ĝis %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s unuoj perditaj, ora medalo ĝis %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s unuoj perditaj, neniu medalo"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s unuoj perditaj, arĝenta medalo ĝis %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronza medalo"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Ora medalo"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Arĝenta medalo"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Detruu ĉiujn malamikajn militŝipojn"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Neniu medalo"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Mortigu 5 vilaĝanojn de la malamiko"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronza medalo en %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Ora medalo en %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Arĝenta medalo en %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Ŝildo malŝaltita"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Ŝildo ŝaltita"}
+{"name": "aoe2mc.cheat.beyond", "text": "Teknologioj: ĝis 256 esploroj"}
+{"name": "aoe2mc.cheat.cpu", "text": "Limo de loĝantaro: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Militkonfuzo: malŝaltita"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Militkonfuzo: ŝaltita"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Teknologioj estas senpagaj"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Dividi estas prizorgi: via enspezo iras al viaj aliancanoj"}
+{"name": "aoe2mc.cheat.wonders", "text": "Vi regas la naturon: %s bestoj"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Nur aliancanoj restas: la alianco finiĝas. La lasta viva ludanto venkas."}
+{"name": "aoe2mc.conquest.defeated", "text": "Ludanto %s estas venkita."}
+{"name": "aoe2mc.controls.attack", "text": "Ataki: elektu militajn unuojn, poste dekstre klaku malamikon."}
+{"name": "aoe2mc.controls.build", "text": "Konstrui: elektu vilaĝanojn, dekstre klaku ilin por la konstrumenuo, elektu konstruaĵon, poste maldekstre klaku la grundon. Shift + maldekstre klaku: konstrui pli. Dekstre klaku: nuligi."}
+{"name": "aoe2mc.controls.camera", "text": "Kamero: dekstre klaku per la spegulvitro Kamero (klavo 2 de la rapidbreto): vi marŝas rapide alte super la mapo. Shift + dekstre klaku: la sekva rapido. Denove dekstre klaku: vi falas malsupren."}
+{"name": "aoe2mc.controls.garrison", "text": "Garnizoni: elektu unuojn, poste dekstre klaku vian propran konstruaĵon. Ĝia menuo lasas ilin eliri. Menuo de la urbocentro: Sonorigu la urbosonorilon."}
+{"name": "aoe2mc.controls.gather", "text": "Kolekti: elektu vilaĝanojn, poste dekstre klaku arbon, fruktan arbuston, minejon aŭ farmon."}
+{"name": "aoe2mc.controls.goto", "text": "Iri al: dekstre klaku per la kompaso Iri al (klavo 3 de la rapidbreto): menuo de viaj urbocentroj, viaj kontrolgrupoj kaj la sekva senlabora vilaĝano."}
+{"name": "aoe2mc.controls.groups", "text": "Kontrolgrupoj: elektu unuojn, prenu grupan objekton (klavoj 5 ĝis 9 de la rapidbreto) kaj Shift + dekstre klaku por konservi la elekton. Dekstre klaku: elekti la grupon."}
+{"name": "aoe2mc.controls.head", "text": "Kontroloj (tenu la karoton sur bastono; la agobreto montras la sekvan paŝon):"}
+{"name": "aoe2mc.controls.menu", "text": "Ludmenuo: dekstre klaku per la libro Ludmenuo (klavo 4 de la rapidbreto): diplomatio kaj tributo, signo, konservi, paŭzi kaj la teknologia arbo."}
+{"name": "aoe2mc.controls.move", "text": "Movi: kun elekto, dekstre klaku la grundon."}
+{"name": "aoe2mc.controls.research", "text": "Esplori kaj epokiĝi: dekstre klaku vian propran konstruaĵon kaj klaku teknologion aŭ la sekvan epokon en ĝia menuo."}
+{"name": "aoe2mc.controls.select", "text": "Elekti: maldekstre klaku unuon. Tenu maldekstran klakon kaj rigardu trans la grundon: elekta skatolo. Dekstre klaku: doni ordonojn."}
+{"name": "aoe2mc.controls.train", "text": "Trejni: dekstre klaku vian propran konstruaĵon (urbocentro, kazerno ...) kaj klaku unuon en ĝia menuo."}
+{"name": "aoe2mc.defeat", "text": "Malvenko"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Aliancano"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Ludanto %s ŝanĝis sian pozicion al vi: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Malamiko"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neŭtrala"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Ludanto %s agordis la ludrapidon al %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Ludanto %s sendis %s %s al ludanto %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Signo ĉe %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Sekvi: klaku propran unuon"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Gardi: klaku propran unuon aŭ konstruaĵon"}
+{"name": "aoe2mc.gaia.joins", "text": "%s aliĝas al vi."}
+{"name": "aoe2mc.garrison.all_back", "text": "Ĉiuj reen al laboro"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "La urbosonorilo sonas: %s vilaĝanoj serĉas ŝirmejon"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Neniu vilaĝano estas elektita."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Vi havas neniujn vilaĝanojn."}
+{"name": "aoe2mc.garrison.out", "text": "%s unuoj eliris"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s vilaĝanoj serĉas ŝirmejon"}
+{"name": "aoe2mc.gather.act_attack", "text": "ataki"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "konstrumenuo"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garnizoni"}
+{"name": "aoe2mc.gather.act_gather", "text": "kolekti"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ĉasi"}
+{"name": "aoe2mc.gather.act_move", "text": "movi"}
+{"name": "aoe2mc.gather.act_select", "text": "elekti"}
+{"name": "aoe2mc.gather.act_select_type", "text": "elekti ĉiujn de la tipo"}
+{"name": "aoe2mc.gather.act_trade", "text": "komerci"}
+{"name": "aoe2mc.gather.act_train", "text": "trejni"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Ataki: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Elekta skatolo: nuligita"}
+{"name": "aoe2mc.gather.bush", "text": "Beroarbusto"}
+{"name": "aoe2mc.gather.carcass", "text": "Kadavro"}
+{"name": "aoe2mc.gather.corner", "text": "Elekta skatolo: klaku la alian angulon"}
+{"name": "aoe2mc.gather.enemy", "text": "Malamika %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Malamika konstruaĵo"}
+{"name": "aoe2mc.gather.farm", "text": "Farmo"}
+{"name": "aoe2mc.gather.ground", "text": "Grundo"}
+{"name": "aoe2mc.gather.group", "text": "Grupo %s: %s unuoj"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grupo %s: %s unuoj konservitaj"}
+{"name": "aoe2mc.gather.mine", "text": "Minejo %s"}
+{"name": "aoe2mc.gather.paused", "text": "La ludo estas paŭzita."}
+{"name": "aoe2mc.gather.point", "text": "%s · Dekstre klaku: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Replantoj en vico: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Elektitaj: %s unuoj"}
+{"name": "aoe2mc.gather.tree", "text": "Arbo"}
+{"name": "aoe2mc.hill.holds", "text": "Ludanto %s tenas la monumenton."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Ataki la grundon: dekstre klaku la grundon"}
+{"name": "aoe2mc.hints.attack_move", "text": "Movi kaj ataki: dekstre klaku la grundon"}
+{"name": "aoe2mc.hints.building", "text": "Meti la %s: dekstre klaku la grundon · Shift + dekstre klaku: meti pli · Nuligi: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: maldekstre klaku por meti · Shift: meti pli · Dekstre klaku: nuligi"}
+{"name": "aoe2mc.hints.corner", "text": "Elekta skatolo: dekstre klaku la alian angulon"}
+{"name": "aoe2mc.hints.count_military", "text": "%s milita unuo"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s militaj unuoj"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s vilaĝano"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s vilaĝanoj"}
+{"name": "aoe2mc.hints.deselect", "text": "Malplena skatolo: malelekti"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Maldekstre klaku: malelekti"}
+{"name": "aoe2mc.hints.follow", "text": "Sekvi: dekstre klaku propran aŭ aliancan unuon"}
+{"name": "aoe2mc.hints.guard", "text": "Gardi: dekstre klaku propran aŭ aliancan unuon aŭ konstruaĵon"}
+{"name": "aoe2mc.hints.military", "text": "%s · Dekstre klaku: ataki malamikon, menuo de pozicio · %s"}
+{"name": "aoe2mc.hints.none", "text": "Maldekstre klaku: elekti unuon · Tenu maldekstran klakon: elekta skatolo"}
+{"name": "aoe2mc.hints.none_wand", "text": "Dekstre klaku: elekti unuon · Bastoneto: elekta skatolo"}
+{"name": "aoe2mc.hints.patrol", "text": "Patroli: dekstre klaku la grundon"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Dekstre klaku: kolekti, konstrui, konstrumenuo · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s pretaj"}
+{"name": "aoe2mc.lobby.you_play", "text": "Vi ludas %s."}
+{"name": "aoe2mc.monk.converts", "text": "Monaĥo konvertas la %s."}
+{"name": "aoe2mc.monk.dies", "text": "La %s mortas (Herezo)."}
+{"name": "aoe2mc.pause.continued", "text": "Ludanto %s daŭrigis la ludon."}
+{"name": "aoe2mc.pause.paused", "text": "Ludanto %s paŭzis la ludon."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Teamo %s (meza takso %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "La ludo finiĝis. Dekstre klaku la libron Resumo en via mano por vidi la rezultojn. Haltu la ludprogramon per Ctrl-C en ĝia konzolo."}
+{"name": "aoe2mc.relic_victory.all", "text": "Ludanto %s tenas ĉiujn relikvojn."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Ludanto %s perdis relikvon."}
+{"name": "aoe2mc.repair.no_resources", "text": "Nesufiĉaj rimedoj por ripari la %s."}
+{"name": "aoe2mc.replay.army", "text": "Armeo: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", armeo ĉe la fino: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", perditaj: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Konstrua ordo:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garnizono %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | portas %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "konstruas %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "manĝaĵo %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "oro %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "senlabora %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "ŝtono %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "ligno %s"}
+{"name": "aoe2mc.replay.flare", "text": "Signo"}
+{"name": "aoe2mc.replay.game_ends", "text": "La ludo finiĝas"}
+{"name": "aoe2mc.replay.game_time", "text": "Ludtempo %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · garnizono %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Lob %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Vil %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s tenis la monumenton: venko de la Reĝo de la Monteto je %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atako %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Duoble tuŝu Shift: spektanta vido (flugi tra blokoj). Dekstre klaku la erojn de la rapidbreto: kontrolo de la ripeto."}
+{"name": "aoe2mc.replay.king_died", "text": ": la Reĝo mortis je %s. Reĝomortigo: la ludanto eliras."}
+{"name": "aoe2mc.replay.king_killed", "text": "Reĝo mortigita je %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Viva ripeto: la saltado haltas ĉe la prokrasto malantaŭ la ludo."}
+{"name": "aoe2mc.replay.lost", "text": "Perditaj: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " tenas la monumenton je %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monumento, %s jaro restas"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monumento, %s jaroj restas"}
+{"name": "aoe2mc.replay.no_camera", "text": "Ĉi tiu registraĵo havas neniun kameron de sia ludanto."}
+{"name": "aoe2mc.replay.now", "text": " nun"}
+{"name": "aoe2mc.replay.out", "text": "%s eliris"}
+{"name": "aoe2mc.replay.players", "text": "Ludantoj"}
+{"name": "aoe2mc.replay.range", "text": " d%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " portas la relikvon al monaĥejo kaj venkas."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Ripeto finiĝis"}
+{"name": "aoe2mc.replay.research", "text": " esploras %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s rezignas"}
+{"name": "aoe2mc.replay.restart_jump", "text": "La servilo rekomenciĝas por la reveno: aliĝu denove."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Konstruaĵoj %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekonomio %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Militado %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Teknologioj %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Sumo %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "kasteloj %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "aĉetis %s, vendis %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relikvoj %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "mirindaĵoj %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Elspezite:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Konstrui %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eko %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tekn %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": vilaĝanoj trejnitaj %s, kolektitaj %s, senlabora tempo de vilaĝanoj %s, senlabora tempo de urbocentro %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": tenas la monumenton (Reĝo de la Monteto)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monumento venkita %s (Reĝo de la Monteto)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": militaj unuoj trejnitaj %s, unuoj perditaj %s, konstruaĵoj perditaj %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Reĝo mortigita %s (Reĝomortigo)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": venkoj, relikvo en monaĥejo %s (Kapti la Relikvon)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stributo sendita %s, ricevita %s, plej alta nombro de vilaĝanoj %s (tak.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": urbocentro perdita %s (Subita Morto)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, teknologioj %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": tempilo de mirindaĵo de %s, finiĝas %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Resumo (tak.)"}
+{"name": "aoe2mc.replay.task_building", "text": "konstruas"}
+{"name": "aoe2mc.replay.task_following", "text": "sekvas"}
+{"name": "aoe2mc.replay.task_food", "text": "kolektas manĝaĵon"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "garnizonita"}
+{"name": "aoe2mc.replay.task_gold", "text": "kolektas oron"}
+{"name": "aoe2mc.replay.task_guarding", "text": "gardas"}
+{"name": "aoe2mc.replay.task_idle", "text": "senlabora"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrolas"}
+{"name": "aoe2mc.replay.task_resources", "text": "kolektas rimedojn"}
+{"name": "aoe2mc.replay.task_stone", "text": "kolektas ŝtonon"}
+{"name": "aoe2mc.replay.task_walking", "text": "marŝas"}
+{"name": "aoe2mc.replay.task_wood", "text": "kolektas lignon"}
+{"name": "aoe2mc.replay.team", "text": "Teamo %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Sagisto %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armilo de sagistoj %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Portado %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armilo de kavaleriistoj %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Farmo %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Oro %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armilo de infanterio %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Teksejo %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Batalo de proksimo %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Ŝtono %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Ligno %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Kastelo"}
+{"name": "aoe2mc.replay.tl_king", "text": "Reĝo mortigita"}
+{"name": "aoe2mc.replay.tl_military", "text": "1-a militado: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relikvo"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Rezignas"}
+{"name": "aoe2mc.replay.town_fell", "text": ": la urbocentro falis je %s. Subita Morto: la ludanto eliras."}
+{"name": "aoe2mc.replay.town_lost", "text": "Urbocentro perdita je %s"}
+{"name": "aoe2mc.replay.training", "text": "Trejnado: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitato:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekonomio %s · Universitato %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " konstruis mirindaĵon je %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Batalo: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s unuoj"}
+{"name": "aoe2mc.replay_input.fights", "text": "Grandaj bataloj:"}
+{"name": "aoe2mc.replay_input.help", "text": "Ripeto: dekstre klaku la erojn en via rapidbreto, aŭ klaku: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Transpreni: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s unuoj)"}
+{"name": "aoe2mc.replay_input.vs", "text": " kontraŭ "}
+{"name": "aoe2mc.resource.food", "text": "manĝaĵo"}
+{"name": "aoe2mc.resource.gold", "text": "oro"}
+{"name": "aoe2mc.resource.stone", "text": "ŝtono"}
+{"name": "aoe2mc.resource.wood", "text": "ligno"}
+{"name": "aoe2mc.run.back", "text": "%s revenis"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampanjo finita"}
+{"name": "aoe2mc.run.chat_hint", "text": "Babilo: ordinara linio iras al ĉiuj, /tm TEKSTO al viaj aliancanoj, /msg NOMO TEKSTO al unu persono."}
+{"name": "aoe2mc.run.left_bot", "text": "%s foriris: roboto ludas kiel ludanto %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenaro %s komencas. Aliĝu denove."}
+{"name": "aoe2mc.run.starts_in", "text": "La ludo komencas en %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Malfermu \"Elektu vian ludanton\" kaj klaku \"Preta\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Ĉiuj kontroloj: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Unua paŝo: tenu la komandbastonon kaj dekstre klaku unu el viaj vilaĝanoj."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Unua paŝo: tenu la komandbastonon kaj maldekstre klaku unu el viaj vilaĝanoj."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Celo: venki en la ludo. Agordo de venko: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Ludo konservita: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s unuoj eliris"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Aŭtomata ekspliki"}
+{"name": "aoe2mc.stance.formation", "text": "Formacio: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Neniu unuo povas ataki la grundon"}
+{"name": "aoe2mc.stance.unpack", "text": "Malpakigu la Katapulton unue"}
+{"name": "aoe2mc.train.active", "text": "%s estas aktiva."}
+{"name": "aoe2mc.train.rally", "text": "Dekstre klaku la grundon por la kunveno."}
+{"name": "aoe2mc.train.researched", "text": "%s estas esplorita."}
+{"name": "aoe2mc.transport.out", "text": "%s unuoj eliris"}
+{"name": "aoe2mc.treaty.ended", "text": "La traktato finiĝis: ludantoj nun povas ataki."}
+{"name": "aoe2mc.treaty.refuse", "text": "Traktato: vi ne povas ataki antaŭ %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Traktato: vi ne povas ataki en ĉi tiu ludo."}
+{"name": "aoe2mc.treaty.start", "text": "Traktato: neniu ludanto povas ataki alian ludanton antaŭ %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Traktato: neniu ludanto povas ataki alian ludanton en ĉi tiu ludo."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Konstrui kazernon: dekstre klaku elektitan vilaĝanon, elektu la kazernon kaj metu ĝin. La agobreto super la rapidbreto diras al vi kie meti ĝin."}
+{"name": "aoe2mc.tutorial.camera", "text": "Rapide marŝu super la mapo: dekstre klaku per la eron \"Kamero\", marŝu, poste dekstre klaku denove per ĝi."}
+{"name": "aoe2mc.tutorial.camp", "text": "Detruu la malamikan tendaron en la mezo de la mapo: elektu viajn Milicianojn kaj dekstre klaku konstruaĵon. La bosa breto supre montras la paŝon."}
+{"name": "aoe2mc.tutorial.camps", "text": "Konstruu lignotranĉejon apud la arboj kaj muelejon apud la beroj. La flanka breto dekstre montras la lignon, kiun ili kostas."}
+{"name": "aoe2mc.tutorial.complete", "text": "La lernilo finiĝis. Sekva: ludu kontraŭ la roboto: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Lernilo finita"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Atingu la Feŭdan Epokon: dekstre klaku vian urbocentron kaj elektu la Feŭdan Epokon. La flanka breto dekstre montras vian manĝaĵon."}
+{"name": "aoe2mc.tutorial.food", "text": "Kolektu 100 manĝaĵon: sendu vilaĝanon al la beroj. La flanka breto dekstre montras vian manĝaĵon."}
+{"name": "aoe2mc.tutorial.house", "text": "Konstrui domon: dekstre klaku elektitan vilaĝanon, elektu la domon kaj metu ĝin. La agobreto super la rapidbreto diras al vi kie meti ĝin."}
+{"name": "aoe2mc.tutorial.militia", "text": "Trejnu 3 Milicianojn: dekstre klaku vian kazernon kaj elektu la milicianon. La flanka breto dekstre montras vian manĝaĵon kaj oron."}
+{"name": "aoe2mc.tutorial.raid", "text": "La malamiko atakas viajn vilaĝanojn! Klaku la ruĝan alarmlinion en la babilejo por iri tien, poste elektu viajn Milicianojn kaj dekstre klaku la malamikojn. La bosa breto supre montras la vivopunktojn de la elektita unuo."}
+{"name": "aoe2mc.tutorial.select", "text": "Elektu vilaĝanon: maldekstre klaku unu el viaj vilaĝanoj per la komandbastono. La bosa breto supre montras la elektitan unuon, la agobreto super la rapidbreto montras la sekvan agon."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Paŝo farita"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Paŝo %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "KONSILO: la kazerno trejnas infanterion. Infanterio estas malmultekosta kaj bona kontraŭ konstruaĵoj."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "KONSILO: ataki per ĉiuj viaj unuoj kune. Malgranda grupo mortas antaŭ ol ĝi povas damaĝi."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "KONSILO: konstruu la alportejojn proksime de la rimedoj, por ke la vilaĝanoj marŝu mallongan vojon."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "KONSILO: la sekva epoko malŝlosas novajn konstruaĵojn, unuojn kaj teknologiojn. Tenu la vilaĝanojn ĉe laboro dum vi epokiĝas."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "KONSILO: beroj apud muelejo estas sekura komenco de manĝaĵo. Poste farmoj donas manĝaĵon, kiu ne finiĝas."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "KONSILO: domo donas lokon por 5 pliaj loĝantoj. Rigardu la loĝantaron en la flanka breto kaj konstruu domojn antaŭ ol ĝi plenas."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "KONSILO: vi povas meti en vicon ĝis 15 unuojn en konstruaĵo, kiam vi havas la rimedojn."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "KONSILO: en AoE2 la urbosonorilo sendas la vilaĝanojn en la urbocentron. Sonorigu ĝin, kiam la malamiko atakas vian urbon."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "KONSILO: la linio Senlabora en la flanka breto dekstre kalkulas viajn vilaĝanojn sen laboro. Donu al ili laboron."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "KONSILO: trejnu vilaĝanojn ĉiam en la unuaj epokoj. Pli da vilaĝanoj donas pli da rimedoj."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "KONSILO: vilaĝanoj kolektas pli rapide apud alportejo. Konstruu lignotranĉejon apud la arboj."}
+{"name": "aoe2mc.tutorial.villager", "text": "Trejnu vilaĝanon: dekstre klaku vian urbocentron kaj elektu la vilaĝanon. La flanka breto dekstre montras la manĝaĵon, kiun ĝi kostas."}
+{"name": "aoe2mc.tutorial.wood", "text": "Kolektu 50 lignon: elektu vilaĝanon kaj dekstre klaku arbon. La flanka breto dekstre montras vian lignon."}
+{"name": "aoe2mc.victory", "text": "Venko"}
+{"name": "aoe2mc.wonder.built", "text": "Ludanto %s konstruis mirindaĵon."}
+{"name": "aoe2mc.wonder.destroyed", "text": "La mirindaĵo de ludanto %s estas detruita."}
