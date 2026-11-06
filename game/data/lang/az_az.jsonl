@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Oyunçu %s %s dövrünə keçir."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Korrupsiya %s ərzində xəritəni kənardan mərkəzə doğru ələ keçirir. O, içindəki bütün vahidləri və binaları məhv edir."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Orada indi %s tikə bilmirəm."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Bu vahidi hazırlaya bilmirəm: onun üçün binam yoxdur."}
+{"name": "aoe2mc.bot.flare_two", "text": "Divar üçün iki işıq nişanı qoyun."}
+{"name": "aoe2mc.bot.no_flare", "text": "Heç bir işıq nişanı görmürəm."}
+{"name": "aoe2mc.bot.no_market", "text": "Bazarım yoxdur: xərac göndərə bilmirəm."}
+{"name": "aoe2mc.bot.no_onager", "text": "Onagrım yoxdur."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Divar üçün kifayət qədər resursum yoxdur."}
+{"name": "aoe2mc.bot.no_water", "text": "Şəhərimin yaxınlığında su yoxdur: donanma tikə bilmirəm."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Onagrlarım ağac kesə bilmir."}
+{"name": "aoe2mc.build.cost", "text": "Kifayət qədər resurs yoxdur: %s %s dəyərindədir."}
+{"name": "aoe2mc.build.flat", "text": "%s düz zəmində durmalıdır."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s öz divarınızın düz xətt üzrə 4 xanasına və ya diaqonal üzrə 3 xanasına qoyulmalıdır."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Tikinti: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s sahil yaxınlığında suda durmalıdır."}
+{"name": "aoe2mc.build.space", "text": "Burada %s üçün yer yoxdur."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Kifayət qədər resurs yoxdur: %s xana %s-dan %s dəyərindədir."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: divarın ucuna sağ klikləyin."}
+{"name": "aoe2mc.build.water", "text": "%s suda durmalıdır."}
+{"name": "aoe2mc.camera.fov", "text": "Sürətli kamera əlindəki əşyanı yellədir. Onun hərəkətsiz qalması üçün Seçimlər > Əlçatanlıq Parametrləri > Baxışın yellənməsi: DEAKTİV edin. Kamera həmçinin görünüşü genişləndirir və xəritədən daha çox hissə göstərir. Adi görünüşü saxlamaq üçün Seçimlər > Əlçatanlıq Parametrləri > FOV Effektləri: 0 % edin."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: söndürülüb"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: yanıb, sürət x%s. Shift + sağ klik: növbəti sürət."}
+{"name": "aoe2mc.camera.speed", "text": "Kamera sürəti: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Düşmənin bütün vahidlərini məğlub edin və az vahid itirin"}
+{"name": "aoe2mc.challenge.booming", "text": "100 kəndli hazırlayın və İmperiya dövrünə keçin"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Qala dövrünə keçin və düşmənin hücumlarına sinə gərin"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Düşmən qalasını məhv edin"}
+{"name": "aoe2mc.challenge.early-economy", "text": "200 yemək, 200 odun, 100 qızıl və 200 daş toplayın, 21 kəndli hazırlayın, odun düşərgəsi və dəyirman tikin və Feodal dövrünə keçin"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "27 kəndli hazırlayın, 5 ev tikin və Qala dövrünə keçin"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Düşmənin altı dalğasının hamısını məğlub edin"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "İtirilən vahidlər: %s, bürünc medal %s-a qədər"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "İtirilən vahidlər: %s, qızıl medal %s-a qədər"}
+{"name": "aoe2mc.challenge.lost_none", "text": "İtirilən vahidlər: %s, medal yoxdur"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "İtirilən vahidlər: %s, gümüş medal %s-a qədər"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bürünc medal"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Qızıl medal"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Gümüş medal"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Düşmənin bütün döyüş gəmilərini məhv edin"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Medal yoxdur"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Düşmənin 5 kəndlisini öldürün"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "%s ərzində bürünc medal"}
+{"name": "aoe2mc.challenge.time_gold", "text": "%s ərzində qızıl medal"}
+{"name": "aoe2mc.challenge.time_silver", "text": "%s ərzində gümüş medal"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Qalxan söndürülüb"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Qalxan yanıb"}
+{"name": "aoe2mc.cheat.beyond", "text": "Texnologiyalar: 256 tədqiqata qədər"}
+{"name": "aoe2mc.cheat.cpu", "text": "Əhali limiti: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Müharibə dumanı: söndürülüb"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Müharibə dumanı: yanıb"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Texnologiyalar pulsuzdur"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Paylaşmaq qayğıdır: gəlirləriniz müttəfiqlərinizə gedir"}
+{"name": "aoe2mc.cheat.wonders", "text": "Təbiəti idarə edirsiniz: %s heyvan"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Yalnız müttəfiqlər qalıb: ittifaqlar bitir. Sonuncu sağ qalan oyunçu qalib gəlir."}
+{"name": "aoe2mc.conquest.defeated", "text": "Oyunçu %s məğlub oldu."}
+{"name": "aoe2mc.controls.attack", "text": "Hücum: döyüş vahidlərini seçin, sonra düşmənə sağ klikləyin."}
+{"name": "aoe2mc.controls.build", "text": "Tikinti: kəndliləri seçin, tikinti menyusu üçün onlara sağ klikləyin, binanı seçin və sonra yerə sol klikləyin. Shift + sol klik: daha çox qoymaq. Sağ klik: ləğv etmək."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: Kamera durbinə (isti düymə 2) sağ klikləyin: xəritənin üstündə sürətlə gəzirsiniz. Shift + sağ klik: növbəti sürət. Yenidən sağ klik: aşağı enirsiniz."}
+{"name": "aoe2mc.controls.garrison", "text": "Yerləşdirmə: vahidləri seçin, sonra öz binanıza sağ klikləyin. Onun menyusu onları çıxarır. Şəhər mərkəzinin menyusu: Zəngi çal."}
+{"name": "aoe2mc.controls.gather", "text": "Toplama: kəndliləri seçin, sonra ağaca, meyvə kolunə, mədənə və ya təsərrüfata sağ klikləyin."}
+{"name": "aoe2mc.controls.goto", "text": "Get: Get kompası ilə (isti düymə 3) sağ klikləyin: şəhər mərkəzləriniz, nəzarət qruplarınız və növbəti boş kəndli üçün menyu."}
+{"name": "aoe2mc.controls.groups", "text": "Nəzarət qrupları: vahidləri seçin, qrup əşyasını götürün (isti düymələr 5-dən 9-a) və seçimi saxlamaq üçün Shift + sağ klik. Sağ klik: qrupu seçmək."}
+{"name": "aoe2mc.controls.head", "text": "Nəzarət (çubuqdakı kəlləni tutun; fəaliyyət zolağı növbəti addımı göstərir):"}
+{"name": "aoe2mc.controls.menu", "text": "Oyun menyusu: Oyun menyusu kitabı ilə (isti düymə 4) sağ klikləyin: diplomatiya və xərac, işıq nişanı, saxlama, pauza və texnologiya ağacı."}
+{"name": "aoe2mc.controls.move", "text": "Hərəkət: seçimlə yerə sağ klikləyin."}
+{"name": "aoe2mc.controls.research", "text": "Tədqiqat və dövrə keçid: öz binanıza sağ klikləyin və onun menyusunda texnologiyaya və ya növbəti dövrə klikləyin."}
+{"name": "aoe2mc.controls.select", "text": "Seçim: vahidə sol klikləyin. Sol düyməni basılı tutub yer üzərində çəkin: seçim qutusu çıxır. Sağ klik: əmr vermək."}
+{"name": "aoe2mc.controls.train", "text": "Hazırlıq: öz binanıza (şəhər mərkəzi, kazarma ...) sağ klikləyin və onun menyusunda vahidə klikləyin."}
+{"name": "aoe2mc.defeat", "text": "Məğlubiyyət"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Müttəfiq"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Oyunçu %s sizə münasibətini dəyişdi: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Düşmən"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neytral"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Oyunçu %s oyun sürətini təyin etdi: %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Oyunçu %s oyunçu %s-ə %s %s göndərdi."}
+{"name": "aoe2mc.flare.placed", "text": "%s: %s %s-də işıq nişanı"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "İzləmək: öz vahidinizə klikləyin"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Gözətçilik: öz vahidinizə və ya binanıza klikləyin"}
+{"name": "aoe2mc.gaia.joins", "text": "%s sizə qoşulur."}
+{"name": "aoe2mc.garrison.all_back", "text": "Hamı işinə qayıdır"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Şəhər zəngi çalınır: %s kəndli sığınacaq axtarır"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Kəndli seçilməyib."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Sizin kəndliniz yoxdur."}
+{"name": "aoe2mc.garrison.out", "text": "%s vahid çıxdı"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s kəndli sığınacaq axtarır"}
+{"name": "aoe2mc.gather.act_attack", "text": "hücum"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "tikinti menyusu"}
+{"name": "aoe2mc.gather.act_garrison", "text": "yerləşdirmək"}
+{"name": "aoe2mc.gather.act_gather", "text": "toplamaq"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ov"}
+{"name": "aoe2mc.gather.act_move", "text": "hərəkət"}
+{"name": "aoe2mc.gather.act_select", "text": "seçmək"}
+{"name": "aoe2mc.gather.act_select_type", "text": "bu növün hamısını seçmək"}
+{"name": "aoe2mc.gather.act_trade", "text": "ticarət"}
+{"name": "aoe2mc.gather.act_train", "text": "hazırlamaq"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Hücum: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Seçim qutusu: ləğv edildi"}
+{"name": "aoe2mc.gather.bush", "text": "Giləmeyvə kolu"}
+{"name": "aoe2mc.gather.carcass", "text": "Cəsəd"}
+{"name": "aoe2mc.gather.corner", "text": "Seçim qutusu: digər künca klikləyin"}
+{"name": "aoe2mc.gather.enemy", "text": "Düşmən %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Düşmən binası"}
+{"name": "aoe2mc.gather.farm", "text": "Təsərrüfat"}
+{"name": "aoe2mc.gather.ground", "text": "Yer"}
+{"name": "aoe2mc.gather.group", "text": "Qrup %s: %s vahid"}
+{"name": "aoe2mc.gather.group_saved", "text": "Qrup %s: %s vahid saxlanıldı"}
+{"name": "aoe2mc.gather.mine", "text": "%s mədəni"}
+{"name": "aoe2mc.gather.paused", "text": "Oyun pauzadadır."}
+{"name": "aoe2mc.gather.point", "text": "%s · Sağ klik: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Növbədə əkinlər: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Seçilib: %s vahid"}
+{"name": "aoe2mc.gather.tree", "text": "Ağac"}
+{"name": "aoe2mc.hill.holds", "text": "Oyunçu %s abidəni tutur."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Yerə hücum: yerə sağ klikləyin"}
+{"name": "aoe2mc.hints.attack_move", "text": "Hücumla hərəkət: yerə sağ klikləyin"}
+{"name": "aoe2mc.hints.building", "text": "%s qoyun: yerə sağ klikləyin · Shift + sağ klik: daha çox qoymaq · Ləğv: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: qoymaq üçün sol klikləyin · Shift: daha çox qoymaq · Sağ klik: ləğv"}
+{"name": "aoe2mc.hints.corner", "text": "Seçim qutusu: digər künca sağ klikləyin"}
+{"name": "aoe2mc.hints.count_military", "text": "%s döyüş vahidi"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s döyüş vahidi"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s kəndli"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s kəndli"}
+{"name": "aoe2mc.hints.deselect", "text": "Boş qutu: seçimi ləğv etmək"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Sol klik: seçimi ləğv etmək"}
+{"name": "aoe2mc.hints.follow", "text": "İzləmək: öz və ya müttəfiq vahidinizə sağ klikləyin"}
+{"name": "aoe2mc.hints.guard", "text": "Gözətçilik: öz və ya müttəfiq vahidinizə və ya binanıza sağ klikləyin"}
+{"name": "aoe2mc.hints.military", "text": "%s · Sağ klik: düşmənə hücum, mövqe menyusu · %s"}
+{"name": "aoe2mc.hints.none", "text": "Sol klik: vahid seçmək · Sol düyməni basılı tutun: seçim qutusu"}
+{"name": "aoe2mc.hints.none_wand", "text": "Sağ klik: vahid seçmək · Çubuq: seçim qutusu"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrul: yerə sağ klikləyin"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Sağ klik: toplamaq, tikmək, tikinti menyusu · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s hazırdır"}
+{"name": "aoe2mc.lobby.you_play", "text": "Siz %s oynayırsınız."}
+{"name": "aoe2mc.monk.converts", "text": "Rahib %s-ı çevirir."}
+{"name": "aoe2mc.monk.dies", "text": "%s ölür (Bidət)."}
+{"name": "aoe2mc.pause.continued", "text": "Oyunçu %s oyunu davam etdirdi."}
+{"name": "aoe2mc.pause.paused", "text": "Oyunçu %s oyunu pauzaya qoydu."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Komanda %s (orta reytinq %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Oyun bitdi. Nəticələri görmək üçün əlinizdəki Xülasə kitabına sağ klikləyin. Oyun proqramını onun konsolunda Ctrl-C ilə dayandırın."}
+{"name": "aoe2mc.relic_victory.all", "text": "Oyunçu %s bütün relikvilərə sahibdir."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Oyunçu %s bir relikvi itirdi."}
+{"name": "aoe2mc.repair.no_resources", "text": "%s təmir etmək üçün kifayət qədər resurs yoxdur."}
+{"name": "aoe2mc.replay.army", "text": "Ordu: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", sonda ordu: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", itirilib: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Tikinti ardıcıllığı:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · yerləşdirilib %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | daşıyır %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "tikinti %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "yemək %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "qızıl %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "boş %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "daş %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "odun %s"}
+{"name": "aoe2mc.replay.flare", "text": "İşıq nişanı"}
+{"name": "aoe2mc.replay.game_ends", "text": "Oyun bitir"}
+{"name": "aoe2mc.replay.game_time", "text": "Oyun vaxtı %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · yerləşdirilib %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Ordu %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Əhali %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Kənd %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s abidəni tuturdu: %s-də Təpə Kralı qələbəsi."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s hücum %s/%s zireh%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift-i iki dəfə basın: tamaşaçı görünüşü (blokların içindən uçmaq). Sürətli panel əşyalarına sağ klikləyin: təkrar oynatmanın idarəsi."}
+{"name": "aoe2mc.replay.king_died", "text": ": kral %s-də öldü. Regisid: oyunçu çıxır."}
+{"name": "aoe2mc.replay.king_killed", "text": "Kral %s-də öldürüldü"}
+{"name": "aoe2mc.replay.live_jump", "text": "Canlı təkrar: atlama oyunun arxasındakı gecikmədə dayanır."}
+{"name": "aoe2mc.replay.lost", "text": "İtirilib: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " %s-də abidəni tutur."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: abidə, %s il qalıb"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: abidə, %s il qalıb"}
+{"name": "aoe2mc.replay.no_camera", "text": "Bu yazının öz oyunçusunun kamerası yoxdur."}
+{"name": "aoe2mc.replay.now", "text": " indi"}
+{"name": "aoe2mc.replay.out", "text": "%s çıxdı"}
+{"name": "aoe2mc.replay.players", "text": "Oyunçular"}
+{"name": "aoe2mc.replay.range", "text": " m%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " relikvini monastıra aparır və qalib gəlir."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Təkrar bitdi"}
+{"name": "aoe2mc.replay.research", "text": " %s tədqiq edir"}
+{"name": "aoe2mc.replay.resigns", "text": "%s təslim olur"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Server geri atlama üçün yenidən başlayır: ona yenidən qoşulun."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Binalar %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "İqtisadiyyat %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Ordu %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Texnologiyalar %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Cəmi %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "qalalar %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "aldı %s, satdı %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relikvilər %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "möcüzələr %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Xərclənib:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Tikinti %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "İqt %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Ordu %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tex %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": hazırlanmış kəndlilər %s, toplanmış %s, kəndlilərin boş vaxtı %s, mərkəzin boş vaxtı %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": abidəni tutur (Təpə Kralı)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": abidə qazanılıb %s (Təpə Kralı)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": hazırlanmış döyüş vahidləri %s, itirilmiş vahidlər %s, itirilmiş binalar %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": öldürülmüş kral %s (Regisid)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": qələbələr, monastırda relikvi %s (Relikvi ələ keçirmə)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sxərac göndərilib %s, alınıb %s, kəndli zirvəsi %s (təxmini)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": şəhər mərkəzi itirilib %s (Qəfil ölüm)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, texnologiyalar %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": möcüzə taymeri %s-dən, bitir %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Xülasə (təxmini)"}
+{"name": "aoe2mc.replay.task_building", "text": "tikir"}
+{"name": "aoe2mc.replay.task_following", "text": "izləyir"}
+{"name": "aoe2mc.replay.task_food", "text": "yemək toplayır"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "yerləşdirilib"}
+{"name": "aoe2mc.replay.task_gold", "text": "qızıl çıxarır"}
+{"name": "aoe2mc.replay.task_guarding", "text": "gözətçilik edir"}
+{"name": "aoe2mc.replay.task_idle", "text": "boş"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrul edir"}
+{"name": "aoe2mc.replay.task_resources", "text": "resurs toplayır"}
+{"name": "aoe2mc.replay.task_stone", "text": "daş çıxarır"}
+{"name": "aoe2mc.replay.task_walking", "text": "gedir"}
+{"name": "aoe2mc.replay.task_wood", "text": "odun kəsir"}
+{"name": "aoe2mc.replay.team", "text": "Komanda %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Oxatan %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Oxatanların zirehi %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Daşıma %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Süvarilərin zirehi %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Təsərrüfat %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Qızıl %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Piyadaların zirehi %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Toxuculuq dəzgahı %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Yaxın döyüş %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Daş %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Odun %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Qala"}
+{"name": "aoe2mc.replay.tl_king", "text": "Kral öldürülüb"}
+{"name": "aoe2mc.replay.tl_military", "text": "1-ci ordu: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relikvi"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Təslim oldu"}
+{"name": "aoe2mc.replay.town_fell", "text": ": şəhər mərkəzi %s-də süquta uğradı. Qəfil ölüm: oyunçu çıxır."}
+{"name": "aoe2mc.replay.town_lost", "text": "Şəhər mərkəzi %s-də itirilib"}
+{"name": "aoe2mc.replay.training", "text": "Hazırlıq: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitet:"}
+{"name": "aoe2mc.replay.up_counts", "text": "iqtisadiyyat %s · Universitet %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " %s-də möcüzə tikdi."}
+{"name": "aoe2mc.replay_input.fight", "text": "Döyüş: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s vahid"}
+{"name": "aoe2mc.replay_input.fights", "text": "Böyük döyüşlər:"}
+{"name": "aoe2mc.replay_input.help", "text": "Təkrar: sürətli paneldəki əşyalara sağ klikləyin və ya klikləyin: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Ələ keçirmək: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s vahid)"}
+{"name": "aoe2mc.replay_input.vs", "text": " qarşı "}
+{"name": "aoe2mc.resource.food", "text": "yemək"}
+{"name": "aoe2mc.resource.gold", "text": "qızıl"}
+{"name": "aoe2mc.resource.stone", "text": "daş"}
+{"name": "aoe2mc.resource.wood", "text": "odun"}
+{"name": "aoe2mc.run.back", "text": "%s geri qayıtdı"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampaniya tamamlandı"}
+{"name": "aoe2mc.run.chat_hint", "text": "Çat: adi sətr hamıya gedir, /tm TEXT müttəfiqlərinizə, /msg NAME TEXT bir adama."}
+{"name": "aoe2mc.run.left_bot", "text": "%s çıxdı: bot oyunçu %s üçün oynayır"}
+{"name": "aoe2mc.run.scenario_starts", "text": "%s ssenarisi başlayır. Yenidən qoşulun."}
+{"name": "aoe2mc.run.starts_in", "text": "Oyun %s-dan başlayır"}
+{"name": "aoe2mc.run.wait_ready", "text": "«Oyunçunuzu seçin» bölməsini açın və «Hazıram»a klikləyin"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Bütün idarəetmə: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "İlk addım: komanda çubuğunu tutun və kəndlilərinizdən birinə sağ klikləyin."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "İlk addım: komanda çubuğunu tutun və kəndlilərinizdən birinə sol klikləyin."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Məqsəd: oyunu qazanmaq. Qələbə ayarı: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Oyun saxlanıldı: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s vahid çıxdı"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Avtomatik kəşfiyyat"}
+{"name": "aoe2mc.stance.formation", "text": "Dəstə: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Heç bir vahid yerə hücum edə bilmir"}
+{"name": "aoe2mc.stance.unpack", "text": "Əvvəlcə traboşu açın"}
+{"name": "aoe2mc.train.active", "text": "%s aktivdir."}
+{"name": "aoe2mc.train.rally", "text": "Toplaşma nöqtəsi üçün yerə sağ klikləyin."}
+{"name": "aoe2mc.train.researched", "text": "%s tədqiq edilib."}
+{"name": "aoe2mc.transport.out", "text": "%s vahid çıxdı"}
+{"name": "aoe2mc.treaty.ended", "text": "Müqavilə bitdi: oyunçular indi hücum edə bilər."}
+{"name": "aoe2mc.treaty.refuse", "text": "Müqavilə: %s-dək hücum edə bilməzsiniz."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Müqavilə: bu oyunda hücum edə bilməzsiniz."}
+{"name": "aoe2mc.treaty.start", "text": "Müqavilə: heç bir oyunçu %s-dək digərinə hücum edə bilməz."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Müqavilə: heç bir oyunçu bu oyunda digərinə hücum edə bilməz."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Kazarma tikin: seçilmiş kəndliyə sağ klikləyin, kazarmanı seçin və yerləşdirin. Sürətli panelin üstündəki fəaliyyət zolağı harada qoymağı deyəcək."}
+{"name": "aoe2mc.tutorial.camera", "text": "Xəritədə sürətlə hərəkət edin: «Kamera» əşyası ilə sağ klikləyin, gəzin, sonra ona yenidən sağ klikləyin."}
+{"name": "aoe2mc.tutorial.camp", "text": "Xəritənin ortasındakı düşmən düşərgəsini məhv edin: Milisiyanızı seçin və binaya sağ klikləyin. Yuxarıdakı boss zolağı addımı göstərir."}
+{"name": "aoe2mc.tutorial.camps", "text": "Ağacların yaxınlığında odun düşərgəsi və giləmeyvə yaxınlığında dəyirman tikin. Sağdakı panel onların nə qədər odun dəyərində olduğunu göstərir."}
+{"name": "aoe2mc.tutorial.complete", "text": "Təlim tamamlandı. Növbəti: botla oynayın: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Təlim tamamlandı"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Feodal dövrünə keçin: şəhər mərkəzinizə sağ klikləyin və Feodal dövrünü seçin. Sağdakı panel yeməyinizi göstərir."}
+{"name": "aoe2mc.tutorial.food", "text": "100 yemək toplayın: kəndlini giləmeyvəyə göndərin. Sağdakı panel yeməyinizi göstərir."}
+{"name": "aoe2mc.tutorial.house", "text": "Ev tikin: seçilmiş kəndliyə sağ klikləyin, evi seçin və yerləşdirin. Sürətli panelin üstündəki fəaliyyət zolağı harada qoymağı deyəcək."}
+{"name": "aoe2mc.tutorial.militia", "text": "3 milis hazırlayın: kazarmanıza sağ klikləyin və milisi seçin. Sağdakı panel yeməyinizi və qızılınızı göstərir."}
+{"name": "aoe2mc.tutorial.raid", "text": "Düşmən kəndlilərinizə hücum edir! Oraya getmək üçün çatdakı qırmızı xəbərdarlıq sətrinə klikləyin, sonra milislərinizi seçin və düşmənlərə sağ klikləyin. Yuxarıdakı boss zolağı seçilmiş vahidin canını göstərir."}
+{"name": "aoe2mc.tutorial.select", "text": "Kəndli seçin: komanda çubuğu ilə kəndlilərinizdən birinə sol klikləyin. Yuxarıdakı boss zolağı seçilmiş vahidi, sürətli panelin üstündəki fəaliyyət zolağı növbəti fəaliyyəti göstərir."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Addım tamamlandı"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Addım %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "MƏSLƏHƏT: kazarma piyada hazırlayır. Piyada ucuzdur və binalara qarşı yaxşıdır."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "MƏSLƏHƏT: bütün vahidlərinizlə birlikdə hücum edin. Kiçik dəstə zərər vurmamışdan əvvəl ölür."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "MƏSLƏHƏT: boşaltma binalarını resursların yaxınlığında tikin ki, kəndlilər qısa yol getsin."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "MƏSLƏHƏT: növbəti dövr yeni binalar, vahidlər və texnologiyalar açır. İrəliləyərkən kəndliləri işdə saxlayın."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "MƏSLƏHƏT: dəyirmanın yanındakı giləmeyvə yemək üçün təhlükəsiz başlanğıcdır. Sonra təsərrüfatlar bitməyən yemək verir."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "MƏSLƏHƏT: ev 5 əlavə əhali üçün yer verir. Yan paneldəki əhaliyə baxın və dolmadan əvvəl evlər tikin."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "MƏSLƏHƏT: resurslarınız olduqda binada 15 vahidə qədər növbə qoya bilərsiniz."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "MƏSLƏHƏT: AoE2-də şəhər zəngi kəndliləri şəhər mərkəzinə göndərir. Düşmən şəhərinizə basqın edəndə zəng çalın."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "MƏSLƏHƏT: sağdakı panelin «Boş» sətri işi olmayan kəndliləri sayır. Onlara iş verin."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "MƏSLƏHƏT: ilk dövrlərdə daim kəndli hazırlayın. Daha çox kəndli daha çox resurs verir."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "MƏSLƏHƏT: kəndlilər boşaltma binasının yanında daha sürətli toplayır. Odun düşərgəsini ağacların yanında tikin."}
+{"name": "aoe2mc.tutorial.villager", "text": "Kəndli hazırlayın: şəhər mərkəzinizə sağ klikləyin və kəndlini seçin. Sağdakı panel onun dəyərində olan yeməyi göstərir."}
+{"name": "aoe2mc.tutorial.wood", "text": "50 odun toplayın: kəndli seçin və ağaca sağ klikləyin. Sağdakı panel odununuzu göstərir."}
+{"name": "aoe2mc.victory", "text": "Qələbə"}
+{"name": "aoe2mc.wonder.built", "text": "Oyunçu %s möcüzə tikdi."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Oyunçu %s-in möcüzəsi məhv edildi."}

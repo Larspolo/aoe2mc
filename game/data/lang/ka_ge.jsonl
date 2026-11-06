@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "მოთამაშე %s გადადის %s-ზე."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: კორუფცია %s-ში იკავებს რუკას საზღვრიდან ცენტრამდე. ის ანადგურებს მასში არსებულ ყველა ერთეულსა და შენობას."}
+{"name": "aoe2mc.bot.cannot_build", "text": "იქ ახლა %s-ის აშენება არ შემიძლია."}
+{"name": "aoe2mc.bot.cannot_train", "text": "იმ ერთეულის მომზადება არ შემიძლია: მისთვის შენობა არ მაქვს."}
+{"name": "aoe2mc.bot.flare_two", "text": "კედლისთვის ორი ნიშანი დადეთ."}
+{"name": "aoe2mc.bot.no_flare", "text": "ნიშანს ვერ ვხედავ."}
+{"name": "aoe2mc.bot.no_market", "text": "ბაზარი არ მაქვს: ხარკის გაგზავნა არ შემიძლია."}
+{"name": "aoe2mc.bot.no_onager", "text": "ონაგრი არ მაქვს."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "კედლისთვის საკმარისი რესურსები არ მაქვს."}
+{"name": "aoe2mc.bot.no_water", "text": "ჩემი ქალაქის მახლობლად წყალი არ არის: ფლოტის აშენება არ შემიძლია."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "ჩემი ონაგრები ხეებს ვერ ჭრიან."}
+{"name": "aoe2mc.build.cost", "text": "საკმარისი რესურსები არ არის: %s ღირს %s."}
+{"name": "aoe2mc.build.flat", "text": "%s უნდა იდგეს სწორ მიწაზე."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s უნდა დადგეს თქვენი კედლის 4 კვადრატზე სწორ ხაზად, ან 3 დიაგონალურ კვადრატზე."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "აშენება: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s უნდა იდგეს ნაპირთან, წყალში."}
+{"name": "aoe2mc.build.space", "text": "აქ %s-ისთვის ადგილი არ არის."}
+{"name": "aoe2mc.build.tiles_cost", "text": "საკმარისი რესურსები არ არის: %s კვადრატი %s-დან ღირს %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: მარჯვენა ღილაკით დააწკაპუნეთ კედლის ბოლოზე."}
+{"name": "aoe2mc.build.water", "text": "%s უნდა იდგეს წყალზე."}
+{"name": "aoe2mc.camera.fov", "text": "სწრაფი კამერა ხელში მყოფ საგანს არხევს. რომ ის უძრავი იყოს, დააყენეთ ოფციები > ხელმისაწვდომობის პარამეტრები > ხედის რხევა: გამორთული. კამერა ასევე ხედს ზრდის და მეტი რუკა ჩანს. ჩვეულებრივი ხედის შესანარჩუნებლად დააყენეთ ოფციები > ხელმისაწვდომობის პარამეტრები > FOV ეფექტები: 0 %."}
+{"name": "aoe2mc.camera.off", "text": "კამერა: გამორთულია"}
+{"name": "aoe2mc.camera.on", "text": "კამერა: ჩართულია, სიჩქარე x%s. Shift + მარჯვენა ღილაკი: შემდეგი სიჩქარე."}
+{"name": "aoe2mc.camera.speed", "text": "კამერის სიჩქარე: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "დაამარცხეთ მტრის ყველა ერთეული და დაკარგეთ ცოტა ერთეული"}
+{"name": "aoe2mc.challenge.booming", "text": "მოამზადეთ 100 გლეხი და გადადით საიმპერიო ხანაში"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "გადადით ციხის ხანაში და გადაურჩით მტრის შეტევებს"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "გაანადგურეთ მტრის ციხე"}
+{"name": "aoe2mc.challenge.early-economy", "text": "შეაგროვეთ 200 საკვები, 200 ხე, 100 ოქრო და 200 ქვა, მოამზადეთ 21 გლეხი, ააშენეთ ხის საჭრელი და წისქვილი და გადადით ფეოდალურ ხანაში"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "მოამზადეთ 27 გლეხი, ააშენეთ 5 სახლი და გადადით ციხის ხანაში"}
+{"name": "aoe2mc.challenge.land-battle", "text": "დაამარცხეთ მტრის ექვსივე ტალღა"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "დაკარგული ერთეულები: %s, ბრინჯაოს მედალი %s-მდე"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "დაკარგული ერთეულები: %s, ოქროს მედალი %s-მდე"}
+{"name": "aoe2mc.challenge.lost_none", "text": "დაკარგული ერთეულები: %s, მედალი არ არის"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "დაკარგული ერთეულები: %s, ვერცხლის მედალი %s-მდე"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "ბრინჯაოს მედალი"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "ოქროს მედალი"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "ვერცხლის მედალი"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "გაანადგურეთ მტრის ყველა სამხედრო გემი"}
+{"name": "aoe2mc.challenge.no_medal", "text": "მედალი არ არის"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "მოკალით მტრის 5 გლეხი"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "ბრინჯაოს მედალი %s-ში"}
+{"name": "aoe2mc.challenge.time_gold", "text": "ოქროს მედალი %s-ში"}
+{"name": "aoe2mc.challenge.time_silver", "text": "ვერცხლის მედალი %s-ში"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "ფარი გამორთულია"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "ფარი ჩართულია"}
+{"name": "aoe2mc.cheat.beyond", "text": "ტექნოლოგიები: 256 კვლევამდე"}
+{"name": "aoe2mc.cheat.cpu", "text": "მოსახლეობის ლიმიტი: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "ომის ნისლი: გამორთულია"}
+{"name": "aoe2mc.cheat.fog_on", "text": "ომის ნისლი: ჩართულია"}
+{"name": "aoe2mc.cheat.free_techs", "text": "ტექნოლოგიები უფასოა"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "გაზიარება ზრუნვაა: თქვენი შემოსავალი თქვენს მოკავშირეებს მიდის"}
+{"name": "aoe2mc.cheat.wonders", "text": "თქვენ აკონტროლებთ ბუნებას: %s ცხოველი"}
+{"name": "aoe2mc.conquest.allies_end", "text": "დარჩნენ მხოლოდ მოკავშირეები: ალიანსები სრულდება. იმარჯვებს ბოლო ცოცხალი მოთამაშე."}
+{"name": "aoe2mc.conquest.defeated", "text": "მოთამაშე %s დამარცხდა."}
+{"name": "aoe2mc.controls.attack", "text": "თავდასხმა: აირჩიეთ სამხედრო ერთეულები და მარჯვენა ღილაკით დააწკაპუნეთ მტერზე."}
+{"name": "aoe2mc.controls.build", "text": "აშენება: აირჩიეთ გლეხები, მარჯვენა ღილაკით დააწკაპუნეთ მათზე აშენების მენიუსთვის, აირჩიეთ შენობა და მარცხენა ღილაკით დააწკაპუნეთ მიწაზე. Shift + მარცხენა ღილაკი: მეტის აშენება. მარჯვენა ღილაკი: გაუქმება."}
+{"name": "aoe2mc.controls.camera", "text": "კამერა: მარჯვენა ღილაკით დააწკაპუნეთ ხელში დაჭერილ კამერის ჭოჭმანზე (სწრაფი კლავიში 2): თქვენ სწრაფად დადიხართ რუკის თავზე. Shift + მარჯვენა ღილაკი: შემდეგი სიჩქარე. მარჯვენა ღილაკი კიდევ ერთხელ: ჩამოფრინდებით."}
+{"name": "aoe2mc.controls.garrison", "text": "განთავსება: აირჩიეთ ერთეულები, შემდეგ მარჯვენა ღილაკით დააწკაპუნეთ თქვენს შენობაზე. მისი მენიუ მათ გამოუშვებს. ქალაქის ცენტრის მენიუ: დარეკეთ ქალაქის ზარი."}
+{"name": "aoe2mc.controls.gather", "text": "შეგროვება: აირჩიეთ გლეხები, შემდეგ მარჯვენა ღილაკით დააწკაპუნეთ ხეზე, ხილის ბუჩქზე, მაღაროზე ან ფერმაზე."}
+{"name": "aoe2mc.controls.goto", "text": "გადასვლა: მარჯვენა ღილაკით დააწკაპუნეთ კომპასზე გადასვლა (სწრაფი კლავიში 3): მენიუ თქვენი ქალაქის ცენტრებისთვის, თქვენი ჯგუფებისთვის და შემდეგი უმოქმედო გლეხისთვის."}
+{"name": "aoe2mc.controls.groups", "text": "მართვის ჯგუფები: აირჩიეთ ერთეულები, აიღეთ ჯგუფის ნივთი (სწრაფი კლავიშები 5-დან 9-მდე) და Shift + მარჯვენა ღილაკი, რომ შეინახოთ არჩევანი. მარჯვენა ღილაკი: ჯგუფის არჩევა."}
+{"name": "aoe2mc.controls.head", "text": "მართვა (ხელში დაიჭირეთ სტაფილო ჯოხზე; მოქმედებების ზოლი აჩვენებს შემდეგ ნაბიჯს):"}
+{"name": "aoe2mc.controls.menu", "text": "თამაშის მენიუ: მარჯვენა ღილაკით დააწკაპუნეთ წიგნზე თამაშის მენიუ (სწრაფი კლავიში 4): დიპლომატია და ხარკი, ნიშანი, შენახვა, პაუზა და ტექნოლოგიების ხე."}
+{"name": "aoe2mc.controls.move", "text": "გადაადგილება: არჩევისას მარჯვენა ღილაკით დააწკაპუნეთ მიწაზე."}
+{"name": "aoe2mc.controls.research", "text": "კვლევა და ხანაში გადასვლა: მარჯვენა ღილაკით დააწკაპუნეთ თქვენს შენობაზე და მის მენიუში დააწკაპუნეთ ტექნოლოგიაზე ან შემდეგ ხანაზე."}
+{"name": "aoe2mc.controls.select", "text": "არჩევა: მარცხენა ღილაკით დააწკაპუნეთ ერთეულზე. დააჭირეთ მარცხენა ღილაკს და გაიყვანეთ მიწაზე: გამოჩნდება არჩევის ჩარჩო. მარჯვენა ღილაკი: ბრძანებების მიცემა."}
+{"name": "aoe2mc.controls.train", "text": "მომზადება: მარჯვენა ღილაკით დააწკაპუნეთ თქვენს შენობაზე (ქალაქის ცენტრი, კაზარმა ...) და მის მენიუში დააწკაპუნეთ ერთეულზე."}
+{"name": "aoe2mc.defeat", "text": "დამარცხება"}
+{"name": "aoe2mc.diplomacy.ally", "text": "მოკავშირე"}
+{"name": "aoe2mc.diplomacy.changed", "text": "მოთამაშე %s შეიცვალა თქვენ მიმართ დამოკიდებულება: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "მტერი"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "ნეიტრალური"}
+{"name": "aoe2mc.diplomacy.speed", "text": "მოთამაშე %s დააყენა თამაშის სიჩქარე: %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "მოთამაშემ %s გაუგზავნა %s %s მოთამაშეს %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: ნიშანი %s %s-ზე"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "გაყოლა: დააწკაპუნეთ თქვენს ერთეულზე"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "დაცვა: დააწკაპუნეთ თქვენს ერთეულზე ან შენობაზე"}
+{"name": "aoe2mc.gaia.joins", "text": "%s შემოგიერთდებათ."}
+{"name": "aoe2mc.garrison.all_back", "text": "ყველა უკან მუშაობაზე"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "ქალაქის ზარი რეკავს: %s გლეხი თავშესაფარს ეძებს"}
+{"name": "aoe2mc.garrison.no_villager", "text": "გლეხი არ არის არჩეული."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "თქვენ გლეხები არ გყავთ."}
+{"name": "aoe2mc.garrison.out", "text": "%s ერთეული გამოვიდა"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s გლეხი თავშესაფარს ეძებს"}
+{"name": "aoe2mc.gather.act_attack", "text": "თავდასხმა"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "აშენების მენიუ"}
+{"name": "aoe2mc.gather.act_garrison", "text": "განთავსება"}
+{"name": "aoe2mc.gather.act_gather", "text": "შეგროვება"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ნადირობა"}
+{"name": "aoe2mc.gather.act_move", "text": "გადაადგილება"}
+{"name": "aoe2mc.gather.act_select", "text": "არჩევა"}
+{"name": "aoe2mc.gather.act_select_type", "text": "ამ ტიპის ყველას არჩევა"}
+{"name": "aoe2mc.gather.act_trade", "text": "ვაჭრობა"}
+{"name": "aoe2mc.gather.act_train", "text": "მომზადება"}
+{"name": "aoe2mc.gather.attack_siege", "text": "თავდასხმა: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "არჩევის ჩარჩო: გაუქმებულია"}
+{"name": "aoe2mc.gather.bush", "text": "კენკროვანი ბუჩქი"}
+{"name": "aoe2mc.gather.carcass", "text": "ნაშთი"}
+{"name": "aoe2mc.gather.corner", "text": "არჩევის ჩარჩო: დააწკაპუნეთ მეორე კუთხეზე"}
+{"name": "aoe2mc.gather.enemy", "text": "მტერი %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "მტრის შენობა"}
+{"name": "aoe2mc.gather.farm", "text": "ფერმა"}
+{"name": "aoe2mc.gather.ground", "text": "მიწა"}
+{"name": "aoe2mc.gather.group", "text": "ჯგუფი %s: %s ერთეული"}
+{"name": "aoe2mc.gather.group_saved", "text": "ჯგუფი %s: %s ერთეული შენახულია"}
+{"name": "aoe2mc.gather.mine", "text": "%s მაღარო"}
+{"name": "aoe2mc.gather.paused", "text": "თამაში პაუზაზეა."}
+{"name": "aoe2mc.gather.point", "text": "%s · მარჯვენა ღილაკი: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "თესვის რიგში: %s"}
+{"name": "aoe2mc.gather.selected", "text": "არჩეულია: %s ერთეული"}
+{"name": "aoe2mc.gather.tree", "text": "ხე"}
+{"name": "aoe2mc.hill.holds", "text": "მოთამაშე %s ინახავს ძეგლს."}
+{"name": "aoe2mc.hints.attack_ground", "text": "მიწაზე თავდასხმა: მარჯვენა ღილაკით დააწკაპუნეთ მიწაზე"}
+{"name": "aoe2mc.hints.attack_move", "text": "თავდასხმით გადაადგილება: მარჯვენა ღილაკით დააწკაპუნეთ მიწაზე"}
+{"name": "aoe2mc.hints.building", "text": "დადგით %s: მარჯვენა ღილაკით დააწკაპუნეთ მიწაზე · Shift + მარჯვენა ღილაკი: მეტის დადგმა · გაუქმება: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: მარცხენა ღილაკით დააწკაპუნეთ დასადგმელად · Shift: მეტის დადგმა · მარჯვენა ღილაკი: გაუქმება"}
+{"name": "aoe2mc.hints.corner", "text": "არჩევის ჩარჩო: მარჯვენა ღილაკით დააწკაპუნეთ მეორე კუთხეზე"}
+{"name": "aoe2mc.hints.count_military", "text": "%s სამხედრო ერთეული"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s სამხედრო ერთეული"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s გლეხი"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s გლეხი"}
+{"name": "aoe2mc.hints.deselect", "text": "ცარიელი ჩარჩო: არჩევის მოხსნა"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "მარცხენა ღილაკი: არჩევის მოხსნა"}
+{"name": "aoe2mc.hints.follow", "text": "გაყოლა: მარჯვენა ღილაკით დააწკაპუნეთ თქვენს ან მოკავშირის ერთეულზე"}
+{"name": "aoe2mc.hints.guard", "text": "დაცვა: მარჯვენა ღილაკით დააწკაპუნეთ თქვენს ან მოკავშირის ერთეულზე ან შენობაზე"}
+{"name": "aoe2mc.hints.military", "text": "%s · მარჯვენა ღილაკი: მტერზე თავდასხმა, პოზიციის მენიუ · %s"}
+{"name": "aoe2mc.hints.none", "text": "მარცხენა ღილაკი: ერთეულის არჩევა · დააჭირეთ მარცხენა ღილაკს: არჩევის ჩარჩო"}
+{"name": "aoe2mc.hints.none_wand", "text": "მარჯვენა ღილაკი: ერთეულის არჩევა · ჯოხი: არჩევის ჩარჩო"}
+{"name": "aoe2mc.hints.patrol", "text": "პატრული: მარჯვენა ღილაკით დააწკაპუნეთ მიწაზე"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · მარჯვენა ღილაკი: შეგროვება, აშენება, აშენების მენიუ · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s მზადაა"}
+{"name": "aoe2mc.lobby.you_play", "text": "თქვენ თამაშობთ %s-ით."}
+{"name": "aoe2mc.monk.converts", "text": "ბერი აქცევს %s-ს."}
+{"name": "aoe2mc.monk.dies", "text": "%s კვდება (ერესი)."}
+{"name": "aoe2mc.pause.continued", "text": "მოთამაშე %s გააგრძელა თამაში."}
+{"name": "aoe2mc.pause.paused", "text": "მოთამაშე %s პაუზაში ჩააყენა თამაში."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "გუნდი %s (საშუალო რეიტინგი %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "თამაში დასრულდა. მარჯვენა ღილაკით დააწკაპუნეთ ხელში მყოფ შეჯამების წიგნზე, რომ ნახოთ შედეგები. თამაშის პროგრამა გააჩერეთ მის კონსოლში Ctrl-C-ით."}
+{"name": "aoe2mc.relic_victory.all", "text": "მოთამაშე %s ინახავს ყველა რელიქვიას."}
+{"name": "aoe2mc.relic_victory.lost", "text": "მოთამაშემ %s დაკარგა რელიქვია."}
+{"name": "aoe2mc.repair.no_resources", "text": "%s-ის შესაკეთებლად საკმარისი რესურსები არ არის."}
+{"name": "aoe2mc.replay.army", "text": "არმია: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", არმია ბოლოს: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", დაკარგული: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "აშენების თანმიმდევრობა:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · განთავსებული %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | ატარებს %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "აშენება %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "საკვები %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "ოქრო %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "უმოქმედო %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "ქვა %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "ხე %s"}
+{"name": "aoe2mc.replay.flare", "text": "ნიშანი"}
+{"name": "aoe2mc.replay.game_ends", "text": "თამაში სრულდება"}
+{"name": "aoe2mc.replay.game_time", "text": "თამაშის დრო %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · განთავსებული %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "არმ %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "მოსახ %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "რესურს %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "გლეხ %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s ინახავდა ძეგლს: გორაკის მეფის გამარჯვება %s-ზე."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s შეტევა %s/%s ჯავშანი%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift ორჯერ დააჭირეთ: მაყურებლის ხედი (ბლოკების გავლით ფრენა). მარჯვენა ღილაკით დააწკაპუნეთ სწრაფი პანელის ნივთებზე: გამეორების მართვა."}
+{"name": "aoe2mc.replay.king_died", "text": ": მეფე %s-ზე გარდაიცვალა. რეგიციდი: მოთამაშე გამოდის."}
+{"name": "aoe2mc.replay.king_killed", "text": "მეფე მოკლულია %s-ზე"}
+{"name": "aoe2mc.replay.live_jump", "text": "ცოცხალი გამეორება: გადახტომა ჩერდება თამაშის უკან დაყოვნებაზე."}
+{"name": "aoe2mc.replay.lost", "text": "დაკარგული: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " ინახავს ძეგლს %s-ზე."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: ძეგლი, დარჩა %s წელი"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: ძეგლი, დარჩა %s წელი"}
+{"name": "aoe2mc.replay.no_camera", "text": "ამ ჩანაწერს მისი მოთამაშის კამერა არ აქვს."}
+{"name": "aoe2mc.replay.now", "text": " ახლა"}
+{"name": "aoe2mc.replay.out", "text": "%s გამოვიდა"}
+{"name": "aoe2mc.replay.players", "text": "მოთამაშეები"}
+{"name": "aoe2mc.replay.range", "text": " მ%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " რელიქვიას მონასტერში მიიტანს და იმარჯვებს."}
+{"name": "aoe2mc.replay.replay_ended", "text": "გამეორება დასრულდა"}
+{"name": "aoe2mc.replay.research", "text": " იკვლევს %s-ს"}
+{"name": "aoe2mc.replay.resigns", "text": "%s დანებდა"}
+{"name": "aoe2mc.replay.restart_jump", "text": "სერვერი უკან გადახტომისთვის თავიდან იტვირთება: შედით მასში ხელახლა."}
+{"name": "aoe2mc.replay.share_buildings", "text": "შენობები %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "ეკონომიკა %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "სამხედრო %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "ტექნოლოგიები %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "სულ %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "ციხეები %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "იყიდა %s, გაყიდა %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "რელიქვიები %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "საოცრებები %s, "}
+{"name": "aoe2mc.replay.spent", "text": "დახარჯული:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "აშენება %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "ეკო %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "სამხ %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "ტექ %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": მომზადებული გლეხები %s, შეგროვებული %s, გლეხების უმოქმედო დრო %s, ცენტრის უმოქმედო დრო %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": ინახავს ძეგლს (გორაკის მეფე)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": ძეგლი მოგებული %s (გორაკის მეფე)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": მომზადებული სამხედრო ერთეულები %s, დაკარგული ერთეულები %s, დაკარგული შენობები %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": მოკლული მეფეები %s (რეგიციდი)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": გამარჯვებები, რელიქვია მონასტერში %s (რელიქვიის დაპყრობა)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sხარკი გაგზავნილი %s, მიღებული %s, გლეხების მწვერვალი %s (შეფასებით)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": დაკარგული ქალაქის ცენტრი %s (უეცარი სიკვდილი)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, ტექნოლოგიები %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": საოცრების ტაიმერი %s-დან, სრულდება %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "შეჯამება (შეფასებით)"}
+{"name": "aoe2mc.replay.task_building", "text": "აშენებს"}
+{"name": "aoe2mc.replay.task_following", "text": "მიჰყვება"}
+{"name": "aoe2mc.replay.task_food", "text": "საკვებს აგროვებს"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "განთავსებული"}
+{"name": "aoe2mc.replay.task_gold", "text": "ოქროს მოპოვება"}
+{"name": "aoe2mc.replay.task_guarding", "text": "იცავს"}
+{"name": "aoe2mc.replay.task_idle", "text": "უმოქმედო"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "პატრულირებს"}
+{"name": "aoe2mc.replay.task_resources", "text": "რესურსებს აგროვებს"}
+{"name": "aoe2mc.replay.task_stone", "text": "ქვის მოპოვება"}
+{"name": "aoe2mc.replay.task_walking", "text": "მიდის"}
+{"name": "aoe2mc.replay.task_wood", "text": "ხეს ჭრის"}
+{"name": "aoe2mc.replay.team", "text": "გუნდი %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "მშვილდოსანი %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "მშვილდოსნების ჯავშანი %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "ტარება %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "კავალერიის ჯავშანი %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "ფერმა %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "ოქრო %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "ქვეითის ჯავშანი %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "ქსოვის დაზგა %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "ხელჩართული %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "ქვა %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "ხე %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "ციხე"}
+{"name": "aoe2mc.replay.tl_king", "text": "მეფე მოკლულია"}
+{"name": "aoe2mc.replay.tl_military", "text": "პირველი სამხედრო: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "რელიქვია"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "დანებდა"}
+{"name": "aoe2mc.replay.town_fell", "text": ": ქალაქის ცენტრი დაეცა %s-ზე. უეცარი სიკვდილი: მოთამაშე გამოდის."}
+{"name": "aoe2mc.replay.town_lost", "text": "ქალაქის ცენტრი დაკარგულია %s-ზე"}
+{"name": "aoe2mc.replay.training", "text": "მომზადება: %s"}
+{"name": "aoe2mc.replay.university", "text": "უნივერსიტეტი:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ეკონომიკა %s · უნივერსიტეტი %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": "ააშენა საოცრება %s-ზე."}
+{"name": "aoe2mc.replay_input.fight", "text": "ბრძოლა: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s ერთეული"}
+{"name": "aoe2mc.replay_input.fights", "text": "დიდი ბრძოლები:"}
+{"name": "aoe2mc.replay_input.help", "text": "გამეორება: მარჯვენა ღილაკით დააწკაპუნეთ სწრაფი პანელის ნივთებზე ან დააწკაპუნეთ: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "გადაბარება: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s ერთეული)"}
+{"name": "aoe2mc.replay_input.vs", "text": " წინააღმდეგ "}
+{"name": "aoe2mc.resource.food", "text": "საკვები"}
+{"name": "aoe2mc.resource.gold", "text": "ოქრო"}
+{"name": "aoe2mc.resource.stone", "text": "ქვა"}
+{"name": "aoe2mc.resource.wood", "text": "ხე"}
+{"name": "aoe2mc.run.back", "text": "%s დაბრუნდა"}
+{"name": "aoe2mc.run.campaign_complete", "text": "კამპანია დასრულებულია"}
+{"name": "aoe2mc.run.chat_hint", "text": "ჩატი: ჩვეულებრივი ხაზი მიდის ყველას, /tm TEXT თქვენს მოკავშირეებს, /msg NAME TEXT ერთ ადამიანს."}
+{"name": "aoe2mc.run.left_bot", "text": "%s წავიდა: ბოტი თამაშობს მოთამაშე %s-ს"}
+{"name": "aoe2mc.run.scenario_starts", "text": "სცენარი %s იწყება. შედით ხელახლა."}
+{"name": "aoe2mc.run.starts_in", "text": "თამაში დაიწყება %s-ში"}
+{"name": "aoe2mc.run.wait_ready", "text": "გახსენით «აირჩიეთ თქვენი მოთამაშე» და დააწკაპუნეთ «მზადაა»"}
+{"name": "aoe2mc.run.welcome_controls", "text": "ყველა მართვა: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "პირველი ნაბიჯი: ხელში დაიჭირეთ ბრძანების ჯოხი და მარჯვენა ღილაკით დააწკაპუნეთ ერთ-ერთ თქვენს გლეხზე."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "პირველი ნაბიჯი: ხელში დაიჭირეთ ბრძანების ჯოხი და მარცხენა ღილაკით დააწკაპუნეთ ერთ-ერთ თქვენს გლეხზე."}
+{"name": "aoe2mc.run.welcome_goal", "text": "მიზანი: თამაშის მოგება. გამარჯვების პარამეტრი: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "თამაში შენახულია: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s ერთეული გამოვიდა"}
+{"name": "aoe2mc.stance.auto_scout", "text": "ავტო დაზვერვა"}
+{"name": "aoe2mc.stance.formation", "text": "წყობა: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "არც ერთი ერთეული ვერ უტევს მიწას"}
+{"name": "aoe2mc.stance.unpack", "text": "ჯერ გახსენით ტრებუშეტი"}
+{"name": "aoe2mc.train.active", "text": "%s აქტიურია."}
+{"name": "aoe2mc.train.rally", "text": "მარჯვენა ღილაკით დააწკაპუნეთ მიწაზე შეკრების წერტილისთვის."}
+{"name": "aoe2mc.train.researched", "text": "%s გამოკვლეულია."}
+{"name": "aoe2mc.transport.out", "text": "%s ერთეული გამოვიდა"}
+{"name": "aoe2mc.treaty.ended", "text": "ხელშეკრულება დასრულდა: მოთამაშეებს ახლა შეუძლიათ თავდასხმა."}
+{"name": "aoe2mc.treaty.refuse", "text": "ხელშეკრულება: თქვენ ვერ შეუტევთ %s-მდე."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "ხელშეკრულება: ამ თამაშში თავდასხმა არ შეიძლება."}
+{"name": "aoe2mc.treaty.start", "text": "ხელშეკრულება: არც ერთი მოთამაშე ვერ შეუტევს სხვას %s-მდე."}
+{"name": "aoe2mc.treaty.start_endless", "text": "ხელშეკრულება: არც ერთი მოთამაშე ვერ შეუტევს სხვას ამ თამაშში."}
+{"name": "aoe2mc.tutorial.barracks", "text": "ააშენეთ კაზარმა: მარჯვენა ღილაკით დააწკაპუნეთ არჩეულ გლეხზე, აირჩიეთ კაზარმა და დადგით იგი. სწრაფი პანელის ზემოთ მოქმედებების ზოლი გეტყვით, სად დადგათ."}
+{"name": "aoe2mc.tutorial.camera", "text": "სწრაფად გადაადგილდით რუკაზე: მარჯვენა ღილაკით დააწკაპუნეთ «კამერის» ნივთზე, იარეთ, შემდეგ კიდევ ერთხელ მარჯვენა ღილაკით დააწკაპუნეთ მასზე."}
+{"name": "aoe2mc.tutorial.camp", "text": "გაანადგურეთ მტრის ბანაკი რუკის შუაში: აირჩიეთ თქვენი მილიცია და მარჯვენა ღილაკით დააწკაპუნეთ შენობაზე. ზედა ბოსის ზოლი აჩვენებს ნაბიჯს."}
+{"name": "aoe2mc.tutorial.camps", "text": "ააშენეთ ხის საჭრელი ბანაკი ხეების მახლობლად და წისქვილი კენკროვან ბუჩქებთან. მარჯვენა მხარის პანელი აჩვენებს მათ ხეს."}
+{"name": "aoe2mc.tutorial.complete", "text": "სწავლება დასრულებულია. შემდეგი: ითამაშეთ ბოტის წინააღმდეგ: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "სწავლება დასრულებულია"}
+{"name": "aoe2mc.tutorial.feudal", "text": "გადადით ფეოდალურ ხანაში: მარჯვენა ღილაკით დააწკაპუნეთ თქვენს ქალაქის ცენტრზე და აირჩიეთ ფეოდალური ხანა. მარჯვენა მხარის პანელი აჩვენებს თქვენს საკვებს."}
+{"name": "aoe2mc.tutorial.food", "text": "შეაგროვეთ 100 საკვები: გაგზავნეთ გლეხი კენკროვან ბუჩქებთან. მარჯვენა მხარის პანელი აჩვენებს თქვენს საკვებს."}
+{"name": "aoe2mc.tutorial.house", "text": "ააშენეთ სახლი: მარჯვენა ღილაკით დააწკაპუნეთ არჩეულ გლეხზე, აირჩიეთ სახლი და დადგით იგი. სწრაფი პანელის ზემოთ მოქმედებების ზოლი გეტყვით, სად დადგათ."}
+{"name": "aoe2mc.tutorial.militia", "text": "მოამზადეთ 3 მილიციელი: მარჯვენა ღილაკით დააწკაპუნეთ თქვენს კაზარმაზე და აირჩიეთ მილიციელი. მარჯვენა მხარის პანელი აჩვენებს თქვენს საკვებს და ოქროს."}
+{"name": "aoe2mc.tutorial.raid", "text": "მტერი თავს ესხმის თქვენს გლეხებს! დააწკაპუნეთ ჩატის წითელ გაფრთხილების ხაზზე, რომ იქ წახვიდეთ, შემდეგ აირჩიეთ თქვენი მილიციელები და მარჯვენა ღილაკით დააწკაპუნეთ მტრებზე. ზედა ბოსის ზოლი აჩვენებს არჩეული ერთეულის ჯანმრთელობას."}
+{"name": "aoe2mc.tutorial.select", "text": "აირჩიეთ გლეხი: მარცხენა ღილაკით დააწკაპუნეთ ერთ-ერთ თქვენს გლეხზე ბრძანების ჯოხით. ზედა ბოსის ზოლი აჩვენებს არჩეულ ერთეულს, სწრაფი პანელის ზემოთ მოქმედებების ზოლი — შემდეგ მოქმედებას."}
+{"name": "aoe2mc.tutorial.step_done", "text": "ნაბიჯი შესრულებულია"}
+{"name": "aoe2mc.tutorial.step_of", "text": "ნაბიჯი %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "რჩევა: კაზარმა ქვეითს ამზადებს. ქვეითი იაფია და კარგია შენობების წინააღმდეგ."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "რჩევა: თავდაცვა ერთად გაუწიეთ ყველა თქვენი ერთეულით. პატარა ჯგუფი იღუპება, სანამ ზიანს მიაყენებს."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "რჩევა: ააშენეთ ჩაბარების შენობები რესურსებთან ახლოს, რომ გლეხებმა მოკლე გზა გაიარონ."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "რჩევა: შემდეგი ხანა ხსნის ახალ შენობებს, ერთეულებსა და ტექნოლოგიებს. წინსვლისას გლეხები სამუშაოზე დატოვეთ."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "რჩევა: წისქვილთან ახლოს მდებარე კენკროვანი ბუჩქები უსაფრთხო დასაწყისია საკვებისთვის. შემდეგ ფერმები იძლევიან საკვებს, რომელიც არ მთავრდება."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "რჩევა: სახლი იძლევა ადგილს 5 დამატებითი მოსახლისთვის. შეხედეთ მოსახლეობას მარჯვენა პანელში და ააშენეთ სახლები, სანამ სავსე არ იქნება."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "რჩევა: შენობაში შეგიძლიათ რიგში ჩააყენოთ 15 ერთეულამდე, როცა გაქვთ რესურსები."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "რჩევა: AoE2-ში ქალაქის ზარი გლეხებს ქალაქის ცენტრში აგზავნის. დარეკეთ მაშინ, როცა მტერი თქვენს ქალაქს შეესევა."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "რჩევა: პანელის მარჯვენა მხარის «უმოქმედო» ხაზი ითვლის სამუშაოს გარეშე მყოფ გლეხებს. მიეცით მათ სამუშაო."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "რჩევა: პირველ ხანებში მუდმივად ამზადეთ გლეხები. მეტი გლეხი — მეტი რესურსი."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "რჩევა: გლეხები უფრო სწრაფად აგროვებენ ჩაბარების შენობასთან ახლოს. ააშენეთ ხის საჭრელი ბანაკი ხეების გვერდით."}
+{"name": "aoe2mc.tutorial.villager", "text": "მოამზადეთ გლეხი: მარჯვენა ღილაკით დააწკაპუნეთ თქვენს ქალაქის ცენტრზე და აირჩიეთ გლეხი. მარჯვენა მხარის პანელი აჩვენებს საკვებს, რომელსაც ის ღირს."}
+{"name": "aoe2mc.tutorial.wood", "text": "შეაგროვეთ 50 ხე: აირჩიეთ გლეხი და მარჯვენა ღილაკით დააწკაპუნეთ ხეზე. მარჯვენა მხარის პანელი აჩვენებს თქვენს ხეს."}
+{"name": "aoe2mc.victory", "text": "გამარჯვება"}
+{"name": "aoe2mc.wonder.built", "text": "მოთამაშე %s-მა ააშენა საოცრება."}
+{"name": "aoe2mc.wonder.destroyed", "text": "მოთამაშე %s-ის საოცრება განადგურებულია."}
