@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Խաղացող %s-ը անցնում է %s դարաշրջան։"}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale. Ապականությունը %s-ի ընթացքում քարտեզը ծայրից մինչև կենտրոն կզբաղեցնի։ Այն կկործանի բոլոր միավորներն ու շենքերը դրանում։"}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ես հիմա չեմ կարող այնտեղ %s կառուցել։"}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ես չեմ կարող այդ միավորը պատրաստել. ինձ համար շենք չկա։"}
+{"name": "aoe2mc.bot.flare_two", "text": "Պարիսպի համար նշանի երկու կետ դրեք։"}
+{"name": "aoe2mc.bot.no_flare", "text": "Ես նշան չեմ տեսնում։"}
+{"name": "aoe2mc.bot.no_market", "text": "Ինձ շուկա չկա. ես հարկ չեմ կարող ուղարկել։"}
+{"name": "aoe2mc.bot.no_onager", "text": "Ինձ օնագր չկա։"}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Պարսպի համար ինձ բավարար ռեսուրսներ չկան։"}
+{"name": "aoe2mc.bot.no_water", "text": "Իմ քաղաքի մոտ ջուր չկա. ես նավատորմ չեմ կարող կառուցել։"}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Իմ օնագրները ծառեր չեն կարող կտրել։"}
+{"name": "aoe2mc.build.cost", "text": "Բավարար ռեսուրսներ չկան. %s-ը արժե %s։"}
+{"name": "aoe2mc.build.flat", "text": "%s-ը պետք է կանգնի հարթ գետնի վրա։"}
+{"name": "aoe2mc.build.gate_spot", "text": "%s-ը պետք է կանգնի սեփական պարսպի 4 վանդակի վրա ուղիղ գծով, կամ 3 անկյունագծային վանդակի վրա։"}
+{"name": "aoe2mc.build.locked", "text": "%s. %s։"}
+{"name": "aoe2mc.build.menu_head", "text": "Կառուցել. "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s-ը պետք է կանգնի ափի մոտ ջրի վրա։"}
+{"name": "aoe2mc.build.space", "text": "Այստեղ %s-ի համար տեղ չկա։"}
+{"name": "aoe2mc.build.tiles_cost", "text": "Բավարար ռեսուրսներ չկան. %s վանդակ %s-ից արժե %s։"}
+{"name": "aoe2mc.build.wall_end", "text": "%s. աջ սեղմեք պարսպի ծայրին։"}
+{"name": "aoe2mc.build.water", "text": "%s-ը պետք է կանգնի ջրի վրա։"}
+{"name": "aoe2mc.camera.fov", "text": "Արագ տեսախցիկը ձեռքի առարկան տատանել է տալիս։ Որ այն անշարժ լինի, ընտրեք Ընտրանքներ > Հասանելիության կարգավորումներ > Դիտման տատանում՝ ԱՆՋԱՏ։ Տեսախցիկը նաև լայնացնում է տեսադաշտը, և ավելի շատ քարտեզ է երևում։ Սովորական տեսադաշտը պահելու համար ընտրեք Ընտրանքներ > Հասանելիության կարգավորումներ > FOV էֆեկտներ՝ 0 %։"}
+{"name": "aoe2mc.camera.off", "text": "Տեսախցիկ՝ անջատված"}
+{"name": "aoe2mc.camera.on", "text": "Տեսախցիկ՝ միացված, արագություն x%s։ Shift + աջ սեղմում՝ հաջորդ արագությունը։"}
+{"name": "aoe2mc.camera.speed", "text": "Տեսախցիկի արագություն՝ x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Ոչնչացրեք թշնամու բոլոր միավորները և կորցրեք քիչ միավորներ"}
+{"name": "aoe2mc.challenge.booming", "text": "Պատրաստեք 100 գյուղացի և անցեք Կայսերական դարաշրջան"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Անցեք Ամրոցի դարաշրջան և դիմացեք թշնամու հարձակումներին"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Ոչնչացրեք թշնամու ամրոցը"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Հավաքեք 200 սնունդ, 200 փայտ, 100 ոսկի և 200 քար, պատրաստեք 21 գյուղացի, կառուցեք փայտահատման և ջրաղացի շենքեր և անցեք Ֆեոդալական դարաշրջան"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Պատրաստեք 27 գյուղացի, կառուցեք 5 տուն և անցեք Ամրոցի դարաշրջան"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Հաղթեք թշնամու բոլոր վեց ալիքները"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "Կորուստ՝ %s միավոր, բրոնզե մեդալը մինչև %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "Կորուստ՝ %s միավոր, ոսկե մեդալը մինչև %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "Կորուստ՝ %s միավոր, մեդալ չկա"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "Կորուստ՝ %s միավոր, արծաթե մեդալը մինչև %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Բրոնզե մեդալ"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Ոսկե մեդալ"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Արծաթե մեդալ"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Ոչնչացրեք թշնամու բոլոր ռազմանավերը"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Մեդալ չկա"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Սպանեք թշնամու 5 գյուղացի"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Բրոնզե մեդալ %s-ում"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Ոսկե մեդալ %s-ում"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Արծաթե մեդալ %s-ում"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Վահան՝ անջատված"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Վահան՝ միացված"}
+{"name": "aoe2mc.cheat.beyond", "text": "Տեխնոլոգիաներ՝ մինչև 256 հետազոտություն"}
+{"name": "aoe2mc.cheat.cpu", "text": "Բնակչության սահման՝ %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Պատերազմի մշուշ՝ անջատված"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Պատերազմի մշուշ՝ միացված"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Տեխնոլոգիաները անվճար են"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Կիսվելը հոգատարություն է. ձեր եկամուտը գնում է ձեր դաշնակիցներին"}
+{"name": "aoe2mc.cheat.wonders", "text": "Դուք վերահսկում եք բնությունը. %s կենդանի"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Մնացել են միայն դաշնակիցներ. դաշինքները ավարտվում են։ Հաղթում է վերջին ողջ մնացած խաղացողը։"}
+{"name": "aoe2mc.conquest.defeated", "text": "Խաղացող %s-ը պարտվեց։"}
+{"name": "aoe2mc.controls.attack", "text": "Հարձակում. ընտրեք ռազմական միավորներ, ապա աջ սեղմեք թշնամու վրա։"}
+{"name": "aoe2mc.controls.build", "text": "Կառուցում. ընտրեք գյուղացիներ, աջ սեղմեք նրանց՝ կառուցման ցանկը բացելու համար, ընտրեք շենք և ձախ սեղմեք գետնին։ Shift + ձախ սեղմում. ավելի շատ կառուցել։ Աջ սեղմում. չեղարկել։"}
+{"name": "aoe2mc.controls.camera", "text": "Տեսախցիկ. աջ սեղմեք Տեսախցիկ տեսադիտակով (տաք ստեղն 2)․ դուք արագ քայլում եք քարտեզի վերևում։ Shift + աջ սեղմում. հաջորդ արագությունը։ Նորից աջ սեղմում. դուք իջնում եք։"}
+{"name": "aoe2mc.controls.garrison", "text": "Տեղակայում. ընտրեք միավորներ, ապա աջ սեղմեք ձեր շենքի վրա։ Դրա ցանկը նրանց դուրս է բերում։ Քաղաքային կենտրոնի ցանկ. Զանգահարել քաղաքի զանգը։"}
+{"name": "aoe2mc.controls.gather", "text": "Հավաքում. ընտրեք գյուղացիներ, ապա աջ սեղմեք ծառի, մրգային թփի, հանքի կամ ֆերմայի վրա։"}
+{"name": "aoe2mc.controls.goto", "text": "Գնալ. աջ սեղմեք Գնալ կողմնացույցով (տաք ստեղն 3)․ ցանկ՝ ձեր քաղաքային կենտրոնների, ձեր խմբերի և հաջորդ պարապ գյուղացու համար։"}
+{"name": "aoe2mc.controls.groups", "text": "Կառավարման խմբեր. ընտրեք միավորներ, վերցրեք խմբի առարկա (տաք ստեղներ 5 մինչև 9) և Shift + աջ սեղմում՝ ընտրությունը պահպանելու համար։ Աջ սեղմում. ընտրել խումբը։"}
+{"name": "aoe2mc.controls.head", "text": "Կառավարում (պահեք գազար փայտի վրա. գործողությունների գոտին ցույց է տալիս հաջորդ քայլը)․"}
+{"name": "aoe2mc.controls.menu", "text": "Խաղի ցանկ. աջ սեղմեք Խաղի ցանկ գրքով (տաք ստեղն 4)․ դիվանագիտություն և հարկ, նշան, պահում, դադար և տեխնոլոգիաների ծառ։"}
+{"name": "aoe2mc.controls.move", "text": "Շարժում. ընտրությամբ աջ սեղմեք գետնին։"}
+{"name": "aoe2mc.controls.research", "text": "Հետազոտություն և դարաշրջանի անցում. աջ սեղմեք ձեր շենքի վրա և սեղմեք տեխնոլոգիան կամ հաջորդ դարաշրջանը նրա ցանկում։"}
+{"name": "aoe2mc.controls.select", "text": "Ընտրություն. ձախ սեղմեք միավորի վրա։ Պահեք ձախ սեղմումը և քաշեք գետնի վրայով. կհայտնվի ընտրության տուփ։ Աջ սեղմում. հրամաններ տալ։"}
+{"name": "aoe2mc.controls.train", "text": "Պատրաստում. աջ սեղմեք ձեր շենքի վրա (քաղաքային կենտրոն, զորանոց ...) և սեղմեք միավորը նրա ցանկում։"}
+{"name": "aoe2mc.defeat", "text": "Պարտություն"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Դաշնակից"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Խաղացող %s-ը փոխեց իր վերաբերմունքը ձեր նկատմամբ. %s։"}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Թշնամի"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Չեզոք"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Խաղացող %s-ը խաղի արագությունը սահմանեց՝ %s։"}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Խաղացող %s-ը ուղարկեց %s %s խաղացող %s-ին։"}
+{"name": "aoe2mc.flare.placed", "text": "%s. Նշան %s %s-ում"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Հետևել. սեղմեք ձեր միավորի վրա"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Պահակ. սեղմեք ձեր միավորի կամ շենքի վրա"}
+{"name": "aoe2mc.gaia.joins", "text": "%s-ը միանում է ձեզ։"}
+{"name": "aoe2mc.garrison.all_back", "text": "Բոլորը վերադառնում են աշխատանքի"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Քաղաքի զանգը հնչում է. %s գյուղացի ապաստան է փնտրում"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Գյուղացի չի ընտրված։"}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Ձեզ գյուղացիներ չունեք։"}
+{"name": "aoe2mc.garrison.out", "text": "%s միավոր դուրս եկավ"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s գյուղացի ապաստան է փնտրում"}
+{"name": "aoe2mc.gather.act_attack", "text": "հարձակում"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "կառուցման ցանկ"}
+{"name": "aoe2mc.gather.act_garrison", "text": "տեղակայում"}
+{"name": "aoe2mc.gather.act_gather", "text": "հավաքում"}
+{"name": "aoe2mc.gather.act_hunt", "text": "որս"}
+{"name": "aoe2mc.gather.act_move", "text": "շարժում"}
+{"name": "aoe2mc.gather.act_select", "text": "ընտրություն"}
+{"name": "aoe2mc.gather.act_select_type", "text": "ընտրել այս տեսակի բոլորին"}
+{"name": "aoe2mc.gather.act_trade", "text": "առևտուր"}
+{"name": "aoe2mc.gather.act_train", "text": "պատրաստում"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Հարձակում. %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Ընտրության տուփ. չեղարկված"}
+{"name": "aoe2mc.gather.bush", "text": "Հատապտղի թուփ"}
+{"name": "aoe2mc.gather.carcass", "text": "Դիակ"}
+{"name": "aoe2mc.gather.corner", "text": "Ընտրության տուփ. սեղմեք մյուս անկյունը"}
+{"name": "aoe2mc.gather.enemy", "text": "Թշնամի %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Թշնամու շենք"}
+{"name": "aoe2mc.gather.farm", "text": "Ֆերմա"}
+{"name": "aoe2mc.gather.ground", "text": "Գետին"}
+{"name": "aoe2mc.gather.group", "text": "Խումբ %s. %s միավոր"}
+{"name": "aoe2mc.gather.group_saved", "text": "Խումբ %s. %s միավոր պահպանված"}
+{"name": "aoe2mc.gather.mine", "text": "%s հանք"}
+{"name": "aoe2mc.gather.paused", "text": "Խաղը դադարեցված է։"}
+{"name": "aoe2mc.gather.point", "text": "%s · Աջ սեղմում. %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Սերմանման հերթում՝ %s"}
+{"name": "aoe2mc.gather.selected", "text": "Ընտրված է՝ %s միավոր"}
+{"name": "aoe2mc.gather.tree", "text": "Ծառ"}
+{"name": "aoe2mc.hill.holds", "text": "Խաղացող %s-ը պահում է հուշարձանը։"}
+{"name": "aoe2mc.hints.attack_ground", "text": "Գետնի հարձակում. աջ սեղմեք գետնին"}
+{"name": "aoe2mc.hints.attack_move", "text": "Հարձակվող շարժում. աջ սեղմեք գետնին"}
+{"name": "aoe2mc.hints.building", "text": "Դրեք %s. աջ սեղմեք գետնին · Shift + աջ սեղմում. ավելի շատ դնել · Չեղարկել. /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s. ձախ սեղմեք՝ դնելու համար · Shift. ավելի շատ դնել · Աջ սեղմում. չեղարկել"}
+{"name": "aoe2mc.hints.corner", "text": "Ընտրության տուփ. աջ սեղմեք մյուս անկյունը"}
+{"name": "aoe2mc.hints.count_military", "text": "%s ռազմական միավոր"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s ռազմական միավոր"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s գյուղացի"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s գյուղացի"}
+{"name": "aoe2mc.hints.deselect", "text": "Դատարկ տուփ. ընտրությունը հանել"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Ձախ սեղմում. ընտրությունը հանել"}
+{"name": "aoe2mc.hints.follow", "text": "Հետևել. աջ սեղմեք ձեր կամ դաշնակից միավորի վրա"}
+{"name": "aoe2mc.hints.guard", "text": "Պահակ. աջ սեղմեք ձեր կամ դաշնակից միավորի կամ շենքի վրա"}
+{"name": "aoe2mc.hints.military", "text": "%s · Աջ սեղմում. հարձակվել թշնամու վրա, վարքի ցանկ · %s"}
+{"name": "aoe2mc.hints.none", "text": "Ձախ սեղմում. ընտրել միավոր · Պահեք ձախ սեղմումը. ընտրության տուփ"}
+{"name": "aoe2mc.hints.none_wand", "text": "Աջ սեղմում. ընտրել միավոր · Փայտիկ. ընտրության տուփ"}
+{"name": "aoe2mc.hints.patrol", "text": "Պարեկություն. աջ սեղմեք գետնին"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Աջ սեղմում. հավաքել, կառուցել, կառուցման ցանկ · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s պատրաստ"}
+{"name": "aoe2mc.lobby.you_play", "text": "Դուք խաղում եք %s-ով։"}
+{"name": "aoe2mc.monk.converts", "text": "Վանականը դարձնում է %s-ին։"}
+{"name": "aoe2mc.monk.dies", "text": "%s-ը մահանում է (հերետիկոսություն)։"}
+{"name": "aoe2mc.pause.continued", "text": "Խաղացող %s-ը շարունակեց խաղը։"}
+{"name": "aoe2mc.pause.paused", "text": "Խաղացող %s-ը կանգնեցրեց խաղը։"}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Թիմ %s (միջին վարկանիշ %s). %s"}
+{"name": "aoe2mc.recap.next", "text": "Խաղն ավարտված է։ Աջ սեղմեք ձեռքի Ամփոփում գիրքը՝ արդյունքները տեսնելու համար։ Կանգնեցրեք խաղի ծրագիրը՝ նրա կոնսոլում Ctrl-C սեղմելով։"}
+{"name": "aoe2mc.relic_victory.all", "text": "Խաղացող %s-ը պահում է բոլոր մասունքները։"}
+{"name": "aoe2mc.relic_victory.lost", "text": "Խաղացող %s-ը կորցրեց մասունք։"}
+{"name": "aoe2mc.repair.no_resources", "text": "%s-ը վերանորոգելու համար բավարար ռեսուրսներ չկան։"}
+{"name": "aoe2mc.replay.army", "text": "Բանակ՝ %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", բանակը վերջում՝ %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", կորած՝ %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Կառուցման հերթականություն՝"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · տեղակայված՝ %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s). %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | կրում է %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "կառուցում՝ %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "սնունդ՝ %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "ոսկի՝ %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "պարապ՝ %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "քար՝ %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "փայտ՝ %s"}
+{"name": "aoe2mc.replay.flare", "text": "Նշան"}
+{"name": "aoe2mc.replay.game_ends", "text": "Խաղն ավարտվում է"}
+{"name": "aoe2mc.replay.game_time", "text": "Խաղի ժամանակ՝ %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · տեղակայված՝ %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Զին %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Բն %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Ռես %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Գյու %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s-ը պահում էր հուշարձանը. «Բլրի արքա» հաղթանակ %s-ին։"}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s). %s/%s | %s%s | %s հարձակում %s/%s զրահ%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift-ը կրկնակի սեղմեք. դիտորդի տեսք (թռչել բլոկների միջով)։ Աջ սեղմեք տաք վահանակի առարկաները. կրկնության կառավարում։"}
+{"name": "aoe2mc.replay.king_died", "text": ". Թագավորը մահացավ %s-ում։ Թագավորասպանություն. խաղացողը դուրս է գալիս։"}
+{"name": "aoe2mc.replay.king_killed", "text": "Թագավորը սպանված է %s-ում"}
+{"name": "aoe2mc.replay.live_jump", "text": "Կենդանի կրկնություն. ցատկը կանգ է առնում խաղից հետ ընկած ուշացման վրա։"}
+{"name": "aoe2mc.replay.lost", "text": "Կորած՝ %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " պահում է հուշարձանը %s-ում։"}
+{"name": "aoe2mc.replay.monument_year", "text": "%s. հուշարձան, մնաց %s տարի"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s. հուշարձան, մնաց %s տարի"}
+{"name": "aoe2mc.replay.no_camera", "text": "Այս ձայնագրությունում նրա խաղացողի տեսախցիկ չկա։"}
+{"name": "aoe2mc.replay.now", "text": " հիմա"}
+{"name": "aoe2mc.replay.out", "text": "%s-ը դուրս է եկել"}
+{"name": "aoe2mc.replay.players", "text": "Խաղացողներ"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " տանում է մասունքը վանք և հաղթում է։"}
+{"name": "aoe2mc.replay.replay_ended", "text": "Կրկնությունն ավարտվեց"}
+{"name": "aoe2mc.replay.research", "text": " հետազոտում է %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s-ը հրաժարվում է"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Սերվերը վերագործարկվում է ետ ցատկի համար. նորից միացեք նրան։"}
+{"name": "aoe2mc.replay.share_buildings", "text": "Շենքեր %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Տնտեսություն %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Զինվորական %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Տեխնոլոգիաներ %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Ընդամենը %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "ամրոցներ %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "գնեց %s, վաճառեց %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "մասունքներ %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "հրաշքներ %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Ծախսված՝"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Շենք %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Տնտ %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Զին %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Տեխ %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ". պատրաստված գյուղացիներ՝ %s, հավաքված՝ %s, գյուղացիների պարապ ժամանակ՝ %s, կենտրոնի պարապ ժամանակ՝ %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ". պահում է հուշարձանը («Բլրի արքա»)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ". հուշարձանը նվաճված՝ %s («Բլրի արքա»)"}
+{"name": "aoe2mc.replay.sum_military", "text": ". պատրաստված զինվորական միավորներ՝ %s, կորցված միավորներ՝ %s, կորցված շենքեր՝ %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ". սպանված թագավորներ՝ %s («Թագավորասպանություն»)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ". հաղթանակներ, մասունքը վանքում՝ %s («Մասունքի գրավում»)"}
+{"name": "aoe2mc.replay.sum_society", "text": ". %sհարկ ուղարկված՝ %s, ստացված՝ %s, գյուղացիների առավելագույնը՝ %s (գնահատական)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ". քաղաքային կենտրոնը կորած՝ %s («Հանկարծակի մահ»)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ". %s, տեխնոլոգիաներ՝ %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ". հրաշքի ժամանակաչափը՝ %s-ից, ավարտվում է %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Ամփոփում (գնահատական)"}
+{"name": "aoe2mc.replay.task_building", "text": "կառուցում է"}
+{"name": "aoe2mc.replay.task_following", "text": "հետևում է"}
+{"name": "aoe2mc.replay.task_food", "text": "սնունդ է հավաքում"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "տեղակայված"}
+{"name": "aoe2mc.replay.task_gold", "text": "ոսկի է հանում"}
+{"name": "aoe2mc.replay.task_guarding", "text": "պահակ է"}
+{"name": "aoe2mc.replay.task_idle", "text": "պարապ"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "պարեկում է"}
+{"name": "aoe2mc.replay.task_resources", "text": "ռեսուրսներ է հավաքում"}
+{"name": "aoe2mc.replay.task_stone", "text": "քար է հանում"}
+{"name": "aoe2mc.replay.task_walking", "text": "քայլում է"}
+{"name": "aoe2mc.replay.task_wood", "text": "փայտ է հավաքում"}
+{"name": "aoe2mc.replay.team", "text": "Թիմ %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Նետաձիգ %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Նետաձիգների զրահ %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Տեղափոխում %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Հեծելազորի զրահ %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Ֆերմա %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Ոսկի %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Հետևակի զրահ %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Հյուսման հաստոց %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Մոտ մարտ %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Քար %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Փայտ %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Ամրոց"}
+{"name": "aoe2mc.replay.tl_king", "text": "Թագավորը սպանված"}
+{"name": "aoe2mc.replay.tl_military", "text": "Առաջին զինվորական միավորը՝ %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Մասունք"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Հրաժարվեց"}
+{"name": "aoe2mc.replay.town_fell", "text": ". քաղաքային կենտրոնը ընկավ %s-ին։ Հանկարծակի մահ. խաղացողը դուրս է գալիս։"}
+{"name": "aoe2mc.replay.town_lost", "text": "Քաղաքային կենտրոնը կորած է %s-ում"}
+{"name": "aoe2mc.replay.training", "text": "Պատրաստում՝ %s"}
+{"name": "aoe2mc.replay.university", "text": "Համալսարան՝"}
+{"name": "aoe2mc.replay.up_counts", "text": "տնտեսություն %s · Համալսարան %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " կառուցեց հրաշք %s-ում։"}
+{"name": "aoe2mc.replay_input.fight", "text": "Մարտ՝ "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s միավոր"}
+{"name": "aoe2mc.replay_input.fights", "text": "Մեծ մարտեր՝"}
+{"name": "aoe2mc.replay_input.help", "text": "Կրկնություն. աջ սեղմեք տաք վահանակի առարկաները կամ սեղմեք՝ "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Վերցնել՝ "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s միավոր)"}
+{"name": "aoe2mc.replay_input.vs", "text": " ընդդեմ "}
+{"name": "aoe2mc.resource.food", "text": "սնունդ"}
+{"name": "aoe2mc.resource.gold", "text": "ոսկի"}
+{"name": "aoe2mc.resource.stone", "text": "քար"}
+{"name": "aoe2mc.resource.wood", "text": "փայտ"}
+{"name": "aoe2mc.run.back", "text": "%s-ը վերադարձավ"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Արշավը ավարտված է"}
+{"name": "aoe2mc.run.chat_hint", "text": "Զրույց. սովորական տող գնում է բոլորին, /tm TEXT՝ ձեր դաշնակիցներին, /msg NAME TEXT՝ մեկ մարդու։"}
+{"name": "aoe2mc.run.left_bot", "text": "%s-ը դուրս եկավ. բոտը խաղում է խաղացող %s-ի համար"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Սցենարը %s-ը սկսվում է։ Նորից միացեք։"}
+{"name": "aoe2mc.run.starts_in", "text": "Խաղը սկսվում է %s-ից"}
+{"name": "aoe2mc.run.wait_ready", "text": "Բացեք «Ընտրեք ձեր խաղացողին» և սեղմեք «Պատրաստ»"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Բոլոր կառավարումները՝ /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Առաջին քայլ. պահեք հրամանի փայտը և աջ սեղմեք ձեր գյուղացիներից մեկի վրա։"}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Առաջին քայլ. պահեք հրամանի փայտը և ձախ սեղմեք ձեր գյուղացիներից մեկի վրա։"}
+{"name": "aoe2mc.run.welcome_goal", "text": "Նպատակ. հաղթել խաղում։ Հաղթանակի կարգավորում՝ %s։"}
+{"name": "aoe2mc.savegame.saved", "text": "Խաղը պահպանված է՝ %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s միավոր դուրս եկավ"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Ինքնուրույն հետախուզում"}
+{"name": "aoe2mc.stance.formation", "text": "Կազմավորում՝ %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ոչ մի միավոր չի կարող հարձակվել գետնի վրա"}
+{"name": "aoe2mc.stance.unpack", "text": "Նախ բացեք տրեբուշետը"}
+{"name": "aoe2mc.train.active", "text": "%s-ը ակտիվ է։"}
+{"name": "aoe2mc.train.rally", "text": "Աջ սեղմեք գետնին՝ հավաքի կետի համար։"}
+{"name": "aoe2mc.train.researched", "text": "%s-ը հետազոտված է։"}
+{"name": "aoe2mc.transport.out", "text": "%s միավոր դուրս եկավ"}
+{"name": "aoe2mc.treaty.ended", "text": "Պայմանագիրն ավարտվեց. խաղացողները կարող են հարձակվել։"}
+{"name": "aoe2mc.treaty.refuse", "text": "Պայմանագիր. դուք չեք կարող հարձակվել մինչև %s։"}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Պայմանագիր. դուք չեք կարող հարձակվել այս խաղում։"}
+{"name": "aoe2mc.treaty.start", "text": "Պայմանագիր. ոչ մի խաղացող չի կարող հարձակվել մյուսի վրա մինչև %s։"}
+{"name": "aoe2mc.treaty.start_endless", "text": "Պայմանագիր. ոչ մի խաղացող չի կարող հարձակվել մյուսի վրա այս խաղում։"}
+{"name": "aoe2mc.tutorial.barracks", "text": "Կառուցեք զորանոց. աջ սեղմեք ընտրված գյուղացու վրա, ընտրեք զորանոցը և դրեք այն։ Գործողությունների գոտին վահանակի վերևում ասում է, թե որտեղ դնել։"}
+{"name": "aoe2mc.tutorial.camera", "text": "Արագ շարժվեք քարտեզով. աջ սեղմեք «Տեսախցիկ» առարկայով, քայլեք, ապա նորից աջ սեղմեք դրա վրա։"}
+{"name": "aoe2mc.tutorial.camp", "text": "Ոչնչացրեք թշնամու բանակատեղին քարտեզի կենտրոնում. ընտրեք ձեր Միլիցիան և աջ սեղմեք շենքի վրա։ Վերևի պարագլխի տողը ցույց է տալիս քայլը։"}
+{"name": "aoe2mc.tutorial.camps", "text": "Կառուցեք փայտահատման բանակատեղի ծառերի մոտ և ջրաղաց հատապտուղների մոտ։ Աջ կողմի վահանակը ցույց է տալիս դրանց արժեցած փայտը։"}
+{"name": "aoe2mc.tutorial.complete", "text": "Ուսուցումն ավարտված է։ Հաջորդը. խաղացեք բոտի դեմ. python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Ուսուցումն ավարտված է"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Անցեք Ֆեոդալական դարաշրջան. աջ սեղմեք ձեր քաղաքային կենտրոնի վրա և ընտրեք Ֆեոդալական դարաշրջանը։ Աջ կողմի վահանակը ցույց է տալիս ձեր սնունդը։"}
+{"name": "aoe2mc.tutorial.food", "text": "Հավաքեք 100 սնունդ. ուղարկեք գյուղացու հատապտուղների մոտ։ Աջ կողմի վահանակը ցույց է տալիս ձեր սնունդը։"}
+{"name": "aoe2mc.tutorial.house", "text": "Կառուցեք տուն. աջ սեղմեք ընտրված գյուղացու վրա, ընտրեք տունը և դրեք այն։ Գործողությունների գոտին վահանակի վերևում ասում է, թե որտեղ դնել։"}
+{"name": "aoe2mc.tutorial.militia", "text": "Պատրաստեք 3 միլիցիոներ. աջ սեղմեք ձեր զորանոցի վրա և ընտրեք միլիցիոները։ Աջ կողմի վահանակը ցույց է տալիս ձեր սնունդը և ոսկին։"}
+{"name": "aoe2mc.tutorial.raid", "text": "Թշնամին հարձակվում է ձեր գյուղացիների վրա. սեղմեք չաթի կարմիր ահազանգի տողը՝ այնտեղ գնալու համար, ապա ընտրեք ձեր միլիցիոներին և աջ սեղմեք թշնամիների վրա։ Վերևի պարագլխի տողը ցույց է տալիս ընտրված միավորի առողջությունը։"}
+{"name": "aoe2mc.tutorial.select", "text": "Ընտրեք գյուղացի. ձախ սեղմեք ձեր գյուղացիներից մեկի վրա հրամանի փայտով։ Վերևի պարագլխի տողը ցույց է տալիս ընտրված միավորը, վահանակի վերևի գործողությունների գոտին՝ հաջորդ գործողությունը։"}
+{"name": "aoe2mc.tutorial.step_done", "text": "Քայլը կատարված է"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Քայլ %s/%s. %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "ԽՈՐՀՈՒՐԴ. զորանոցը հետևակ է պատրաստում։ Հետևակը էժան է և լավն է շենքերի դեմ։"}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "ԽՈՐՀՈՒՐԴ. հարձակվեք բոլոր ձեր միավորներով միասին։ Փոքր խումբը մահանում է, նախքան վնաս հասցնելը։"}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "ԽՈՐՀՈՒՐԴ. կառուցեք հավաքման շենքերը ռեսուրսների մոտ, որպեսզի գյուղացիները կարճ ճանապարհ անցնեն։"}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "ԽՈՐՀՈՒՐԴ. հաջորդ դարաշրջանը բացում է նոր շենքեր, միավորներ և տեխնոլոգիաներ։ Մինչ առաջ գնալը գյուղացիները թող աշխատեն։"}
+{"name": "aoe2mc.tutorial.tip_food", "text": "ԽՈՐՀՈՒՐԴ. ջրաղացի մոտ գտնվող հատապտուղները ապահով սկիզբ են սննդի համար։ Հետո ֆերմաները սնունդ են տալիս, որը չի ավարտվում։"}
+{"name": "aoe2mc.tutorial.tip_house", "text": "ԽՈՐՀՈՒՐԴ. տունը տեղ է տալիս 5 լրացուցիչ բնակչի։ Նայեք բնակչությանը վահանակում և կառուցեք տներ, մինչև լցվի։"}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "ԽՈՐՀՈՒՐԴ. շենքում կարող եք հերթագրել մինչև 15 միավոր, երբ ունեք ռեսուրսներ։"}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "ԽՈՐՀՈՒՐԴ. AoE2-ում քաղաքի զանգը գյուղացիներին ուղարկում է քաղաքային կենտրոն։ Զանգահարեք, երբ թշնամին ներխուժում է ձեր քաղաք։"}
+{"name": "aoe2mc.tutorial.tip_select", "text": "ԽՈՐՀՈՒՐԴ. վահանակի աջ կողմի «Պարապ» տողը հաշվում է աշխատանք չունեցող գյուղացիներին։ Աշխատանք տվեք նրանց։"}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "ԽՈՐՀՈՒՐԴ. առաջին դարաշրջաններում գյուղացիներ պատրաստեք անընդհատ։ Ավելի շատ գյուղացիներ՝ ավելի շատ ռեսուրս։"}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "ԽՈՐՀՈՒՐԴ. գյուղացիները ավելի արագ են հավաքում հավաքման շենքի մոտ։ Կառուցեք փայտահատման բանակատեղի ծառերի կողքին։"}
+{"name": "aoe2mc.tutorial.villager", "text": "Պատրաստեք գյուղացի. աջ սեղմեք ձեր քաղաքային կենտրոնի վրա և ընտրեք գյուղացին։ Աջ կողմի վահանակը ցույց է տալիս դրա արժեցած սնունդը։"}
+{"name": "aoe2mc.tutorial.wood", "text": "Հավաքեք 50 փայտ. ընտրեք գյուղացի և աջ սեղմեք ծառի վրա։ Աջ կողմի վահանակը ցույց է տալիս ձեր փայտը։"}
+{"name": "aoe2mc.victory", "text": "Հաղթանակ"}
+{"name": "aoe2mc.wonder.built", "text": "Խաղացող %s-ը կառուցեց հրաշք։"}
+{"name": "aoe2mc.wonder.destroyed", "text": "Խաղացող %s-ի հրաշքը ոչնչացված է։"}

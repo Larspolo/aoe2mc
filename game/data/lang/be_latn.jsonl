@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Hulec %s pierachodzic u %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Paškodžańnie zajmaje mapu ad miezy da centra za %s. Jano źniščaje ŭsich jednastak i budynki ŭ joj."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ja ciapier nie mahu pabudavać %s tam."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ja nie mahu navučyć hetaha junita: u mianie niama dla jaho buidynku."}
+{"name": "aoe2mc.bot.flare_two", "text": "Pusciecie dva signalnyja ahni dlaścieny."}
+{"name": "aoe2mc.bot.no_flare", "text": "Ja nie bačy signalnaha ahniu."}
+{"name": "aoe2mc.bot.no_market", "text": "U mianie niama rynku: ja nie mahu adpraviać daninu."}
+{"name": "aoe2mc.bot.no_onager", "text": "U mianie niama anahra."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "U mianie nedastatkova resursaŭ dla ścieny."}
+{"name": "aoe2mc.bot.no_water", "text": "Kala majho horada niama vody: ja nie mahu pabudavać flot."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Maje anahry nie mohuć ruabać dreva."}
+{"name": "aoe2mc.build.cost", "text": "Nedastatkova resursaŭ: %s kaštuje %s."}
+{"name": "aoe2mc.build.flat", "text": "%s pavinien stajać na roŭnaj ziamli."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s treba stavić na 4 kletki voskaj ścieny ŭ prostaj linii abo na 3 kletki pa dyjahanali."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Pabudova: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s pavinien stajać na vadzie kala bierahu."}
+{"name": "aoe2mc.build.space", "text": "Tut niama miesca dla %s."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Nedastatkova resursaŭ: %s kletak z %s kaštujuć %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: pstrykniciem pravaj knopkaj na kancy ścieny."}
+{"name": "aoe2mc.build.water", "text": "%s pavinien stajać na vadzie."}
+{"name": "aoe2mc.camera.fov", "text": "Chutkaja kamiera robić trymany pradmiet kalychajecca. Kab jon byŭ nieruchomy, ustalujcie Opcyi > Nalady dastupnaści > Kalychannie vyhladu: VYKL. Kamiera taksama pašyraje vyhlad, i vidać bolš mapy. Kab viarnuć zvyčajny vyhlad, ustalujcie Opcyi > Nalady dastupnaści > Efekty polja zroku: 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamiera: vyklučana"}
+{"name": "aoe2mc.camera.on", "text": "Kamiera: ułučana, chutkaść x%s. Shift + pravaja knopka: nastupnaja chutkaść."}
+{"name": "aoe2mc.camera.speed", "text": "Chutkaść kamiery: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Peramahčy ŭsich vorahaŭ i stračyć mala jednastak"}
+{"name": "aoe2mc.challenge.booming", "text": "Navučyć 100 sialan i pierajści ŭ Imperski vek"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Pierajści ŭ Zamkavy vek i vytrymać napady vorahaŭ"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Źniščyć zamak vorahaŭ"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Sabrać 200 ježy, 200 dreva, 100 zalata i 200 kamienia, navučyć 21 sialanina, pabudavać liesapunkt i młyn i pierajści ŭ Feadalny vek"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Navučyć 27 sialan, pabudavać 5 domaŭ i pierajści ŭ Zamkavy vek"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Peramahčy ŭsie šeść chvaloŭ vorahaŭ"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "Stračana jednastak: %s, bronzavy miedal da %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "Stračana jednastak: %s, zalaty miedal da %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "Stračana jednastak: %s, miedalu niama"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "Stračana jednastak: %s, sried'ny miedal da %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronzavy miedal"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Zalaty miedal"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Sriebny miedal"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Źniščyć usie vajennyja karabli vorahaŭ"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Miedalu niama"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Zabić 5 sialan vorahaŭ"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronzavy miedal za %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Zalaty miedal za %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Sriebny miedal za %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Ehida vyklučana"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Ehida ułučana"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tehnalohii: da 256 dasledavanniaŭ"}
+{"name": "aoe2mc.cheat.cpu", "text": "Limit nasielnictva: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Tuman vajny: vyklučany"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Tuman vajny: ułučany"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Tehnalohii biaspłatnyja"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Dzialicca — značyć klapacca: vaš dachod idzie saiuznikam"}
+{"name": "aoe2mc.cheat.wonders", "text": "Vy kirujecie pryrodaj: žyvioł — %s"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Zastalisia tolki saiuzniki: saiuzy skončylisia. Peramahaje apošni žyvy hulec."}
+{"name": "aoe2mc.conquest.defeated", "text": "Hulec %s pacierpieŭ paražeńnie."}
+{"name": "aoe2mc.controls.attack", "text": "Ataka: vybiarycie vajennyja junity i pstrykniciem pravaj knopkaj na vorahaŭ."}
+{"name": "aoe2mc.controls.build", "text": "Pabudova: vybiarycie sialan, pstrykniciem pa ich pravaj knopkaj dla menju pabudovy, vybiarycie buidynak i pstrykniciem levaj knopkaj pa ziamli. Shift + levaja knopka: pabudavać jašče. Pravaja knopka: skasavać."}
+{"name": "aoe2mc.controls.camera", "text": "Kamiera: pstrykniciem pravaj knopkaj z padzornaj trubaj Kamiera (haračaja klavišsa 2): vy chutka idziecie vysoka nad mapaj. Shift + pravaja knopka: nastupnaja chutkaść. Jašče raz pravaja knopka: vy lacicie ŭniz."}
+{"name": "aoe2mc.controls.garrison", "text": "Razmieščeńnie: vybiarycie junity, pstrykniciem pravaj knopkaj pa svaim buidynku. Jaho menju vypuskaje ich. Menju centra horada: Zvon u zvanicu."}
+{"name": "aoe2mc.controls.gather", "text": "Zbor: vybiarycie sialan, potym pstrykniciem pravaj knopkaj na dreva, kusty jahad, šachtu abo fermu."}
+{"name": "aoe2mc.controls.goto", "text": "Pierajści: pstrykniciem pravaj knopkaj z kampasam Pierajści (haračaja klavišsa 3): menju vašych centraŭ horada, vašych hrup kiravannia i nastupnaha biaździejnaha sialanina."}
+{"name": "aoe2mc.controls.groups", "text": "Hrupy kiravannia: vybiarycie junity, vazmicie pradmiet hrupy (haračyja klavišy 5–9) i Shift + pravaja knopka, kab zachavać vybar. Pravaja knopka: vybrać hrupu."}
+{"name": "aoe2mc.controls.head", "text": "Kiravanne (trymajcie marka na palicy; panel dziejańniaŭ pakazvaje nastupny kroki):"}
+{"name": "aoe2mc.controls.menu", "text": "Menju hulni: pstrykniciem pravaj knopkaj z kniharaj Menju hulni (haračaja klavišsa 4): dyplamatyja i danina, signalny ahon, zachavańnie, paŭza i drevo tehnalohij."}
+{"name": "aoe2mc.controls.move", "text": "Ruch: pry vybary pstrykniciem pravaj knopkaj pa ziamli."}
+{"name": "aoe2mc.controls.research", "text": "Dasledavanne i pierachod u novy vek: pstrykniciem pravaj knopkaj pa svaim buidynku i vybiarycie tehnalohiju abo nastupny vek u jaho menju."}
+{"name": "aoe2mc.controls.select", "text": "Vybar: pstrykniciem levaj knopkaj pa juniće. Trymajcie levuju knopku i viedzicie pa ziamli: źjaviecca ramka vybaru. Pravaja knopka: addać zahady."}
+{"name": "aoe2mc.controls.train", "text": "Navučańnie: pstrykniciem pravaj knopkaj pa svaim buidynku (centr horada, kazarmy …) i vybiarycie juniča ŭ jaho menju."}
+{"name": "aoe2mc.defeat", "text": "Paražeńnie"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Saiuznik"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Hulec %s źmianiŭ svaju paziciju da vas: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Vorah"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Nejtralny"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Hulec %s ustalavaŭ chutkaść hulni: %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Hulec %s dasłaŭ %s %s huleću %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: signalny ahon na %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Idzi za: pstrykniciem pa svaim juniće"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Achova: pstrykniciem pa svaim juniće abo buidynku"}
+{"name": "aoe2mc.gaia.joins", "text": "%s dałučajecca da vas."}
+{"name": "aoe2mc.garrison.all_back", "text": "Usie viartajucca da pracy"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Zvanić u zvanicu: %s sialan šukajuć prytulku"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Sialanin nie vybrany."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "U vas niama sialan."}
+{"name": "aoe2mc.garrison.out", "text": "Vyjšla jednastak: %s"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s sialan šukajuć prytulku"}
+{"name": "aoe2mc.gather.act_attack", "text": "ataka"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menju pabudovy"}
+{"name": "aoe2mc.gather.act_garrison", "text": "razmiascić"}
+{"name": "aoe2mc.gather.act_gather", "text": "zbor"}
+{"name": "aoe2mc.gather.act_hunt", "text": "palavańnie"}
+{"name": "aoe2mc.gather.act_move", "text": "ruch"}
+{"name": "aoe2mc.gather.act_select", "text": "vybar"}
+{"name": "aoe2mc.gather.act_select_type", "text": "vybrać usich hetaha typu"}
+{"name": "aoe2mc.gather.act_trade", "text": "handal"}
+{"name": "aoe2mc.gather.act_train", "text": "navučańnie"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Ataka: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Ramka vybaru: skasavana"}
+{"name": "aoe2mc.gather.bush", "text": "Kust jahad"}
+{"name": "aoe2mc.gather.carcass", "text": "Tuša"}
+{"name": "aoe2mc.gather.corner", "text": "Ramka vybaru: pstrykniciem pa druhim kucie"}
+{"name": "aoe2mc.gather.enemy", "text": "Vorah: %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Buidynak vorahaŭ"}
+{"name": "aoe2mc.gather.farm", "text": "Ferma"}
+{"name": "aoe2mc.gather.ground", "text": "Ziamlia"}
+{"name": "aoe2mc.gather.group", "text": "Hrupa %s: %s jednastak"}
+{"name": "aoe2mc.gather.group_saved", "text": "Hrupa %s: %s jednastak zachavana"}
+{"name": "aoe2mc.gather.mine", "text": "Šachta: %s"}
+{"name": "aoe2mc.gather.paused", "text": "Hulnia na paŭzie."}
+{"name": "aoe2mc.gather.point", "text": "%s · Pravaja knopka: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Čarha pasievaŭ: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Vybrana: %s jednastak"}
+{"name": "aoe2mc.gather.tree", "text": "Drevo"}
+{"name": "aoe2mc.hill.holds", "text": "Hulec %s trymaje pomnik."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Ataka pa ziamli: pstrykniciem pravaj knopkaj pa ziamli"}
+{"name": "aoe2mc.hints.attack_move", "text": "Ataka z ruchaj: pstrykniciem pravaj knopkaj pa ziamli"}
+{"name": "aoe2mc.hints.building", "text": "Pastaŭcie %s: pstrykniciem pravaj knopkaj pa ziamli · Shift + pravaja knopka: pastavić jašče · Skasavać: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: pstrykniciem levaj knopkaj, kab pastavić · Shift: pastavić jašče · Pravaja knopka: skasavać"}
+{"name": "aoe2mc.hints.corner", "text": "Ramka vybaru: pstrykniciem pravaj knopkaj pa druhim kucie"}
+{"name": "aoe2mc.hints.count_military", "text": "%s vajenny junit"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s vajennych jednastak"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s sialanin"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s sialan"}
+{"name": "aoe2mc.hints.deselect", "text": "Pustaja ramka: znažać vybar"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Levaja knopka: znać vybar"}
+{"name": "aoe2mc.hints.follow", "text": "Idzi za: pstrykniciem pravaj knopkaj pa svaim abo sajuznym juniće"}
+{"name": "aoe2mc.hints.guard", "text": "Achova: pstrykniciem pravaj knopkaj pa svaim abo sajuznym juniće ci buidynku"}
+{"name": "aoe2mc.hints.military", "text": "%s · Pravaja knopka: atakavać vorahaŭ, menju stojki · %s"}
+{"name": "aoe2mc.hints.none", "text": "Levaja knopka: vybrać juniča · Trymajcie levuju knopku: ramka vybaru"}
+{"name": "aoe2mc.hints.none_wand", "text": "Pravaja knopka: vybrać juniča · Palačka: ramka vybaru"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrulavańnie: pstrykniciem pravaj knopkaj pa ziamli"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Pravaja knopka: zbor, pabudova, menju pabudovy · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "Hatovyja: %s / %s"}
+{"name": "aoe2mc.lobby.you_play", "text": "Vy hulajecie za %s."}
+{"name": "aoe2mc.monk.converts", "text": "Manah naviarnaje %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s hine (jaresʹ)."}
+{"name": "aoe2mc.pause.continued", "text": "Hulec %s pracjahnuŭ hulniu."}
+{"name": "aoe2mc.pause.paused", "text": "Hulec %s pastaviŭ hulniu na paŭzu."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Kamanda %s (siaredni rejtynh %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Hulnia skončana. Pstrykniciem pravaj knopkaj pa kniezie Recap u ruce, kab ubačyć vyniki. Spyniecie prahramu hulni Ctrl-C u jaje kansoli."}
+{"name": "aoe2mc.relic_victory.all", "text": "Hulec %s trymaje ŭsie relikvii."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Hulec %s straciŭ relikviju."}
+{"name": "aoe2mc.repair.no_resources", "text": "Nedastatkova resursaŭ dla remontu: %s."}
+{"name": "aoe2mc.replay.army", "text": "Vojsca: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", vojsca ŭ kancy: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", straczana: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Čarha pabudovy:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · razmieščana %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | niasie %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "pabudova %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "ježa %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "zalata %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "biaździejnaść %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "kamień %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "dreva %s"}
+{"name": "aoe2mc.replay.flare", "text": "Signalny ahon"}
+{"name": "aoe2mc.replay.game_ends", "text": "Hulnia kančajecca"}
+{"name": "aoe2mc.replay.game_time", "text": "Čas hulni %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · razmieščana %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Voj %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Nas %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Sial %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s trymaŭ pomnik: pieramoha «Karoĺ uzhorka» na %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s ataka %s/%s bronia%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Dvojčy nacisnicie Shift: vid nazirališča (lot praz bloki). Pstrykniciem pravaj knopkaj pa pradmietach paneli: kiravanne paŭtorenniem."}
+{"name": "aoe2mc.replay.king_died", "text": ": karoĺ zahinuŭ na %s. Regicyd: hulec vybyvaje."}
+{"name": "aoe2mc.replay.king_killed", "text": "Karoĺ zabity na %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Žyvy paŭtor: skok spyniajecca na zatrymcy za hulniaj."}
+{"name": "aoe2mc.replay.lost", "text": "Straczana: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " trymaje pomnik na %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: pomnik, zastałosia %s hod"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: pomnik, zastałosia %s hady"}
+{"name": "aoe2mc.replay.no_camera", "text": "U hetym zapisie niama kamiery jaho hulca."}
+{"name": "aoe2mc.replay.now", "text": " zaraz"}
+{"name": "aoe2mc.replay.out", "text": "%s vybyŭ"}
+{"name": "aoe2mc.replay.players", "text": "Hulcy"}
+{"name": "aoe2mc.replay.range", "text": " d%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " niasie relikviju ŭ manastyr i peramahaje."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Paŭtor skončany"}
+{"name": "aoe2mc.replay.research", "text": " dasledujuje %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s zdajecca"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Server pierazapuskajecca dla skoka nazad: padkliučycieśia da jaho znoŭ."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Buidynki %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekanomika %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Voj %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tehnalohii %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Razam %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "zamki %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "kupiŭ %s, pradaŭ %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relikvii %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "cudy %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Vydatkavana:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Pabudova %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eka %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Voj %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tech %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": navučana sialan %s, zabrana %s, čas biaździejnaści sialan %s, čas biaździejnaści centra horada %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": trymaje pomnik («Karoĺ uzhorka»)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": pomnik pieramoženy %s («Karoĺ uzhorka»)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": navučana vajennych jednastak %s, stračana jednastak %s, stračana buidynkaŭ %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": zabita karoloŭ %s («Regicyd»)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": pieramohi, relikvija ŭ manastyry %s («Zachop relikvii»)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sdanina addadziena %s, atrymana %s, pik sialan %s (acenka)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": centr horada straczany %s («Raptoŭnaja śmierć»)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tehnalohii %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": tajmer cudu z %s, zakančvajecca %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Vynik (acenka)"}
+{"name": "aoe2mc.replay.task_building", "text": "buduje"}
+{"name": "aoe2mc.replay.task_following", "text": "idzie sledam"}
+{"name": "aoe2mc.replay.task_food", "text": "zbiraje ježu"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "razmieščany"}
+{"name": "aoe2mc.replay.task_gold", "text": "zdabyvaje zalata"}
+{"name": "aoe2mc.replay.task_guarding", "text": "achoŭvaje"}
+{"name": "aoe2mc.replay.task_idle", "text": "biaździejničaje"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrulujje"}
+{"name": "aoe2mc.replay.task_resources", "text": "zbiraje resursy"}
+{"name": "aoe2mc.replay.task_stone", "text": "zdabyvaje kamień"}
+{"name": "aoe2mc.replay.task_walking", "text": "idzie"}
+{"name": "aoe2mc.replay.task_wood", "text": "ruabaje dreva"}
+{"name": "aoe2mc.replay.team", "text": "Kamanda %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Łučnik %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Bronia łučnikoŭ %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Piarenoska %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Bronia kavaleryi %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Ferma %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Zalata %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Bronia piachoty %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Tkacki stanok %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Bližni boj %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Kamień %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Dreva %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Zamak"}
+{"name": "aoe2mc.replay.tl_king", "text": "Karoĺ zabity"}
+{"name": "aoe2mc.replay.tl_military", "text": "Pieršaje vojsca: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relikvija"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Zdaŭsia"}
+{"name": "aoe2mc.replay.town_fell", "text": ": centr horada padaŭ na %s. Raptoŭnaja śmierć: hulec vybyvaje."}
+{"name": "aoe2mc.replay.town_lost", "text": "Centr horada straczany na %s"}
+{"name": "aoe2mc.replay.training", "text": "Navučańnie: %s"}
+{"name": "aoe2mc.replay.university", "text": "Univiersytet:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekanomika %s · Univiersytet %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " pabudavaŭ cud na %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Boj: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", jednastak %s"}
+{"name": "aoe2mc.replay_input.fights", "text": "Vialikija bitvy:"}
+{"name": "aoe2mc.replay_input.help", "text": "Paŭtor: pstrykniciem pravaj knopkaj pa pradmietach paneli abo nacisniecie: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Pierajści da: "}
+{"name": "aoe2mc.replay_input.units", "text": " (jednastak %s)"}
+{"name": "aoe2mc.replay_input.vs", "text": " suprać "}
+{"name": "aoe2mc.resource.food", "text": "ježa"}
+{"name": "aoe2mc.resource.gold", "text": "zalata"}
+{"name": "aoe2mc.resource.stone", "text": "kamień"}
+{"name": "aoe2mc.resource.wood", "text": "dreva"}
+{"name": "aoe2mc.run.back", "text": "%s viarnuŭsia"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampanija prajdzienaja"}
+{"name": "aoe2mc.run.chat_hint", "text": "Čat: zvyčajny radok idzie usim, /tm TEXT — vašym saiuznikam, /msg NAME TEXT — adnamu čałavieku."}
+{"name": "aoe2mc.run.left_bot", "text": "%s vyjšaŭ: bot hulaje za hulca %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenaryj %s pačynajecca. Dałučajciesia znoŭ."}
+{"name": "aoe2mc.run.starts_in", "text": "Hulnia pačnecca praz %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Adkryjcie «Vybierycie svajho hulca» i pstrykniciem «Hatovy»"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Usie elementy kiravannia: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Pieršy krok: trymajcie palku kamand i pstrykniciem pravaj knopkaj pa adnym sa svaich sialan."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Pieršy krok: trymajcie palku kamand i pstrykniciem levaj knopkaj pa adnym sa svaich sialan."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Mieta: peramahčy ŭ hulni. Umova peramohi: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Hulnia zachavana: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "Vyjšla jednastak: %s"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Aŭtarazviedka"}
+{"name": "aoe2mc.stance.formation", "text": "Strój: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ni adzin junit nie moža atakavać ziamlu"}
+{"name": "aoe2mc.stance.unpack", "text": "Spačatku raspakujcie trabuszet"}
+{"name": "aoe2mc.train.active", "text": "%s aktyŭny."}
+{"name": "aoe2mc.train.rally", "text": "Pstrykniciem pravaj knopkaj pa ziamli dla kropki zboru."}
+{"name": "aoe2mc.train.researched", "text": "%s dasledavana."}
+{"name": "aoe2mc.transport.out", "text": "Vyjšla jednastak: %s"}
+{"name": "aoe2mc.treaty.ended", "text": "Dahavor skončyŭsia: hulcy mohuć atakavać."}
+{"name": "aoe2mc.treaty.refuse", "text": "Dahavor: atakavać da %s nielha."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Dahavor: u hetaj hulni atakavać nielha."}
+{"name": "aoe2mc.treaty.start", "text": "Dahavor: ni adzin hulec nie moža atakavać inšaha da %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Dahavor: ni adzin hulec nie moža atakavać inšaha ŭ hetaj hulni."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Pabudujcie kazarmy: pstrykniciem pravaj knopkaj pa vybranym sialaninie, vybierycie kazarmy i pastaŭcie ich. Panel dziejańniaŭ nad paneli chutkaha dastupu skaža, kudy staviać."}
+{"name": "aoe2mc.tutorial.camera", "text": "Chutka pierakinicie mapu: pstrykniciem pravaj knopkaj z pradmietam «Kamiera», idzicie, potym pstrykniciem pa im pravaj knopkaj jašče raz."}
+{"name": "aoe2mc.tutorial.camp", "text": "Źniščycie vorahi łahier u centry mapy: vybiarycie svaich apalčeńcaŭ i pstrykniciem pravaj knopkaj pa buidynku. Palosa bossa ŭverchu pakazvaje krok."}
+{"name": "aoe2mc.tutorial.camps", "text": "Pabudujcie liesapunkt kala dreviaŭ i młyn kala jahad. Bakavaja panel sprava pakazvaje, kolki dreva jany kaštujuć."}
+{"name": "aoe2mc.tutorial.complete", "text": "Navučańnie skončana. Dalej: hulajcie z botam: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Navučańnie skončana"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Pierajdzicie ŭ Feadalny vek: pstrykniciem pravaj knopkaj pa svaim centry horada i vybiarycie Feadalny vek. Bakavaja panel sprava pakazvaje vašu ježu."}
+{"name": "aoe2mc.tutorial.food", "text": "Sabierycie 100 ježy: paškliciecie sialanina da jahad. Bakavaja panel sprava pakazvaje vašu ježu."}
+{"name": "aoe2mc.tutorial.house", "text": "Pabudujcie dom: pstrykniciem pravaj knopkaj pa vybranym sialaninie, vybierycie dom i pastaŭcie jaho. Panel dziejańniaŭ nad paneli chutkaha dastupu skaža, kudy staviać."}
+{"name": "aoe2mc.tutorial.militia", "text": "Navučycie 3 apalčeńcaŭ: pstrykniciem pravaj knopkaj pa svaich kazarmach i vybiarycie apalčeńca. Bakavaja panel sprava pakazvaje vašu ježu i zalata."}
+{"name": "aoe2mc.tutorial.raid", "text": "Vorah napadaje na vašych sialan! Pstrykniciem pa čyrvonaj linii trywohi ŭ čaće, kab pajści tudy, potym vybiarycie svaich apalčeńcaŭ i pstrykniciem pravaj knopkaj pa vorahach. Palosa bossa ŭverchu pakazvaje zdaroŭje vybranaha junita."}
+{"name": "aoe2mc.tutorial.select", "text": "Vybierycie sialanina: pstrykniciem levaj knopkaj pa adnym sa svaich sialan z palkaj kamand. Palosa bossa ŭverchu pakazvaje vybranaha junita, panel dziejańniaŭ nad paneli chutkaha dastupu — nastupnaje dziejańnie."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Kroki vykonany"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Krok %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "PARADA: kazarmy navučajuć pjachotu. Pjachota tannaja i dobraja suprać budynkaŭ."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "PARADA: atakujcie usimi junitami razam. Maleńkaja hrupa hinie, perš čym nanesci škodu."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "PARADA: stavicie buidynki dla zdačy resursaŭ kala resursaŭ, kab sialane chadzili niadoŭha."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "PARADA: nastupny vek adkryvaje novyja buidynki, junitaŭ i tehnalohii. Trymajcie sialan za pracaj, pakul vy pierachodzicie dalej."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "PARADA: jahady kala młyna — nadziejnaja pačatkovaja ježa. Potym fermy dajuć ježu, jakaja nie zakančvajecca."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "PARADA: dom dae miesca dla 5 žycharoŭ. Hlažcie nasielnictva na bakavaj paneli i buduje domy, pakul nie zapoŭnena."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "PARADA: u buidynku možna pastaviać u čarhu da 15 jednastak, kali je resursy."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "PARADA: u AoE2 zvon u zvanicu pasyłaje sialan u centr horada. Zvonicie, kali vorah napadaje na vaš horad."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "PARADA: radok «Biaździejnyja» na bakavaj paneli sprava liče sialan biez pracy. Dajcie im pracu."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "PARADA: navučajcie sialan uvieś čas u pieršych vekach. Bolš sialan — bolš resursaŭ."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "PARADA: sialane zbirajuć chutchaj kala punkta zdačy. Pabudujcie liesapunkt kala dreviaŭ."}
+{"name": "aoe2mc.tutorial.villager", "text": "Navučycie sialanina: pstrykniciem pravaj knopkaj pa svaim centry horada i vybiarycie sialanina. Bakavaja panel sprava pakazvaje ježu, jakuju jon kaštuje."}
+{"name": "aoe2mc.tutorial.wood", "text": "Sabierycie 50 dreva: vybiarycie sialanina i pstrykniciem pravaj knopkaj pa drevie. Bakavaja panel sprava pakazvaje vaše dreva."}
+{"name": "aoe2mc.victory", "text": "Peramoha"}
+{"name": "aoe2mc.wonder.built", "text": "Hulec %s pabudavaŭ cud."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Cud hulca %s źniščany."}
