@@ -277,8 +277,10 @@ def invite_names(host, invite, offline):
 
 
 def invite_line(names):
-    """The console line of --host: only the invited names can join, the white-list checks them (#5913)."""
-    return f"Only these Minecraft names can join: {', '.join(names)}."
+    """The console line of --host: only the invited names can join, the white-list checks them (#5913). The console
+    sends a typed line to the server: the vanilla `whitelist add` invites one more name with no restart (#5924)."""
+    return (f"Only these Minecraft names can join: {', '.join(names)}. "
+            "Type whitelist add NAME here to invite one more friend.")
 
 
 def properties(game_port, rcon_port, password, pack=None, host=False, offline=False):

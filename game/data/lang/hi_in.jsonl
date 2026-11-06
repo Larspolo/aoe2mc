@@ -1,0 +1,314 @@
+{"name": "aoe2mc.age_up", "text": "खिलाड़ी %s %s में पहुँचता है।"}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: भ्रष्टाचार %s में नक्शे को किनारे से केंद्र तक ले लेता है। यह उसमें सभी इकाइयाँ और इमारतें नष्ट करता है।"}
+{"name": "aoe2mc.bot.cannot_build", "text": "मैं अभी वहाँ %s नहीं बना सकता।"}
+{"name": "aoe2mc.bot.cannot_train", "text": "मैं वह इकाई प्रशिक्षित नहीं कर सकता: मेरे पास उसकी इमारत नहीं है।"}
+{"name": "aoe2mc.bot.flare_two", "text": "दीवार के लिए दो जगह संकेत दें।"}
+{"name": "aoe2mc.bot.no_flare", "text": "मुझे कोई संकेत नहीं दिखता।"}
+{"name": "aoe2mc.bot.no_market", "text": "मेरे पास बाज़ार नहीं है: मैं नज़राना नहीं भेज सकता।"}
+{"name": "aoe2mc.bot.no_onager", "text": "मेरे पास कोई ओनेजर नहीं है।"}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "मेरे पास दीवार के लिए पर्याप्त संसाधन नहीं हैं।"}
+{"name": "aoe2mc.bot.no_water", "text": "मेरे नगर के पास पानी नहीं है: मैं नौसेना नहीं बना सकता।"}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "मेरे ओनेजर पेड़ नहीं काट सकते।"}
+{"name": "aoe2mc.build.cost", "text": "पर्याप्त संसाधन नहीं: एक %s की कीमत %s है।"}
+{"name": "aoe2mc.build.flat", "text": "%s को समतल ज़मीन पर होना चाहिए।"}
+{"name": "aoe2mc.build.gate_spot", "text": "एक %s को अपनी दीवार की सीधी रेखा में 4 टाइलों पर, या 3 तिरछी टाइलों पर होना चाहिए।"}
+{"name": "aoe2mc.build.locked", "text": "%s: %s।"}
+{"name": "aoe2mc.build.menu_head", "text": "बनाएँ: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "एक %s को किनारे के पास पानी पर होना चाहिए।"}
+{"name": "aoe2mc.build.space", "text": "यहाँ %s के लिए जगह नहीं है।"}
+{"name": "aoe2mc.build.tiles_cost", "text": "पर्याप्त संसाधन नहीं: %s टाइल %s की कीमत %s है।"}
+{"name": "aoe2mc.build.wall_end", "text": "%s: दीवार के अंत पर राइट क्लिक करें।"}
+{"name": "aoe2mc.build.water", "text": "एक %s को पानी पर होना चाहिए।"}
+{"name": "aoe2mc.camera.fov", "text": "तेज़ कैमरा पकड़े हुए आइटम को हिलाता है। उसे स्थिर रखने के लिए Options > Accessibility Settings > View Bobbing को OFF करें। कैमरा दृश्य को चौड़ा भी करता है, जो नक्शे का अधिक भाग दिखाता है। सामान्य दृश्य रखने के लिए Options > Accessibility Settings > FOV Effects को 0 % करें।"}
+{"name": "aoe2mc.camera.off", "text": "कैमरा: बंद"}
+{"name": "aoe2mc.camera.on", "text": "कैमरा: चालू, गति x%s। Shift राइट क्लिक: अगली गति।"}
+{"name": "aoe2mc.camera.speed", "text": "कैमरा गति: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "सभी दुश्मन इकाइयों को हराएँ और कम इकाइयाँ खोएँ"}
+{"name": "aoe2mc.challenge.booming", "text": "100 ग्रामीण प्रशिक्षित करें और साम्राज्य युग में पहुँचें"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "किला युग में पहुँचें और दुश्मन के हमलों से बचें"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "दुश्मन का किला नष्ट करें"}
+{"name": "aoe2mc.challenge.early-economy", "text": "200 भोजन, 200 लकड़ी, 100 सोना और 200 पत्थर इकट्ठा करें, 21 ग्रामीण प्रशिक्षित करें, एक लकड़ी शिविर और एक चक्की बनाएँ, और सामंती युग में पहुँचें"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "27 ग्रामीण प्रशिक्षित करें, 5 घर बनाएँ और किला युग में पहुँचें"}
+{"name": "aoe2mc.challenge.land-battle", "text": "दुश्मन की सभी छह लहरों को हराएँ"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s इकाइयाँ खोईं, कांस्य पदक %s तक"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s इकाइयाँ खोईं, स्वर्ण पदक %s तक"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s इकाइयाँ खोईं, कोई पदक नहीं"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s इकाइयाँ खोईं, रजत पदक %s तक"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "कांस्य पदक"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "स्वर्ण पदक"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "रजत पदक"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "दुश्मन के सभी युद्धपोत नष्ट करें"}
+{"name": "aoe2mc.challenge.no_medal", "text": "कोई पदक नहीं"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "5 दुश्मन ग्रामीणों को मारें"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "%s में कांस्य पदक"}
+{"name": "aoe2mc.challenge.time_gold", "text": "%s में स्वर्ण पदक"}
+{"name": "aoe2mc.challenge.time_silver", "text": "%s में रजत पदक"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis बंद"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis चालू"}
+{"name": "aoe2mc.cheat.beyond", "text": "तकनीकें: अधिकतम 256 अनुसंधान"}
+{"name": "aoe2mc.cheat.cpu", "text": "जनसंख्या सीमा: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "युद्ध का कोहरा: बंद"}
+{"name": "aoe2mc.cheat.fog_on", "text": "युद्ध का कोहरा: चालू"}
+{"name": "aoe2mc.cheat.free_techs", "text": "तकनीकें मुफ़्त हैं"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "बाँटना ही परवाह है: आपकी आय आपके सहयोगियों को जाती है"}
+{"name": "aoe2mc.cheat.wonders", "text": "आप प्रकृति को नियंत्रित करते हैं: %s जानवर"}
+{"name": "aoe2mc.conquest.allies_end", "text": "केवल सहयोगी बचे हैं: गठबंधन समाप्त होते हैं। अंतिम जीवित खिलाड़ी जीतता है।"}
+{"name": "aoe2mc.conquest.defeated", "text": "खिलाड़ी %s हार गया।"}
+{"name": "aoe2mc.controls.attack", "text": "हमला: सैन्य इकाइयाँ चुनें, फिर किसी दुश्मन पर राइट क्लिक करें।"}
+{"name": "aoe2mc.controls.build", "text": "बनाएँ: ग्रामीण चुनें, निर्माण मेनू के लिए उन पर राइट क्लिक करें, एक इमारत चुनें, फिर ज़मीन पर लेफ्ट क्लिक करें। Shift + लेफ्ट क्लिक: और रखें। राइट क्लिक: रद्द करें।"}
+{"name": "aoe2mc.controls.camera", "text": "कैमरा: दूरबीन Camera (हॉटबार कुंजी 2) से राइट क्लिक करें: आप नक्शे के ऊपर तेज़ चलते हैं। Shift राइट क्लिक: अगली गति। फिर राइट क्लिक: आप नीचे उड़ते हैं।"}
+{"name": "aoe2mc.controls.garrison", "text": "गैरीसन: इकाइयाँ चुनें, फिर अपनी इमारत पर राइट क्लिक करें। उसका मेनू उन्हें बाहर निकालता है। टाउन सेंटर मेनू: नगर घंटी बजाएँ।"}
+{"name": "aoe2mc.controls.gather", "text": "इकट्ठा करें: ग्रामीण चुनें, फिर पेड़, फल की झाड़ी, खान या खेत पर राइट क्लिक करें।"}
+{"name": "aoe2mc.controls.goto", "text": "यहाँ जाएँ: कंपास Go to (हॉटबार कुंजी 3) से राइट क्लिक करें: आपके टाउन सेंटर, नियंत्रण समूह और अगले खाली ग्रामीण का मेनू।"}
+{"name": "aoe2mc.controls.groups", "text": "नियंत्रण समूह: इकाइयाँ चुनें, एक समूह आइटम (हॉटबार कुंजी 5 से 9) लें और चयन सेव करने के लिए Shift + राइट क्लिक करें। राइट क्लिक: समूह चुनें।"}
+{"name": "aoe2mc.controls.head", "text": "नियंत्रण (छड़ी पर गाजर पकड़ें; एक्शन बार अगला कदम दिखाता है):"}
+{"name": "aoe2mc.controls.menu", "text": "गेम मेनू: किताब Game menu (हॉटबार कुंजी 4) से राइट क्लिक करें: कूटनीति और नज़राना, संकेत, सेव, रोकें और तकनीक वृक्ष।"}
+{"name": "aoe2mc.controls.move", "text": "चलाएँ: चयन के साथ, ज़मीन पर राइट क्लिक करें।"}
+{"name": "aoe2mc.controls.research", "text": "अनुसंधान और युग उन्नति: अपनी इमारत पर राइट क्लिक करें और उसके मेनू में एक तकनीक या अगला युग क्लिक करें।"}
+{"name": "aoe2mc.controls.select", "text": "चुनें: किसी यूनिट पर लेफ्ट क्लिक करें। लेफ्ट क्लिक दबाए रखें और ज़मीन पर नज़र घुमाएँ: चयन बॉक्स। राइट क्लिक: आदेश दें।"}
+{"name": "aoe2mc.controls.train", "text": "प्रशिक्षण: अपनी इमारत (टाउन सेंटर, बैरक ...) पर राइट क्लिक करें और उसके मेनू में एक इकाई पर क्लिक करें।"}
+{"name": "aoe2mc.defeat", "text": "हार"}
+{"name": "aoe2mc.diplomacy.ally", "text": "सहयोगी"}
+{"name": "aoe2mc.diplomacy.changed", "text": "खिलाड़ी %s ने आपके प्रति अपना रुख बदला: %s।"}
+{"name": "aoe2mc.diplomacy.enemy", "text": "दुश्मन"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "तटस्थ"}
+{"name": "aoe2mc.diplomacy.speed", "text": "खिलाड़ी %s ने गेम की गति %s की।"}
+{"name": "aoe2mc.diplomacy.tribute", "text": "खिलाड़ी %s ने %s %s खिलाड़ी %s को भेजा।"}
+{"name": "aoe2mc.flare.placed", "text": "%s: %s %s पर संकेत"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "पीछे चलें: अपनी इकाई पर क्लिक करें"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "रक्षा करें: अपनी इकाई या इमारत पर क्लिक करें"}
+{"name": "aoe2mc.gaia.joins", "text": "एक %s आपसे जुड़ता है।"}
+{"name": "aoe2mc.garrison.all_back", "text": "सब काम पर वापस"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "नगर घंटी बजती है: %s ग्रामीण आश्रय ढूँढते हैं"}
+{"name": "aoe2mc.garrison.no_villager", "text": "कोई ग्रामीण चुना नहीं गया।"}
+{"name": "aoe2mc.garrison.no_villagers", "text": "आपके पास कोई ग्रामीण नहीं है।"}
+{"name": "aoe2mc.garrison.out", "text": "%s इकाइयाँ बाहर आईं"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s ग्रामीण आश्रय ढूँढते हैं"}
+{"name": "aoe2mc.gather.act_attack", "text": "हमला"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "निर्माण मेनू"}
+{"name": "aoe2mc.gather.act_garrison", "text": "गैरीसन"}
+{"name": "aoe2mc.gather.act_gather", "text": "इकट्ठा करें"}
+{"name": "aoe2mc.gather.act_hunt", "text": "शिकार"}
+{"name": "aoe2mc.gather.act_move", "text": "चलें"}
+{"name": "aoe2mc.gather.act_select", "text": "चुनें"}
+{"name": "aoe2mc.gather.act_select_type", "text": "उस प्रकार के सभी चुनें"}
+{"name": "aoe2mc.gather.act_trade", "text": "व्यापार"}
+{"name": "aoe2mc.gather.act_train", "text": "प्रशिक्षण"}
+{"name": "aoe2mc.gather.attack_siege", "text": "हमला: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "चयन बॉक्स: रद्द"}
+{"name": "aoe2mc.gather.bush", "text": "बेरी की झाड़ी"}
+{"name": "aoe2mc.gather.carcass", "text": "शव"}
+{"name": "aoe2mc.gather.corner", "text": "चयन बॉक्स: दूसरे कोने पर क्लिक करें"}
+{"name": "aoe2mc.gather.enemy", "text": "दुश्मन %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "दुश्मन इमारत"}
+{"name": "aoe2mc.gather.farm", "text": "खेत"}
+{"name": "aoe2mc.gather.ground", "text": "ज़मीन"}
+{"name": "aoe2mc.gather.group", "text": "समूह %s: %s इकाइयाँ"}
+{"name": "aoe2mc.gather.group_saved", "text": "समूह %s: %s इकाइयाँ सेव हुईं"}
+{"name": "aoe2mc.gather.mine", "text": "%s खान"}
+{"name": "aoe2mc.gather.paused", "text": "गेम रुका हुआ है।"}
+{"name": "aoe2mc.gather.point", "text": "%s · राइट क्लिक: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "कतार में पुनः बुवाई: %s"}
+{"name": "aoe2mc.gather.selected", "text": "चुनी गईं: %s इकाइयाँ"}
+{"name": "aoe2mc.gather.tree", "text": "पेड़"}
+{"name": "aoe2mc.hill.holds", "text": "खिलाड़ी %s के पास स्मारक है।"}
+{"name": "aoe2mc.hints.attack_ground", "text": "ज़मीन पर हमला: ज़मीन पर राइट क्लिक करें"}
+{"name": "aoe2mc.hints.attack_move", "text": "हमला करते हुए चलें: ज़मीन पर राइट क्लिक करें"}
+{"name": "aoe2mc.hints.building", "text": "%s रखें: ज़मीन पर राइट क्लिक करें · Shift + राइट क्लिक: और रखें · रद्द: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: रखने के लिए लेफ्ट क्लिक · Shift: और रखें · राइट क्लिक: रद्द"}
+{"name": "aoe2mc.hints.corner", "text": "चयन बॉक्स: दूसरे कोने पर राइट क्लिक करें"}
+{"name": "aoe2mc.hints.count_military", "text": "%s सैन्य इकाई"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s सैन्य इकाइयाँ"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s ग्रामीण"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s ग्रामीण"}
+{"name": "aoe2mc.hints.deselect", "text": "खाली बॉक्स: चयन हटाएँ"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "लेफ्ट क्लिक: चयन हटाएँ"}
+{"name": "aoe2mc.hints.follow", "text": "पीछे चलें: अपनी या सहयोगी इकाई पर राइट क्लिक करें"}
+{"name": "aoe2mc.hints.guard", "text": "रक्षा करें: अपनी या सहयोगी इकाई या इमारत पर राइट क्लिक करें"}
+{"name": "aoe2mc.hints.military", "text": "%s · राइट क्लिक: दुश्मन पर हमला, रुख मेनू · %s"}
+{"name": "aoe2mc.hints.none", "text": "लेफ्ट क्लिक: यूनिट चुनें · लेफ्ट क्लिक दबाए रखें: चयन बॉक्स"}
+{"name": "aoe2mc.hints.none_wand", "text": "राइट क्लिक: एक इकाई चुनें · छड़ी: चयन बॉक्स"}
+{"name": "aoe2mc.hints.patrol", "text": "गश्त: ज़मीन पर राइट क्लिक करें"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · राइट क्लिक: इकट्ठा, निर्माण, निर्माण मेनू · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s तैयार"}
+{"name": "aoe2mc.lobby.you_play", "text": "आप %s खेलते हैं।"}
+{"name": "aoe2mc.monk.converts", "text": "एक भिक्षु %s का धर्म परिवर्तन करता है।"}
+{"name": "aoe2mc.monk.dies", "text": "%s मर जाता है (Heresy)।"}
+{"name": "aoe2mc.pause.continued", "text": "खिलाड़ी %s ने गेम जारी रखा।"}
+{"name": "aoe2mc.pause.paused", "text": "खिलाड़ी %s ने गेम रोका।"}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "टीम %s (औसत रेटिंग %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "गेम समाप्त हो गया। परिणाम देखने के लिए हाथ में Recap किताब पर राइट क्लिक करें। गेम प्रोग्राम को उसके कंसोल में Ctrl-C से रोकें।"}
+{"name": "aoe2mc.relic_victory.all", "text": "खिलाड़ी %s के पास सभी अवशेष हैं।"}
+{"name": "aoe2mc.relic_victory.lost", "text": "खिलाड़ी %s ने एक अवशेष खोया।"}
+{"name": "aoe2mc.repair.no_resources", "text": "%s की मरम्मत के लिए पर्याप्त संसाधन नहीं।"}
+{"name": "aoe2mc.replay.army", "text": "सेना: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", अंत में सेना: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", खोया: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "निर्माण क्रम:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · गैरीसन %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | %s %s ले जा रहा है"}
+{"name": "aoe2mc.replay.eco_build", "text": "निर्माण %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "भोजन %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "सोना %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "खाली %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "पत्थर %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "लकड़ी %s"}
+{"name": "aoe2mc.replay.flare", "text": "संकेत"}
+{"name": "aoe2mc.replay.game_ends", "text": "गेम समाप्त होता है"}
+{"name": "aoe2mc.replay.game_time", "text": "गेम समय %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · गैरीसन %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "सेना %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "जनसंख्या %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "संसाधन %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "ग्रामीण %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s ने स्मारक रखा: %s पर King of the Hill जीत।"}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s हमला %s/%s कवच%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift दो बार दबाएँ: दर्शक दृश्य (ब्लॉकों से होकर उड़ें)। हॉटबार आइटम पर राइट क्लिक करें: रीप्ले नियंत्रण।"}
+{"name": "aoe2mc.replay.king_died", "text": ": राजा %s पर मरा। Regicide: खिलाड़ी बाहर है।"}
+{"name": "aoe2mc.replay.king_killed", "text": "राजा %s पर मारा गया"}
+{"name": "aoe2mc.replay.live_jump", "text": "लाइव रीप्ले: छलांग गेम के पीछे की देरी पर रुकती है।"}
+{"name": "aoe2mc.replay.lost", "text": "खोया: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " के पास %s पर स्मारक है।"}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: स्मारक, %s वर्ष बाकी"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: स्मारक, %s वर्ष बाकी"}
+{"name": "aoe2mc.replay.no_camera", "text": "इस रिकॉर्ड में उसके खिलाड़ी का कैमरा नहीं है।"}
+{"name": "aoe2mc.replay.now", "text": " अब"}
+{"name": "aoe2mc.replay.out", "text": "%s बाहर है"}
+{"name": "aoe2mc.replay.players", "text": "खिलाड़ी"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " अवशेष को मठ में ले जाता है और जीतता है।"}
+{"name": "aoe2mc.replay.replay_ended", "text": "रीप्ले समाप्त"}
+{"name": "aoe2mc.replay.research", "text": " %s का अनुसंधान करता है"}
+{"name": "aoe2mc.replay.resigns", "text": "%s हार मानता है"}
+{"name": "aoe2mc.replay.restart_jump", "text": "पीछे की छलांग के लिए सर्वर फिर से शुरू होता है: फिर से जुड़ें।"}
+{"name": "aoe2mc.replay.share_buildings", "text": "इमारतें %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "अर्थव्यवस्था %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "सेना %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "तकनीकें %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "कुल %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "किले %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "खरीदा %s, बेचा %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "अवशेष %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "अजूबे %s, "}
+{"name": "aoe2mc.replay.spent", "text": "खर्च:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "निर्माण %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "अर्थ %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "सेना %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "तकनीक %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": प्रशिक्षित ग्रामीण %s, इकट्ठा %s, खाली ग्रामीण समय %s, खाली TC समय %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": स्मारक रखता है (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": स्मारक जीता %s (King of the Hill)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": प्रशिक्षित सैन्य इकाइयाँ %s, खोई इकाइयाँ %s, खोई इमारतें %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": राजा मारा गया %s (Regicide)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": जीतता है, मठ में अवशेष %s (Capture the Relic)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sभेजा नज़राना %s, प्राप्त %s, अधिकतम ग्रामीण %s (अनुमान)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": टाउन सेंटर खोया %s (Sudden Death)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, तकनीकें %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": अजूबा टाइमर %s से, समाप्त %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "सारांश (अनुमान)"}
+{"name": "aoe2mc.replay.task_building", "text": "निर्माण कर रहा"}
+{"name": "aoe2mc.replay.task_following", "text": "पीछे चल रहा"}
+{"name": "aoe2mc.replay.task_food", "text": "भोजन इकट्ठा कर रहा"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "गैरीसन में"}
+{"name": "aoe2mc.replay.task_gold", "text": "सोना इकट्ठा कर रहा"}
+{"name": "aoe2mc.replay.task_guarding", "text": "रक्षा कर रहा"}
+{"name": "aoe2mc.replay.task_idle", "text": "खाली"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "गश्त कर रहा"}
+{"name": "aoe2mc.replay.task_resources", "text": "संसाधन इकट्ठा कर रहा"}
+{"name": "aoe2mc.replay.task_stone", "text": "पत्थर इकट्ठा कर रहा"}
+{"name": "aoe2mc.replay.task_walking", "text": "चल रहा"}
+{"name": "aoe2mc.replay.task_wood", "text": "लकड़ी इकट्ठा कर रहा"}
+{"name": "aoe2mc.replay.team", "text": "टीम %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "तीरंदाज़ %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "तीरंदाज़ कवच %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "ढुलाई %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "घुड़सवार कवच %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "खेत %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "सोना %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "पैदल सेना कवच %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "करघा %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "हाथापाई %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "पत्थर %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "लकड़ी %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "किला"}
+{"name": "aoe2mc.replay.tl_king", "text": "राजा मारा गया"}
+{"name": "aoe2mc.replay.tl_military", "text": "पहली सेना: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "अवशेष"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "हार मानता है"}
+{"name": "aoe2mc.replay.town_fell", "text": ": टाउन सेंटर %s पर गिरा। Sudden Death: खिलाड़ी बाहर है।"}
+{"name": "aoe2mc.replay.town_lost", "text": "टाउन सेंटर %s पर खोया"}
+{"name": "aoe2mc.replay.training", "text": "प्रशिक्षण: %s"}
+{"name": "aoe2mc.replay.university", "text": "विश्वविद्यालय:"}
+{"name": "aoe2mc.replay.up_counts", "text": "अर्थव्यवस्था %s · विश्वविद्यालय %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " ने %s पर अजूबा बनाया।"}
+{"name": "aoe2mc.replay_input.fight", "text": "लड़ाई: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s इकाइयाँ"}
+{"name": "aoe2mc.replay_input.fights", "text": "बड़ी लड़ाइयाँ:"}
+{"name": "aoe2mc.replay_input.help", "text": "रीप्ले: अपने हॉटबार के आइटम पर राइट क्लिक करें, या क्लिक करें: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "अपने हाथ में लें: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s इकाइयाँ)"}
+{"name": "aoe2mc.replay_input.vs", "text": " बनाम "}
+{"name": "aoe2mc.resource.food", "text": "भोजन"}
+{"name": "aoe2mc.resource.gold", "text": "सोना"}
+{"name": "aoe2mc.resource.stone", "text": "पत्थर"}
+{"name": "aoe2mc.resource.wood", "text": "लकड़ी"}
+{"name": "aoe2mc.run.campaign_complete", "text": "अभियान पूरा"}
+{"name": "aoe2mc.run.chat_hint", "text": "चैट: सामान्य पंक्ति सबको जाती है, /tm TEXT आपके सहयोगियों को, /msg NAME TEXT एक व्यक्ति को।"}
+{"name": "aoe2mc.run.scenario_starts", "text": "परिदृश्य %s शुरू होता है। फिर से जुड़ें।"}
+{"name": "aoe2mc.run.starts_in", "text": "गेम %s में शुरू होता है"}
+{"name": "aoe2mc.run.wait_ready", "text": "\"Choose your player\" खोलें और \"Ready\" पर क्लिक करें"}
+{"name": "aoe2mc.run.welcome_controls", "text": "सभी नियंत्रण: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "पहला कदम: आदेश छड़ी पकड़ें और अपने किसी ग्रामीण पर राइट क्लिक करें।"}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "पहला कदम: आदेश छड़ी पकड़ें और अपने किसी ग्रामीण पर लेफ्ट क्लिक करें।"}
+{"name": "aoe2mc.run.welcome_goal", "text": "लक्ष्य: गेम जीतें। जीत सेटिंग: %s।"}
+{"name": "aoe2mc.savegame.saved", "text": "गेम सेव हुआ: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s इकाइयाँ बाहर आईं"}
+{"name": "aoe2mc.stance.auto_scout", "text": "स्वतः टोही"}
+{"name": "aoe2mc.stance.formation", "text": "व्यूह: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "कोई इकाई ज़मीन पर हमला नहीं कर सकती"}
+{"name": "aoe2mc.stance.unpack", "text": "पहले ट्रेबुशे को खोलें"}
+{"name": "aoe2mc.train.active", "text": "%s सक्रिय है।"}
+{"name": "aoe2mc.train.rally", "text": "रैली पॉइंट के लिए ज़मीन पर राइट क्लिक करें।"}
+{"name": "aoe2mc.train.researched", "text": "%s का अनुसंधान हुआ।"}
+{"name": "aoe2mc.transport.out", "text": "%s इकाइयाँ बाहर आईं"}
+{"name": "aoe2mc.treaty.ended", "text": "संधि समाप्त: खिलाड़ी अब हमला कर सकते हैं।"}
+{"name": "aoe2mc.treaty.refuse", "text": "संधि: आप %s से पहले हमला नहीं कर सकते।"}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "संधि: आप इस गेम में हमला नहीं कर सकते।"}
+{"name": "aoe2mc.treaty.start", "text": "संधि: कोई खिलाड़ी %s से पहले दूसरे खिलाड़ी पर हमला नहीं कर सकता।"}
+{"name": "aoe2mc.treaty.start_endless", "text": "संधि: कोई खिलाड़ी इस गेम में दूसरे खिलाड़ी पर हमला नहीं कर सकता।"}
+{"name": "aoe2mc.tutorial.barracks", "text": "एक बैरक बनाएँ: चुने गए ग्रामीण पर राइट क्लिक करें, बैरक चुनें और उसे रखें। हॉटबार के ऊपर एक्शन बार बताता है कि उसे कहाँ रखना है।"}
+{"name": "aoe2mc.tutorial.camera", "text": "नक्शे पर तेज़ चलें: \"Camera\" आइटम से राइट क्लिक करें, चलें, फिर उससे दोबारा राइट क्लिक करें।"}
+{"name": "aoe2mc.tutorial.camp", "text": "नक्शे के बीच में दुश्मन शिविर नष्ट करें: अपने मिलिशिया चुनें और एक इमारत पर राइट क्लिक करें। ऊपर बॉस बार कदम दिखाता है।"}
+{"name": "aoe2mc.tutorial.camps", "text": "पेड़ों के पास लकड़ी शिविर और बेरी के पास चक्की बनाएँ। दाईं ओर साइडबार उनकी लकड़ी कीमत दिखाता है।"}
+{"name": "aoe2mc.tutorial.complete", "text": "ट्यूटोरियल पूरा हुआ। अगला: बॉट के विरुद्ध एक गेम खेलें: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "ट्यूटोरियल पूरा"}
+{"name": "aoe2mc.tutorial.feudal", "text": "सामंती युग में पहुँचें: अपने टाउन सेंटर पर राइट क्लिक करें और सामंती युग चुनें। दाईं ओर साइडबार आपका भोजन दिखाता है।"}
+{"name": "aoe2mc.tutorial.food", "text": "100 भोजन इकट्ठा करें: एक ग्रामीण को बेरी के पास भेजें। दाईं ओर साइडबार आपका भोजन दिखाता है।"}
+{"name": "aoe2mc.tutorial.house", "text": "एक घर बनाएँ: चुने गए ग्रामीण पर राइट क्लिक करें, घर चुनें और उसे रखें। हॉटबार के ऊपर एक्शन बार बताता है कि उसे कहाँ रखना है।"}
+{"name": "aoe2mc.tutorial.militia", "text": "3 मिलिशिया प्रशिक्षित करें: अपने बैरक पर राइट क्लिक करें और मिलिशिया चुनें। दाईं ओर साइडबार आपका भोजन और सोना दिखाता है।"}
+{"name": "aoe2mc.tutorial.raid", "text": "दुश्मन आपके ग्रामीणों पर हमला करता है! वहाँ जाने के लिए चैट में लाल चेतावनी पंक्ति पर क्लिक करें, फिर अपने मिलिशिया चुनें और दुश्मनों पर राइट क्लिक करें। ऊपर बॉस बार चुनी गई इकाई का स्वास्थ्य दिखाता है।"}
+{"name": "aoe2mc.tutorial.select", "text": "एक ग्रामीण चुनें: आदेश छड़ी से अपने किसी ग्रामीण पर राइट क्लिक करें। ऊपर बॉस बार चुनी गई इकाई दिखाता है, हॉटबार के ऊपर एक्शन बार अगला कार्य दिखाता है।"}
+{"name": "aoe2mc.tutorial.step_done", "text": "कदम पूरा"}
+{"name": "aoe2mc.tutorial.step_of", "text": "कदम %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "सुझाव: बैरक पैदल सेना प्रशिक्षित करता है। पैदल सेना सस्ती है और इमारतों के विरुद्ध अच्छी है।"}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "सुझाव: अपनी सभी इकाइयों के साथ मिलकर हमला करें। एक छोटा समूह नुकसान करने से पहले मर जाता है।"}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "सुझाव: जमा करने वाली इमारतें संसाधनों के पास बनाएँ, ताकि ग्रामीण कम चलें।"}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "सुझाव: अगला युग नई इमारतें, इकाइयाँ और तकनीकें खोलता है। युग उन्नति के समय ग्रामीणों को काम पर रखें।"}
+{"name": "aoe2mc.tutorial.tip_food", "text": "सुझाव: चक्की के पास बेरी भोजन की सुरक्षित शुरुआत है। बाद में खेत ऐसा भोजन देते हैं जो खत्म नहीं होता।"}
+{"name": "aoe2mc.tutorial.tip_house", "text": "सुझाव: एक घर 5 और जनसंख्या की जगह देता है। साइडबार में जनसंख्या देखें और भरने से पहले घर बनाएँ।"}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "सुझाव: संसाधन होने पर आप एक इमारत में 15 तक इकाइयाँ कतार में लगा सकते हैं।"}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "सुझाव: AoE2 में नगर घंटी ग्रामीणों को टाउन सेंटर में भेजती है। जब दुश्मन आपके नगर पर धावा बोले तो इसे बजाएँ।"}
+{"name": "aoe2mc.tutorial.tip_select", "text": "सुझाव: दाईं ओर साइडबार की Idle पंक्ति बिना काम वाले ग्रामीण गिनती है। उन्हें काम दें।"}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "सुझाव: पहले युगों में हर समय ग्रामीण प्रशिक्षित करें। अधिक ग्रामीण अधिक संसाधन देते हैं।"}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "सुझाव: ग्रामीण जमा करने वाली इमारत के पास तेज़ इकट्ठा करते हैं। पेड़ों के पास लकड़ी शिविर बनाएँ।"}
+{"name": "aoe2mc.tutorial.villager", "text": "एक ग्रामीण प्रशिक्षित करें: अपने टाउन सेंटर पर राइट क्लिक करें और ग्रामीण चुनें। दाईं ओर साइडबार उसकी भोजन कीमत दिखाता है।"}
+{"name": "aoe2mc.tutorial.wood", "text": "50 लकड़ी इकट्ठा करें: एक ग्रामीण चुनें और एक पेड़ पर राइट क्लिक करें। दाईं ओर साइडबार आपकी लकड़ी दिखाता है।"}
+{"name": "aoe2mc.victory", "text": "जीत"}
+{"name": "aoe2mc.wonder.built", "text": "खिलाड़ी %s ने एक अजूबा बनाया।"}
+{"name": "aoe2mc.wonder.destroyed", "text": "खिलाड़ी %s का अजूबा नष्ट हुआ।"}

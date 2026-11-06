@@ -11,7 +11,8 @@ The tool copies the world and runs `run.main([WORLD, --play, --host, --invite al
 (the clients of tools/mc_shot.py have no Minecraft login). Client "alice" (the host) joins on localhost. Client "bob"
 joins on ADDRESS:PORT of the line "Join the server ADDRESS:PORT (other computers on the network)." and loads the pack
 from the PackServer of the network address. The tool sets both people "Ready" (as tools/rejoin_check.py). Then
-client "eve" (not invited) tries to join: the server log must show the white-list refusal. OUTDIR gets result.json.
+client "eve" (not invited) tries to join: the server log must show the white-list refusal. Then the tool types
+`whitelist add eve` in the console of the game program (stdin, #5924) and eve joins again. OUTDIR gets result.json.
 Exit 0: all points are OK.
 """
 import argparse
@@ -64,10 +65,11 @@ class Client(mc_shot.Client):
         return super().__exit__(*exc)
 
 
-def result(line, port, pack_url, pack_gets, team, refused, eve_on, errors, ops):
+def result(line, port, pack_url, pack_gets, team, refused, eve_on, errors, ops, invited):
     """{point: (ok, detail)} of the check. line: the (ADDRESS, PORT) of the printed line or None; pack_gets: the
     client addresses of the pack downloads; refused: the server log lines of the refusal of eve; ops: (the server
-    still runs after the /stop of bob, the chat lines of bob after /stop, after /controls)."""
+    still runs after the /stop of bob, the chat lines of bob after /stop, after /controls); invited: eve is online
+    after the whitelist add."""
     addr = line[0] if line else None
     out = {"the address line": (bool(line) and addr not in ("localhost", "127.0.0.1") and line[1] == str(port),
                                 f"{line} (game port {port})"),
@@ -78,6 +80,7 @@ def result(line, port, pack_url, pack_gets, team, refused, eve_on, errors, ops):
                                            f"server {'up' if ops[0] else 'stopped'}; " + "; ".join(ops[1][:2])),
            "bob gets /controls": (bool(ops[2]), "; ".join(ops[2][:3])),
            "eve cannot join": (bool(refused) and not eve_on, "; ".join(refused[:2]) or f"no refusal, online {eve_on}"),
+           "eve joins after whitelist add in the console": (invited, f"online {invited}"),
            "no server errors": (not errors, "; ".join(e[:200] for e in errors[:5]))}
     return {k: (bool(ok), d) for k, (ok, d) in out.items()}
 
@@ -141,10 +144,18 @@ def drive(games, a, report, tee):
                     time.sleep(3)
                     refused = [x for x in game.server.log if REFUSED.search(x)]
                     eve_on = eve_on or online(E)
+                os.write(a.stdin, b"whitelist add eve\n")                 # the host types it (run.console)
+                time.sleep(3)
+                with Client(game.game_port, game.version, name=E, world=a.copy,
+                                    host=line[0] if line else "127.0.0.1") as ce:
+                    t, invited = time.time(), False
+                    while not invited and time.time() - t < 180 and ce.client.poll() is None:
+                        invited = online(E)
+                        time.sleep(1)
         log = game.server.log
         errors = [x for x in log if rejoin_check.ERROR.search(x) and not rejoin_check.OFFLINE.search(x)]
         report.update(result(line, game.game_port, getattr(game.pack, "url", None), gets, team, refused, eve_on,
-                             errors, ops))
+                             errors, ops, invited))
     except Exception:
         traceback.print_exc()
     finally:
@@ -184,8 +195,8 @@ def main(argv=None):
 
     run.Game.__init__ = game_init
     tee = sys.stderr = Tee(sys.stderr)
+    r, a.stdin = os.pipe()                                             # run.console reads stdin: no EOF
     threading.Thread(target=drive, args=(games, a, report, tee), daemon=True).start()
-    r, _ = os.pipe()                                                   # run.console reads stdin: no EOF
     os.dup2(r, sys.stdin.fileno())
     run.main([a.copy, "--play", "--host", "--invite", f"{A},{B}", "--offline", "--people", "2",
               "--speed", f"{a.speed:g}"])

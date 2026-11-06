@@ -1,0 +1,314 @@
+{"name": "aoe2mc.age_up", "text": "プレイヤー %s が%sに進みます。"}
+{"name": "aoe2mc.battle_royale.start", "text": "バトルロイヤル: 腐敗が%sでマップの端から中心へ広がります。範囲内のユニットと建物はすべて破壊されます。"}
+{"name": "aoe2mc.bot.cannot_build", "text": "今はそこに%sを建てられません。"}
+{"name": "aoe2mc.bot.cannot_train", "text": "そのユニットを生産できません: そのための建物がありません。"}
+{"name": "aoe2mc.bot.flare_two", "text": "壁を作るには2か所に合図してください。"}
+{"name": "aoe2mc.bot.no_flare", "text": "合図が見えません。"}
+{"name": "aoe2mc.bot.no_market", "text": "市場がありません: 貢ぎ物を送れません。"}
+{"name": "aoe2mc.bot.no_onager", "text": "オナガーがいません。"}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "壁を作る資源が足りません。"}
+{"name": "aoe2mc.bot.no_water", "text": "町の近くに水がありません: 海軍を作れません。"}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "私のオナガーは木を切れません。"}
+{"name": "aoe2mc.build.cost", "text": "資源が足りません: %sには%sが必要です。"}
+{"name": "aoe2mc.build.flat", "text": "%sは平らな地面に建てる必要があります。"}
+{"name": "aoe2mc.build.gate_spot", "text": "%sは自軍の壁の直線4タイル、または斜め3タイルの上に置く必要があります。"}
+{"name": "aoe2mc.build.locked", "text": "%s: %s。"}
+{"name": "aoe2mc.build.menu_head", "text": "建設: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%sは岸に接した水上に建てる必要があります。"}
+{"name": "aoe2mc.build.space", "text": "ここには%sを置く場所がありません。"}
+{"name": "aoe2mc.build.tiles_cost", "text": "資源が足りません: %sタイルの%sには%sが必要です。"}
+{"name": "aoe2mc.build.wall_end", "text": "%s: 壁の終点を右クリックしてください。"}
+{"name": "aoe2mc.build.water", "text": "%sは水上に建てる必要があります。"}
+{"name": "aoe2mc.camera.fov", "text": "高速カメラでは持っているアイテムが揺れます。揺れを止めるには、設定 > アクセシビリティ設定 > 画面の揺れ をオフにしてください。カメラは視野も広げ、マップをより広く表示します。通常の視野を保つには、設定 > アクセシビリティ設定 > 視野角の効果 を 0 % にしてください。"}
+{"name": "aoe2mc.camera.off", "text": "カメラ: オフ"}
+{"name": "aoe2mc.camera.on", "text": "カメラ: オン、速度 x%s。Shift + 右クリック: 次の速度。"}
+{"name": "aoe2mc.camera.speed", "text": "カメラ速度: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "敵ユニットをすべて倒し、損失を少なくする"}
+{"name": "aoe2mc.challenge.booming", "text": "村人を100人生産し、帝王の時代に進む"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "城主の時代に進み、敵の攻撃を生き延びる"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "敵の城を破壊する"}
+{"name": "aoe2mc.challenge.early-economy", "text": "食料200、木200、金100、石200を集め、村人を21人生産し、伐採所と粉ひき所を建て、領主の時代に進む"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "村人を27人生産し、家を5軒建て、城主の時代に進む"}
+{"name": "aoe2mc.challenge.land-battle", "text": "敵の6つの波をすべて倒す"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "失ったユニット %s、%sまで銅メダル"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "失ったユニット %s、%sまで金メダル"}
+{"name": "aoe2mc.challenge.lost_none", "text": "失ったユニット %s、メダルなし"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "失ったユニット %s、%sまで銀メダル"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "銅メダル"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "金メダル"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "銀メダル"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "敵の軍艦をすべて破壊する"}
+{"name": "aoe2mc.challenge.no_medal", "text": "メダルなし"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "敵の村人を5人倒す"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "%sで銅メダル"}
+{"name": "aoe2mc.challenge.time_gold", "text": "%sで金メダル"}
+{"name": "aoe2mc.challenge.time_silver", "text": "%sで銀メダル"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "イージス オフ"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "イージス オン"}
+{"name": "aoe2mc.cheat.beyond", "text": "技術: 最大 256 件の研究"}
+{"name": "aoe2mc.cheat.cpu", "text": "人口上限: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "戦場の霧: オフ"}
+{"name": "aoe2mc.cheat.fog_on", "text": "戦場の霧: オン"}
+{"name": "aoe2mc.cheat.free_techs", "text": "技術が無料になりました"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "分かち合いは思いやり: 収入が同盟国に送られます"}
+{"name": "aoe2mc.cheat.wonders", "text": "自然を支配: 動物 %s"}
+{"name": "aoe2mc.conquest.allies_end", "text": "同盟国だけが残りました: 同盟は終了します。最後に生き残ったプレイヤーが勝ちます。"}
+{"name": "aoe2mc.conquest.defeated", "text": "プレイヤー %s が敗北しました。"}
+{"name": "aoe2mc.controls.attack", "text": "攻撃: 軍事ユニットを選択し、敵を右クリック。"}
+{"name": "aoe2mc.controls.build", "text": "建設: 村人を選択して右クリックで建設メニューを開き、建物を選んで地面を左クリック。Shift + 左クリック: 続けて配置。右クリック: キャンセル。"}
+{"name": "aoe2mc.controls.camera", "text": "カメラ: 望遠鏡「カメラ」(ホットバーキー 2) で右クリックすると、マップの上空を高速で移動します。Shift + 右クリック: 次の速度。もう一度右クリック: 降下します。"}
+{"name": "aoe2mc.controls.garrison", "text": "駐留: ユニットを選択し、自軍の建物を右クリック。建物のメニューで外に出せます。町の中心のメニュー: 町の鐘を鳴らす。"}
+{"name": "aoe2mc.controls.gather", "text": "採集: 村人を選択し、木、果実の茂み、鉱山、または農場を右クリック。"}
+{"name": "aoe2mc.controls.goto", "text": "移動先: コンパス「移動先」(ホットバーキー 3) で右クリックすると、町の中心、部隊、次の待機中の村人のメニューが開きます。"}
+{"name": "aoe2mc.controls.groups", "text": "部隊: ユニットを選択し、部隊アイテム (ホットバーキー 5〜9) を持って Shift + 右クリックで選択を保存。右クリック: 部隊を選択。"}
+{"name": "aoe2mc.controls.head", "text": "操作 (ニンジン付きの棒を持つと、アクションバーに次の手順が表示されます):"}
+{"name": "aoe2mc.controls.menu", "text": "ゲームメニュー: 本「ゲームメニュー」(ホットバーキー 4) で右クリック: 外交と貢ぎ物、合図、保存、一時停止、技術ツリー。"}
+{"name": "aoe2mc.controls.move", "text": "移動: 選択中に地面を右クリック。"}
+{"name": "aoe2mc.controls.research", "text": "研究と時代進化: 自軍の建物を右クリックし、メニューから技術または次の時代をクリック。"}
+{"name": "aoe2mc.controls.select", "text": "選択: ユニットを左クリック。左クリックを押したまま地面を見渡すと選択ボックス。右クリック: 命令。"}
+{"name": "aoe2mc.controls.train", "text": "生産: 自軍の建物 (町の中心、兵舎など) を右クリックし、メニューからユニットをクリック。"}
+{"name": "aoe2mc.defeat", "text": "敗北"}
+{"name": "aoe2mc.diplomacy.ally", "text": "同盟"}
+{"name": "aoe2mc.diplomacy.changed", "text": "プレイヤー %s があなたへの態度を変更しました: %s。"}
+{"name": "aoe2mc.diplomacy.enemy", "text": "敵対"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "中立"}
+{"name": "aoe2mc.diplomacy.speed", "text": "プレイヤー %s がゲーム速度を %s に設定しました。"}
+{"name": "aoe2mc.diplomacy.tribute", "text": "プレイヤー %s が %s %s をプレイヤー %s に送りました。"}
+{"name": "aoe2mc.flare.placed", "text": "%s: %s %s に合図"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "追従: 自軍のユニットをクリック"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "護衛: 自軍のユニットまたは建物をクリック"}
+{"name": "aoe2mc.gaia.joins", "text": "%sが仲間になりました。"}
+{"name": "aoe2mc.garrison.all_back", "text": "全員作業に戻れ"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "町の鐘が鳴りました: 村人 %s 人が避難します"}
+{"name": "aoe2mc.garrison.no_villager", "text": "村人が選択されていません。"}
+{"name": "aoe2mc.garrison.no_villagers", "text": "村人がいません。"}
+{"name": "aoe2mc.garrison.out", "text": "%s ユニットが出てきました"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "村人 %s 人が避難します"}
+{"name": "aoe2mc.gather.act_attack", "text": "攻撃"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "建設メニュー"}
+{"name": "aoe2mc.gather.act_garrison", "text": "駐留"}
+{"name": "aoe2mc.gather.act_gather", "text": "採集"}
+{"name": "aoe2mc.gather.act_hunt", "text": "狩猟"}
+{"name": "aoe2mc.gather.act_move", "text": "移動"}
+{"name": "aoe2mc.gather.act_select", "text": "選択"}
+{"name": "aoe2mc.gather.act_select_type", "text": "同じ種類をすべて選択"}
+{"name": "aoe2mc.gather.act_trade", "text": "交易"}
+{"name": "aoe2mc.gather.act_train", "text": "生産"}
+{"name": "aoe2mc.gather.attack_siege", "text": "攻撃: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "範囲選択: キャンセルしました"}
+{"name": "aoe2mc.gather.bush", "text": "果実の茂み"}
+{"name": "aoe2mc.gather.carcass", "text": "死骸"}
+{"name": "aoe2mc.gather.corner", "text": "範囲選択: もう一方の角をクリック"}
+{"name": "aoe2mc.gather.enemy", "text": "敵の%s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "敵の建物"}
+{"name": "aoe2mc.gather.farm", "text": "農場"}
+{"name": "aoe2mc.gather.ground", "text": "地面"}
+{"name": "aoe2mc.gather.group", "text": "部隊 %s: %s ユニット"}
+{"name": "aoe2mc.gather.group_saved", "text": "部隊 %s: %s ユニットを保存しました"}
+{"name": "aoe2mc.gather.mine", "text": "%s鉱山"}
+{"name": "aoe2mc.gather.paused", "text": "ゲームは一時停止中です。"}
+{"name": "aoe2mc.gather.point", "text": "%s · 右クリック: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "再植え付けの予約: %s"}
+{"name": "aoe2mc.gather.selected", "text": "選択中: %s ユニット"}
+{"name": "aoe2mc.gather.tree", "text": "木"}
+{"name": "aoe2mc.hill.holds", "text": "プレイヤー %s がモニュメントを保持しています。"}
+{"name": "aoe2mc.hints.attack_ground", "text": "地面攻撃: 地面を右クリック"}
+{"name": "aoe2mc.hints.attack_move", "text": "攻撃移動: 地面を右クリック"}
+{"name": "aoe2mc.hints.building", "text": "%sを配置: 地面を右クリック · Shift + 右クリック: 続けて配置 · キャンセル: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: 左クリックで配置 · Shift: 続けて配置 · 右クリック: キャンセル"}
+{"name": "aoe2mc.hints.corner", "text": "範囲選択: もう一方の角を右クリック"}
+{"name": "aoe2mc.hints.count_military", "text": "軍事ユニット %s"}
+{"name": "aoe2mc.hints.count_military_many", "text": "軍事ユニット %s"}
+{"name": "aoe2mc.hints.count_villager", "text": "村人 %s"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "村人 %s"}
+{"name": "aoe2mc.hints.deselect", "text": "空の範囲: 選択解除"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "左クリック: 選択解除"}
+{"name": "aoe2mc.hints.follow", "text": "追従: 自軍または同盟国のユニットを右クリック"}
+{"name": "aoe2mc.hints.guard", "text": "護衛: 自軍または同盟国のユニットか建物を右クリック"}
+{"name": "aoe2mc.hints.military", "text": "%s · 右クリック: 敵を攻撃、態勢メニュー · %s"}
+{"name": "aoe2mc.hints.none", "text": "左クリック: ユニットを選択 · 左クリック長押し: 選択ボックス"}
+{"name": "aoe2mc.hints.none_wand", "text": "右クリック: ユニットを選択 · 杖: 範囲選択"}
+{"name": "aoe2mc.hints.patrol", "text": "巡回: 地面を右クリック"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · 右クリック: 採集、建設、建設メニュー · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s 準備完了"}
+{"name": "aoe2mc.lobby.you_play", "text": "あなたは%sでプレイします。"}
+{"name": "aoe2mc.monk.converts", "text": "修道士が%sを改宗させます。"}
+{"name": "aoe2mc.monk.dies", "text": "%sが死亡しました (異端)。"}
+{"name": "aoe2mc.pause.continued", "text": "プレイヤー %s がゲームを再開しました。"}
+{"name": "aoe2mc.pause.paused", "text": "プレイヤー %s がゲームを一時停止しました。"}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "チーム %s (平均レーティング %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "ゲームが終了しました。手に持った「戦績」の本を右クリックすると結果が見られます。ゲームプログラムはコンソールで Ctrl-C を押して停止します。"}
+{"name": "aoe2mc.relic_victory.all", "text": "プレイヤー %s がすべての聖遺物を保持しています。"}
+{"name": "aoe2mc.relic_victory.lost", "text": "プレイヤー %s が聖遺物を失いました。"}
+{"name": "aoe2mc.repair.no_resources", "text": "%sを修理する資源が足りません。"}
+{"name": "aoe2mc.replay.army", "text": "軍隊: %s"}
+{"name": "aoe2mc.replay.army_end", "text": "、終了時の軍隊: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": "、損失: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "ビルドオーダー:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · 駐留 %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | %s %s を運搬中"}
+{"name": "aoe2mc.replay.eco_build", "text": "建設 %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "食料 %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "金 %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "待機 %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "石 %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "木 %s"}
+{"name": "aoe2mc.replay.flare", "text": "合図"}
+{"name": "aoe2mc.replay.game_ends", "text": "ゲーム終了"}
+{"name": "aoe2mc.replay.game_time", "text": "ゲーム時間 %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · 駐留 %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "軍事 %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "人口 %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "資源 %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "村人 %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%sがモニュメントを保持: %sにキング・オブ・ザ・ヒルで勝利。"}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s 攻撃 %s/%s 防御%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift を2回押す: 観戦視点 (ブロックを通り抜けて飛行)。ホットバーのアイテムを右クリック: リプレイ操作。"}
+{"name": "aoe2mc.replay.king_died", "text": ": %sに王が死亡しました。レジサイド: このプレイヤーは脱落です。"}
+{"name": "aoe2mc.replay.king_killed", "text": "%sに王が殺害されました"}
+{"name": "aoe2mc.replay.live_jump", "text": "ライブリプレイ: ジャンプはゲームの遅延分の手前で止まります。"}
+{"name": "aoe2mc.replay.lost", "text": "損失: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " が%sにモニュメントを保持しています。"}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: モニュメント、残り %s 年"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: モニュメント、残り %s 年"}
+{"name": "aoe2mc.replay.no_camera", "text": "この記録にはそのプレイヤーのカメラがありません。"}
+{"name": "aoe2mc.replay.now", "text": " 今"}
+{"name": "aoe2mc.replay.out", "text": "%sが脱落しました"}
+{"name": "aoe2mc.replay.players", "text": "プレイヤー"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " が聖遺物を修道院に運び、勝利します。"}
+{"name": "aoe2mc.replay.replay_ended", "text": "リプレイ終了"}
+{"name": "aoe2mc.replay.research", "text": " が%sを研究中"}
+{"name": "aoe2mc.replay.resigns", "text": "%sが降伏しました"}
+{"name": "aoe2mc.replay.restart_jump", "text": "巻き戻しのためサーバーを再起動します: もう一度参加してください。"}
+{"name": "aoe2mc.replay.share_buildings", "text": "建物 %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "経済 %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "軍事 %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "技術 %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "合計 %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "城 %s、"}
+{"name": "aoe2mc.replay.soc_market", "text": "購入 %s、売却 %s、"}
+{"name": "aoe2mc.replay.soc_relics", "text": "聖遺物 %s、"}
+{"name": "aoe2mc.replay.soc_wonder", "text": "遺産 %s、"}
+{"name": "aoe2mc.replay.spent", "text": "消費:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "建設 %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "経済 %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "軍事 %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "技術 %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": 生産した村人 %s、採集 %s、村人の待機時間 %s、町の中心の待機時間 %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": モニュメントを保持 (キング・オブ・ザ・ヒル)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": モニュメントで勝利 %s (キング・オブ・ザ・ヒル)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": 生産した軍事ユニット %s、失ったユニット %s、失った建物 %s、APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": 王が殺害 %s (レジサイド)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": 勝利、修道院の聖遺物 %s (聖遺物争奪)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %s送った貢ぎ物 %s、受け取り %s、村人の最大数 %s (推定)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": 町の中心を喪失 %s (サドンデス)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s、技術 %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": 遺産タイマー開始 %s、終了 %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "概要 (推定)"}
+{"name": "aoe2mc.replay.task_building", "text": "建設中"}
+{"name": "aoe2mc.replay.task_following", "text": "追従中"}
+{"name": "aoe2mc.replay.task_food", "text": "食料を採集中"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "駐留中"}
+{"name": "aoe2mc.replay.task_gold", "text": "金を採集中"}
+{"name": "aoe2mc.replay.task_guarding", "text": "護衛中"}
+{"name": "aoe2mc.replay.task_idle", "text": "待機中"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "巡回中"}
+{"name": "aoe2mc.replay.task_resources", "text": "資源を採集中"}
+{"name": "aoe2mc.replay.task_stone", "text": "石を採集中"}
+{"name": "aoe2mc.replay.task_walking", "text": "歩行中"}
+{"name": "aoe2mc.replay.task_wood", "text": "木を採集中"}
+{"name": "aoe2mc.replay.team", "text": "チーム %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "弓兵 %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "弓兵の装甲 %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "運搬 %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "騎兵の装甲 %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "農場 %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "金 %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "歩兵の装甲 %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "機織り %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "近接 %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "石 %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "木 %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "城"}
+{"name": "aoe2mc.replay.tl_king", "text": "王が殺害"}
+{"name": "aoe2mc.replay.tl_military", "text": "最初の軍事: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "聖遺物"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "降伏"}
+{"name": "aoe2mc.replay.town_fell", "text": ": %sに町の中心が陥落しました。サドンデス: このプレイヤーは脱落です。"}
+{"name": "aoe2mc.replay.town_lost", "text": "%sに町の中心を喪失"}
+{"name": "aoe2mc.replay.training", "text": "生産: %s"}
+{"name": "aoe2mc.replay.university", "text": "大学:"}
+{"name": "aoe2mc.replay.up_counts", "text": "経済 %s · 大学 %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " が%sに遺産を建設しました。"}
+{"name": "aoe2mc.replay_input.fight", "text": "戦闘: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": "、%s ユニット"}
+{"name": "aoe2mc.replay_input.fights", "text": "大規模な戦闘:"}
+{"name": "aoe2mc.replay_input.help", "text": "リプレイ: ホットバーのアイテムを右クリック、またはクリック: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "引き継ぎ: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s ユニット)"}
+{"name": "aoe2mc.replay_input.vs", "text": " 対 "}
+{"name": "aoe2mc.resource.food", "text": "食料"}
+{"name": "aoe2mc.resource.gold", "text": "金"}
+{"name": "aoe2mc.resource.stone", "text": "石"}
+{"name": "aoe2mc.resource.wood", "text": "木"}
+{"name": "aoe2mc.run.campaign_complete", "text": "キャンペーン完了"}
+{"name": "aoe2mc.run.chat_hint", "text": "チャット: 通常の行は全員へ、/tm TEXT は同盟国へ、/msg NAME TEXT は1人へ送られます。"}
+{"name": "aoe2mc.run.scenario_starts", "text": "シナリオ %s が始まります。もう一度参加してください。"}
+{"name": "aoe2mc.run.starts_in", "text": "ゲームは %s 後に始まります"}
+{"name": "aoe2mc.run.wait_ready", "text": "「プレイヤーを選択」を開き、「準備完了」をクリックしてください"}
+{"name": "aoe2mc.run.welcome_controls", "text": "すべての操作: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "最初のステップ: 指揮棒を持ち、村人の1人を右クリックしてください。"}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "最初のステップ: 指揮棒を持ち、村人の1人を左クリックしてください。"}
+{"name": "aoe2mc.run.welcome_goal", "text": "目標: ゲームに勝つこと。勝利条件: %s。"}
+{"name": "aoe2mc.savegame.saved", "text": "ゲームを保存しました: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s ユニットが出てきました"}
+{"name": "aoe2mc.stance.auto_scout", "text": "自動偵察"}
+{"name": "aoe2mc.stance.formation", "text": "陣形: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "地面を攻撃できるユニットがありません"}
+{"name": "aoe2mc.stance.unpack", "text": "先にトレビュシェットを展開解除してください"}
+{"name": "aoe2mc.train.active", "text": "%sが有効です。"}
+{"name": "aoe2mc.train.rally", "text": "地面を右クリックして集合地点を設定します。"}
+{"name": "aoe2mc.train.researched", "text": "%sの研究が完了しました。"}
+{"name": "aoe2mc.transport.out", "text": "%s ユニットが出てきました"}
+{"name": "aoe2mc.treaty.ended", "text": "休戦が終了しました: 攻撃が可能になりました。"}
+{"name": "aoe2mc.treaty.refuse", "text": "休戦: %sまで攻撃できません。"}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "休戦: このゲームでは攻撃できません。"}
+{"name": "aoe2mc.treaty.start", "text": "休戦: %sまでどのプレイヤーも他のプレイヤーを攻撃できません。"}
+{"name": "aoe2mc.treaty.start_endless", "text": "休戦: このゲームではどのプレイヤーも他のプレイヤーを攻撃できません。"}
+{"name": "aoe2mc.tutorial.barracks", "text": "兵舎を建てる: 選択中の村人を右クリックし、兵舎を選んで配置します。ホットバーの上のアクションバーが配置場所を示します。"}
+{"name": "aoe2mc.tutorial.camera", "text": "マップを高速で移動: 「カメラ」アイテムで右クリックして歩き、もう一度右クリックします。"}
+{"name": "aoe2mc.tutorial.camp", "text": "マップ中央の敵の野営地を破壊: 民兵を選択し、建物を右クリックします。上部のボスバーにステップが表示されます。"}
+{"name": "aoe2mc.tutorial.camps", "text": "木の近くに伐採所を、果実の近くに粉ひき所を建てます。右のサイドバーに必要な木が表示されます。"}
+{"name": "aoe2mc.tutorial.complete", "text": "チュートリアル完了。次はボットと対戦しましょう: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "チュートリアル完了"}
+{"name": "aoe2mc.tutorial.feudal", "text": "領主の時代に進む: 町の中心を右クリックして領主の時代を選びます。右のサイドバーに食料が表示されます。"}
+{"name": "aoe2mc.tutorial.food", "text": "食料を100集める: 村人を果実に向かわせます。右のサイドバーに食料が表示されます。"}
+{"name": "aoe2mc.tutorial.house", "text": "家を建てる: 選択中の村人を右クリックし、家を選んで配置します。ホットバーの上のアクションバーが配置場所を示します。"}
+{"name": "aoe2mc.tutorial.militia", "text": "民兵を3人生産: 兵舎を右クリックして民兵を選びます。右のサイドバーに食料と金が表示されます。"}
+{"name": "aoe2mc.tutorial.raid", "text": "敵が村人を攻撃しています! チャットの赤い警告の行をクリックしてそこへ行き、民兵を選択して敵を右クリックします。上部のボスバーに選択中のユニットの体力が表示されます。"}
+{"name": "aoe2mc.tutorial.select", "text": "村人を選択: 指揮棒で自分の村人の1人を右クリックします。上部のボスバーに選択中のユニット、ホットバーの上のアクションバーに次の行動が表示されます。"}
+{"name": "aoe2mc.tutorial.step_done", "text": "ステップ完了"}
+{"name": "aoe2mc.tutorial.step_of", "text": "ステップ %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "ヒント: 兵舎は歩兵を生産します。歩兵は安く、建物に強いです。"}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "ヒント: すべてのユニットで一緒に攻撃しましょう。小さな集団は損害を与える前に倒されます。"}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "ヒント: 集積所は資源の近くに建てて、村人の移動を短くしましょう。"}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "ヒント: 次の時代で新しい建物、ユニット、技術が解放されます。進化中も村人を働かせましょう。"}
+{"name": "aoe2mc.tutorial.tip_food", "text": "ヒント: 粉ひき所の近くの果実は安全な食料の始まりです。後で、農場が尽きない食料を与えます。"}
+{"name": "aoe2mc.tutorial.tip_house", "text": "ヒント: 家1軒で人口が5増えます。サイドバーの人口を見て、上限に達する前に家を建てましょう。"}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "ヒント: 資源があれば、1つの建物に最大15ユニットを予約できます。"}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "ヒント: AoE2 では町の鐘で村人を町の中心に避難させます。敵が町を襲ったら鳴らしましょう。"}
+{"name": "aoe2mc.tutorial.tip_select", "text": "ヒント: 右のサイドバーの「待機」の行は仕事のない村人の数です。仕事を与えましょう。"}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "ヒント: 序盤の時代では常に村人を生産しましょう。村人が多いほど資源が増えます。"}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "ヒント: 村人は資源の集積所の近くで速く採集します。木の近くに伐採所を建てましょう。"}
+{"name": "aoe2mc.tutorial.villager", "text": "村人を生産: 町の中心を右クリックして村人を選びます。右のサイドバーに必要な食料が表示されます。"}
+{"name": "aoe2mc.tutorial.wood", "text": "木を50集める: 村人を選択して木を右クリックします。右のサイドバーに木の量が表示されます。"}
+{"name": "aoe2mc.victory", "text": "勝利"}
+{"name": "aoe2mc.wonder.built", "text": "プレイヤー %s が遺産を建設しました。"}
+{"name": "aoe2mc.wonder.destroyed", "text": "プレイヤー %s の遺産が破壊されました。"}

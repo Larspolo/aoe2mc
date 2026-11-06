@@ -1,0 +1,314 @@
+{"name": "aoe2mc.age_up", "text": "玩家 %s 进入%s。"}
+{"name": "aoe2mc.battle_royale.start", "text": "大逃杀：腐化将在 %s 内从地图边缘蔓延到中心，摧毁其中的所有单位和建筑。"}
+{"name": "aoe2mc.bot.cannot_build", "text": "我现在无法在那里建造%s。"}
+{"name": "aoe2mc.bot.cannot_train", "text": "我无法训练该单位：我没有对应的建筑。"}
+{"name": "aoe2mc.bot.flare_two", "text": "请在两个地方发出信号来建造城墙。"}
+{"name": "aoe2mc.bot.no_flare", "text": "我看不到信号。"}
+{"name": "aoe2mc.bot.no_market", "text": "我没有市场：我无法进贡。"}
+{"name": "aoe2mc.bot.no_onager", "text": "我没有投石车。"}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "我没有足够的资源建造城墙。"}
+{"name": "aoe2mc.bot.no_water", "text": "我的城镇附近没有水：我无法建造海军。"}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "我的投石车不能砍树。"}
+{"name": "aoe2mc.build.cost", "text": "资源不足：%s需要 %s。"}
+{"name": "aoe2mc.build.flat", "text": "%s必须建在平地上。"}
+{"name": "aoe2mc.build.gate_spot", "text": "%s必须放在己方城墙的 4 格直线上，或 3 格斜线上。"}
+{"name": "aoe2mc.build.locked", "text": "%s：%s。"}
+{"name": "aoe2mc.build.menu_head", "text": "建造："}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s必须建在靠岸的水面上。"}
+{"name": "aoe2mc.build.space", "text": "这里没有空间放置%s。"}
+{"name": "aoe2mc.build.tiles_cost", "text": "资源不足：%s 格%s需要 %s。"}
+{"name": "aoe2mc.build.wall_end", "text": "%s：右键点击城墙的终点。"}
+{"name": "aoe2mc.build.water", "text": "%s必须建在水面上。"}
+{"name": "aoe2mc.camera.fov", "text": "快速镜头会使手持物品晃动。要保持静止，请将 选项 > 辅助功能设置 > 视角摇晃 设为关。镜头还会使视野变宽，显示更多地图。要保持正常视野，请将 选项 > 辅助功能设置 > 视场角效果 设为 0 %。"}
+{"name": "aoe2mc.camera.off", "text": "镜头：关"}
+{"name": "aoe2mc.camera.on", "text": "镜头：开，速度 x%s。Shift 右键：下一档速度。"}
+{"name": "aoe2mc.camera.speed", "text": "镜头速度：x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "击败所有敌方单位并减少损失"}
+{"name": "aoe2mc.challenge.booming", "text": "训练 100 名村民并进入帝王时代"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "进入城堡时代并抵御敌人的进攻"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "摧毁敌方城堡"}
+{"name": "aoe2mc.challenge.early-economy", "text": "采集 200 食物、200 木材、100 黄金和 200 石头，训练 21 名村民，建造伐木场和磨坊，并进入封建时代"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "训练 27 名村民，建造 5 座房屋并进入城堡时代"}
+{"name": "aoe2mc.challenge.land-battle", "text": "击败全部六波敌人"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "损失 %s 个单位，%s 以内获得铜牌"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "损失 %s 个单位，%s 以内获得金牌"}
+{"name": "aoe2mc.challenge.lost_none", "text": "损失 %s 个单位，无奖牌"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "损失 %s 个单位，%s 以内获得银牌"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "铜牌"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "金牌"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "银牌"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "摧毁所有敌方战舰"}
+{"name": "aoe2mc.challenge.no_medal", "text": "无奖牌"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "杀死 5 名敌方村民"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "%s 获得铜牌"}
+{"name": "aoe2mc.challenge.time_gold", "text": "%s 获得金牌"}
+{"name": "aoe2mc.challenge.time_silver", "text": "%s 获得银牌"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "神盾：关"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "神盾：开"}
+{"name": "aoe2mc.cheat.beyond", "text": "科技：最多 256 项研究"}
+{"name": "aoe2mc.cheat.cpu", "text": "人口上限：%s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "战争迷雾：关"}
+{"name": "aoe2mc.cheat.fog_on", "text": "战争迷雾：开"}
+{"name": "aoe2mc.cheat.free_techs", "text": "科技免费"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "分享即关爱：你的收入归你的盟友"}
+{"name": "aoe2mc.cheat.wonders", "text": "你掌控自然：%s 只动物"}
+{"name": "aoe2mc.conquest.allies_end", "text": "只剩下盟友：同盟解除。最后存活的玩家获胜。"}
+{"name": "aoe2mc.conquest.defeated", "text": "玩家 %s 被击败。"}
+{"name": "aoe2mc.controls.attack", "text": "攻击：选择军事单位，然后右键点击敌人。"}
+{"name": "aoe2mc.controls.build", "text": "建造：选择村民，右键点击他们打开建造菜单，选择建筑，然后左键点击地面。Shift + 左键：继续放置。右键：取消。"}
+{"name": "aoe2mc.controls.camera", "text": "镜头：用望远镜“镜头”（快捷栏键 2）右键点击：你在地图高空快速移动。Shift 右键：下一档速度。再次右键：降落。"}
+{"name": "aoe2mc.controls.garrison", "text": "驻扎：选择单位，然后右键点击己方建筑。其菜单可让单位出来。城镇中心菜单：敲响城镇钟。"}
+{"name": "aoe2mc.controls.gather", "text": "采集：选择村民，然后右键点击树木、浆果丛、矿或农田。"}
+{"name": "aoe2mc.controls.goto", "text": "前往：用指南针“前往”（快捷栏键 3）右键点击：显示你的城镇中心、编队和下一个空闲村民的菜单。"}
+{"name": "aoe2mc.controls.groups", "text": "编队：选择单位，拿起编队物品（快捷栏键 5 至 9），Shift + 右键保存选择。右键：选择该编队。"}
+{"name": "aoe2mc.controls.head", "text": "操作（手持胡萝卜钓竿；动作栏显示下一步）："}
+{"name": "aoe2mc.controls.menu", "text": "游戏菜单：用书“游戏菜单”（快捷栏键 4）右键点击：外交与进贡、信号、保存、暂停和科技树。"}
+{"name": "aoe2mc.controls.move", "text": "移动：选中单位后，右键点击地面。"}
+{"name": "aoe2mc.controls.research", "text": "研究与升级时代：右键点击己方建筑，在菜单中点击科技或下一个时代。"}
+{"name": "aoe2mc.controls.select", "text": "选择：左键点击单位。按住左键并扫视地面：选择框。右键：下达命令。"}
+{"name": "aoe2mc.controls.train", "text": "训练：右键点击己方建筑（城镇中心、兵营……），在菜单中点击一个单位。"}
+{"name": "aoe2mc.defeat", "text": "失败"}
+{"name": "aoe2mc.diplomacy.ally", "text": "盟友"}
+{"name": "aoe2mc.diplomacy.changed", "text": "玩家 %s 改变了对你的态度：%s。"}
+{"name": "aoe2mc.diplomacy.enemy", "text": "敌人"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "中立"}
+{"name": "aoe2mc.diplomacy.speed", "text": "玩家 %s 将游戏速度设为 %s。"}
+{"name": "aoe2mc.diplomacy.tribute", "text": "玩家 %s 发送了 %s %s 给玩家 %s。"}
+{"name": "aoe2mc.flare.placed", "text": "%s：在 %s %s 发出信号"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "跟随：点击一个己方单位"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "护卫：点击一个己方单位或建筑"}
+{"name": "aoe2mc.gaia.joins", "text": "一个%s加入了你。"}
+{"name": "aoe2mc.garrison.all_back", "text": "全部回去工作"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "城镇钟响起：%s 名村民前去避难"}
+{"name": "aoe2mc.garrison.no_villager", "text": "没有选中村民。"}
+{"name": "aoe2mc.garrison.no_villagers", "text": "你没有村民。"}
+{"name": "aoe2mc.garrison.out", "text": "%s 个单位出来了"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s 名村民前去避难"}
+{"name": "aoe2mc.gather.act_attack", "text": "攻击"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "建造菜单"}
+{"name": "aoe2mc.gather.act_garrison", "text": "驻扎"}
+{"name": "aoe2mc.gather.act_gather", "text": "采集"}
+{"name": "aoe2mc.gather.act_hunt", "text": "狩猎"}
+{"name": "aoe2mc.gather.act_move", "text": "移动"}
+{"name": "aoe2mc.gather.act_select", "text": "选择"}
+{"name": "aoe2mc.gather.act_select_type", "text": "选择所有同类"}
+{"name": "aoe2mc.gather.act_trade", "text": "贸易"}
+{"name": "aoe2mc.gather.act_train", "text": "训练"}
+{"name": "aoe2mc.gather.attack_siege", "text": "攻击：%s（%s/%s）"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "框选：已取消"}
+{"name": "aoe2mc.gather.bush", "text": "浆果丛"}
+{"name": "aoe2mc.gather.carcass", "text": "尸体"}
+{"name": "aoe2mc.gather.corner", "text": "框选：点击另一个角"}
+{"name": "aoe2mc.gather.enemy", "text": "敌方%s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "敌方建筑"}
+{"name": "aoe2mc.gather.farm", "text": "农田"}
+{"name": "aoe2mc.gather.ground", "text": "地面"}
+{"name": "aoe2mc.gather.group", "text": "编队 %s：%s 个单位"}
+{"name": "aoe2mc.gather.group_saved", "text": "编队 %s：已保存 %s 个单位"}
+{"name": "aoe2mc.gather.mine", "text": "%s矿"}
+{"name": "aoe2mc.gather.paused", "text": "游戏已暂停。"}
+{"name": "aoe2mc.gather.point", "text": "%s · 右键：%s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "排队补种：%s"}
+{"name": "aoe2mc.gather.selected", "text": "已选择：%s 个单位"}
+{"name": "aoe2mc.gather.tree", "text": "树木"}
+{"name": "aoe2mc.hill.holds", "text": "玩家 %s 占领了纪念碑。"}
+{"name": "aoe2mc.hints.attack_ground", "text": "攻击地面：右键点击地面"}
+{"name": "aoe2mc.hints.attack_move", "text": "攻击移动：右键点击地面"}
+{"name": "aoe2mc.hints.building", "text": "放置%s：右键点击地面 · Shift + 右键：继续放置 · 取消：/trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s：左键放置 · Shift：继续放置 · 右键：取消"}
+{"name": "aoe2mc.hints.corner", "text": "框选：右键点击另一个角"}
+{"name": "aoe2mc.hints.count_military", "text": "%s 个军事单位"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s 个军事单位"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s 名村民"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s 名村民"}
+{"name": "aoe2mc.hints.deselect", "text": "空框：取消选择"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "左键：取消选择"}
+{"name": "aoe2mc.hints.follow", "text": "跟随：右键点击一个己方或盟方单位"}
+{"name": "aoe2mc.hints.guard", "text": "护卫：右键点击一个己方或盟方单位或建筑"}
+{"name": "aoe2mc.hints.military", "text": "%s · 右键：攻击敌人、姿态菜单 · %s"}
+{"name": "aoe2mc.hints.none", "text": "左键：选择单位 · 按住左键：选择框"}
+{"name": "aoe2mc.hints.none_wand", "text": "右键：选择单位 · 魔杖：框选"}
+{"name": "aoe2mc.hints.patrol", "text": "巡逻：右键点击地面"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · 右键：采集、建造、建造菜单 · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s 已准备"}
+{"name": "aoe2mc.lobby.you_play", "text": "你扮演%s。"}
+{"name": "aoe2mc.monk.converts", "text": "一名僧侣转化了%s。"}
+{"name": "aoe2mc.monk.dies", "text": "%s死亡（异端）。"}
+{"name": "aoe2mc.pause.continued", "text": "玩家 %s 继续了游戏。"}
+{"name": "aoe2mc.pause.paused", "text": "玩家 %s 暂停了游戏。"}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "队伍 %s（平均等级分 %s）：%s"}
+{"name": "aoe2mc.recap.next", "text": "游戏结束。右键点击手中的“战报”书查看结果。在游戏程序的控制台中按 Ctrl-C 停止它。"}
+{"name": "aoe2mc.relic_victory.all", "text": "玩家 %s 拥有全部圣物。"}
+{"name": "aoe2mc.relic_victory.lost", "text": "玩家 %s 失去了一件圣物。"}
+{"name": "aoe2mc.repair.no_resources", "text": "资源不足，无法修理%s。"}
+{"name": "aoe2mc.replay.army", "text": "军队：%s"}
+{"name": "aoe2mc.replay.army_end", "text": "，结束时的军队：%s"}
+{"name": "aoe2mc.replay.army_lost", "text": "，损失：%s"}
+{"name": "aoe2mc.replay.build_order", "text": "建造顺序："}
+{"name": "aoe2mc.replay.building_garrison", "text": " · 驻扎 %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s（%s）：%s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | 携带 %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "建造 %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "食物 %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "黄金 %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "空闲 %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "石头 %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "木材 %s"}
+{"name": "aoe2mc.replay.flare", "text": "信号"}
+{"name": "aoe2mc.replay.game_ends", "text": "游戏结束"}
+{"name": "aoe2mc.replay.game_time", "text": "游戏时间 %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · 驻扎 %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "军事 %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "人口 %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "资源 %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "村民 %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s占领纪念碑：于 %s 取得山丘之王胜利。"}
+{"name": "aoe2mc.replay.inspect", "text": "%s（%s）：%s/%s | %s%s | %s 攻击 %s/%s 护甲%s"}
+{"name": "aoe2mc.replay.join_help", "text": "双击 Shift：旁观视角（穿过方块飞行）。右键点击快捷栏物品：回放控制。"}
+{"name": "aoe2mc.replay.king_died", "text": "：国王于 %s 阵亡。弑君：该玩家出局。"}
+{"name": "aoe2mc.replay.king_killed", "text": "国王于 %s 被杀"}
+{"name": "aoe2mc.replay.live_jump", "text": "实时回放：跳转停在落后游戏的延迟处。"}
+{"name": "aoe2mc.replay.lost", "text": "损失：%s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " 于 %s 占领纪念碑。"}
+{"name": "aoe2mc.replay.monument_year", "text": "%s：纪念碑，剩余 %s 年"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s：纪念碑，剩余 %s 年"}
+{"name": "aoe2mc.replay.no_camera", "text": "此记录没有该玩家的镜头。"}
+{"name": "aoe2mc.replay.now", "text": " 现在"}
+{"name": "aoe2mc.replay.out", "text": "%s 出局"}
+{"name": "aoe2mc.replay.players", "text": "玩家"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " 将圣物带到修道院并获胜。"}
+{"name": "aoe2mc.replay.replay_ended", "text": "回放结束"}
+{"name": "aoe2mc.replay.research", "text": " 研究%s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s 投降"}
+{"name": "aoe2mc.replay.restart_jump", "text": "服务器为回退而重启：请重新加入。"}
+{"name": "aoe2mc.replay.share_buildings", "text": "建筑 %s（%s）"}
+{"name": "aoe2mc.replay.share_economy", "text": "经济 %s（%s）"}
+{"name": "aoe2mc.replay.share_military", "text": "军事 %s（%s）"}
+{"name": "aoe2mc.replay.share_technologies", "text": "科技 %s（%s）"}
+{"name": "aoe2mc.replay.share_total", "text": "总计 %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "城堡 %s，"}
+{"name": "aoe2mc.replay.soc_market", "text": "买入 %s，卖出 %s，"}
+{"name": "aoe2mc.replay.soc_relics", "text": "圣物 %s，"}
+{"name": "aoe2mc.replay.soc_wonder", "text": "奇观 %s，"}
+{"name": "aoe2mc.replay.spent", "text": "花费："}
+{"name": "aoe2mc.replay.spent_buildings", "text": "建造 %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "经济 %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "军事 %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "科技 %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": "：训练村民 %s，采集 %s，村民空闲时间 %s，城镇中心空闲时间 %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": "：占领纪念碑（山丘之王）"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": "：纪念碑胜利 %s（山丘之王）"}
+{"name": "aoe2mc.replay.sum_military", "text": "：训练军事单位 %s，损失单位 %s，损失建筑 %s，APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": "：国王被杀 %s（弑君）"}
+{"name": "aoe2mc.replay.sum_relic", "text": "：获胜，修道院中的圣物 %s（夺取圣物）"}
+{"name": "aoe2mc.replay.sum_society", "text": "：%s送出贡品 %s，收到 %s，村民最多 %s（估计）"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": "：城镇中心失守 %s（突然死亡）"}
+{"name": "aoe2mc.replay.sum_techs", "text": "：%s，科技 %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": "：奇观计时从 %s 开始，于 %s 结束（%s）"}
+{"name": "aoe2mc.replay.summary", "text": "总结（估计）"}
+{"name": "aoe2mc.replay.task_building", "text": "建造中"}
+{"name": "aoe2mc.replay.task_following", "text": "跟随中"}
+{"name": "aoe2mc.replay.task_food", "text": "采集食物"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "已驻扎"}
+{"name": "aoe2mc.replay.task_gold", "text": "采集黄金"}
+{"name": "aoe2mc.replay.task_guarding", "text": "护卫中"}
+{"name": "aoe2mc.replay.task_idle", "text": "空闲"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "巡逻中"}
+{"name": "aoe2mc.replay.task_resources", "text": "采集资源"}
+{"name": "aoe2mc.replay.task_stone", "text": "采集石头"}
+{"name": "aoe2mc.replay.task_walking", "text": "行走中"}
+{"name": "aoe2mc.replay.task_wood", "text": "采集木材"}
+{"name": "aoe2mc.replay.team", "text": "队伍 %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "弓兵 %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "弓兵护甲 %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "携带 %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "骑兵护甲 %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "农田 %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "黄金 %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "步兵护甲 %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "织布机 %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "近战 %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "石头 %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "木材 %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "城堡"}
+{"name": "aoe2mc.replay.tl_king", "text": "国王被杀"}
+{"name": "aoe2mc.replay.tl_military", "text": "首个军事单位：%s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "圣物"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "投降"}
+{"name": "aoe2mc.replay.town_fell", "text": "：城镇中心于 %s 陷落。突然死亡：该玩家出局。"}
+{"name": "aoe2mc.replay.town_lost", "text": "城镇中心于 %s 失守"}
+{"name": "aoe2mc.replay.training", "text": "训练：%s"}
+{"name": "aoe2mc.replay.university", "text": "大学："}
+{"name": "aoe2mc.replay.up_counts", "text": "经济 %s · 大学 %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " 于 %s 建成奇观。"}
+{"name": "aoe2mc.replay_input.fight", "text": "战斗："}
+{"name": "aoe2mc.replay_input.fight_units", "text": "，%s 个单位"}
+{"name": "aoe2mc.replay_input.fights", "text": "大型战斗："}
+{"name": "aoe2mc.replay_input.help", "text": "回放：右键点击快捷栏中的物品，或点击："}
+{"name": "aoe2mc.replay_input.takeover", "text": "接管："}
+{"name": "aoe2mc.replay_input.units", "text": "（%s 个单位）"}
+{"name": "aoe2mc.replay_input.vs", "text": " 对 "}
+{"name": "aoe2mc.resource.food", "text": "食物"}
+{"name": "aoe2mc.resource.gold", "text": "黄金"}
+{"name": "aoe2mc.resource.stone", "text": "石头"}
+{"name": "aoe2mc.resource.wood", "text": "木材"}
+{"name": "aoe2mc.run.campaign_complete", "text": "战役完成"}
+{"name": "aoe2mc.run.chat_hint", "text": "聊天：普通消息发给所有人，/tm TEXT 发给盟友，/msg NAME TEXT 发给一个人。"}
+{"name": "aoe2mc.run.scenario_starts", "text": "场景 %s 开始。请重新加入。"}
+{"name": "aoe2mc.run.starts_in", "text": "游戏将在 %s 后开始"}
+{"name": "aoe2mc.run.wait_ready", "text": "打开“选择你的玩家”并点击“准备”"}
+{"name": "aoe2mc.run.welcome_controls", "text": "所有操作：/controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "第一步：手持指挥棒，右键点击你的一名村民。"}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "第一步：手持指挥棒，左键点击你的一名村民。"}
+{"name": "aoe2mc.run.welcome_goal", "text": "目标：赢得游戏。胜利设置：%s。"}
+{"name": "aoe2mc.savegame.saved", "text": "游戏已保存：%s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s 个单位出来了"}
+{"name": "aoe2mc.stance.auto_scout", "text": "自动侦察"}
+{"name": "aoe2mc.stance.formation", "text": "阵型：%s"}
+{"name": "aoe2mc.stance.no_ground", "text": "没有单位能攻击地面"}
+{"name": "aoe2mc.stance.unpack", "text": "请先展开投石机"}
+{"name": "aoe2mc.train.active", "text": "%s 已启用。"}
+{"name": "aoe2mc.train.rally", "text": "右键点击地面设置集结点。"}
+{"name": "aoe2mc.train.researched", "text": "%s 研究完成。"}
+{"name": "aoe2mc.transport.out", "text": "%s 个单位出来了"}
+{"name": "aoe2mc.treaty.ended", "text": "停战期结束：玩家现在可以攻击了。"}
+{"name": "aoe2mc.treaty.refuse", "text": "停战：%s 之前你不能攻击。"}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "停战：本局游戏中你不能攻击。"}
+{"name": "aoe2mc.treaty.start", "text": "停战：%s 之前任何玩家都不能攻击其他玩家。"}
+{"name": "aoe2mc.treaty.start_endless", "text": "停战：本局游戏中任何玩家都不能攻击其他玩家。"}
+{"name": "aoe2mc.tutorial.barracks", "text": "建造兵营：右键点击选中的村民，选择兵营并放置。快捷栏上方的动作栏告诉你放置位置。"}
+{"name": "aoe2mc.tutorial.camera", "text": "在地图上快速移动：用“镜头”物品右键点击，行走，然后再次右键点击。"}
+{"name": "aoe2mc.tutorial.camp", "text": "摧毁地图中央的敌方营地：选择你的民兵并右键点击一座建筑。顶部的 Boss 栏显示步骤。"}
+{"name": "aoe2mc.tutorial.camps", "text": "在树旁建造伐木场，在浆果旁建造磨坊。右侧边栏显示所需的木材。"}
+{"name": "aoe2mc.tutorial.complete", "text": "教程完成。下一步：与机器人对战：python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "教程完成"}
+{"name": "aoe2mc.tutorial.feudal", "text": "进入封建时代：右键点击你的城镇中心并选择封建时代。右侧边栏显示你的食物。"}
+{"name": "aoe2mc.tutorial.food", "text": "采集 100 食物：派一名村民去浆果丛。右侧边栏显示你的食物。"}
+{"name": "aoe2mc.tutorial.house", "text": "建造房屋：右键点击选中的村民，选择房屋并放置。快捷栏上方的动作栏告诉你放置位置。"}
+{"name": "aoe2mc.tutorial.militia", "text": "训练 3 名民兵：右键点击你的兵营并选择民兵。右侧边栏显示你的食物和黄金。"}
+{"name": "aoe2mc.tutorial.raid", "text": "敌人在攻击你的村民！点击聊天中的红色警报行前往那里，然后选择你的民兵并右键点击敌人。顶部的 Boss 栏显示选中单位的生命值。"}
+{"name": "aoe2mc.tutorial.select", "text": "选择村民：用指挥棒右键点击你的一名村民。顶部的 Boss 栏显示选中的单位，快捷栏上方的动作栏显示下一个动作。"}
+{"name": "aoe2mc.tutorial.step_done", "text": "步骤完成"}
+{"name": "aoe2mc.tutorial.step_of", "text": "步骤 %s/%s：%s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "提示：兵营训练步兵。步兵便宜，擅长攻击建筑。"}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "提示：让所有单位一起进攻。小队伍在造成伤害前就会阵亡。"}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "提示：将资源存放建筑建在资源附近，让村民少走路。"}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "提示：下一个时代解锁新的建筑、单位和科技。升级时让村民继续工作。"}
+{"name": "aoe2mc.tutorial.tip_food", "text": "提示：磨坊旁的浆果是安全的食物来源。之后，农田提供不会耗尽的食物。"}
+{"name": "aoe2mc.tutorial.tip_house", "text": "提示：一座房屋可增加 5 人口。查看侧边栏中的人口，在满员前建造房屋。"}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "提示：资源足够时，一座建筑最多可排队 15 个单位。"}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "提示：在 AoE2 中，城镇钟会让村民躲进城镇中心。敌人袭击城镇时敲响它。"}
+{"name": "aoe2mc.tutorial.tip_select", "text": "提示：右侧边栏的“空闲”行统计没有工作的村民。给他们安排工作。"}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "提示：在前几个时代中一直训练村民。村民越多，资源越多。"}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "提示：村民在资源存放建筑附近采集得更快。在树旁建造伐木场。"}
+{"name": "aoe2mc.tutorial.villager", "text": "训练村民：右键点击你的城镇中心并选择村民。右侧边栏显示所需的食物。"}
+{"name": "aoe2mc.tutorial.wood", "text": "采集 50 木材：选择一名村民并右键点击一棵树。右侧边栏显示你的木材。"}
+{"name": "aoe2mc.victory", "text": "胜利"}
+{"name": "aoe2mc.wonder.built", "text": "玩家 %s 建成了奇观。"}
+{"name": "aoe2mc.wonder.destroyed", "text": "玩家 %s 的奇观被摧毁。"}
