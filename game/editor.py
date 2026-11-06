@@ -35,7 +35,7 @@ class State:
             with open(os.path.join(game.world, "aoe2mc.json")) as f:
                 data = json.load(f)
         self.game, self.data, self.map = game, data, gather.Map(data)
-        self.menus, self.placed, self.person = {}, [], None
+        self.menus, self.placed, self.person, self.picked = {}, [], None, {}   # picked: player -> object name
 
     def command(self, cmd):
         return self.game.command(cmd)
@@ -81,7 +81,7 @@ def open_menu(g, player, tab=0, page=0):
             if slot - PAGE < len(all_tabs):
                 open_menu(g, p, slot - PAGE)
         elif slot < len(shown):
-            vars(g).setdefault("picked", {})[p] = shown[slot]
+            g.picked[p] = shown[slot]
             if right and (view := g.look(p)):
                 place(g, p, shown[slot], *view)
     items = [(i, build.ICONS.get(n, TAB_ICONS[tab]), build.pretty(n), "") for i, n in enumerate(shown)]
