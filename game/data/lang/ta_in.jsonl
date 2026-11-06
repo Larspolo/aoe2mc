@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "வீரர் %s, %s நிலைக்கு முன்னேறுகிறார்."}
+{"name": "aoe2mc.battle_royale.start", "text": "போர் ராயல்: சிதைவு %s இல் வரைபடத்தை அதன் எல்லையிலிருந்து மையம் வரை கைப்பற்றும். அதிலுள்ள அனைத்து அலகுகளையும் கட்டிடங்களையும் அது அழிக்கும்."}
+{"name": "aoe2mc.bot.cannot_build", "text": "நான் இப்போது அங்கே %s ஐக் கட்ட முடியாது."}
+{"name": "aoe2mc.bot.cannot_train", "text": "அந்த அலகுக்கு என்னிடம் கட்டிடம் இல்லாததால் அதைப் பயிற்சி அளிக்க முடியாது."}
+{"name": "aoe2mc.bot.flare_two", "text": "சுவருக்காக இரண்டு இடங்களில் சிக்னல் வையுங்கள்."}
+{"name": "aoe2mc.bot.no_flare", "text": "எனக்கு எந்த சிக்னலும் தெரியவில்லை."}
+{"name": "aoe2mc.bot.no_market", "text": "என்னிடம் சந்தை இல்லை: என்னால் காணிக்கை அனுப்ப முடியாது."}
+{"name": "aoe2mc.bot.no_onager", "text": "என்னிடம் ஒனேஜர் இல்லை."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "சுவருக்குப் போதுமான வளங்கள் என்னிடம் இல்லை."}
+{"name": "aoe2mc.bot.no_water", "text": "என் நகரத்திற்கு அருகில் நீர் இல்லை: கடற்படையைக் கட்ட முடியாது."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "என் ஒனேஜர்களால் மரங்களை வெட்ட முடியாது."}
+{"name": "aoe2mc.build.cost", "text": "போதுமான வளங்கள் இல்லை: ஒரு %s இன் விலை %s."}
+{"name": "aoe2mc.build.flat", "text": "%s சமமான தரையில் நிற்க வேண்டும்."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s ஒரு நேர் கோட்டில் உங்கள் சுவரின் 4 கட்டங்களில், அல்லது 3 குறுக்கு கட்டங்களில் அமைய வேண்டும்."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "கட்டு: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s கரையை ஒட்டிய நீரில் நிற்க வேண்டும்."}
+{"name": "aoe2mc.build.space", "text": "இங்கே %s க்கு இடம் இல்லை."}
+{"name": "aoe2mc.build.tiles_cost", "text": "போதுமான வளங்கள் இல்லை: %s கட்டங்கள் %s இன் விலை %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: சுவரின் முனையில் வலது கிளிக் செய்யுங்கள்."}
+{"name": "aoe2mc.build.water", "text": "%s நீரின் மேல் நிற்க வேண்டும்."}
+{"name": "aoe2mc.camera.fov", "text": "வேகமான கேமரா கையில் உள்ள பொருளை ஆட வைக்கிறது. அது அசையாமல் இருக்க, விருப்பங்கள் > அணுகல்தன்மை அமைப்புகள் > View Bobbing ஐ OFF ஆக அமைக்கவும். கேமரா பார்வையையும் அகலமாக்குகிறது, அதனால் வரைபடத்தில் அதிகம் தெரியும். சாதாரண பார்வையை வைத்திருக்க, விருப்பங்கள் > அணுகல்தன்மை அமைப்புகள் > FOV Effects ஐ 0 % ஆக அமைக்கவும்."}
+{"name": "aoe2mc.camera.off", "text": "கேமரா: முடக்கப்பட்டது"}
+{"name": "aoe2mc.camera.on", "text": "கேமரா: இயக்கத்தில், வேகம் x%s. Shift + வலது கிளிக்: அடுத்த வேகம்."}
+{"name": "aoe2mc.camera.speed", "text": "கேமரா வேகம்: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "எதிரியின் அனைத்து அலகுகளையும் தோற்கடித்து, சில அலகுகளை மட்டும் இழக்கவும்"}
+{"name": "aoe2mc.challenge.booming", "text": "100 கிராமவாசிகளைப் பயிற்சி அளித்து, ஏகாதிபத்திய யுகத்திற்கு முன்னேறுங்கள்"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "கோட்டை யுகத்திற்கு முன்னேறி, எதிரியின் தாக்குதல்களிலிருந்து தப்பிக்கவும்"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "எதிரியின் கோட்டையை அழிக்கவும்"}
+{"name": "aoe2mc.challenge.early-economy", "text": "200 உணவு, 200 மரம், 100 தங்கம் மற்றும் 200 கல் சேகரித்து, 21 கிராமவாசிகளைப் பயிற்சி அளித்து, ஒரு மரவெட்டு முகாம் மற்றும் ஒரு ஆலையைக் கட்டி, நிலப்பிரபுத்துவ யுகத்திற்கு முன்னேறுங்கள்"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "27 கிராமவாசிகளைப் பயிற்சி அளித்து, 5 வீடுகளைக் கட்டி, கோட்டை யுகத்திற்கு முன்னேறுங்கள்"}
+{"name": "aoe2mc.challenge.land-battle", "text": "எதிரியின் ஆறு அலைகளையும் தோற்கடிக்கவும்"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s அலகுகள் இழந்தன, வெண்கல பதக்கம் %s வரை"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s அலகுகள் இழந்தன, தங்கப் பதக்கம் %s வரை"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s அலகுகள் இழந்தன, பதக்கம் இல்லை"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s அலகுகள் இழந்தன, வெள்ளிப் பதக்கம் %s வரை"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "வெண்கலப் பதக்கம்"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "தங்கப் பதக்கம்"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "வெள்ளிப் பதக்கம்"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "எதிரியின் அனைத்துப் போர்க்கப்பல்களையும் அழிக்கவும்"}
+{"name": "aoe2mc.challenge.no_medal", "text": "பதக்கம் இல்லை"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "எதிரியின் 5 கிராமவாசிகளைக் கொல்லுங்கள்"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "%s இல் வெண்கலப் பதக்கம்"}
+{"name": "aoe2mc.challenge.time_gold", "text": "%s இல் தங்கப் பதக்கம்"}
+{"name": "aoe2mc.challenge.time_silver", "text": "%s இல் வெள்ளிப் பதக்கம்"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "ஏஜிஸ் முடக்கப்பட்டது"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "ஏஜிஸ் இயக்கத்தில்"}
+{"name": "aoe2mc.cheat.beyond", "text": "தொழில்நுட்பங்கள்: 256 ஆராய்ச்சிகள் வரை"}
+{"name": "aoe2mc.cheat.cpu", "text": "மக்கள்தொகை வரம்பு: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "போர்ப் பனி: முடக்கப்பட்டது"}
+{"name": "aoe2mc.cheat.fog_on", "text": "போர்ப் பனி: இயக்கத்தில்"}
+{"name": "aoe2mc.cheat.free_techs", "text": "தொழில்நுட்பங்கள் இலவசம்"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "பகிர்தல் அக்கறை காட்டுவது: உங்கள் வருமானம் உங்கள் கூட்டாளிகளுக்குப் போகும்"}
+{"name": "aoe2mc.cheat.wonders", "text": "நீங்கள் இயற்கையைக் கட்டுப்படுத்துகிறீர்கள்: %s விலங்குகள்"}
+{"name": "aoe2mc.conquest.allies_end", "text": "கூட்டாளிகள் மட்டுமே எஞ்சியுள்ளனர்: கூட்டணிகள் முடிவடைகின்றன. உயிருடன் இருக்கும் கடைசி வீரர் வெல்கிறார்."}
+{"name": "aoe2mc.conquest.defeated", "text": "வீரர் %s தோற்கடிக்கப்பட்டார்."}
+{"name": "aoe2mc.controls.attack", "text": "தாக்குதல்: இராணுவ அலகுகளைத் தேர்ந்தெடுத்து, பின்னர் எதிரியின் மீது வலது கிளிக் செய்யுங்கள்."}
+{"name": "aoe2mc.controls.build", "text": "கட்டு: கிராமவாசிகளைத் தேர்ந்தெடுத்து, கட்டும் பட்டியலுக்கு அவர்கள் மீது வலது கிளிக் செய்யுங்கள், ஒரு கட்டிடத்தைத் தேர்ந்தெடுத்து, பின்னர் தரையில் இடது கிளிக் செய்யுங்கள். Shift + இடது கிளிக்: மேலும் அமையுங்கள். வலது கிளிக்: ரத்து செய்யுங்கள்."}
+{"name": "aoe2mc.controls.camera", "text": "கேமரா: நோக்குக்கருவி கேமரா (ஹாட்பார் விசை 2) மூலம் வலது கிளிக் செய்யுங்கள்: வரைபடத்திற்கு மேலே வேகமாக நடப்பீர்கள். Shift + வலது கிளிக்: அடுத்த வேகம். மீண்டும் வலது கிளிக்: கீழே பறப்பீர்கள்."}
+{"name": "aoe2mc.controls.garrison", "text": "காவல்: அலகுகளைத் தேர்ந்தெடுத்து, பின்னர் உங்கள் சொந்தக் கட்டிடத்தின் மீது வலது கிளிக் செய்யுங்கள். அதன் பட்டியல் அவற்றை வெளியே விடும். நகர மையப் பட்டியல்: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "சேகரி: கிராமவாசிகளைத் தேர்ந்தெடுத்து, பின்னர் ஒரு மரம், ஒரு பழப் புதர், ஒரு சுரங்கம் அல்லது ஒரு பண்ணை மீது வலது கிளிக் செய்யுங்கள்."}
+{"name": "aoe2mc.controls.goto", "text": "செல்: திசைகாட்டி செல் (ஹாட்பார் விசை 3) மூலம் வலது கிளிக் செய்யுங்கள்: உங்கள் நகர மையங்கள், கட்டுப்பாட்டுக் குழுக்கள் மற்றும் அடுத்த வேலையில்லாத கிராமவாசி ஆகியவற்றின் பட்டியல்."}
+{"name": "aoe2mc.controls.groups", "text": "கட்டுப்பாட்டுக் குழுக்கள்: அலகுகளைத் தேர்ந்தெடுத்து, ஒரு குழுப் பொருளை எடுங்கள் (ஹாட்பார் விசைகள் 5 முதல் 9 வரை), தேர்வைச் சேமிக்க Shift + வலது கிளிக் செய்யுங்கள். வலது கிளிக்: குழுவைத் தேர்ந்தெடுக்கவும்."}
+{"name": "aoe2mc.controls.head", "text": "கட்டுப்பாடுகள் (ஒரு குச்சியில் உள்ள கேரட்டைப் பிடியுங்கள்; செயல் பட்டி அடுத்த படியைக் காட்டும்):"}
+{"name": "aoe2mc.controls.menu", "text": "விளையாட்டு பட்டியல்: விளையாட்டு பட்டியல் புத்தகத்தின் மீது வலது கிளிக் செய்யுங்கள் (ஹாட்பார் விசை 4): தூதரகம் மற்றும் காணிக்கை, சமிக்ஞை, சேமிப்பு, இடைநிறுத்தம் மற்றும் தொழில்நுட்ப மரம்."}
+{"name": "aoe2mc.controls.move", "text": "நகர்த்து: ஒரு தேர்வுடன், தரையில் வலது கிளிக் செய்யுங்கள்."}
+{"name": "aoe2mc.controls.research", "text": "ஆராய்ச்சி மற்றும் யுகத்தில் முன்னேறுதல்: உங்கள் சொந்தக் கட்டிடத்தின் மீது வலது கிளிக் செய்து, அதன் பட்டியலில் ஒரு தொழில்நுட்பத்தையோ அடுத்த யுகத்தையோ கிளிக் செய்யுங்கள்."}
+{"name": "aoe2mc.controls.select", "text": "தேர்வு: ஓர் அலகின் மீது இடது கிளிக் செய்யுங்கள். இடது கிளிக்கைப் பிடித்து தரையில் பாருங்கள்: ஒரு தேர்வுப் பெட்டி. வலது கிளிக்: கட்டளைகளைக் கொடுங்கள்."}
+{"name": "aoe2mc.controls.train", "text": "பயிற்சி: உங்கள் சொந்தக் கட்டிடத்தின் (நகர மையம், பாசறை ...) மீது வலது கிளிக் செய்து, அதன் பட்டியலில் ஓர் அலகைக் கிளிக் செய்யுங்கள்."}
+{"name": "aoe2mc.defeat", "text": "தோல்வி"}
+{"name": "aoe2mc.diplomacy.ally", "text": "கூட்டாளி"}
+{"name": "aoe2mc.diplomacy.changed", "text": "வீரர் %s உங்களிடம் தனது நிலைப்பாட்டை மாற்றியுள்ளார்: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "எதிரி"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "நடுநிலை"}
+{"name": "aoe2mc.diplomacy.speed", "text": "வீரர் %s விளையாட்டு வேகத்தை %s ஆக அமைத்தார்."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "வீரர் %s, வீரர் %s க்கு %s %s அனுப்பினார்."}
+{"name": "aoe2mc.flare.placed", "text": "%s: சிக்னல் %s %s இல்"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "பின்தொடர்: உங்கள் அலகு ஒன்றின் மீது கிளிக் செய்யுங்கள்"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "காவல்: உங்கள் அலகு அல்லது கட்டிடத்தின் மீது கிளிக் செய்யுங்கள்"}
+{"name": "aoe2mc.gaia.joins", "text": "%s உங்களுடன் சேர்கிறது."}
+{"name": "aoe2mc.garrison.all_back", "text": "அனைவரும் மீண்டும் வேலைக்கு"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "நகர மணி ஒலிக்கிறது: %s கிராமவாசிகள் தங்குமிடம் தேடுகிறார்கள்"}
+{"name": "aoe2mc.garrison.no_villager", "text": "எந்தக் கிராமவாசியும் தேர்ந்தெடுக்கப்படவில்லை."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "உங்களிடம் கிராமவாசிகள் இல்லை."}
+{"name": "aoe2mc.garrison.out", "text": "%s அலகுகள் வெளியே வந்தன"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s கிராமவாசிகள் தங்குமிடம் தேடுகிறார்கள்"}
+{"name": "aoe2mc.gather.act_attack", "text": "தாக்கு"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "கட்டும் பட்டியல்"}
+{"name": "aoe2mc.gather.act_garrison", "text": "காவல்"}
+{"name": "aoe2mc.gather.act_gather", "text": "சேகரி"}
+{"name": "aoe2mc.gather.act_hunt", "text": "வேட்டையாடு"}
+{"name": "aoe2mc.gather.act_move", "text": "நகர்"}
+{"name": "aoe2mc.gather.act_select", "text": "தேர்ந்தெடு"}
+{"name": "aoe2mc.gather.act_select_type", "text": "இந்த வகை அனைத்தையும் தேர்ந்தெடு"}
+{"name": "aoe2mc.gather.act_trade", "text": "வணிகம்"}
+{"name": "aoe2mc.gather.act_train", "text": "பயிற்சி"}
+{"name": "aoe2mc.gather.attack_siege", "text": "தாக்குதல்: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "தேர்வுப் பெட்டி: ரத்து செய்யப்பட்டது"}
+{"name": "aoe2mc.gather.bush", "text": "பெர்ரி புதர்"}
+{"name": "aoe2mc.gather.carcass", "text": "சடலம்"}
+{"name": "aoe2mc.gather.corner", "text": "தேர்வுப் பெட்டி: மற்ற மூலையில் கிளிக் செய்யுங்கள்"}
+{"name": "aoe2mc.gather.enemy", "text": "எதிரி %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "எதிரிக் கட்டிடம்"}
+{"name": "aoe2mc.gather.farm", "text": "பண்ணை"}
+{"name": "aoe2mc.gather.ground", "text": "தரை"}
+{"name": "aoe2mc.gather.group", "text": "குழு %s: %s அலகுகள்"}
+{"name": "aoe2mc.gather.group_saved", "text": "குழு %s: %s அலகுகள் சேமிக்கப்பட்டன"}
+{"name": "aoe2mc.gather.mine", "text": "%s சுரங்கம்"}
+{"name": "aoe2mc.gather.paused", "text": "விளையாட்டு இடைநிறுத்தப்பட்டுள்ளது."}
+{"name": "aoe2mc.gather.point", "text": "%s · வலது கிளிக்: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "வரிசையில் உள்ள மறு விதைப்புகள்: %s"}
+{"name": "aoe2mc.gather.selected", "text": "தேர்ந்தெடுக்கப்பட்டவை: %s அலகுகள்"}
+{"name": "aoe2mc.gather.tree", "text": "மரம்"}
+{"name": "aoe2mc.hill.holds", "text": "வீரர் %s நினைவுச் சின்னத்தை வைத்திருக்கிறார்."}
+{"name": "aoe2mc.hints.attack_ground", "text": "தரையைத் தாக்கு: தரையில் வலது கிளிக் செய்யுங்கள்"}
+{"name": "aoe2mc.hints.attack_move", "text": "தாக்கியபடி நகர்: தரையில் வலது கிளிக் செய்யுங்கள்"}
+{"name": "aoe2mc.hints.building", "text": "%s ஐ அமையுங்கள்: தரையில் வலது கிளிக் செய்யுங்கள் · Shift + வலது கிளிக்: மேலும் அமையுங்கள் · ரத்து: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: அமைக்க இடது கிளிக் · Shift: மேலும் அமையுங்கள் · வலது கிளிக்: ரத்து"}
+{"name": "aoe2mc.hints.corner", "text": "தேர்வுப் பெட்டி: மற்ற மூலையில் வலது கிளிக் செய்யுங்கள்"}
+{"name": "aoe2mc.hints.count_military", "text": "%s இராணுவ அலகு"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s இராணுவ அலகுகள்"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s கிராமவாசி"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s கிராமவாசிகள்"}
+{"name": "aoe2mc.hints.deselect", "text": "வெற்றுப் பெட்டி: தேர்வு நீக்கு"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "இடது கிளிக்: தேர்வு நீக்கு"}
+{"name": "aoe2mc.hints.follow", "text": "பின்தொடர்: உங்கள் அல்லது கூட்டாளி அலகின் மீது வலது கிளிக் செய்யுங்கள்"}
+{"name": "aoe2mc.hints.guard", "text": "காவல்: உங்கள் அல்லது கூட்டாளி அலகு அல்லது கட்டிடத்தின் மீது வலது கிளிக் செய்யுங்கள்"}
+{"name": "aoe2mc.hints.military", "text": "%s · வலது கிளிக்: எதிரியைத் தாக்கு, நிலைப்பாட்டுப் பட்டியல் · %s"}
+{"name": "aoe2mc.hints.none", "text": "இடது கிளிக்: ஓர் அலகைத் தேர்ந்தெடு · இடது கிளிக்கைப் பிடி: தேர்வுப் பெட்டி"}
+{"name": "aoe2mc.hints.none_wand", "text": "வலது கிளிக்: ஓர் அலகைத் தேர்ந்தெடு · மந்திரக்கோல்: தேர்வுப் பெட்டி"}
+{"name": "aoe2mc.hints.patrol", "text": "ரோந்து: தரையில் வலது கிளிக் செய்யுங்கள்"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · வலது கிளிக்: சேகரி, கட்டு, கட்டும் பட்டியல் · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s தயார்"}
+{"name": "aoe2mc.lobby.you_play", "text": "நீங்கள் %s விளையாடுகிறீர்கள்."}
+{"name": "aoe2mc.monk.converts", "text": "ஒரு துறவி %s ஐ மாற்றுகிறார்."}
+{"name": "aoe2mc.monk.dies", "text": "%s இறக்கிறது (மதவெறி)."}
+{"name": "aoe2mc.pause.continued", "text": "வீரர் %s விளையாட்டைத் தொடர்ந்தார்."}
+{"name": "aoe2mc.pause.paused", "text": "வீரர் %s விளையாட்டை இடைநிறுத்தினார்."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "அணி %s (சராசரி மதிப்பீடு %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "விளையாட்டு முடிந்தது. முடிவுகளைப் பார்க்க உங்கள் கையில் உள்ள சுருக்கப் புத்தகத்தின் மீது வலது கிளிக் செய்யுங்கள். அதன் கன்சோலில் Ctrl-C மூலம் விளையாட்டு நிரலை நிறுத்துங்கள்."}
+{"name": "aoe2mc.relic_victory.all", "text": "வீரர் %s அனைத்து நினைவுப் பொருட்களையும் வைத்திருக்கிறார்."}
+{"name": "aoe2mc.relic_victory.lost", "text": "வீரர் %s ஒரு நினைவுப் பொருளை இழந்தார்."}
+{"name": "aoe2mc.repair.no_resources", "text": "%s ஐ பழுதுபார்க்கப் போதுமான வளங்கள் இல்லை."}
+{"name": "aoe2mc.replay.army", "text": "படை: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", இறுதியில் படை: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", இழந்தவை: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "கட்டும் வரிசை:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · காவல் %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | %s %s சுமக்கிறது"}
+{"name": "aoe2mc.replay.eco_build", "text": "கட்டு %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "உணவு %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "தங்கம் %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "வேலையில்லாமல் %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "கல் %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "மரம் %s"}
+{"name": "aoe2mc.replay.flare", "text": "சிக்னல்"}
+{"name": "aoe2mc.replay.game_ends", "text": "விளையாட்டு முடிகிறது"}
+{"name": "aoe2mc.replay.game_time", "text": "விளையாட்டு நேரம் %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · காவல் %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "இரா %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "மக்கள் %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "வளம் %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "கிரா %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s நினைவுச் சின்னத்தை வைத்திருந்தார்: %s இல் மலையின் அரசன் வெற்றி."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s தாக்குதல் %s/%s கவசம்%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift இரண்டு முறை தட்டவும்: பார்வையாளர் பார்வை (தொகுதிகள் வழியாகப் பறக்கலாம்). ஹாட்பார் பொருட்களின் மீது வலது கிளிக் செய்யுங்கள்: மறுஒளிபரப்புக் கட்டுப்பாடு."}
+{"name": "aoe2mc.replay.king_died", "text": ": அரசன் %s இல் இறந்தான். அரசன் கொலை: வீரர் வெளியேறுகிறார்."}
+{"name": "aoe2mc.replay.king_killed", "text": "%s இல் அரசன் கொல்லப்பட்டான்"}
+{"name": "aoe2mc.replay.live_jump", "text": "நேரடி மறுஒளிபரப்பு: தாவல் விளையாட்டுக்குப் பின்னால் உள்ள தாமதத்தில் நிற்கும்."}
+{"name": "aoe2mc.replay.lost", "text": "இழந்தவை: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " %s இல் நினைவுச் சின்னத்தை வைத்திருக்கிறார்."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: நினைவுச் சின்னம், இன்னும் %s ஆண்டு உள்ளது"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: நினைவுச் சின்னம், இன்னும் %s ஆண்டுகள் உள்ளன"}
+{"name": "aoe2mc.replay.no_camera", "text": "இந்தப் பதிவில் அதன் வீரரின் கேமரா இல்லை."}
+{"name": "aoe2mc.replay.now", "text": " இப்போது"}
+{"name": "aoe2mc.replay.out", "text": "%s வெளியேறினார்"}
+{"name": "aoe2mc.replay.players", "text": "வீரர்கள்"}
+{"name": "aoe2mc.replay.range", "text": " வ%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " நினைவுப் பொருளை ஒரு மடாலயத்திற்குக் கொண்டு சென்று வெல்கிறார்."}
+{"name": "aoe2mc.replay.replay_ended", "text": "மறுஒளிபரப்பு முடிந்தது"}
+{"name": "aoe2mc.replay.research", "text": " %s ஐ ஆராய்ச்சி செய்கிறார்"}
+{"name": "aoe2mc.replay.resigns", "text": "%s சரணடைந்தார்"}
+{"name": "aoe2mc.replay.restart_jump", "text": "பின்னோக்கித் தாவுவதற்காக சேவையகம் மறுதொடக்கம் செய்யப்படுகிறது: மீண்டும் இணையுங்கள்."}
+{"name": "aoe2mc.replay.share_buildings", "text": "கட்டிடங்கள் %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "பொருளாதாரம் %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "இராணுவம் %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "தொழில்நுட்பங்கள் %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "மொத்தம் %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "கோட்டைகள் %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "வாங்கியவை %s, விற்றவை %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "நினைவுப் பொருட்கள் %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "அதிசயங்கள் %s, "}
+{"name": "aoe2mc.replay.spent", "text": "செலவிட்டது:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "கட்டு %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "பொருளாதாரம் %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "இரா %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "தொழில் %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": பயிற்சி பெற்ற கிராமவாசிகள் %s, சேகரித்தவை %s, கிராமவாசி வேலையில்லா நேரம் %s, நகர மைய வேலையில்லா நேரம் %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": நினைவுச் சின்னத்தை வைத்திருக்கிறார் (மலையின் அரசன்)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": நினைவுச் சின்னம் வென்றது %s (மலையின் அரசன்)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": பயிற்சி பெற்ற இராணுவ அலகுகள் %s, இழந்த அலகுகள் %s, இழந்த கட்டிடங்கள் %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": அரசனைக் கொன்றது %s (அரசன் கொலை)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": வெற்றி, மடாலயத்தில் நினைவுப் பொருள் %s (நினைவுப் பொருளைக் கைப்பற்று)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sகாணிக்கை அனுப்பியது %s, பெற்றது %s, கிராமவாசி உச்சம் %s (மதிப்பீடு)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": நகர மையத்தை இழந்தது %s (திடீர் மரணம்)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, தொழில்நுட்பங்கள் %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": அதிசய டைமர் %s இலிருந்து, முடிவு %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "சுருக்கம் (மதிப்பீடு)"}
+{"name": "aoe2mc.replay.task_building", "text": "கட்டுதல்"}
+{"name": "aoe2mc.replay.task_following", "text": "பின்தொடர்தல்"}
+{"name": "aoe2mc.replay.task_food", "text": "உணவு சேகரித்தல்"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "காவலில்"}
+{"name": "aoe2mc.replay.task_gold", "text": "தங்கம் சேகரித்தல்"}
+{"name": "aoe2mc.replay.task_guarding", "text": "காத்தல்"}
+{"name": "aoe2mc.replay.task_idle", "text": "வேலையில்லாமல்"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "ரோந்து"}
+{"name": "aoe2mc.replay.task_resources", "text": "வளங்கள் சேகரித்தல்"}
+{"name": "aoe2mc.replay.task_stone", "text": "கல் சேகரித்தல்"}
+{"name": "aoe2mc.replay.task_walking", "text": "நடத்தல்"}
+{"name": "aoe2mc.replay.task_wood", "text": "மரம் சேகரித்தல்"}
+{"name": "aoe2mc.replay.team", "text": "அணி %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "வில்லாளி %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "வில்லாளி கவசம் %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "சுமத்தல் %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "குதிரைப்படை கவசம் %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "பண்ணை %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "தங்கம் %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "காலாட்படை கவசம் %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "தறி %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "கைகலப்பு %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "கல் %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "மரம் %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "கோட்டை"}
+{"name": "aoe2mc.replay.tl_king", "text": "அரசன் கொல்லப்பட்டான்"}
+{"name": "aoe2mc.replay.tl_military", "text": "முதல் இராணுவம்: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "நினைவுப் பொருள்"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "சரணடைதல்"}
+{"name": "aoe2mc.replay.town_fell", "text": ": நகர மையம் %s இல் வீழ்ந்தது. திடீர் மரணம்: வீரர் வெளியேறுகிறார்."}
+{"name": "aoe2mc.replay.town_lost", "text": "%s இல் நகர மையம் இழக்கப்பட்டது"}
+{"name": "aoe2mc.replay.training", "text": "பயிற்சி: %s"}
+{"name": "aoe2mc.replay.university", "text": "பல்கலைக்கழகம்:"}
+{"name": "aoe2mc.replay.up_counts", "text": "பொருளாதாரம் %s · பல்கலைக்கழகம் %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " %s இல் ஓர் அதிசயத்தைக் கட்டினார்."}
+{"name": "aoe2mc.replay_input.fight", "text": "சண்டை: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s அலகுகள்"}
+{"name": "aoe2mc.replay_input.fights", "text": "பெரிய சண்டைகள்:"}
+{"name": "aoe2mc.replay_input.help", "text": "மறுஒளிபரப்பு: ஹாட்பாரில் உள்ள பொருட்களின் மீது வலது கிளிக் செய்யுங்கள், அல்லது கிளிக் செய்யுங்கள்: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "கைப்பற்று: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s அலகுகள்)"}
+{"name": "aoe2mc.replay_input.vs", "text": " எதிராக "}
+{"name": "aoe2mc.resource.food", "text": "உணவு"}
+{"name": "aoe2mc.resource.gold", "text": "தங்கம்"}
+{"name": "aoe2mc.resource.stone", "text": "கல்"}
+{"name": "aoe2mc.resource.wood", "text": "மரம்"}
+{"name": "aoe2mc.run.back", "text": "%s திரும்பியுள்ளார்"}
+{"name": "aoe2mc.run.campaign_complete", "text": "பிரச்சாரம் முடிந்தது"}
+{"name": "aoe2mc.run.chat_hint", "text": "அரட்டை: சாதாரண வரி அனைவருக்கும் செல்லும், /tm TEXT உங்கள் கூட்டாளிகளுக்கு, /msg NAME TEXT ஒருவருக்கு."}
+{"name": "aoe2mc.run.left_bot", "text": "%s வெளியேறினார்: வீரர் %s ஐ ஒரு போட் விளையாடுகிறது"}
+{"name": "aoe2mc.run.scenario_starts", "text": "காட்சி %s தொடங்குகிறது. மீண்டும் இணையுங்கள்."}
+{"name": "aoe2mc.run.starts_in", "text": "விளையாட்டு %s இல் தொடங்குகிறது"}
+{"name": "aoe2mc.run.wait_ready", "text": "\"உங்கள் வீரரைத் தேர்ந்தெடுக்கவும்\" என்பதைத் திறந்து \"தயார்\" என்பதைக் கிளிக் செய்யுங்கள்"}
+{"name": "aoe2mc.run.welcome_controls", "text": "அனைத்துக் கட்டுப்பாடுகள்: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "முதல் படி: கட்டளைக் குச்சியைப் பிடித்து உங்கள் கிராமவாசிகளில் ஒருவர் மீது வலது கிளிக் செய்யுங்கள்."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "முதல் படி: கட்டளைக் குச்சியைப் பிடித்து உங்கள் கிராமவாசிகளில் ஒருவர் மீது இடது கிளிக் செய்யுங்கள்."}
+{"name": "aoe2mc.run.welcome_goal", "text": "இலக்கு: விளையாட்டில் வெல்லுங்கள். வெற்றி அமைப்பு: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "விளையாட்டு சேமிக்கப்பட்டது: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s அலகுகள் வெளியே வந்தன"}
+{"name": "aoe2mc.stance.auto_scout", "text": "தானியங்கி உளவு"}
+{"name": "aoe2mc.stance.formation", "text": "அணிவகுப்பு: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "எந்த அலகும் தரையைத் தாக்க முடியாது"}
+{"name": "aoe2mc.stance.unpack", "text": "முதலில் டிரெபுசெட்டை அவிழ்க்கவும்"}
+{"name": "aoe2mc.train.active", "text": "%s செயலில் உள்ளது."}
+{"name": "aoe2mc.train.rally", "text": "கூடும் இடத்திற்காக தரையில் வலது கிளிக் செய்யுங்கள்."}
+{"name": "aoe2mc.train.researched", "text": "%s ஆராயப்பட்டது."}
+{"name": "aoe2mc.transport.out", "text": "%s அலகுகள் வெளியே வந்தன"}
+{"name": "aoe2mc.treaty.ended", "text": "ஒப்பந்தம் முடிந்தது: வீரர்கள் இப்போது தாக்கலாம்."}
+{"name": "aoe2mc.treaty.refuse", "text": "ஒப்பந்தம்: %s க்கு முன் நீங்கள் தாக்க முடியாது."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "ஒப்பந்தம்: இந்த விளையாட்டில் நீங்கள் தாக்க முடியாது."}
+{"name": "aoe2mc.treaty.start", "text": "ஒப்பந்தம்: %s க்கு முன் எந்த வீரரும் மற்றொரு வீரரைத் தாக்க முடியாது."}
+{"name": "aoe2mc.treaty.start_endless", "text": "ஒப்பந்தம்: இந்த விளையாட்டில் எந்த வீரரும் மற்றொரு வீரரைத் தாக்க முடியாது."}
+{"name": "aoe2mc.tutorial.barracks", "text": "பாசறை கட்டுங்கள்: தேர்ந்தெடுக்கப்பட்ட கிராமவாசியின் மீது வலது கிளிக் செய்து, பாசறையைத் தேர்ந்தெடுத்து அமையுங்கள். ஹாட்பாருக்கு மேலுள்ள செயல் பட்டி அதை எங்கே அமைப்பது என்று சொல்லும்."}
+{"name": "aoe2mc.tutorial.camera", "text": "வரைபடத்தில் வேகமாக நகருங்கள்: \"கேமரா\" பொருளுடன் வலது கிளிக் செய்து, நடங்கள், பின்னர் அதனுடன் மீண்டும் வலது கிளிக் செய்யுங்கள்."}
+{"name": "aoe2mc.tutorial.camp", "text": "வரைபடத்தின் நடுவில் உள்ள எதிரி முகாமை அழியுங்கள்: உங்கள் மில்லீஷியாவைத் தேர்ந்தெடுத்து ஒரு கட்டிடத்தின் மீது வலது கிளிக் செய்யுங்கள். மேலுள்ள முதலாளிப் பட்டி படியைக் காட்டும்."}
+{"name": "aoe2mc.tutorial.camps", "text": "மரங்களுக்கு அருகில் ஒரு மரவெட்டு முகாமையும், பெர்ரிகளுக்கு அருகில் ஒரு ஆலையையும் கட்டுங்கள். வலதுபுறப் பக்கப்பட்டி அவற்றின் மர விலையைக் காட்டும்."}
+{"name": "aoe2mc.tutorial.complete", "text": "பயிற்சி முடிந்தது. அடுத்தது: போட்டுக்கு எதிராக ஒரு விளையாட்டு விளையாடுங்கள்: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "பயிற்சி முடிந்தது"}
+{"name": "aoe2mc.tutorial.feudal", "text": "நிலப்பிரபுத்துவ யுகத்திற்கு முன்னேறுங்கள்: உங்கள் நகர மையத்தின் மீது வலது கிளிக் செய்து நிலப்பிரபுத்துவ யுகத்தைத் தேர்ந்தெடுக்கவும். வலதுபுறப் பக்கப்பட்டி உங்கள் உணவைக் காட்டும்."}
+{"name": "aoe2mc.tutorial.food", "text": "100 உணவு சேகரியுங்கள்: ஒரு கிராமவாசியைப் பெர்ரிகளுக்கு அனுப்புங்கள். வலதுபுறப் பக்கப்பட்டி உங்கள் உணவைக் காட்டும்."}
+{"name": "aoe2mc.tutorial.house", "text": "ஒரு வீட்டைக் கட்டுங்கள்: தேர்ந்தெடுக்கப்பட்ட கிராமவாசியின் மீது வலது கிளிக் செய்து, வீட்டைத் தேர்ந்தெடுத்து அமையுங்கள். ஹாட்பாருக்கு மேலுள்ள செயல் பட்டி அதை எங்கே அமைப்பது என்று சொல்லும்."}
+{"name": "aoe2mc.tutorial.militia", "text": "3 மில்லீஷியாவைப் பயிற்சி அளியுங்கள்: உங்கள் பாசறையின் மீது வலது கிளிக் செய்து மில்லீஷியாவைத் தேர்ந்தெடுங்கள். வலதுபுறப் பக்கப்பட்டி உங்கள் உணவையும் தங்கத்தையும் காட்டும்."}
+{"name": "aoe2mc.tutorial.raid", "text": "எதிரி உங்கள் கிராமவாசிகளைத் தாக்குகிறான்! அங்கு செல்ல அரட்டையில் உள்ள சிவப்பு எச்சரிக்கை வரியைக் கிளிக் செய்யுங்கள், பின்னர் உங்கள் மில்லீஷியாவைத் தேர்ந்தெடுத்து எதிரிகளின் மீது வலது கிளிக் செய்யுங்கள். மேலுள்ள முதலாளிப் பட்டி தேர்ந்தெடுக்கப்பட்ட அலகின் ஆரோக்கியத்தைக் காட்டும்."}
+{"name": "aoe2mc.tutorial.select", "text": "ஒரு கிராமவாசியைத் தேர்ந்தெடுங்கள்: கட்டளைக் குச்சியுடன் உங்கள் கிராமவாசிகளில் ஒருவர் மீது இடது கிளிக் செய்யுங்கள். மேலுள்ள முதலாளிப் பட்டி தேர்ந்தெடுக்கப்பட்ட அலகைக் காட்டும், ஹாட்பாருக்கு மேலுள்ள செயல் பட்டி அடுத்த செயலைக் காட்டும்."}
+{"name": "aoe2mc.tutorial.step_done", "text": "படி முடிந்தது"}
+{"name": "aoe2mc.tutorial.step_of", "text": "படி %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "குறிப்பு: பாசறை காலாட்படையைப் பயிற்றுவிக்கிறது. காலாட்படை மலிவானது மற்றும் கட்டிடங்களுக்கு எதிராக நல்லது."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "குறிப்பு: உங்கள் அனைத்து அலகுகளுடன் சேர்ந்து தாக்குங்கள். ஒரு சிறிய குழு சேதம் விளைவிக்கும் முன்பே இறந்துவிடும்."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "குறிப்பு: வளங்களுக்கு அருகில் வைப்புக் கட்டிடங்களைக் கட்டுங்கள், அதனால் கிராமவாசிகள் குறுகிய தூரம் நடப்பார்கள்."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "குறிப்பு: அடுத்த யுகம் புதிய கட்டிடங்கள், அலகுகள் மற்றும் தொழில்நுட்பங்களைத் திறக்கும். முன்னேறும்போது கிராமவாசிகளை வேலையில் வைத்திருங்கள்."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "குறிப்பு: ஆலைக்கு அருகில் உள்ள பெர்ரிகள் உணவுக்கு ஒரு பாதுகாப்பான தொடக்கம். பின்னர், பண்ணைகள் முடிவில்லாத உணவைத் தருகின்றன."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "குறிப்பு: ஒரு வீடு 5 கூடுதல் மக்களுக்கு இடம் தரும். பக்கப்பட்டியில் உள்ள மக்கள்தொகையைப் பாருங்கள், அது நிரம்புவதற்கு முன் வீடுகளைக் கட்டுங்கள்."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "குறிப்பு: உங்களிடம் வளங்கள் இருக்கும்போது ஒரு கட்டிடத்தில் 15 அலகுகள் வரை வரிசைப்படுத்தலாம்."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "குறிப்பு: AoE2 இல் நகர மணி கிராமவாசிகளை நகர மையத்திற்கு அனுப்பும். எதிரி உங்கள் நகரைத் தாக்கும்போது அதை ஒலிக்கவும்."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "குறிப்பு: வலதுபுறப் பக்கப்பட்டியின் வேலையில்லா வரி வேலை இல்லாத உங்கள் கிராமவாசிகளை எண்ணும். அவர்களுக்கு வேலை கொடுங்கள்."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "குறிப்பு: முதல் யுகங்களில் எப்போதும் கிராமவாசிகளைப் பயிற்சி அளியுங்கள். அதிக கிராமவாசிகள் அதிக வளங்களைத் தருவார்கள்."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "குறிப்பு: வைப்புக் கட்டிடத்திற்கு அருகில் கிராமவாசிகள் வேகமாக சேகரிப்பார்கள். மரங்களுக்கு அருகில் ஒரு மரவெட்டு முகாமைக் கட்டுங்கள்."}
+{"name": "aoe2mc.tutorial.villager", "text": "ஒரு கிராமவாசியைப் பயிற்சி அளியுங்கள்: உங்கள் நகர மையத்தின் மீது வலது கிளிக் செய்து கிராமவாசியைத் தேர்ந்தெடுங்கள். வலதுபுறப் பக்கப்பட்டி அதற்கான உணவு விலையைக் காட்டும்."}
+{"name": "aoe2mc.tutorial.wood", "text": "50 மரம் சேகரியுங்கள்: ஒரு கிராமவாசியைத் தேர்ந்தெடுத்து ஒரு மரத்தின் மீது வலது கிளிக் செய்யுங்கள். வலதுபுறப் பக்கப்பட்டி உங்கள் மரத்தைக் காட்டும்."}
+{"name": "aoe2mc.victory", "text": "வெற்றி"}
+{"name": "aoe2mc.wonder.built", "text": "வீரர் %s ஓர் அதிசயத்தைக் கட்டினார்."}
+{"name": "aoe2mc.wonder.destroyed", "text": "வீரர் %s இன் அதிசயம் அழிக்கப்பட்டது."}

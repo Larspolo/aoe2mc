@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Ул %s %s дәүеренә күтәрелә."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Бысраныу картаны уның сиктәренән үҙәгенә тиклем %s эсендә баҫып ала. Унда бар берәмектәрҙе һәм биналарҙы юҡ итә."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Мин хәҙер унда %s төҙөй алмайым."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Мин ул берәмекте әҙерли алмайым: уның өсөн бина юҡ."}
+{"name": "aoe2mc.bot.flare_two", "text": "Стена өсөн ике урынға сигнал ҡуйығыҙ."}
+{"name": "aoe2mc.bot.no_flare", "text": "Мин һис бер сигнал күрмәйем."}
+{"name": "aoe2mc.bot.no_market", "text": "Минең базарым юҡ: мин алым ебәрә алмайым."}
+{"name": "aoe2mc.bot.no_onager", "text": "Минең онагерым юҡ."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Стена өсөн минең ресурстарым етмәй."}
+{"name": "aoe2mc.bot.no_water", "text": "Минең ҡала янында һыу юҡ: мин флот төҙөй алмайым."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Минең онагерҙар ағастарҙы сабып оло алмай."}
+{"name": "aoe2mc.build.cost", "text": "Ресурстар етмәй: %s бәһәһе %s."}
+{"name": "aoe2mc.build.flat", "text": "%s тигеҙ ерҙә торорға тейеш."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s үҙ стенаңдың 4 плиткаһында түп-тура һыҙыҡта, йәки 3 диагональ плиткала торорға тейеш."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Төҙө: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s ярға яҡын һыу өҫтөндә торорға тейеш."}
+{"name": "aoe2mc.build.space", "text": "Бында %s өсөн урын юҡ."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Ресурстар етмәй: %s плитка %s бәһәһе %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: стена осона уң төртөп ҡарағыҙ."}
+{"name": "aoe2mc.build.water", "text": "%s һыу өҫтөндә торорға тейеш."}
+{"name": "aoe2mc.camera.fov", "text": "Тиҙ камера ҡулдағы әйберҙе тирбәтә. Ул хәрәкәтһеҙ булһын өсөн, Опциялар > Инвалидлыҡ мөмкинлектәре > View Bobbing ҡуйығыҙ: OFF. Камера шулай уҡ ҡараштарҙы киңәйтә, шуға күрә картаның күберәге күренә. Ғәҙәти ҡараш өсөн, Опциялар > Инвалидлыҡ мөмкинлектәре > FOV Effects ҡуйығыҙ: 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Камера: ҡабат"}
+{"name": "aoe2mc.camera.on", "text": "Камера: ҡушылған, тиҙлек x%s. Shift + уң төртөү: киләһе тиҙлек."}
+{"name": "aoe2mc.camera.speed", "text": "Камера тиҙлеге: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Барлыҡ дошман берәмектәрен еңеп, аҙ ғына берәмек юғалтығыҙ"}
+{"name": "aoe2mc.challenge.booming", "text": "100 ауыл халҡын әҙерләгеҙ һәм Империя дәүеренә күтәрелегеҙ"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Ҡәлғә дәүеренә күтәрелегеҙ һәм дошман һөжүмдәренән иҫән ҡалығыҙ"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Дошман ҡәлғәһен емерегеҙ"}
+{"name": "aoe2mc.challenge.early-economy", "text": "200 аҙыҡ, 200 ағас, 100 алтын һәм 200 таш йыйығыҙ, 21 ауыл халҡын әҙерләгеҙ, ағас лагерь һәм тегермән төҙөгөҙ, һәм Феодаль дәүеренә күтәрелегеҙ"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "27 ауыл халҡын әҙерләгеҙ, 5 йорт төҙөгөҙ һәм Ҡәлғә дәүеренә күтәрелегеҙ"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Дошмандың алты дулҡынын да еңегеҙ"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s берәмек юғалды, бронза миҙал %s тиклем"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s берәмек юғалды, алтын миҙал %s тиклем"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s берәмек юғалды, миҙал юҡ"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s берәмек юғалды, көмөш миҙал %s тиклем"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Бронза миҙал"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Алтын миҙал"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Көмөш миҙал"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Барлыҡ дошман һуғыш кемәләрен юҡ итегеҙ"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Миҙал юҡ"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Дошманның 5 ауыл халҡын үлтерегеҙ"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "%s эсендә бронза миҙал"}
+{"name": "aoe2mc.challenge.time_gold", "text": "%s эсендә алтын миҙал"}
+{"name": "aoe2mc.challenge.time_silver", "text": "%s эсендә көмөш миҙал"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Эгида һүндерелгән"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Эгида ҡабынған"}
+{"name": "aoe2mc.cheat.beyond", "text": "Технологиялар: 256 тикшереүгә тиклем"}
+{"name": "aoe2mc.cheat.cpu", "text": "Халыҡ сиге: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Һуғыш томаны: һүндерелгән"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Һуғыш томаны: ҡабынған"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Технологиялар бушлай"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Уртаҡлашыу — ҡайғыртыу: һеҙҙең керем союздаштарығыҙға бара"}
+{"name": "aoe2mc.cheat.wonders", "text": "Һеҙ тәбиғәтте идара итәһегеҙ: %s хайуан"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Бары союздаштар ғына ҡалды: союздар бөтә. Иҫән ҡалған һуңғы уйынсы еңә."}
+{"name": "aoe2mc.conquest.defeated", "text": "Уйынсы %s еңелде."}
+{"name": "aoe2mc.controls.attack", "text": "Һөжүм: хәрби берәмектәрҙе һайлағыҙ, һуңынан дошманға уң төртөгөҙ."}
+{"name": "aoe2mc.controls.build", "text": "Төҙө: ауыл халҡын һайлағыҙ, төҙөү менюһы өсөн уларға уң төртөгөҙ, бина һайлағыҙ, һуңынан ерҙе һул төртөгөҙ. Shift + һул төртөү: күберәк урынлаштырыу. Уң төртөү: юҡ итеү."}
+{"name": "aoe2mc.controls.camera", "text": "Камера: тапҡыр камера (хотбар төймәһе 2) менән уң төртөгөҙ: һеҙ картаның өҫтөндә тиҙ йөрөйһөгөҙ. Shift + уң төртөү: киләһе тиҙлек. Яңынан уң төртөү: һеҙ түбән осаһығыҙ."}
+{"name": "aoe2mc.controls.garrison", "text": "Гарнизон: берәмектәрҙе һайлағыҙ, һуңынан үҙегеҙҙең биналарға уң төртөгөҙ. Уның менюһы уларҙы сығарыр. Ҡала үҙәге менюһы: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "Йыйыу: ауыл халҡын һайлағыҙ, һуңынан ағас, еләк куҫтары, шахта йәки баҡсаға уң төртөгөҙ."}
+{"name": "aoe2mc.controls.goto", "text": "Бар: компас Бар (хотбар төймәһе 3) менән уң төртөгөҙ: ҡала үҙәктәрегеҙ, контроль төркөмдәр һәм киләһе эшһеҙ ауыл халҡы менюһы."}
+{"name": "aoe2mc.controls.groups", "text": "Контроль төркөмдәре: берәмектәрҙе һайлағыҙ, төркөм әйберен алығыҙ (хотбар төймәләре 5-тән 9-ға тиклем) һәм һайлауҙы һаҡлау өсөн Shift + уң төртөгөҙ. Уң төртөү: төркөмде һайлау."}
+{"name": "aoe2mc.controls.head", "text": "Контроллар (таяҡтағы һарыҡ тамырын тотоғоҙ; эш панелендә киләһе аҙым күрһәтелә):"}
+{"name": "aoe2mc.controls.menu", "text": "Уйын менюһы: Уйын менюһы китабы менән уң төртөгөҙ (хотбар төймәһе 4): дипломатия һәм алым, сигнал, һаҡлау, туҡтатыу һәм технология ағасы."}
+{"name": "aoe2mc.controls.move", "text": "Күсер: һайлау менән, ерҙе уң төртөгөҙ."}
+{"name": "aoe2mc.controls.research", "text": "Тикшереү һәм дәүерҙе күтәреү: үҙегеҙҙең биналарға уң төртөгөҙ һәм уның менюһында технологияға йәки киләһе дәүергә басығыҙ."}
+{"name": "aoe2mc.controls.select", "text": "Һайлау: берәмеккә һул төртөгөҙ. Һул төртөүҙе тотоп, ерҙе ҡарағыҙ: һайлау ҡорамы. Уң төртөү: бойороҡтар биреү."}
+{"name": "aoe2mc.controls.train", "text": "Әҙерләү: үҙегеҙҙең биналарға (ҡала үҙәге, казарма ...) уң төртөгөҙ һәм уның менюһында берәмеккә басығыҙ."}
+{"name": "aoe2mc.defeat", "text": "Еңелеү"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Союздаш"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Уйынсы %s һеҙгә ҡарата позицияһын үҙгәртте: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Дошман"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Бейтараф"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Уйынсы %s уйын тиҙлеген %s итеп ҡуйҙы."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Уйынсы %s уйынсы %s-ға %s %s ебәрҙе."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Сигнал %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Эйәр: үҙегеҙҙең берәмеккә басығыҙ"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Һаҡла: үҙегеҙҙең берәмеккә йәки биналарға басығыҙ"}
+{"name": "aoe2mc.gaia.joins", "text": "Бер %s һеҙгә ҡушыла."}
+{"name": "aoe2mc.garrison.all_back", "text": "Барыһы эшкә ҡайта"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Ҡала ҡыңғырауы ҡыңғырай: %s ауыл халҡы һыйыныу эҙли"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Бер ауыл халҡы ла һайланмаған."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Һеҙҙең ауыл халҡы юҡ."}
+{"name": "aoe2mc.garrison.out", "text": "%s берәмек сыҡты"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s ауыл халҡы һыйыныу эҙли"}
+{"name": "aoe2mc.gather.act_attack", "text": "һөжүм"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "төҙөү менюһы"}
+{"name": "aoe2mc.gather.act_garrison", "text": "гарнизон"}
+{"name": "aoe2mc.gather.act_gather", "text": "йыйыу"}
+{"name": "aoe2mc.gather.act_hunt", "text": "аулау"}
+{"name": "aoe2mc.gather.act_move", "text": "күсер"}
+{"name": "aoe2mc.gather.act_select", "text": "һайла"}
+{"name": "aoe2mc.gather.act_select_type", "text": "был төрҙөгеһен барыһын һайла"}
+{"name": "aoe2mc.gather.act_trade", "text": "сауҙа"}
+{"name": "aoe2mc.gather.act_train", "text": "әҙерләү"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Һөжүм: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Һайлау ҡорамы: юҡ ителде"}
+{"name": "aoe2mc.gather.bush", "text": "Еләк куҫы"}
+{"name": "aoe2mc.gather.carcass", "text": "Эшкәртелгән һөйәк"}
+{"name": "aoe2mc.gather.corner", "text": "Һайлау ҡорамы: икенсе мөйөшкә басығыҙ"}
+{"name": "aoe2mc.gather.enemy", "text": "Дошман %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Дошман бина"}
+{"name": "aoe2mc.gather.farm", "text": "Баҡса"}
+{"name": "aoe2mc.gather.ground", "text": "Ер"}
+{"name": "aoe2mc.gather.group", "text": "Төркөм %s: %s берәмек"}
+{"name": "aoe2mc.gather.group_saved", "text": "Төркөм %s: %s берәмек һаҡланы"}
+{"name": "aoe2mc.gather.mine", "text": "%s шахта"}
+{"name": "aoe2mc.gather.paused", "text": "Уйын туҡтатылған."}
+{"name": "aoe2mc.gather.point", "text": "%s · Уң төртөү: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Сиратта тағын сәсеүҙәр: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Һайланған: %s берәмек"}
+{"name": "aoe2mc.gather.tree", "text": "Ағас"}
+{"name": "aoe2mc.hill.holds", "text": "Уйынсы %s ҡомартҡыны тота."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Ерҙе һөжүм итеү: ерҙе уң төртөгөҙ"}
+{"name": "aoe2mc.hints.attack_move", "text": "Һөжүм менән күсер: ерҙе уң төртөгөҙ"}
+{"name": "aoe2mc.hints.building", "text": "%s урынлаштырығыҙ: ерҙе уң төртөгөҙ · Shift + уң төртөү: күберәк урынлаштырыу · Юҡ итеү: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: урынлаштырыу өсөн һул төртөгөҙ · Shift: күберәк урынлаштырыу · Уң төртөү: юҡ итеү"}
+{"name": "aoe2mc.hints.corner", "text": "Һайлау ҡорамы: икенсе мөйөшкә уң төртөгөҙ"}
+{"name": "aoe2mc.hints.count_military", "text": "%s хәрби берәмек"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s хәрби берәмек"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s ауыл халҡы"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s ауыл халҡы"}
+{"name": "aoe2mc.hints.deselect", "text": "Буш ҡорам: һайлауҙы бүтән"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Һул төртөү: һайлауҙы бүтән"}
+{"name": "aoe2mc.hints.follow", "text": "Эйәр: үҙегеҙҙең йәки союздаш берәмеккә уң төртөгөҙ"}
+{"name": "aoe2mc.hints.guard", "text": "Һаҡла: үҙегеҙҙең йәки союздаш берәмеккә йәки биналарға уң төртөгөҙ"}
+{"name": "aoe2mc.hints.military", "text": "%s · Уң төртөү: дошманға һөжүм, торош менюһы · %s"}
+{"name": "aoe2mc.hints.none", "text": "Һул төртөү: берәмек һайла · Һул төртөүҙе тотоу: һайлау ҡорамы"}
+{"name": "aoe2mc.hints.none_wand", "text": "Уң төртөү: берәмек һайла · Таяҡ: һайлау ҡорамы"}
+{"name": "aoe2mc.hints.patrol", "text": "Патрул: ерҙе уң төртөгөҙ"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Уң төртөү: йыйыу, төҙөү, төҙөү менюһы · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s әҙер"}
+{"name": "aoe2mc.lobby.you_play", "text": "Һеҙ %s менән уйнайһығыҙ."}
+{"name": "aoe2mc.monk.converts", "text": "Монах %s-ҙы ынандыра."}
+{"name": "aoe2mc.monk.dies", "text": "%s үлә (Ереслек)."}
+{"name": "aoe2mc.pause.continued", "text": "Уйынсы %s уйынды дауам итте."}
+{"name": "aoe2mc.pause.paused", "text": "Уйынсы %s уйынды туҡтатты."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Команда %s (уртаса рейтинг %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Уйын тамамланды. Һөҙөмтәләрҙе ҡарау өсөн ҡулығыҙҙағы Йомғаҡ китабына уң төртөгөҙ. Уйын программаһын уның консолендә Ctrl-C менән туҡтатығыҙ."}
+{"name": "aoe2mc.relic_victory.all", "text": "Уйынсы %s барлыҡ реликвияларҙы тота."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Уйынсы %s бер реликвияны юғалтты."}
+{"name": "aoe2mc.repair.no_resources", "text": "%s төҙәтергә ресурстар етмәй."}
+{"name": "aoe2mc.replay.army", "text": "Армия: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", аҙаҡтағы армия: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", юғалды: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Төҙөү тәртибе:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · гарнизон %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | %s %s ташый"}
+{"name": "aoe2mc.replay.eco_build", "text": "төҙөү %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "аҙыҡ %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "алтын %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "эшһеҙ %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "таш %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "ағас %s"}
+{"name": "aoe2mc.replay.flare", "text": "Сигнал"}
+{"name": "aoe2mc.replay.game_ends", "text": "Уйын тамамлана"}
+{"name": "aoe2mc.replay.game_time", "text": "Уйын ваҡыты %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · гарнизон %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Хәрби %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Халыҡ %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Ресурс %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Ауыл %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s ҡомартҡыны тотто: %s-ҙа Тау Короле еңеүе."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s һөжүм %s/%s броня%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift-ты ике тапҡыр баҫығыҙ: күҙәтеүсе күренеше (блоктар аша осоу). Хотбар әйберҙәренә уң төртөгөҙ: яҙмаҡ идаралығы."}
+{"name": "aoe2mc.replay.king_died", "text": ": Король %s-ҙа үлде. Королде үлтереү: уйынсы сыға."}
+{"name": "aoe2mc.replay.king_killed", "text": "Король %s-ҙа үлтерелде"}
+{"name": "aoe2mc.replay.live_jump", "text": "Тере яҙма: һикереү уйын артындағы тоҡанлыҡта туҡтай."}
+{"name": "aoe2mc.replay.lost", "text": "Юғалды: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " %s-ҙа ҡомартҡыны тота."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: ҡомартҡы, ҡалған %s йыл"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: ҡомартҡы, ҡалған %s йыл"}
+{"name": "aoe2mc.replay.no_camera", "text": "Был яҙмала уның уйынсыһының камераһы юҡ."}
+{"name": "aoe2mc.replay.now", "text": " хәҙер"}
+{"name": "aoe2mc.replay.out", "text": "%s сыҡты"}
+{"name": "aoe2mc.replay.players", "text": "Уйынсылар"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " реликвияны монастырға алып бара һәм еңә."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Яҙма тамамланды"}
+{"name": "aoe2mc.replay.research", "text": " %s тикшерә"}
+{"name": "aoe2mc.replay.resigns", "text": "%s бирелә"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Артҡа һикереү өсөн серверҙы яңынан иҫкә төшөрәләр: яңынан ҡушылығыҙ."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Биналар %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Иҡтисад %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Хәрби %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Технологиялар %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Барлығы %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "ҡәлғәләр %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "һатып алынған %s, һатылған %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "реликвиялар %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "мөғжизәләр %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Һарыф:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Төҙөү %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Иҡт. %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Хәрби %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Техн. %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": әҙерләнгән ауыл халҡы %s, йыйылған %s, ауыл халҡы эшһеҙ ваҡыты %s, ҡала үҙәге эшһеҙ ваҡыты %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": ҡомартҡыны тота (Тау Короле)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": ҡомартҡы еңелде %s (Тау Короле)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": әҙерләнгән хәрби берәмектәр %s, юғалған берәмектәр %s, юғалған биналар %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": король үлтерелде %s (Королде үлтереү)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": еңеү, монастырҙа реликвия %s (Реликвияны алыу)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sалым ебәрелде %s, алынды %s, ауыл халҡы иң юғары %s (баһа)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": ҡала үҙәге юғалды %s (Көтмәгәндән үлем)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, технологиялар %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": мөғжизә таймеры %s-ҙан, тамамлана %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Йомғаҡ (баһа)"}
+{"name": "aoe2mc.replay.task_building", "text": "төҙөй"}
+{"name": "aoe2mc.replay.task_following", "text": "эйәрә"}
+{"name": "aoe2mc.replay.task_food", "text": "аҙыҡ йыя"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "гарнизонда"}
+{"name": "aoe2mc.replay.task_gold", "text": "алтын йыя"}
+{"name": "aoe2mc.replay.task_guarding", "text": "һаҡлай"}
+{"name": "aoe2mc.replay.task_idle", "text": "эшһеҙ"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "патрулдай"}
+{"name": "aoe2mc.replay.task_resources", "text": "ресурстар йыя"}
+{"name": "aoe2mc.replay.task_stone", "text": "таш йыя"}
+{"name": "aoe2mc.replay.task_walking", "text": "атлай"}
+{"name": "aoe2mc.replay.task_wood", "text": "ағас йыя"}
+{"name": "aoe2mc.replay.team", "text": "Команда %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Уҡсыһы %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Уҡсы броняһы %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Ташыу %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Атлы броня %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Баҡса %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Алтын %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Пехота броняһы %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Тукыма станок %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Яҡынлашыу %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Таш %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Ағас %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Ҡәлғә"}
+{"name": "aoe2mc.replay.tl_king", "text": "Король үлтерелде"}
+{"name": "aoe2mc.replay.tl_military", "text": "1-се хәрби: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Реликвия"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Бирелеү"}
+{"name": "aoe2mc.replay.town_fell", "text": ": ҡала үҙәге %s-ҙа ҡолаған. Көтмәгәндән үлем: уйынсы сыға."}
+{"name": "aoe2mc.replay.town_lost", "text": "%s-ҙа ҡала үҙәге юғалды"}
+{"name": "aoe2mc.replay.training", "text": "Әҙерләү: %s"}
+{"name": "aoe2mc.replay.university", "text": "Университет:"}
+{"name": "aoe2mc.replay.up_counts", "text": "иҡтисад %s · Университет %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " %s-ҙа мөғжизә төҙөнө."}
+{"name": "aoe2mc.replay_input.fight", "text": "Һуғыш: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s берәмек"}
+{"name": "aoe2mc.replay_input.fights", "text": "Ҙур һуғыштар:"}
+{"name": "aoe2mc.replay_input.help", "text": "Яҙма: хотбар әйберҙәренә уң төртөгөҙ, йәки төртөгөҙ: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Алып алыу: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s берәмек)"}
+{"name": "aoe2mc.replay_input.vs", "text": " ҡаршы "}
+{"name": "aoe2mc.resource.food", "text": "аҙыҡ"}
+{"name": "aoe2mc.resource.gold", "text": "алтын"}
+{"name": "aoe2mc.resource.stone", "text": "таш"}
+{"name": "aoe2mc.resource.wood", "text": "ағас"}
+{"name": "aoe2mc.run.back", "text": "%s ҡайтты"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Кампания тамамланды"}
+{"name": "aoe2mc.run.chat_hint", "text": "Чат: ғәҙәти юл барыһына бара, /tm TEXT — союздаштарға, /msg NAME TEXT — бер кешегә."}
+{"name": "aoe2mc.run.left_bot", "text": "%s сыҡты: бот уйынсы %s-ҙы уйнай"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Сценарий %s башлана. Яңынан ҡушылығыҙ."}
+{"name": "aoe2mc.run.starts_in", "text": "Уйын %s-ҙан башлана"}
+{"name": "aoe2mc.run.wait_ready", "text": "\"Уйынсыны һайлағыҙ\" асығыҙ һәм \"Әҙер\" төртөгөҙ"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Бөтә контроллар: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Беренсе аҙым: команда таяғын тотоғоҙ һәм ауыл халҡынан берәүгә уң төртөгөҙ."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Беренсе аҙым: команда таяғын тотоғоҙ һәм ауыл халҡынан берәүгә һул төртөгөҙ."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Маҡсат: уйынды еңеү. Еңеү көйләүе: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Уйын һаҡланды: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s берәмек сыҡты"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Автомат разведка"}
+{"name": "aoe2mc.stance.formation", "text": "Төҙөлөш: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Бер берәмек тә ерҙе һөжүм итә алмай"}
+{"name": "aoe2mc.stance.unpack", "text": "Алдан трибуштты асығыҙ"}
+{"name": "aoe2mc.train.active", "text": "%s эшләй."}
+{"name": "aoe2mc.train.rally", "text": "Йыйылыу нөктәһе өсөн ерҙе уң төртөгөҙ."}
+{"name": "aoe2mc.train.researched", "text": "%s тикшерелде."}
+{"name": "aoe2mc.transport.out", "text": "%s берәмек сыҡты"}
+{"name": "aoe2mc.treaty.ended", "text": "Килешеү тамамланды: уйынсылар хәҙер һөжүм итә ала."}
+{"name": "aoe2mc.treaty.refuse", "text": "Килешеү: %s-ҙан алда һеҙ һөжүм итә алмайһығыҙ."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Килешеү: был уйында һеҙ һөжүм итә алмайһығыҙ."}
+{"name": "aoe2mc.treaty.start", "text": "Килешеү: %s-ҙан алда бер ниндәй уйынсы ла икенсе уйынсыға һөжүм итә алмай."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Килешеү: был уйында бер ниндәй уйынсы ла икенсе уйынсыға һөжүм итә алмай."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Казарма төҙөгөҙ: һайланған ауыл халҡына уң төртөгөҙ, казармаһын һайлағыҙ һәм урынлаштырығыҙ. Хотбар өҫтөндәге эш панелө уны ҡайҙа урынлаштырырға кәрәклеген әйтер."}
+{"name": "aoe2mc.tutorial.camera", "text": "Картала тиҙ күсегеҙ: \"Камера\" әйберҙе менән уң төртөгөҙ, атлағыҙ, һуңынан уның менән яңынан уң төртөгөҙ."}
+{"name": "aoe2mc.tutorial.camp", "text": "Картаның уртаһындағы дошман лагерен юҡ итегеҙ: үҙ милицияғыҙҙы һайлағыҙ һәм биналарҙың береһенә уң төртөгөҙ. Өҫтәге босс-панель аҙымды күрһәтә."}
+{"name": "aoe2mc.tutorial.camps", "text": "Ағастар янында ағас лагерь, еләк куҫтары янында тегермән төҙөгөҙ. Уң яҡтағы панель уларҙың ағас бәһәһен күрһәтә."}
+{"name": "aoe2mc.tutorial.complete", "text": "Уҡыу тамамланды. Киләһе: бот менән уйын уйнағыҙ: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Уҡыу тамамланды"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Феодаль дәүеренә күтәрелегеҙ: ҡала үҙәгегеҙгә уң төртөгөҙ һәм Феодаль дәүерҙе һайлағыҙ. Уң яҡтағы панель аҙығығыҙҙы күрһәтә."}
+{"name": "aoe2mc.tutorial.food", "text": "100 аҙыҡ йыйығыҙ: ауыл халҡын еләк куҫтарына ебәрегеҙ. Уң яҡтағы панель аҙығығыҙҙы күрһәтә."}
+{"name": "aoe2mc.tutorial.house", "text": "Йорт төҙөгөҙ: һайланған ауыл халҡына уң төртөгөҙ, йортто һайлағыҙ һәм урынлаштырығыҙ. Хотбар өҫтөндәге эш панелө уны ҡайҙа урынлаштырырға кәрәклеген әйтер."}
+{"name": "aoe2mc.tutorial.militia", "text": "3 милиция әҙерләгеҙ: казармағыҙға уң төртөгөҙ һәм милицияны һайлағыҙ. Уң яҡтағы панель аҙығығыҙҙы һәм алтынығыҙҙы күрһәтә."}
+{"name": "aoe2mc.tutorial.raid", "text": "Дошман ауыл халҡығызға һөжүм итә! Унда барыр өсөн, чаттағы ҡыҙыл иҫкәртеү юлына төртөгөҙ, һуңынан милицияғыҙҙы һайлағыҙ һәм дошмандарға уң төртөгөҙ. Өҫтәге босс-панель һайланған берәмектең һаулығын күрһәтә."}
+{"name": "aoe2mc.tutorial.select", "text": "Ауыл халҡын һайлағыҙ: команда таяғы менән ауыл халҡыгыҙҙың береһенә һул төртөгөҙ. Өҫтәге босс-панель һайланған берәмекте күрһәтә, хотбар өҫтөндәге эш панелө киләһе эшмәкәрлекте күрһәтә."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Аҙым эшләнде"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Аҙым %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "Кәңәш: казарма йәйәү ғәскәр әҙерләй. Йәйәү ғәскәр арзан һәм биналарға ҡаршы яҡшы."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "Кәңәш: бар берәмектәрегеҙ менән бергә һөжүм итегеҙ. Бер аҙ төркөм зыян килтереп ҡалғансы үлә."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "Кәңәш: төп ресурстар янында тапшырыу биналарын төҙөгөҙ, шулай итеп ауыл халҡы ҡыҫҡа юл үтә."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "Кәңәш: киләһе дәүер яңы биналар, берәмектәр һәм технологиялар асыуҙа. Алға барғанда ауыл халҡын эштә тотоғоҙ."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "Кәңәш: тегермән янындағы еләк — аҙыҡтың хәүефһеҙ башы. Һуңынан баҡсалар аҙыҡты бөтмәҫ итеп бирә."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "Кәңәш: йорт 5 өҫтәмә халыҡ өсөн урын бирә. Панелдә халыҡты ҡараһығыҙ һәм ул тулыр алдынан йорттар төҙөгөҙ."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "Кәңәш: ресурстарығыҙ булғанда, бинаға 15 берәмеккә тиклем сират ҡуйырға мөмкин."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "Кәңәш: AoE2-ҙә ҡала ҡыңғырауы ауыл халҡын ҡала үҙәгенә ебәрә. Дошман ҡалағыҙҙы баҫҡанда уны ҡыңғыратығыҙ."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "Кәңәш: уң яҡтағы панелдең Эшһеҙ юлы эшһеҙ ауыл халҡын һанай. Уларға эш бирегеҙ."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "Кәңәш: беренсе дәүерҙәрҙә ауыл халҡын дәүмәл әҙерләгеҙ. Күберәк ауыл халҡы — күберәк ресурстар."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "Кәңәш: тапшырыу биналары янында ауыл халҡы тизерәк йыя. Ағастар янында ағас лагерь төҙөгөҙ."}
+{"name": "aoe2mc.tutorial.villager", "text": "Ауыл халҡын әҙерләгеҙ: ҡала үҙәгегеҙгә уң төртөгөҙ һәм ауыл халҡын һайлағыҙ. Уң яҡтағы панель уның аҙыҡ бәһәһен күрһәтә."}
+{"name": "aoe2mc.tutorial.wood", "text": "50 ағас йыйығыҙ: ауыл халҡын һайлағыҙ һәм ағасҡа уң төртөгөҙ. Уң яҡтағы панель ағасығыҙҙы күрһәтә."}
+{"name": "aoe2mc.victory", "text": "Еңеү"}
+{"name": "aoe2mc.wonder.built", "text": "Уйынсы %s мөғжизә төҙөнө."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Уйынсы %s-ҙың мөғжизәһе юҡ ителде."}

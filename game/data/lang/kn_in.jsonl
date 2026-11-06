@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "ಆಟಗಾರ %s ಈಗ %s ಯುಗಕ್ಕೆ ಮುನ್ನಡೆಯುತ್ತಿದ್ದಾರೆ."}
+{"name": "aoe2mc.battle_royale.start", "text": "ಬ್ಯಾಟಲ್ ರಾಯಲ್: %s ರಲ್ಲಿ ಭ್ರಷ್ಟತೆ ನಕ್ಷೆಯನ್ನು ಅದರ ಅಂಚಿನಿಂದ ಮಧ್ಯದವರೆಗೆ ಆವರಿಸುತ್ತದೆ. ಅದರೊಳಗಿನ ಎಲ್ಲಾ ಘಟಕಗಳನ್ನು ಮತ್ತು ಕಟ್ಟಡಗಳನ್ನು ಅದು ನಾಶಮಾಡುತ್ತದೆ."}
+{"name": "aoe2mc.bot.cannot_build", "text": "ನಾನು ಈಗ ಅಲ್ಲಿ %s ಕಟ್ಟಲು ಸಾಧ್ಯವಿಲ್ಲ."}
+{"name": "aoe2mc.bot.cannot_train", "text": "ಆ ಘಟಕಕ್ಕೆ ತರಬೇತಿ ನೀಡಲು ನನಗೆ ಕಟ್ಟಡವಿಲ್ಲ, ಆದ್ದರಿಂದ ಸಾಧ್ಯವಿಲ್ಲ."}
+{"name": "aoe2mc.bot.flare_two", "text": "ಗೋಡೆಗಾಗಿ ಎರಡು ಸ್ಥಳಗಳಲ್ಲಿ ಸಂಕೇತ ಹಾಕಿ."}
+{"name": "aoe2mc.bot.no_flare", "text": "ನನಗೆ ಯಾವುದೇ ಸಂಕೇತ ಕಾಣುತ್ತಿಲ್ಲ."}
+{"name": "aoe2mc.bot.no_market", "text": "ನನ್ನ ಬಳಿ ಮಾರುಕಟ್ಟೆ ಇಲ್ಲ: ನಾನು ಕಪ್ಪ ಕಳುಹಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ."}
+{"name": "aoe2mc.bot.no_onager", "text": "ನನ್ನ ಬಳಿ ಒನೇಜರ್ ಇಲ್ಲ."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "ಗೋಡೆಗೆ ನನ್ನ ಬಳಿ ಸಾಕಷ್ಟು ಸಂಪನ್ಮೂಲಗಳಿಲ್ಲ."}
+{"name": "aoe2mc.bot.no_water", "text": "ನನ್ನ ನಗರದ ಹತ್ತಿರ ನೀರಿಲ್ಲ: ನೌಕಾಪಡೆಯನ್ನು ಕಟ್ಟಲು ಸಾಧ್ಯವಿಲ್ಲ."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "ನನ್ನ ಒನೇಜರ್‌ಗಳು ಮರಗಳನ್ನು ಕಡಿಯಲು ಸಾಧ್ಯವಿಲ್ಲ."}
+{"name": "aoe2mc.build.cost", "text": "ಸಾಕಷ್ಟು ಸಂಪನ್ಮೂಲಗಳಿಲ್ಲ: ಒಂದು %s ವೆಚ್ಚ %s."}
+{"name": "aoe2mc.build.flat", "text": "%s ಸಮತಟ್ಟಾದ ನೆಲದ ಮೇಲೆ ನಿಲ್ಲಬೇಕು."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s ತನ್ನ ಸ್ವಂತ ಗೋಡೆಯ 4 ಟೈಲ್‌ಗಳ ಮೇಲೆ ನೇರ ಸಾಲಿನಲ್ಲಿ, ಅಥವಾ 3 ಕರ್ಣೀಯ ಟೈಲ್‌ಗಳ ಮೇಲೆ ಇರಬೇಕು."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "ನಿರ್ಮಿಸು: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s ತೀರದ ಪಕ್ಕದ ನೀರಿನ ಮೇಲೆ ನಿಲ್ಲಬೇಕು."}
+{"name": "aoe2mc.build.space", "text": "ಇಲ್ಲಿ %s ಗೆ ಸ್ಥಳವಿಲ್ಲ."}
+{"name": "aoe2mc.build.tiles_cost", "text": "ಸಾಕಷ್ಟು ಸಂಪನ್ಮೂಲಗಳಿಲ್ಲ: %s ಟೈಲ್‌ಗಳ %s ವೆಚ್ಚ %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: ಗೋಡೆಯ ಕೊನೆಯ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ."}
+{"name": "aoe2mc.build.water", "text": "%s ನೀರಿನ ಮೇಲೆ ನಿಲ್ಲಬೇಕು."}
+{"name": "aoe2mc.camera.fov", "text": "ವೇಗದ ಕ್ಯಾಮೆರಾ ಕೈಯಲ್ಲಿರುವ ವಸ್ತುವನ್ನು ತೂಗಾಡಿಸುತ್ತದೆ. ಅದು ಸ್ಥಿರವಾಗಿರಲು, ಆಯ್ಕೆಗಳು > ಪ್ರವೇಶಿಸುವಿಕೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳು > View Bobbing ಅನ್ನು OFF ಗೆ ಹೊಂದಿಸಿ. ಕ್ಯಾಮೆರಾ ನೋಟವನ್ನು ಅಗಲವಾಗಿಸುತ್ತದೆ, ಇದರಿಂದ ನಕ್ಷೆಯ ಹೆಚ್ಚಿನ ಭಾಗ ಕಾಣುತ್ತದೆ. ಸಾಮಾನ್ಯ ನೋಟಕ್ಕೆ, ಆಯ್ಕೆಗಳು > ಪ್ರವೇಶಿಸುವಿಕೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳು > FOV Effects ಅನ್ನು 0 % ಗೆ ಹೊಂದಿಸಿ."}
+{"name": "aoe2mc.camera.off", "text": "ಕ್ಯಾಮೆರಾ: ಆಫ್"}
+{"name": "aoe2mc.camera.on", "text": "ಕ್ಯಾಮೆರಾ: ಆನ್, ವೇಗ x%s. Shift + ಬಲ ಕ್ಲಿಕ್: ಮುಂದಿನ ವೇಗ."}
+{"name": "aoe2mc.camera.speed", "text": "ಕ್ಯಾಮೆರಾ ವೇಗ: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "ಎಲ್ಲಾ ಶತ್ರು ಘಟಕಗಳನ್ನು ಸೋಲಿಸಿ ಮತ್ತು ಕೆಲವೇ ಘಟಕಗಳನ್ನು ಕಳೆದುಕೊಳ್ಳಿ"}
+{"name": "aoe2mc.challenge.booming", "text": "100 ಗ್ರಾಮಸ್ಥರಿಗೆ ತರಬೇತಿ ನೀಡಿ ಮತ್ತು ಸಾಮ್ರಾಜ್ಯಶಾಹಿ ಯುಗಕ್ಕೆ ಮುನ್ನಡೆಯಿರಿ"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "ಕೋಟೆ ಯುಗಕ್ಕೆ ಮುನ್ನಡೆದು ಶತ್ರುಗಳ ದಾಳಿಗಳಿಂದ ಬದುಕಿ ಉಳಿಯಿರಿ"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "ಶತ್ರುವಿನ ಕೋಟೆಯನ್ನು ನಾಶಮಾಡಿ"}
+{"name": "aoe2mc.challenge.early-economy", "text": "200 ಆಹಾರ, 200 ಮರ, 100 ಚಿನ್ನ ಮತ್ತು 200 ಕಲ್ಲು ಸಂಗ್ರಹಿಸಿ, 21 ಗ್ರಾಮಸ್ಥರಿಗೆ ತರಬೇತಿ ನೀಡಿ, ಒಂದು ಮರದ ಶಿಬಿರ ಮತ್ತು ಒಂದು ಗಿರಣಿ ಕಟ್ಟಿ, ಮತ್ತು ಊಳಿಗಮಾನ್ಯ ಯುಗಕ್ಕೆ ಮುನ್ನಡೆಯಿರಿ"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "27 ಗ್ರಾಮಸ್ಥರಿಗೆ ತರಬೇತಿ ನೀಡಿ, 5 ಮನೆಗಳನ್ನು ಕಟ್ಟಿ ಮತ್ತು ಕೋಟೆ ಯುಗಕ್ಕೆ ಮುನ್ನಡೆಯಿರಿ"}
+{"name": "aoe2mc.challenge.land-battle", "text": "ಶತ್ರುವಿನ ಎಲ್ಲಾ ಆರು ಅಲೆಗಳನ್ನು ಸೋಲಿಸಿ"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s ಘಟಕಗಳು ಕಳೆದುಹೋದವು, ಕಂಚಿನ ಪದಕ %s ವರೆಗೆ"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s ಘಟಕಗಳು ಕಳೆದುಹೋದವು, ಚಿನ್ನದ ಪದಕ %s ವರೆಗೆ"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s ಘಟಕಗಳು ಕಳೆದುಹೋದವು, ಯಾವುದೇ ಪದಕವಿಲ್ಲ"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s ಘಟಕಗಳು ಕಳೆದುಹೋದವು, ಬೆಳ್ಳಿ ಪದಕ %s ವರೆಗೆ"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "ಕಂಚಿನ ಪದಕ"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "ಚಿನ್ನದ ಪದಕ"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "ಬೆಳ್ಳಿ ಪದಕ"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "ಶತ್ರುವಿನ ಎಲ್ಲಾ ಯುದ್ಧನೌಕೆಗಳನ್ನು ನಾಶಮಾಡಿ"}
+{"name": "aoe2mc.challenge.no_medal", "text": "ಯಾವುದೇ ಪದಕವಿಲ್ಲ"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "ಶತ್ರುವಿನ 5 ಗ್ರಾಮಸ್ಥರನ್ನು ಕೊಲ್ಲಿ"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "%s ರಲ್ಲಿ ಕಂಚಿನ ಪದಕ"}
+{"name": "aoe2mc.challenge.time_gold", "text": "%s ರಲ್ಲಿ ಚಿನ್ನದ ಪದಕ"}
+{"name": "aoe2mc.challenge.time_silver", "text": "%s ರಲ್ಲಿ ಬೆಳ್ಳಿ ಪದಕ"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "ಏಜಿಸ್ ಆಫ್"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "ಏಜಿಸ್ ಆನ್"}
+{"name": "aoe2mc.cheat.beyond", "text": "ತಂತ್ರಜ್ಞಾನಗಳು: 256 ಸಂಶೋಧನೆಗಳವರೆಗೆ"}
+{"name": "aoe2mc.cheat.cpu", "text": "ಜನಸಂಖ್ಯೆಯ ಮಿತಿ: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "ಯುದ್ಧದ ಮಂಜು: ಆಫ್"}
+{"name": "aoe2mc.cheat.fog_on", "text": "ಯುದ್ಧದ ಮಂಜು: ಆನ್"}
+{"name": "aoe2mc.cheat.free_techs", "text": "ತಂತ್ರಜ್ಞಾನಗಳು ಉಚಿತ"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "ಹಂಚಿಕೆ ಎಂದರೆ ಕಾಳಜಿ: ನಿಮ್ಮ ಆದಾಯ ನಿಮ್ಮ ಮಿತ್ರರಿಗೆ ಹೋಗುತ್ತದೆ"}
+{"name": "aoe2mc.cheat.wonders", "text": "ನೀವು ಪ್ರಕೃತಿಯನ್ನು ನಿಯಂತ್ರಿಸುತ್ತೀರಿ: %s ಪ್ರಾಣಿಗಳು"}
+{"name": "aoe2mc.conquest.allies_end", "text": "ಮಿತ್ರರು ಮಾತ್ರ ಉಳಿದಿದ್ದಾರೆ: ಮೈತ್ರಿಗಳು ಕೊನೆಗೊಳ್ಳುತ್ತವೆ. ಬದುಕಿರುವ ಕೊನೆಯ ಆಟಗಾರ ಗೆಲ್ಲುತ್ತಾನೆ."}
+{"name": "aoe2mc.conquest.defeated", "text": "ಆಟಗಾರ %s ಸೋತಿದ್ದಾರೆ."}
+{"name": "aoe2mc.controls.attack", "text": "ದಾಳಿ: ಸೇನಾ ಘಟಕಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ, ನಂತರ ಶತ್ರುವಿನ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ."}
+{"name": "aoe2mc.controls.build", "text": "ನಿರ್ಮಿಸು: ಗ್ರಾಮಸ್ಥರನ್ನು ಆಯ್ಕೆಮಾಡಿ, ನಿರ್ಮಾಣ ಮೆನುಗಾಗಿ ಅವರ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ, ಕಟ್ಟಡವನ್ನು ಆಯ್ಕೆಮಾಡಿ, ನಂತರ ನೆಲದ ಮೇಲೆ ಎಡ ಕ್ಲಿಕ್ ಮಾಡಿ. Shift + ಎಡ ಕ್ಲಿಕ್: ಇನ್ನಷ್ಟು ಇರಿಸಿ. ಬಲ ಕ್ಲಿಕ್: ರದ್ದುಮಾಡಿ."}
+{"name": "aoe2mc.controls.camera", "text": "ಕ್ಯಾಮೆರಾ: ದೂರದರ್ಶಕ ಕ್ಯಾಮೆರಾ (ಹಾಟ್‌ಬಾರ್ ಕೀ 2) ಯೊಂದಿಗೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ: ನೀವು ನಕ್ಷೆಯ ಮೇಲೆ ವೇಗವಾಗಿ ನಡೆಯುತ್ತೀರಿ. Shift + ಬಲ ಕ್ಲಿಕ್: ಮುಂದಿನ ವೇಗ. ಮತ್ತೆ ಬಲ ಕ್ಲಿಕ್: ನೀವು ಕೆಳಗೆ ಹಾರುತ್ತೀರಿ."}
+{"name": "aoe2mc.controls.garrison", "text": "ಕಾವಲು: ಘಟಕಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ, ನಂತರ ನಿಮ್ಮ ಸ್ವಂತ ಕಟ್ಟಡದ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ. ಅದರ ಮೆನು ಅವುಗಳನ್ನು ಹೊರಗೆ ಬಿಡುತ್ತದೆ. ಪಟ್ಟಣ ಕೇಂದ್ರದ ಮೆನು: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "ಸಂಗ್ರಹಿಸು: ಗ್ರಾಮಸ್ಥರನ್ನು ಆಯ್ಕೆಮಾಡಿ, ನಂತರ ಒಂದು ಮರ, ಹಣ್ಣಿನ ಪೊದೆ, ಗಣಿ ಅಥವಾ ಹೊಲದ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ."}
+{"name": "aoe2mc.controls.goto", "text": "ಹೋಗು: ದಿಕ್ಸೂಚಿ ಹೋಗು (ಹಾಟ್‌ಬಾರ್ ಕೀ 3) ಯೊಂದಿಗೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ: ನಿಮ್ಮ ಪಟ್ಟಣ ಕೇಂದ್ರಗಳು, ನಿಯಂತ್ರಣ ಗುಂಪುಗಳು ಮತ್ತು ಮುಂದಿನ ನಿರುದ್ಯೋಗಿ ಗ್ರಾಮಸ್ಥರ ಮೆನು."}
+{"name": "aoe2mc.controls.groups", "text": "ನಿಯಂತ್ರಣ ಗುಂಪುಗಳು: ಘಟಕಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ, ಗುಂಪು ವಸ್ತುವನ್ನು ತೆಗೆದುಕೊಳ್ಳಿ (ಹಾಟ್‌ಬಾರ್ ಕೀಗಳು 5 ರಿಂದ 9), ಮತ್ತು ಆಯ್ಕೆಯನ್ನು ಉಳಿಸಲು Shift + ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ. ಬಲ ಕ್ಲಿಕ್: ಗುಂಪನ್ನು ಆಯ್ಕೆಮಾಡಿ."}
+{"name": "aoe2mc.controls.head", "text": "ನಿಯಂತ್ರಣಗಳು (ಕೋಲಿನ ಮೇಲಿನ ಕ್ಯಾರೆಟ್ ಹಿಡಿಯಿರಿ; ಕ್ರಿಯಾ ಪಟ್ಟಿ ಮುಂದಿನ ಹಂತವನ್ನು ತೋರಿಸುತ್ತದೆ):"}
+{"name": "aoe2mc.controls.menu", "text": "ಆಟದ ಮೆನು: ಆಟದ ಮೆನು ಪುಸ್ತಕದೊಂದಿಗೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ (ಹಾಟ್‌ಬಾರ್ ಕೀ 4): ರಾಜತಾಂತ್ರಿಕತೆ ಮತ್ತು ಕಪ್ಪ, ಸಂಕೇತ, ಉಳಿಸು, ವಿರಾಮ ಮತ್ತು ತಂತ್ರಜ್ಞಾನ ಮರ."}
+{"name": "aoe2mc.controls.move", "text": "ಚಲಿಸು: ಆಯ್ಕೆಯೊಂದಿಗೆ, ನೆಲದ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ."}
+{"name": "aoe2mc.controls.research", "text": "ಸಂಶೋಧನೆ ಮತ್ತು ಯುಗ ಮುನ್ನಡೆ: ನಿಮ್ಮ ಸ್ವಂತ ಕಟ್ಟಡದ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ ಮತ್ತು ಅದರ ಮೆನುವಿನಲ್ಲಿ ತಂತ್ರಜ್ಞಾನ ಅಥವಾ ಮುಂದಿನ ಯುಗವನ್ನು ಕ್ಲಿಕ್ ಮಾಡಿ."}
+{"name": "aoe2mc.controls.select", "text": "ಆಯ್ಕೆ: ಘಟಕದ ಮೇಲೆ ಎಡ ಕ್ಲಿಕ್ ಮಾಡಿ. ಎಡ ಕ್ಲಿಕ್ ಹಿಡಿದು ನೆಲದ ಮೇಲೆ ನೋಡಿ: ಆಯ್ಕೆ ಪೆಟ್ಟಿಗೆ. ಬಲ ಕ್ಲಿಕ್: ಆದೇಶಗಳನ್ನು ನೀಡಿ."}
+{"name": "aoe2mc.controls.train", "text": "ತರಬೇತಿ: ನಿಮ್ಮ ಸ್ವಂತ ಕಟ್ಟಡದ (ಪಟ್ಟಣ ಕೇಂದ್ರ, ಬ್ಯಾರಕ್ಸ್ ...) ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ ಮತ್ತು ಅದರ ಮೆನುವಿನಲ್ಲಿ ಘಟಕವನ್ನು ಕ್ಲಿಕ್ ಮಾಡಿ."}
+{"name": "aoe2mc.defeat", "text": "ಸೋಲು"}
+{"name": "aoe2mc.diplomacy.ally", "text": "ಮಿತ್ರ"}
+{"name": "aoe2mc.diplomacy.changed", "text": "ಆಟಗಾರ %s ನಿಮ್ಮ ಕಡೆಗೆ ತನ್ನ ನಿಲುವನ್ನು ಬದಲಾಯಿಸಿದ್ದಾರೆ: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "ಶತ್ರು"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "ತಟಸ್ಥ"}
+{"name": "aoe2mc.diplomacy.speed", "text": "ಆಟಗಾರ %s ಆಟದ ವೇಗವನ್ನು %s ಗೆ ಹೊಂದಿಸಿದ್ದಾರೆ."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "ಆಟಗಾರ %s ಆಟಗಾರ %s ಗೆ %s %s ಕಳುಹಿಸಿದ್ದಾರೆ."}
+{"name": "aoe2mc.flare.placed", "text": "%s: ಸಂಕೇತ %s %s ನಲ್ಲಿ"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "ಹಿಂಬಾಲಿಸು: ನಿಮ್ಮ ಘಟಕವೊಂದರ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "ಕಾವಲು: ನಿಮ್ಮ ಘಟಕ ಅಥವಾ ಕಟ್ಟಡದ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ"}
+{"name": "aoe2mc.gaia.joins", "text": "ಒಂದು %s ನಿಮ್ಮನ್ನು ಸೇರುತ್ತದೆ."}
+{"name": "aoe2mc.garrison.all_back", "text": "ಎಲ್ಲರೂ ಮತ್ತೆ ಕೆಲಸಕ್ಕೆ"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "ಪಟ್ಟಣದ ಗಂಟೆ ಬಾರಿಸುತ್ತದೆ: %s ಗ್ರಾಮಸ್ಥರು ಆಶ್ರಯ ಹುಡುಕುತ್ತಾರೆ"}
+{"name": "aoe2mc.garrison.no_villager", "text": "ಯಾವುದೇ ಗ್ರಾಮಸ್ಥರನ್ನು ಆಯ್ಕೆ ಮಾಡಿಲ್ಲ."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "ನಿಮ್ಮ ಬಳಿ ಗ್ರಾಮಸ್ಥರಿಲ್ಲ."}
+{"name": "aoe2mc.garrison.out", "text": "%s ಘಟಕಗಳು ಹೊರಬಂದವು"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s ಗ್ರಾಮಸ್ಥರು ಆಶ್ರಯ ಹುಡುಕುತ್ತಾರೆ"}
+{"name": "aoe2mc.gather.act_attack", "text": "ದಾಳಿ"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "ನಿರ್ಮಾಣ ಮೆನು"}
+{"name": "aoe2mc.gather.act_garrison", "text": "ಕಾವಲು"}
+{"name": "aoe2mc.gather.act_gather", "text": "ಸಂಗ್ರಹಿಸು"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ಬೇಟೆಯಾಡು"}
+{"name": "aoe2mc.gather.act_move", "text": "ಚಲಿಸು"}
+{"name": "aoe2mc.gather.act_select", "text": "ಆಯ್ಕೆ"}
+{"name": "aoe2mc.gather.act_select_type", "text": "ಈ ಪ್ರಕಾರದ ಎಲ್ಲವನ್ನೂ ಆಯ್ಕೆಮಾಡಿ"}
+{"name": "aoe2mc.gather.act_trade", "text": "ವ್ಯಾಪಾರ"}
+{"name": "aoe2mc.gather.act_train", "text": "ತರಬೇತಿ"}
+{"name": "aoe2mc.gather.attack_siege", "text": "ದಾಳಿ: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "ಆಯ್ಕೆ ಪೆಟ್ಟಿಗೆ: ರದ್ದಾಗಿದೆ"}
+{"name": "aoe2mc.gather.bush", "text": "ಬೆರ್ರಿ ಪೊದೆ"}
+{"name": "aoe2mc.gather.carcass", "text": "ಶವ"}
+{"name": "aoe2mc.gather.corner", "text": "ಆಯ್ಕೆ ಪೆಟ್ಟಿಗೆ: ಇತರ ಮೂಲೆಯ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ"}
+{"name": "aoe2mc.gather.enemy", "text": "ಶತ್ರು %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "ಶತ್ರು ಕಟ್ಟಡ"}
+{"name": "aoe2mc.gather.farm", "text": "ಹೊಲ"}
+{"name": "aoe2mc.gather.ground", "text": "ನೆಲ"}
+{"name": "aoe2mc.gather.group", "text": "ಗುಂಪು %s: %s ಘಟಕಗಳು"}
+{"name": "aoe2mc.gather.group_saved", "text": "ಗುಂಪು %s: %s ಘಟಕಗಳು ಉಳಿಸಲಾಗಿದೆ"}
+{"name": "aoe2mc.gather.mine", "text": "%s ಗಣಿ"}
+{"name": "aoe2mc.gather.paused", "text": "ಆಟ ವಿರಾಮದಲ್ಲಿದೆ."}
+{"name": "aoe2mc.gather.point", "text": "%s · ಬಲ ಕ್ಲಿಕ್: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "ಸರದಿಯಲ್ಲಿರುವ ಮರು-ಬಿತ್ತನೆಗಳು: %s"}
+{"name": "aoe2mc.gather.selected", "text": "ಆಯ್ಕೆಮಾಡಲಾಗಿದೆ: %s ಘಟಕಗಳು"}
+{"name": "aoe2mc.gather.tree", "text": "ಮರ"}
+{"name": "aoe2mc.hill.holds", "text": "ಆಟಗಾರ %s ಸ್ಮಾರಕವನ್ನು ಹಿಡಿದಿದ್ದಾರೆ."}
+{"name": "aoe2mc.hints.attack_ground", "text": "ನೆಲದ ಮೇಲೆ ದಾಳಿ: ನೆಲದ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ"}
+{"name": "aoe2mc.hints.attack_move", "text": "ದಾಳಿಯೊಂದಿಗೆ ಚಲಿಸು: ನೆಲದ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ"}
+{"name": "aoe2mc.hints.building", "text": "%s ಇರಿಸಿ: ನೆಲದ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ · Shift + ಬಲ ಕ್ಲಿಕ್: ಇನ್ನಷ್ಟು ಇರಿಸಿ · ರದ್ದುಮಾಡಲು: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: ಇರಿಸಲು ಎಡ ಕ್ಲಿಕ್ · Shift: ಇನ್ನಷ್ಟು ಇರಿಸಿ · ಬಲ ಕ್ಲಿಕ್: ರದ್ದುಮಾಡಿ"}
+{"name": "aoe2mc.hints.corner", "text": "ಆಯ್ಕೆ ಪೆಟ್ಟಿಗೆ: ಇತರ ಮೂಲೆಯ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ"}
+{"name": "aoe2mc.hints.count_military", "text": "%s ಸೇನಾ ಘಟಕ"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s ಸೇನಾ ಘಟಕಗಳು"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s ಗ್ರಾಮಸ್ಥ"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s ಗ್ರಾಮಸ್ಥರು"}
+{"name": "aoe2mc.hints.deselect", "text": "ಖಾಲಿ ಪೆಟ್ಟಿಗೆ: ಆಯ್ಕೆ ರದ್ದುಮಾಡಿ"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "ಎಡ ಕ್ಲಿಕ್: ಆಯ್ಕೆ ರದ್ದುಮಾಡಿ"}
+{"name": "aoe2mc.hints.follow", "text": "ಹಿಂಬಾಲಿಸು: ನಿಮ್ಮ ಅಥವಾ ಮಿತ್ರರ ಘಟಕದ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ"}
+{"name": "aoe2mc.hints.guard", "text": "ಕಾವಲು: ನಿಮ್ಮ ಅಥವಾ ಮಿತ್ರರ ಘಟಕ ಅಥವಾ ಕಟ್ಟಡದ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ"}
+{"name": "aoe2mc.hints.military", "text": "%s · ಬಲ ಕ್ಲಿಕ್: ಶತ್ರುವಿನ ಮೇಲೆ ದಾಳಿ, ನಿಲುವಿನ ಮೆನು · %s"}
+{"name": "aoe2mc.hints.none", "text": "ಎಡ ಕ್ಲಿಕ್: ಘಟಕವನ್ನು ಆಯ್ಕೆಮಾಡಿ · ಎಡ ಕ್ಲಿಕ್ ಹಿಡಿಯಿರಿ: ಆಯ್ಕೆ ಪೆಟ್ಟಿಗೆ"}
+{"name": "aoe2mc.hints.none_wand", "text": "ಬಲ ಕ್ಲಿಕ್: ಘಟಕವನ್ನು ಆಯ್ಕೆಮಾಡಿ · ದಂಡ: ಆಯ್ಕೆ ಪೆಟ್ಟಿಗೆ"}
+{"name": "aoe2mc.hints.patrol", "text": "ಗಸ್ತು: ನೆಲದ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · ಬಲ ಕ್ಲಿಕ್: ಸಂಗ್ರಹಿಸು, ನಿರ್ಮಿಸು, ನಿರ್ಮಾಣ ಮೆನು · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s ಸಿದ್ಧ"}
+{"name": "aoe2mc.lobby.you_play", "text": "ನೀವು %s ಆಡುತ್ತಿದ್ದೀರಿ."}
+{"name": "aoe2mc.monk.converts", "text": "ಒಬ್ಬ ಸನ್ಯಾಸಿ %s ಅನ್ನು ಮತಾಂತರಿಸುತ್ತಾನೆ."}
+{"name": "aoe2mc.monk.dies", "text": "%s ಸಾಯುತ್ತದೆ (ಧರ್ಮದ್ರೋಹ)."}
+{"name": "aoe2mc.pause.continued", "text": "ಆಟಗಾರ %s ಆಟವನ್ನು ಮುಂದುವರಿಸಿದ್ದಾರೆ."}
+{"name": "aoe2mc.pause.paused", "text": "ಆಟಗಾರ %s ಆಟವನ್ನು ವಿರಾಮಗೊಳಿಸಿದ್ದಾರೆ."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "ತಂಡ %s (ಸರಾಸರಿ ರೇಟಿಂಗ್ %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "ಆಟ ಮುಗಿದಿದೆ. ಫಲಿತಾಂಶಗಳನ್ನು ನೋಡಲು ನಿಮ್ಮ ಕೈಯಲ್ಲಿರುವ ಸಾರಾಂಶ ಪುಸ್ತಕದ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ. ಅದರ ಕನ್ಸೋಲ್‌ನಲ್ಲಿ Ctrl-C ಯೊಂದಿಗೆ ಆಟದ ಪ್ರೋಗ್ರಾಂ ನಿಲ್ಲಿಸಿ."}
+{"name": "aoe2mc.relic_victory.all", "text": "ಆಟಗಾರ %s ಎಲ್ಲಾ ಅವಶೇಷಗಳನ್ನು ಹಿಡಿದಿದ್ದಾರೆ."}
+{"name": "aoe2mc.relic_victory.lost", "text": "ಆಟಗಾರ %s ಒಂದು ಅವಶೇಷವನ್ನು ಕಳೆದುಕೊಂಡಿದ್ದಾರೆ."}
+{"name": "aoe2mc.repair.no_resources", "text": "%s ದುರಸ್ತಿಗೆ ಸಾಕಷ್ಟು ಸಂಪನ್ಮೂಲಗಳಿಲ್ಲ."}
+{"name": "aoe2mc.replay.army", "text": "ಸೇನೆ: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", ಕೊನೆಯಲ್ಲಿ ಸೇನೆ: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", ಕಳೆದುಹೋದವು: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "ನಿರ್ಮಾಣ ಕ್ರಮ:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · ಕಾವಲು %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | %s %s ಹೊತ್ತಿದೆ"}
+{"name": "aoe2mc.replay.eco_build", "text": "ನಿರ್ಮಿಸು %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "ಆಹಾರ %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "ಚಿನ್ನ %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "ನಿರುದ್ಯೋಗ %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "ಕಲ್ಲು %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "ಮರ %s"}
+{"name": "aoe2mc.replay.flare", "text": "ಸಂಕೇತ"}
+{"name": "aoe2mc.replay.game_ends", "text": "ಆಟ ಕೊನೆಗೊಳ್ಳುತ್ತದೆ"}
+{"name": "aoe2mc.replay.game_time", "text": "ಆಟದ ಸಮಯ %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · ಕಾವಲು %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "ಸೇನೆ %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "ಜನಸಂಖ್ಯೆ %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "ಸಂಪನ್ಮೂಲ %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "ಗ್ರಾಮಸ್ಥ %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s ಸ್ಮಾರಕವನ್ನು ಹಿಡಿದಿದ್ದರು: %s ರಲ್ಲಿ ಬೆಟ್ಟದ ರಾಜ ಗೆಲುವು."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s ದಾಳಿ %s/%s ರಕ್ಷಾಕವಚ%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift ಎರಡು ಬಾರಿ ಟ್ಯಾಪ್ ಮಾಡಿ: ವೀಕ್ಷಕ ನೋಟ (ಬ್ಲಾಕ್‌ಗಳ ಮೂಲಕ ಹಾರಿ). ಹಾಟ್‌ಬಾರ್ ವಸ್ತುಗಳ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ: ಮರುಪ್ರಸಾರ ನಿಯಂತ್ರಣ."}
+{"name": "aoe2mc.replay.king_died", "text": ": ರಾಜ %s ರಲ್ಲಿ ಸತ್ತನು. ರಾಜಹತ್ಯೆ: ಆಟಗಾರ ಹೊರಬೀಳುತ್ತಾನೆ."}
+{"name": "aoe2mc.replay.king_killed", "text": "%s ರಲ್ಲಿ ರಾಜನನ್ನು ಕೊಲ್ಲಲಾಯಿತು"}
+{"name": "aoe2mc.replay.live_jump", "text": "ನೇರ ಮರುಪ್ರಸಾರ: ಜಿಗಿತವು ಆಟದ ಹಿಂದಿನ ವಿಳಂಬದಲ್ಲಿ ನಿಲ್ಲುತ್ತದೆ."}
+{"name": "aoe2mc.replay.lost", "text": "ಕಳೆದುಹೋದವು: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " %s ರಲ್ಲಿ ಸ್ಮಾರಕವನ್ನು ಹಿಡಿದಿದ್ದಾರೆ."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: ಸ್ಮಾರಕ, %s ವರ್ಷ ಉಳಿದಿದೆ"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: ಸ್ಮಾರಕ, %s ವರ್ಷಗಳು ಉಳಿದಿವೆ"}
+{"name": "aoe2mc.replay.no_camera", "text": "ಈ ದಾಖಲೆಯಲ್ಲಿ ಅದರ ಆಟಗಾರನ ಕ್ಯಾಮೆರಾ ಇಲ್ಲ."}
+{"name": "aoe2mc.replay.now", "text": " ಈಗ"}
+{"name": "aoe2mc.replay.out", "text": "%s ಹೊರಬಿದ್ದಿದ್ದಾರೆ"}
+{"name": "aoe2mc.replay.players", "text": "ಆಟಗಾರರು"}
+{"name": "aoe2mc.replay.range", "text": " ವ್ಯಾ%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " ಅವಶೇಷವನ್ನು ಮಠಕ್ಕೆ ತಂದು ಗೆಲ್ಲುತ್ತಾರೆ."}
+{"name": "aoe2mc.replay.replay_ended", "text": "ಮರುಪ್ರಸಾರ ಮುಗಿದಿದೆ"}
+{"name": "aoe2mc.replay.research", "text": " %s ಸಂಶೋಧಿಸುತ್ತಾರೆ"}
+{"name": "aoe2mc.replay.resigns", "text": "%s ಶರಣಾಗುತ್ತಾರೆ"}
+{"name": "aoe2mc.replay.restart_jump", "text": "ಹಿಂದಕ್ಕೆ ಜಿಗಿತಕ್ಕಾಗಿ ಸರ್ವರ್ ಮರುಪ್ರಾರಂಭವಾಗುತ್ತದೆ: ಮತ್ತೆ ಸೇರಿಕೊಳ್ಳಿ."}
+{"name": "aoe2mc.replay.share_buildings", "text": "ಕಟ್ಟಡಗಳು %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "ಆರ್ಥಿಕತೆ %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "ಸೇನೆ %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "ತಂತ್ರಜ್ಞಾನಗಳು %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "ಒಟ್ಟು %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "ಕೋಟೆಗಳು %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "ಖರೀದಿ %s, ಮಾರಾಟ %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "ಅವಶೇಷಗಳು %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "ಅದ್ಭುತಗಳು %s, "}
+{"name": "aoe2mc.replay.spent", "text": "ಖರ್ಚು:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "ನಿರ್ಮಾಣ %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "ಆರ್ಥಿಕತೆ %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "ಸೇನೆ %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "ತಂತ್ರ %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": ತರಬೇತಿ ಪಡೆದ ಗ್ರಾಮಸ್ಥರು %s, ಸಂಗ್ರಹಿಸಿದ್ದು %s, ಗ್ರಾಮಸ್ಥರ ನಿರುದ್ಯೋಗ ಸಮಯ %s, ಟೌನ್ ಸೆಂಟರ್ ನಿರುದ್ಯೋಗ ಸಮಯ %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": ಸ್ಮಾರಕವನ್ನು ಹಿಡಿದಿದ್ದಾರೆ (ಬೆಟ್ಟದ ರಾಜ)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": ಸ್ಮಾರಕ ಗೆದ್ದದ್ದು %s (ಬೆಟ್ಟದ ರಾಜ)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": ತರಬೇತಿ ಪಡೆದ ಸೇನಾ ಘಟಕಗಳು %s, ಕಳೆದುಹೋದ ಘಟಕಗಳು %s, ಕಳೆದುಹೋದ ಕಟ್ಟಡಗಳು %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": ರಾಜನನ್ನು ಕೊಂದದ್ದು %s (ರಾಜಹತ್ಯೆ)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": ಗೆಲುವು, ಮಠದಲ್ಲಿ ಅವಶೇಷ %s (ಅವಶೇಷ ಸೆರೆ)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sಕಪ್ಪ ಕಳುಹಿಸಿದ್ದು %s, ಸ್ವೀಕರಿಸಿದ್ದು %s, ಗ್ರಾಮಸ್ಥರ ಉತ್ತುಂಗ %s (ಅಂದಾಜು)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": ಟೌನ್ ಸೆಂಟರ್ ಕಳೆದುಕೊಂಡಿದ್ದು %s (ಆಕಸ್ಮಿಕ ಸಾವು)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, ತಂತ್ರಜ್ಞಾನಗಳು %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": ಅದ್ಭುತ ಟೈಮರ್ %s ರಿಂದ, %s ರಲ್ಲಿ ಕೊನೆಗೊಳ್ಳುತ್ತದೆ (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "ಸಾರಾಂಶ (ಅಂದಾಜು)"}
+{"name": "aoe2mc.replay.task_building", "text": "ನಿರ್ಮಿಸುತ್ತಿದೆ"}
+{"name": "aoe2mc.replay.task_following", "text": "ಹಿಂಬಾಲಿಸುತ್ತಿದೆ"}
+{"name": "aoe2mc.replay.task_food", "text": "ಆಹಾರ ಸಂಗ್ರಹಿಸುತ್ತಿದೆ"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "ಕಾವಲಿನಲ್ಲಿದೆ"}
+{"name": "aoe2mc.replay.task_gold", "text": "ಚಿನ್ನ ಸಂಗ್ರಹಿಸುತ್ತಿದೆ"}
+{"name": "aoe2mc.replay.task_guarding", "text": "ಕಾಯುತ್ತಿದೆ"}
+{"name": "aoe2mc.replay.task_idle", "text": "ನಿರುದ್ಯೋಗಿ"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "ಗಸ್ತು ತಿರುಗುತ್ತಿದೆ"}
+{"name": "aoe2mc.replay.task_resources", "text": "ಸಂಪನ್ಮೂಲಗಳನ್ನು ಸಂಗ್ರಹಿಸುತ್ತಿದೆ"}
+{"name": "aoe2mc.replay.task_stone", "text": "ಕಲ್ಲು ಸಂಗ್ರಹಿಸುತ್ತಿದೆ"}
+{"name": "aoe2mc.replay.task_walking", "text": "ನಡೆಯುತ್ತಿದೆ"}
+{"name": "aoe2mc.replay.task_wood", "text": "ಮರ ಸಂಗ್ರಹಿಸುತ್ತಿದೆ"}
+{"name": "aoe2mc.replay.team", "text": "ತಂಡ %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "ಬಿಲ್ಲುಗಾರ %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "ಬಿಲ್ಲುಗಾರ ರಕ್ಷಾಕವಚ %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "ಹೊರುವಿಕೆ %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "ಅಶ್ವದಳ ರಕ್ಷಾಕವಚ %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "ಹೊಲ %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "ಚಿನ್ನ %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "ಕಾಲಾಳು ರಕ್ಷಾಕವಚ %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "ನೇಯ್ಗೆ ಯಂತ್ರ %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "ಸಮೀಪ ಹೋರಾಟ %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "ಕಲ್ಲು %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "ಮರ %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "ಕೋಟೆ"}
+{"name": "aoe2mc.replay.tl_king", "text": "ರಾಜನನ್ನು ಕೊಲ್ಲಲಾಯಿತು"}
+{"name": "aoe2mc.replay.tl_military", "text": "ಮೊದಲ ಸೇನೆ: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "ಅವಶೇಷ"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "ಶರಣಾಗತಿ"}
+{"name": "aoe2mc.replay.town_fell", "text": ": ಟೌನ್ ಸೆಂಟರ್ %s ರಲ್ಲಿ ಬಿದ್ದಿತು. ಆಕಸ್ಮಿಕ ಸಾವು: ಆಟಗಾರ ಹೊರಬೀಳುತ್ತಾನೆ."}
+{"name": "aoe2mc.replay.town_lost", "text": "%s ರಲ್ಲಿ ಟೌನ್ ಸೆಂಟರ್ ಕಳೆದುಹೋಯಿತು"}
+{"name": "aoe2mc.replay.training", "text": "ತರಬೇತಿ: %s"}
+{"name": "aoe2mc.replay.university", "text": "ವಿಶ್ವವಿದ್ಯಾಲಯ:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ಆರ್ಥಿಕತೆ %s · ವಿಶ್ವವಿದ್ಯಾಲಯ %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " %s ರಲ್ಲಿ ಒಂದು ಅದ್ಭುತವನ್ನು ನಿರ್ಮಿಸಿದರು."}
+{"name": "aoe2mc.replay_input.fight", "text": "ಕಾಳಗ: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s ಘಟಕಗಳು"}
+{"name": "aoe2mc.replay_input.fights", "text": "ದೊಡ್ಡ ಕಾಳಗಗಳು:"}
+{"name": "aoe2mc.replay_input.help", "text": "ಮರುಪ್ರಸಾರ: ಹಾಟ್‌ಬಾರ್‌ನಲ್ಲಿರುವ ವಸ್ತುಗಳ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ, ಅಥವಾ ಕ್ಲಿಕ್ ಮಾಡಿ: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "ವಶಪಡಿಸಿಕೊಳ್ಳಿ: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s ಘಟಕಗಳು)"}
+{"name": "aoe2mc.replay_input.vs", "text": " ವಿರುದ್ಧ "}
+{"name": "aoe2mc.resource.food", "text": "ಆಹಾರ"}
+{"name": "aoe2mc.resource.gold", "text": "ಚಿನ್ನ"}
+{"name": "aoe2mc.resource.stone", "text": "ಕಲ್ಲು"}
+{"name": "aoe2mc.resource.wood", "text": "ಮರ"}
+{"name": "aoe2mc.run.back", "text": "%s ಮರಳಿದ್ದಾರೆ"}
+{"name": "aoe2mc.run.campaign_complete", "text": "ಅಭಿಯಾನ ಪೂರ್ಣಗೊಂಡಿದೆ"}
+{"name": "aoe2mc.run.chat_hint", "text": "ಚಾಟ್: ಸಾಮಾನ್ಯ ಸಾಲು ಎಲ್ಲರಿಗೂ ಹೋಗುತ್ತದೆ, /tm TEXT ನಿಮ್ಮ ಮಿತ್ರರಿಗೆ, /msg NAME TEXT ಒಬ್ಬ ವ್ಯಕ್ತಿಗೆ."}
+{"name": "aoe2mc.run.left_bot", "text": "%s ಹೊರಟಿದ್ದಾರೆ: ಬಾಟ್ ಆಟಗಾರ %s ಆಡುತ್ತದೆ"}
+{"name": "aoe2mc.run.scenario_starts", "text": "ಸನ್ನಿವೇಶ %s ಪ್ರಾರಂಭವಾಗುತ್ತದೆ. ಮತ್ತೆ ಸೇರಿಕೊಳ್ಳಿ."}
+{"name": "aoe2mc.run.starts_in", "text": "ಆಟ %s ರಲ್ಲಿ ಪ್ರಾರಂಭವಾಗುತ್ತದೆ"}
+{"name": "aoe2mc.run.wait_ready", "text": "\"ನಿಮ್ಮ ಆಟಗಾರನನ್ನು ಆಯ್ಕೆಮಾಡಿ\" ತೆರೆಯಿರಿ ಮತ್ತು \"ಸಿದ್ಧ\" ಕ್ಲಿಕ್ ಮಾಡಿ"}
+{"name": "aoe2mc.run.welcome_controls", "text": "ಎಲ್ಲಾ ನಿಯಂತ್ರಣಗಳು: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "ಮೊದಲ ಹಂತ: ಆಜ್ಞಾ ಕೋಲನ್ನು ಹಿಡಿದು ನಿಮ್ಮ ಗ್ರಾಮಸ್ಥರಲ್ಲಿ ಒಬ್ಬರ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "ಮೊದಲ ಹಂತ: ಆಜ್ಞಾ ಕೋಲನ್ನು ಹಿಡಿದು ನಿಮ್ಮ ಗ್ರಾಮಸ್ಥರಲ್ಲಿ ಒಬ್ಬರ ಮೇಲೆ ಎಡ ಕ್ಲಿಕ್ ಮಾಡಿ."}
+{"name": "aoe2mc.run.welcome_goal", "text": "ಗುರಿ: ಆಟ ಗೆಲ್ಲಿರಿ. ಗೆಲುವಿನ ಸೆಟ್ಟಿಂಗ್: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "ಆಟ ಉಳಿಸಲಾಗಿದೆ: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s ಘಟಕಗಳು ಹೊರಬಂದವು"}
+{"name": "aoe2mc.stance.auto_scout", "text": "ಸ್ವಯಂ ಗೂಢಚಾರ"}
+{"name": "aoe2mc.stance.formation", "text": "ರಚನೆ: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "ಯಾವುದೇ ಘಟಕ ನೆಲದ ಮೇಲೆ ದಾಳಿ ಮಾಡಲಾರದು"}
+{"name": "aoe2mc.stance.unpack", "text": "ಮೊದಲು ಟ್ರೆಬುಶೆಟ್ ಅನ್ನು ಬಿಚ್ಚಿ"}
+{"name": "aoe2mc.train.active", "text": "%s ಸಕ್ರಿಯವಾಗಿದೆ."}
+{"name": "aoe2mc.train.rally", "text": "ಸಭಾ ಸ್ಥಳಕ್ಕಾಗಿ ನೆಲದ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ."}
+{"name": "aoe2mc.train.researched", "text": "%s ಸಂಶೋಧಿಸಲಾಗಿದೆ."}
+{"name": "aoe2mc.transport.out", "text": "%s ಘಟಕಗಳು ಹೊರಬಂದವು"}
+{"name": "aoe2mc.treaty.ended", "text": "ಒಪ್ಪಂದ ಕೊನೆಗೊಂಡಿದೆ: ಆಟಗಾರರು ಈಗ ದಾಳಿ ಮಾಡಬಹುದು."}
+{"name": "aoe2mc.treaty.refuse", "text": "ಒಪ್ಪಂದ: %s ಮೊದಲು ನೀವು ದಾಳಿ ಮಾಡಲಾರಿರಿ."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "ಒಪ್ಪಂದ: ಈ ಆಟದಲ್ಲಿ ನೀವು ದಾಳಿ ಮಾಡಲಾರಿರಿ."}
+{"name": "aoe2mc.treaty.start", "text": "ಒಪ್ಪಂದ: %s ಮೊದಲು ಯಾವುದೇ ಆಟಗಾರನು ಇನ್ನೊಬ್ಬ ಆಟಗಾರನ ಮೇಲೆ ದಾಳಿ ಮಾಡಲಾರನು."}
+{"name": "aoe2mc.treaty.start_endless", "text": "ಒಪ್ಪಂದ: ಈ ಆಟದಲ್ಲಿ ಯಾವುದೇ ಆಟಗಾರನು ಇನ್ನೊಬ್ಬ ಆಟಗಾರನ ಮೇಲೆ ದಾಳಿ ಮಾಡಲಾರನು."}
+{"name": "aoe2mc.tutorial.barracks", "text": "ಬ್ಯಾರಕ್ಸ್ ನಿರ್ಮಿಸಿ: ಆಯ್ಕೆಮಾಡಿದ ಗ್ರಾಮಸ್ಥರ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ, ಬ್ಯಾರಕ್ಸ್ ಆಯ್ಕೆಮಾಡಿ ಮತ್ತು ಇರಿಸಿ. ಹಾಟ್‌ಬಾರ್‌ನ ಮೇಲಿನ ಕ್ರಿಯಾ ಪಟ್ಟಿ ಅದನ್ನು ಎಲ್ಲಿ ಇರಿಸಬೇಕೆಂದು ತಿಳಿಸುತ್ತದೆ."}
+{"name": "aoe2mc.tutorial.camera", "text": "ನಕ್ಷೆಯ ಮೇಲೆ ವೇಗವಾಗಿ ಚಲಿಸಿ: \"ಕ್ಯಾಮೆರಾ\" ವಸ್ತುವಿನೊಂದಿಗೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ, ನಡೆಯಿರಿ, ನಂತರ ಅದರೊಂದಿಗೆ ಮತ್ತೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ."}
+{"name": "aoe2mc.tutorial.camp", "text": "ನಕ್ಷೆಯ ಮಧ್ಯದಲ್ಲಿರುವ ಶತ್ರು ಶಿಬಿರವನ್ನು ನಾಶಮಾಡಿ: ನಿಮ್ಮ ಮಿಲಿಷಿಯಾವನ್ನು ಆಯ್ಕೆಮಾಡಿ ಮತ್ತು ಕಟ್ಟಡದ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ. ಮೇಲಿನ ಬಾಸ್ ಪಟ್ಟಿ ಹಂತವನ್ನು ತೋರಿಸುತ್ತದೆ."}
+{"name": "aoe2mc.tutorial.camps", "text": "ಮರಗಳ ಹತ್ತಿರ ಮರದ ಶಿಬಿರ ಮತ್ತು ಹಣ್ಣುಗಳ ಹತ್ತಿರ ಗಿರಣಿಯನ್ನು ನಿರ್ಮಿಸಿ. ಬಲಭಾಗದ ಪಾರ್ಶ್ವಪಟ್ಟಿ ಅವುಗಳ ಮರದ ವೆಚ್ಚವನ್ನು ತೋರಿಸುತ್ತದೆ."}
+{"name": "aoe2mc.tutorial.complete", "text": "ಟ್ಯುಟೋರಿಯಲ್ ಪೂರ್ಣಗೊಂಡಿದೆ. ಮುಂದೆ: ಬಾಟ್ ವಿರುದ್ಧ ಆಟ ಆಡಿ: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "ಟ್ಯುಟೋರಿಯಲ್ ಪೂರ್ಣಗೊಂಡಿದೆ"}
+{"name": "aoe2mc.tutorial.feudal", "text": "ಊಳಿಗಮಾನ್ಯ ಯುಗಕ್ಕೆ ಮುನ್ನಡೆಯಿರಿ: ನಿಮ್ಮ ಪಟ್ಟಣ ಕೇಂದ್ರದ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ ಮತ್ತು ಊಳಿಗಮಾನ್ಯ ಯುಗವನ್ನು ಆಯ್ಕೆಮಾಡಿ. ಬಲಭಾಗದ ಪಾರ್ಶ್ವಪಟ್ಟಿ ನಿಮ್ಮ ಆಹಾರವನ್ನು ತೋರಿಸುತ್ತದೆ."}
+{"name": "aoe2mc.tutorial.food", "text": "100 ಆಹಾರ ಸಂಗ್ರಹಿಸಿ: ಒಬ್ಬ ಗ್ರಾಮಸ್ಥನನ್ನು ಬೆರ್ರಿಗಳಿಗೆ ಕಳುಹಿಸಿ. ಬಲಭಾಗದ ಪಾರ್ಶ್ವಪಟ್ಟಿ ನಿಮ್ಮ ಆಹಾರವನ್ನು ತೋರಿಸುತ್ತದೆ."}
+{"name": "aoe2mc.tutorial.house", "text": "ಮನೆ ನಿರ್ಮಿಸಿ: ಆಯ್ಕೆಮಾಡಿದ ಗ್ರಾಮಸ್ಥರ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ, ಮನೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ ಮತ್ತು ಇರಿಸಿ. ಹಾಟ್‌ಬಾರ್‌ನ ಮೇಲಿನ ಕ್ರಿಯಾ ಪಟ್ಟಿ ಅದನ್ನು ಎಲ್ಲಿ ಇರಿಸಬೇಕೆಂದು ತಿಳಿಸುತ್ತದೆ."}
+{"name": "aoe2mc.tutorial.militia", "text": "3 ಮಿಲಿಷಿಯಾಗಳಿಗೆ ತರಬೇತಿ ನೀಡಿ: ನಿಮ್ಮ ಬ್ಯಾರಕ್ಸ್ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ ಮತ್ತು ಮಿಲಿಷಿಯಾವನ್ನು ಆಯ್ಕೆಮಾಡಿ. ಬಲಭಾಗದ ಪಾರ್ಶ್ವಪಟ್ಟಿ ನಿಮ್ಮ ಆಹಾರ ಮತ್ತು ಚಿನ್ನವನ್ನು ತೋರಿಸುತ್ತದೆ."}
+{"name": "aoe2mc.tutorial.raid", "text": "ಶತ್ರು ನಿಮ್ಮ ಗ್ರಾಮಸ್ಥರ ಮೇಲೆ ದಾಳಿ ಮಾಡುತ್ತಿದ್ದಾನೆ! ಅಲ್ಲಿಗೆ ಹೋಗಲು ಚಾಟ್‌ನಲ್ಲಿರುವ ಕೆಂಪು ಎಚ್ಚರಿಕೆಯ ಸಾಲನ್ನು ಕ್ಲಿಕ್ ಮಾಡಿ, ನಂತರ ನಿಮ್ಮ ಮಿಲಿಷಿಯಾವನ್ನು ಆಯ್ಕೆಮಾಡಿ ಮತ್ತು ಶತ್ರುಗಳ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ. ಮೇಲಿನ ಬಾಸ್ ಪಟ್ಟಿ ಆಯ್ಕೆಮಾಡಿದ ಘಟಕದ ಆರೋಗ್ಯವನ್ನು ತೋರಿಸುತ್ತದೆ."}
+{"name": "aoe2mc.tutorial.select", "text": "ಒಬ್ಬ ಗ್ರಾಮಸ್ಥನನ್ನು ಆಯ್ಕೆಮಾಡಿ: ಆಜ್ಞಾ ಕೋಲಿನೊಂದಿಗೆ ನಿಮ್ಮ ಗ್ರಾಮಸ್ಥರಲ್ಲಿ ಒಬ್ಬರ ಮೇಲೆ ಎಡ ಕ್ಲಿಕ್ ಮಾಡಿ. ಮೇಲಿನ ಬಾಸ್ ಪಟ್ಟಿ ಆಯ್ಕೆಮಾಡಿದ ಘಟಕವನ್ನು ತೋರಿಸುತ್ತದೆ, ಹಾಟ್‌ಬಾರ್‌ನ ಮೇಲಿನ ಕ್ರಿಯಾ ಪಟ್ಟಿ ಮುಂದಿನ ಕ್ರಿಯೆಯನ್ನು ತೋರಿಸುತ್ತದೆ."}
+{"name": "aoe2mc.tutorial.step_done", "text": "ಹಂತ ಪೂರ್ಣಗೊಂಡಿದೆ"}
+{"name": "aoe2mc.tutorial.step_of", "text": "ಹಂತ %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "ಸಲಹೆ: ಬ್ಯಾರಕ್ಸ್ ಕಾಲಾಳುಗಳಿಗೆ ತರಬೇತಿ ನೀಡುತ್ತದೆ. ಕಾಲಾಳುಗಳು ಅಗ್ಗವಾಗಿದ್ದು ಕಟ್ಟಡಗಳ ವಿರುದ್ಧ ಉತ್ತಮ."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "ಸಲಹೆ: ನಿಮ್ಮ ಎಲ್ಲಾ ಘಟಕಗಳೊಂದಿಗೆ ಒಟ್ಟಿಗೆ ದಾಳಿ ಮಾಡಿ. ಒಂದು ಸಣ್ಣ ಗುಂಪು ಹಾನಿ ಮಾಡುವ ಮೊದಲೇ ಸಾಯುತ್ತದೆ."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "ಸಲಹೆ: ಸಂಪನ್ಮೂಲಗಳ ಹತ್ತಿರ ಇಳಿಸುವ ಕಟ್ಟಡಗಳನ್ನು ನಿರ್ಮಿಸಿ, ಇದರಿಂದ ಗ್ರಾಮಸ್ಥರು ಸಣ್ಣ ದಾರಿ ನಡೆಯುತ್ತಾರೆ."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "ಸಲಹೆ: ಮುಂದಿನ ಯುಗ ಹೊಸ ಕಟ್ಟಡಗಳು, ಘಟಕಗಳು ಮತ್ತು ತಂತ್ರಜ್ಞಾನಗಳನ್ನು ತೆರೆಯುತ್ತದೆ. ಮುನ್ನಡೆಯುವಾಗ ಗ್ರಾಮಸ್ಥರನ್ನು ಕೆಲಸದಲ್ಲಿ ಇರಿಸಿ."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "ಸಲಹೆ: ಗಿರಣಿಯ ಹತ್ತಿರದ ಬೆರ್ರಿಗಳು ಆಹಾರಕ್ಕೆ ಸುರಕ್ಷಿತ ಆರಂಭ. ನಂತರ, ಹೊಲಗಳು ಮುಗಿಯದ ಆಹಾರವನ್ನು ನೀಡುತ್ತವೆ."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "ಸಲಹೆ: ಒಂದು ಮನೆ 5 ಹೆಚ್ಚು ಜನಸಂಖ್ಯೆಗೆ ಸ್ಥಳ ನೀಡುತ್ತದೆ. ಪಾರ್ಶ್ವಪಟ್ಟಿಯಲ್ಲಿ ಜನಸಂಖ್ಯೆಯನ್ನು ನೋಡಿ ಮತ್ತು ಅದು ತುಂಬುವ ಮೊದಲು ಮನೆಗಳನ್ನು ನಿರ್ಮಿಸಿ."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "ಸಲಹೆ: ನಿಮ್ಮ ಬಳಿ ಸಂಪನ್ಮೂಲಗಳಿದ್ದಾಗ ಒಂದು ಕಟ್ಟಡದಲ್ಲಿ 15 ಘಟಕಗಳವರೆಗೆ ಸರದಿ ಹಾಕಬಹುದು."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "ಸಲಹೆ: AoE2 ನಲ್ಲಿ ಪಟ್ಟಣದ ಗಂಟೆ ಗ್ರಾಮಸ್ಥರನ್ನು ಟೌನ್ ಸೆಂಟರ್‌ಗೆ ಕಳುಹಿಸುತ್ತದೆ. ಶತ್ರು ನಿಮ್ಮ ಪಟ್ಟಣವನ್ನು ದಾಳಿ ಮಾಡಿದಾಗ ಅದನ್ನು ಬಾರಿಸಿ."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "ಸಲಹೆ: ಬಲಭಾಗದ ಪಾರ್ಶ್ವಪಟ್ಟಿಯ ನಿರುದ್ಯೋಗ ಸಾಲು ಕೆಲಸವಿಲ್ಲದ ನಿಮ್ಮ ಗ್ರಾಮಸ್ಥರನ್ನು ಎಣಿಸುತ್ತದೆ. ಅವರಿಗೆ ಕೆಲಸ ನೀಡಿ."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "ಸಲಹೆ: ಮೊದಲ ಯುಗಗಳಲ್ಲಿ ಯಾವಾಗಲೂ ಗ್ರಾಮಸ್ಥರಿಗೆ ತರಬೇತಿ ನೀಡಿ. ಹೆಚ್ಚು ಗ್ರಾಮಸ್ಥರು ಹೆಚ್ಚು ಸಂಪನ್ಮೂಲಗಳನ್ನು ನೀಡುತ್ತಾರೆ."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "ಸಲಹೆ: ಇಳಿಸುವ ಕಟ್ಟಡದ ಹತ್ತಿರ ಗ್ರಾಮಸ್ಥರು ವೇಗವಾಗಿ ಸಂಗ್ರಹಿಸುತ್ತಾರೆ. ಮರಗಳ ಪಕ್ಕದಲ್ಲಿ ಮರದ ಶಿಬಿರವನ್ನು ನಿರ್ಮಿಸಿ."}
+{"name": "aoe2mc.tutorial.villager", "text": "ಒಬ್ಬ ಗ್ರಾಮಸ್ಥನಿಗೆ ತರಬೇತಿ ನೀಡಿ: ನಿಮ್ಮ ಟೌನ್ ಸೆಂಟರ್ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ ಮತ್ತು ಗ್ರಾಮಸ್ಥನನ್ನು ಆಯ್ಕೆಮಾಡಿ. ಬಲಭಾಗದ ಪಾರ್ಶ್ವಪಟ್ಟಿ ಅದರ ಆಹಾರ ವೆಚ್ಚವನ್ನು ತೋರಿಸುತ್ತದೆ."}
+{"name": "aoe2mc.tutorial.wood", "text": "50 ಮರ ಸಂಗ್ರಹಿಸಿ: ಒಬ್ಬ ಗ್ರಾಮಸ್ಥನನ್ನು ಆಯ್ಕೆಮಾಡಿ ಮತ್ತು ಮರದ ಮೇಲೆ ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ. ಬಲಭಾಗದ ಪಾರ್ಶ್ವಪಟ್ಟಿ ನಿಮ್ಮ ಮರವನ್ನು ತೋರಿಸುತ್ತದೆ."}
+{"name": "aoe2mc.victory", "text": "ಗೆಲುವು"}
+{"name": "aoe2mc.wonder.built", "text": "ಆಟಗಾರ %s ಒಂದು ಅದ್ಭುತವನ್ನು ನಿರ್ಮಿಸಿದ್ದಾರೆ."}
+{"name": "aoe2mc.wonder.destroyed", "text": "ಆಟಗಾರ %s ಅವರ ಅದ್ಭುತ ನಾಶವಾಗಿದೆ."}

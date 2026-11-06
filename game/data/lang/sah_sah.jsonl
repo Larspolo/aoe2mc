@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Оонньооччу %s %s эбэтэр кэмигэр көтүөҕэ."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Буорулуу картаны кыраныыһын тиэрдэн ортотугар %s иһигэр ылар. Онно баар бары биэрбэт уонна дьиэлэри сүтэрэр."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Мин ити кэмҥэ онно %s тутуа сатаабаппын."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ити биэрбэти үөрэтэ сатаабаппын: ону иһин дьиэ суох."}
+{"name": "aoe2mc.bot.flare_two", "text": "Стена иһин икки миэстэҕэ сигнал быраҕыҥ."}
+{"name": "aoe2mc.bot.no_flare", "text": "Миигин сигнал көрбөт."}
+{"name": "aoe2mc.bot.no_market", "text": "Миэхэ маарыннаһыы суох: налог ыыта сатаабаппын."}
+{"name": "aoe2mc.bot.no_onager", "text": "Миэхэ онагер суох."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Стена иһин миэхэ ресурстар бааллара суох."}
+{"name": "aoe2mc.bot.no_water", "text": "Миэхэ куорат чугаһыгар уу суох: флот тутуу сатаабаппын."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Миэхэ онагерҕыт моҥҥордору сабар сатаабаттар."}
+{"name": "aoe2mc.build.cost", "text": "Ресурстар бааллара суох: %s уонна %s."}
+{"name": "aoe2mc.build.flat", "text": "%s тэҥ сиргэ турарга тиийиэхтээх."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s бэйэҥ стенаҥ 4 плиткатыгар түөрт сирэйинэн, эбэтэр 3 диагональ плиткатыгар турарга тиийиэхтээх."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Тутуу: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s кыраныыс чугаһыгар уу үрдүгэр турарга тиийиэхтээх."}
+{"name": "aoe2mc.build.space", "text": "Бу сиргэ %s иһин миэстэ суох."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Ресурстар бааллара суох: %s плитка %s — %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: стена түмүгүн уң кнопканан баттаҥ."}
+{"name": "aoe2mc.build.water", "text": "%s уу үрдүгэр турарга тиийиэхтээх."}
+{"name": "aoe2mc.camera.fov", "text": "Түргэн камера илиигэр баар предмети тэбирдиир. Ол тохтуур иһин Тэрилтэ > Киллэриилээх көрүү > View Bobbing ини OFF гыныҥ. Камера көрүүнү эмиэ кэҥэтэр, онно картаны уларыта көстөр. Ордук көрүү иһин Тэрилтэ > Киллэриилээх көрүү > FOV Effects ини 0 % гыныҥ."}
+{"name": "aoe2mc.camera.off", "text": "Камера: сабыллыбыт"}
+{"name": "aoe2mc.camera.on", "text": "Камера: эргиллибит, түргэнэ x%s. Shift + уң кнопка: киэһэҕи түргэн."}
+{"name": "aoe2mc.camera.speed", "text": "Камера түргэнэ: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Бары күүстээх биэрбэттэри хото-хото, аҕыйах биэрбэти эрэ сүтэрэн"}
+{"name": "aoe2mc.challenge.booming", "text": "100 олохтооҕу үөрэтэн, Империя кэмигэр көтүөҕүн"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Кылаан кэмигэр көтүөҕүн уонна күүстээх биэрбэт кутуутуттан тыырыллыаҕыҥ"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Күүстээх кылаабы сүтэрэн"}
+{"name": "aoe2mc.challenge.early-economy", "text": "200 аһы, 200 таһы, 100 алтаны уонна 200 таһы хомуйан, 21 олохтооҕу үөрэтэн, таас лагерь уонна кыыһыҥ тутан, Феодал кэмигэр көтүөҕүн"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "27 олохтооҕу үөрэтэн, 5 дьиэ тутан уонна Кылаабы кэмигэр көтүөҕүн"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Биэрбэт алта дулҕатын барытын кыайан"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s биэрбэт сүтүктэ, бронза мэтээл %s диэри"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s биэрбэт сүтүктэ, алтан мэтээл %s диэри"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s биэрбэт сүтүктэ, мэтээл суох"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s биэрбэт сүтүктэ, күмүс мэтээл %s диэри"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Бронза мэтээл"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Алтан мэтээл"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Күмүс мэтээл"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Бары күүстээх уу ыраах кемелэри сүтэрэн"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Мэтээл суох"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Күүстээх 5 олохтооҕу өлөрөн"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "%s иһигэр бронза мэтээл"}
+{"name": "aoe2mc.challenge.time_gold", "text": "%s иһигэр алтан мэтээл"}
+{"name": "aoe2mc.challenge.time_silver", "text": "%s иһигэр күмүс мэтээл"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Эгида сабыллыбыт"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Эгида эргиллибит"}
+{"name": "aoe2mc.cheat.beyond", "text": "Технологиялар: 256 ыйытыыга диэри"}
+{"name": "aoe2mc.cheat.cpu", "text": "Олохтоохтор кээмэйэ: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Сэрии туман: сабыллыбыт"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Сэрии туман: эргиллибит"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Технологиялар бэлэх"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Бэйэлэрин үллэстии — кыһалҕаны билии: киирээччиҥ сэбиэскэй саҥа сиргэ барар"}
+{"name": "aoe2mc.cheat.wonders", "text": "Эн сир-дойдуну салайаҕыт: %s эрэ"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Бэйэлэр эрэ хаалбыттар: союзтар бүтэллэр. Олорор соҕотох оонньооччу кыайар."}
+{"name": "aoe2mc.conquest.defeated", "text": "Оонньооччу %s кыайыллыбыт."}
+{"name": "aoe2mc.controls.attack", "text": "Һөҕүү: сэрии биэрбэттэри талан, онтон биэрбэттэн уң кнопканан баттаҥ."}
+{"name": "aoe2mc.controls.build", "text": "Тутуу: олохтооҕу талан, тутуу менюһын иһин кинилэргэ уң кнопканан баттаҥ, дьиэни талан, онтон сиргэ сол кнопканан баттаҥ. Shift + сол кнопка: атын бүтүн. Уң кнопка: аҕаллын."}
+{"name": "aoe2mc.controls.camera", "text": "Камера: көрүү камераны (хотбар кнопка 2) уң кнопканан баттаҥ: картаны үрдүгэр түргэнник сылдьаҕыт. Shift + уң кнопка: киэһэҕи түргэн. Уонна уң кнопка: аллара тэбиллэҕит."}
+{"name": "aoe2mc.controls.garrison", "text": "Гарнизон: биэрбэттэри талан, бэйэҥ дьиэҥ уң кнопканан баттаҥ. Ол менюта кинилэри таһаарар. Куорат тэрилтэтин менюта: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "Хомуй: олохтооҕу талан, онтон моҥҥору, ыһыах хатыһын, быраабы эбэтэр ото ууну уң кнопканан баттаҥ."}
+{"name": "aoe2mc.controls.goto", "text": "Бар: компас Бар (хотбар кнопка 3) уң кнопканан баттаҥ: бэйэҥ куорат тэрилтэлэрин, көннөрүү бөлөхтөрүн уонна кэнники боруобата суох олохтооҕу менюта."}
+{"name": "aoe2mc.controls.groups", "text": "Көннөрүү бөлөхтөрө: биэрбэттэри талан, бөлөх предметин ылан (хотбар кнопкалара 5-тан 9-ҕа диэри) уонна талыыны харыстыы Shift + уң кнопка. Уң кнопка: бөлөҕү талыы."}
+{"name": "aoe2mc.controls.head", "text": "Көннөрүүлэр (таяҕа олорор морковь тутуҥ; дьайыы панель кэнники кэмҥэ көрдөрөр):"}
+{"name": "aoe2mc.controls.menu", "text": "Оонньуу менюта: Оонньуу менюта кинигэтин уң кнопканан баттаҥ (хотбар кнопка 4): дипломатия уонна налог, сигнал, харыстыы, тохтотуу уонна технология мааны."}
+{"name": "aoe2mc.controls.move", "text": "Тэрий: талыылаах, сиргэ уң кнопканан баттаҥ."}
+{"name": "aoe2mc.controls.research", "text": "Үөрэтии уонна кэмнэри көтүтүү: бэйэҥ дьиэҥ уң кнопканан баттаҥ уонна менюҕар технологияҕа эбэтэр кэнники кэми баттаҥ."}
+{"name": "aoe2mc.controls.select", "text": "Талыы: биэрбэккэ сол кнопканан баттаҥ. Сол кнопканы тутан сиргэ көр: талыы хааһа. Уң кнопка: бойобуой биэриҥ."}
+{"name": "aoe2mc.controls.train", "text": "Үөрэтии: бэйэҥ дьиэҥ (куорат тэрилтэтэ, казарма ...) уң кнопканан баттаҥ уонна менюҕар биэрбэти баттаҥ."}
+{"name": "aoe2mc.defeat", "text": "Кыайыы"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Союзник"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Оонньооччу %s эйигин ситимнээн бэйэтин туруга уларыйда: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Күүстээх"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Нейтралынай"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Оонньооччу %s оонньуу түргэнин %s гыннарда."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Оонньооччу %s %s %s ыыппыт оонньооччуга %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Сигнал %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Түгэн: бэйэҥ биэрбэккэ баттаҥ"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Харыстыы: бэйэҥ биэрбэккэ эбэтэр дьиэҕэр баттаҥ"}
+{"name": "aoe2mc.gaia.joins", "text": "Биир %s эйиэхэ холбонор."}
+{"name": "aoe2mc.garrison.all_back", "text": "Бары үлэҕэ тахсаҕыт"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Куорат хонуу дьаныллар: %s олохтооҕо тыыны көрдүүр"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Биир да олохтооҕо талыллыбатах."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Эйигин олохтоохтор суохтар."}
+{"name": "aoe2mc.garrison.out", "text": "%s биэрбэт тахсыбыт"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s олохтооҕо тыыны көрдүүр"}
+{"name": "aoe2mc.gather.act_attack", "text": "һөҕүү"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "тутуу менюта"}
+{"name": "aoe2mc.gather.act_garrison", "text": "гарнизон"}
+{"name": "aoe2mc.gather.act_gather", "text": "хомуй"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ааны"}
+{"name": "aoe2mc.gather.act_move", "text": "тэрий"}
+{"name": "aoe2mc.gather.act_select", "text": "талыы"}
+{"name": "aoe2mc.gather.act_select_type", "text": "бу туһун барытын талыы"}
+{"name": "aoe2mc.gather.act_trade", "text": "суоҕа"}
+{"name": "aoe2mc.gather.act_train", "text": "үөрэт"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Һөҕүү: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Талыы хааһа: аҕаллыбыт"}
+{"name": "aoe2mc.gather.bush", "text": "Ыһыах хатыһа"}
+{"name": "aoe2mc.gather.carcass", "text": "Өлбүт сүөһү"}
+{"name": "aoe2mc.gather.corner", "text": "Талыы хааһа: атын булуҥҥа баттаҥ"}
+{"name": "aoe2mc.gather.enemy", "text": "Күүстээх %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Күүстээх дьиэ"}
+{"name": "aoe2mc.gather.farm", "text": "Ото уу"}
+{"name": "aoe2mc.gather.ground", "text": "Сир"}
+{"name": "aoe2mc.gather.group", "text": "Бөлөх %s: %s биэрбэт"}
+{"name": "aoe2mc.gather.group_saved", "text": "Бөлөх %s: %s биэрбэт харыстанна"}
+{"name": "aoe2mc.gather.mine", "text": "%s быраа"}
+{"name": "aoe2mc.gather.paused", "text": "Оонньуу тохтотуллубут."}
+{"name": "aoe2mc.gather.point", "text": "%s · Уң кнопка: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Кэлэр кэмҥэ тардыллыбыт: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Талыллыбыт: %s биэрбэт"}
+{"name": "aoe2mc.gather.tree", "text": "Моҥҥор"}
+{"name": "aoe2mc.hill.holds", "text": "Оонньооччу %s кыһалҕаны тутар."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Сири һөҕүү: сиргэ уң кнопканан баттаҥ"}
+{"name": "aoe2mc.hints.attack_move", "text": "Һөҕүүнэн тэрий: сиргэ уң кнопканан баттаҥ"}
+{"name": "aoe2mc.hints.building", "text": "%s уур: сиргэ уң кнопканан баттаҥ · Shift + уң кнопка: атын бүтүн · Аҕалыы: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: уурар иһин сол кнопка · Shift: атын бүтүн · Уң кнопка: аҕаллын"}
+{"name": "aoe2mc.hints.corner", "text": "Талыы хааһа: атын булуҥҥа уң кнопканан баттаҥ"}
+{"name": "aoe2mc.hints.count_military", "text": "%s сэрии биэрбэт"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s сэрии биэрбэт"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s олохтооҕо"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s олохтоохтор"}
+{"name": "aoe2mc.hints.deselect", "text": "Буор хааһа: талыыны аҕал"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Сол кнопка: талыыны аҕал"}
+{"name": "aoe2mc.hints.follow", "text": "Түгэн: бэйэҥ эбэтэр союзник биэрбэккэ уң кнопканан баттаҥ"}
+{"name": "aoe2mc.hints.guard", "text": "Харыстыы: бэйэҥ эбэтэр союзник биэрбэккэ эбэтэр дьиэҕэр уң кнопканан баттаҥ"}
+{"name": "aoe2mc.hints.military", "text": "%s · Уң кнопка: күүстээххэ һөҕүү, туруу менюта · %s"}
+{"name": "aoe2mc.hints.none", "text": "Сол кнопка: биэрбэти талыы · Сол кнопканы тутуу: талыы хааһа"}
+{"name": "aoe2mc.hints.none_wand", "text": "Уң кнопка: биэрбэти талыы · Таяах: талыы хааһа"}
+{"name": "aoe2mc.hints.patrol", "text": "Патрул: сиргэ уң кнопканан баттаҥ"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Уң кнопка: хомуй, тутуу, тутуу менюта · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s бэлэм"}
+{"name": "aoe2mc.lobby.you_play", "text": "Эн %s оонньуоҥ."}
+{"name": "aoe2mc.monk.converts", "text": "Монах %s ууннарар."}
+{"name": "aoe2mc.monk.dies", "text": "%s өлөр (Ереси)."}
+{"name": "aoe2mc.pause.continued", "text": "Оонньооччу %s оонньуу салҕаппыт."}
+{"name": "aoe2mc.pause.paused", "text": "Оонньооччу %s оонньууну тохтотта."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Команда %s (орто рейтинг %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Оонньуу бүппүт. Түмүгү көрөр иһин илиигэр баар Түмүк кинигэтин уң кнопканан баттаҥ. Оонньуу программатын консолугар Ctrl-C-ҕа тохтотуҥ."}
+{"name": "aoe2mc.relic_victory.all", "text": "Оонньооччу %s барытын бэлиэлэрин тутар."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Оонньооччу %s биир бэлиэни сүтэрбит."}
+{"name": "aoe2mc.repair.no_resources", "text": "%s түһэрэргэ ресурстар бааллара суох."}
+{"name": "aoe2mc.replay.army", "text": "Армия: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", түмүктээҕи армия: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", сүтүктэ: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Тутуу сирэйэ:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · гарнизон %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | %s %s таһаарар"}
+{"name": "aoe2mc.replay.eco_build", "text": "тутуу %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "аһа %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "алтан %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "үлэтэ суох %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "таас %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "моҥҥор %s"}
+{"name": "aoe2mc.replay.flare", "text": "Сигнал"}
+{"name": "aoe2mc.replay.game_ends", "text": "Оонньуу бүтэр"}
+{"name": "aoe2mc.replay.game_time", "text": "Оонньуу кэмэ %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · гарнизон %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Сэрии %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Олохтоохтор %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Ресурс %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Олохтооҕо %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s кыһалҕаны тутта: %s кыайыы Хайа Ыал иһин."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s һөҕүү %s/%s броня%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift-ы икки төгүллүүр кнопкалаа: көрөөччү көрүүтэ (блоктар аҥаарынан ыһыллан). Хотбар предметтэрин уң кнопканан баттаҥ: көрүү көрүүлэрэ."}
+{"name": "aoe2mc.replay.king_died", "text": ": Ыал %s өлбүт. Ыал өлөрүү: оонньооччу таҕыстаҕа."}
+{"name": "aoe2mc.replay.king_killed", "text": "Ыал %s өлөрүллүбүт"}
+{"name": "aoe2mc.replay.live_jump", "text": "Тыыннаах көрүү: түргэн күүтүү оонньуу кэнниттэн тохтуур."}
+{"name": "aoe2mc.replay.lost", "text": "Сүтүктэ: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " %s кыһалҕаны тутар."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: кыһалҕа, %s сыл хаалла"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: кыһалҕа, %s сыл хаалла"}
+{"name": "aoe2mc.replay.no_camera", "text": "Бу суругуга оонньооччутун камерата суох."}
+{"name": "aoe2mc.replay.now", "text": " итинник"}
+{"name": "aoe2mc.replay.out", "text": "%s таҕыстаҕа"}
+{"name": "aoe2mc.replay.players", "text": "Оонньооччулар"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " бэлиэни монастырга илдьэ кыайар."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Көрүү бүппүт"}
+{"name": "aoe2mc.replay.research", "text": " %s үөрэтэр"}
+{"name": "aoe2mc.replay.resigns", "text": "%s бэйэтин биэрэр"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Кэннинэн сүүрүү иһин сервер хаҥыллар: эмиэ холбонуҥ."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Дьиэлэр %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Эканамыка %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Сэрии %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Технологиялар %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Бүтүн %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "кылааптар %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "атыылаппыт %s, атыыласпыт %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "бэлиэлэр %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "аатырар дьыалалар %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Барбыт:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Тутуу %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Эк. %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Сэрии %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Тех. %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": үөрэммит олохтоохтор %s, хомуйбут %s, олохтооҕо үлэтэ суох кэмэ %s, куорат тэрилтэтин үлэтэ суох кэмэ %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": кыһалҕаны тутар (Хайа Ыал)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": кыһалҕа кыайыыта %s (Хайа Ыал)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": үөрэммит сэрии биэрбэттэрэ %s, сүтүктэрэ %s, сүтүк дьиэлэрэ %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": ыал өлөрүллүбүт %s (Ыал өлөрүү)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": кыайыы, монастырга бэлиэ %s (Бэлиэни ылыы)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sналог ыыппыт %s, ылбыт %s, олохтоохтор кыра сүгүрүйүүтэ %s (тыырыы)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": куорат тэрилтэтэ сүтүктэ %s (Үтүмэн өлүү)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, технологиялар %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": аатырар дьыала таймера %s-тан, бүтэр %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Түмүк (тыырыы)"}
+{"name": "aoe2mc.replay.task_building", "text": "тутар"}
+{"name": "aoe2mc.replay.task_following", "text": "түгэнэр"}
+{"name": "aoe2mc.replay.task_food", "text": "аһы хомуйар"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "гарнизоҥҥа"}
+{"name": "aoe2mc.replay.task_gold", "text": "алтаны хомуйар"}
+{"name": "aoe2mc.replay.task_guarding", "text": "харыстыыр"}
+{"name": "aoe2mc.replay.task_idle", "text": "үлэтэ суох"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "патруллуур"}
+{"name": "aoe2mc.replay.task_resources", "text": "ресурстары хомуйар"}
+{"name": "aoe2mc.replay.task_stone", "text": "таас хомуйар"}
+{"name": "aoe2mc.replay.task_walking", "text": "сылдьар"}
+{"name": "aoe2mc.replay.task_wood", "text": "моҥҥор хомуйар"}
+{"name": "aoe2mc.replay.team", "text": "Команда %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Ыйааччы %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Ыйааччы броня %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Таһааһын %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Атынан броня %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Ото уу %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Алтан %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Пехота броняҕа %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Таҥаһы станок %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Чугас һөҕүү %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Таас %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Моҥҥор %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Кылаап"}
+{"name": "aoe2mc.replay.tl_king", "text": "Ыал өлөрүллүбүт"}
+{"name": "aoe2mc.replay.tl_military", "text": "1-кы сэрии: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Бэлиэ"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Бэйэни биэрии"}
+{"name": "aoe2mc.replay.town_fell", "text": ": куорат тэрилтэтэ %s түспүт. Үтүмэн өлүү: оонньооччу таҕыстаҕа."}
+{"name": "aoe2mc.replay.town_lost", "text": "%s куорат тэрилтэтэ сүтүктэ"}
+{"name": "aoe2mc.replay.training", "text": "Үөрэтии: %s"}
+{"name": "aoe2mc.replay.university", "text": "Университет:"}
+{"name": "aoe2mc.replay.up_counts", "text": "эканамыка %s · Университет %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " %s аатырар дьыаланы тутта."}
+{"name": "aoe2mc.replay_input.fight", "text": "Сэрии: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s биэрбэт"}
+{"name": "aoe2mc.replay_input.fights", "text": "Улахан сэриилэр:"}
+{"name": "aoe2mc.replay_input.help", "text": "Көрүү: хотбар предметтэрин уң кнопканан баттаҥ, эбэтэр баттаҥ: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Эккирэтии: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s биэрбэт)"}
+{"name": "aoe2mc.replay_input.vs", "text": " каршы "}
+{"name": "aoe2mc.resource.food", "text": "аһа"}
+{"name": "aoe2mc.resource.gold", "text": "алтан"}
+{"name": "aoe2mc.resource.stone", "text": "таас"}
+{"name": "aoe2mc.resource.wood", "text": "моҥҥор"}
+{"name": "aoe2mc.run.back", "text": "%s төнүннэ"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Кампания бүппүт"}
+{"name": "aoe2mc.run.chat_hint", "text": "Чат: бу сурук барытыгар барар, /tm TEXT союзниктарга, /msg NAME TEXT биир киһиэхэ."}
+{"name": "aoe2mc.run.left_bot", "text": "%s таҕыста: бот оонньооччу %s оонньуур"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Сценарий %s саҕаланар. Эмиэ холбонуҥ."}
+{"name": "aoe2mc.run.starts_in", "text": "Оонньуу %s кэнниттэн саҕаланар"}
+{"name": "aoe2mc.run.wait_ready", "text": "\"Оонньооччуну талыы\" ас уонна \"Бэлэм\" баттаҥ"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Бүтүн көннөрүүлэр: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Бастакы аҕалыы: бойобуой таяҕы тутан олохтооҕуттан биирдэрин уң кнопканан баттаҥ."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Бастакы аҕалыы: бойобуой таяҕы тутан олохтооҕуттан биирдэрин сол кнопканан баттаҥ."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Сыала: оонньууну кыайыы. Кыайыы көрүүтэ: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Оонньуу харыстанна: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s биэрбэт тахсыбыт"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Автомат разведка"}
+{"name": "aoe2mc.stance.formation", "text": "Тутуу: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Биир да биэрбэт сиргэ һөҕүүргэ сатаабат"}
+{"name": "aoe2mc.stance.unpack", "text": "Малтан трибуҥу аһыҥ"}
+{"name": "aoe2mc.train.active", "text": "%s үлэлиир."}
+{"name": "aoe2mc.train.rally", "text": "Мустар миэстэ иһин сиргэ уң кнопканан баттаҥ."}
+{"name": "aoe2mc.train.researched", "text": "%s үөрэтиллибит."}
+{"name": "aoe2mc.transport.out", "text": "%s биэрбэт тахсыбыт"}
+{"name": "aoe2mc.treaty.ended", "text": "Килиэп бүппүт: оонньооччулар индигэр һөҕүү оҥорон сөп."}
+{"name": "aoe2mc.treaty.refuse", "text": "Килиэп: %s иннинэ эн һөҕүү оҥорор кыаҕын булбаккын."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Килиэп: бу оонньуу иһигэр эн һөҕүү оҥорор кыаҕын булбаккын."}
+{"name": "aoe2mc.treaty.start", "text": "Килиэп: %s иннинэ бэрт оонньооччу атын оонньооччуну һөҕүө сатаабат."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Килиэп: бу оонньуу иһигэр бэрт оонньооччу атын оонньооччуну һөҕүө сатаабат."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Казарма тут: талыллыбыт олохтооҕуҥ уң кнопканан баттаҥ, казарманы талан уур. Хотбар үрдүгэр дьайыы панель хантан уурар эрэ көрдөрөр."}
+{"name": "aoe2mc.tutorial.camera", "text": "Картаҕа түргэнник сылдьыҥ: \"Камера\" предметтэн уң кнопканан баттаҥ, сылдьаҥ, онтон онуоха эмиэ уң кнопканан баттаҥ."}
+{"name": "aoe2mc.tutorial.camp", "text": "Картаны иһин ортотугар күүстээх лаагыр аҕалаҥ: бэйэҥ милицияны талан, дьиэҕэ уң кнопканан баттаҥ. Үрдүгэр босс-панель адьас кэнниттэн көрдөрөр."}
+{"name": "aoe2mc.tutorial.camps", "text": "Моҥҥор чугаһыгар моҥҥор лагерь, ыһыах хатыһа чугаһыгар тэгирмэн тут. Баара, панель ону оруолаах бэйэтин моҥҥордоро көрдөрөр."}
+{"name": "aoe2mc.tutorial.complete", "text": "Үөрэтии бүппүт. Кэнники: боту оонньуу оонньуоҥ: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Үөрэтии бүппүт"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Феодал кэмигэр көтүөҕүн: куорат тэрилтэҕэр уң кнопканан баттаҥ уонна Феодал кэмин талыҥ. Баара панель эн аһыҥ көрдөрөр."}
+{"name": "aoe2mc.tutorial.food", "text": "100 аһы хомуй: олохтооҕуҥ биир ыһыах хатыһыгар ыт. Баара панель эн аһыҥ көрдөрөр."}
+{"name": "aoe2mc.tutorial.house", "text": "Дьиэ тут: талыллыбыт олохтооҕуҥ уң кнопканан баттаҥ, дьиэни талан уур. Хотбар үрдүгэр дьайыы панель хантан уурар эрэ көрдөрөр."}
+{"name": "aoe2mc.tutorial.militia", "text": "3 милиция үөрэт: бэйэҥ казармаҕар уң кнопканан баттаҥ уонна милицияны талыҥ. Баара панель эн аһыҥ уонна алтаныҥ көрдөрөр."}
+{"name": "aoe2mc.tutorial.raid", "text": "Күүстээх олохтоохторгун һөҕөр! Ол диэки барыар иһин чааттағы кызыл биллэриини баттаҥ, онтон бэйэҥ милицияны талан, күүстээххэ уң кнопканан баттаҥ. Үрдүгэр босс-панель талыллыбыт биэрбэт доруобуйатын көрдөрөр."}
+{"name": "aoe2mc.tutorial.select", "text": "Олохтооҕу талыы: бойобуой таяҕынан олохтооҕуҥ биирдэрин сол кнопканан баттаҥ. Үрдүгэр босс-панель талыллыбыт биэрбэти көрдөрөр, хотбар үрдүгэр дьайыы панель кэнники дьайыыны көрдөрөр."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Ахсаан бүппүт"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Ахсаан %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "Сүбэ: казарма пехотаны үөрэтэр. Пехота кыраны уонна дьиэлэргэ үчүгэй."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "Сүбэ: бары биэрбэттэриҥ биир тэҥҥэ һөҕүү оҥорон. Кыра бөлөх кыһыйар иннинэ өлөр."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "Сүбэ: тутуулары сүөһү көмөрөр тула, олохтоохтор кыра ыт иһин."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "Сүбэ: кэнники кэм саҥа дьиэлэри, биэрбэттэри уонна технологияны аһар. Кэмнэри көтүтэ сылдьан олохтоохтору үлэҕэ тутуҥ."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "Сүбэ: тэгирмэн чугаһыгар ыһыах хатыһа — аһы бастакы былаан. Кэнники ото уу аһы бүтүннүк биэрэр."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "Сүбэ: дьиэ 5 атын олохтооҕу сиэрэр. Панельгэ олохтооҕу көрүҥ уонна толору иннинэ дьиэлэри тутуҥ."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "Сүбэ: баалар баар буолан, дьиэҕэ 15 биэрбэккэ диэри кэтэх туруоруохха сөп."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "Сүбэ: AoE2-ҕа куорат ҥыыла олохтооҕу куорат тэрилтэтигэр ыытар. Күүстээх куорату һөҕөн эрдэҕинэ ҥыыллыҥ."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "Сүбэ: баара панель Үлэтэ суох сирэй үлэтэ суох олохтоохтору лаппаҕа. Кинилэргэ үлэ биэриҥ."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "Сүбэ: бастакы кэмнэргэ бэрт олохтоохтору үөрэтиҥ. Ордук олохтоохтор ордук ресурстар."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "Сүбэ: ыыталыыр дьиэ чугаһыгар олохтоохтор түргэнник хомуйар. Моҥҥор чугаһыгар моҥҥор лагерь тут."}
+{"name": "aoe2mc.tutorial.villager", "text": "Олохтооҕу үөрэт: бэйэҥ куорат тэрилтэҕэр уң кнопканан баттаҥ уонна олохтооҕу талыҥ. Баара панель ону аһа көрдөрөр."}
+{"name": "aoe2mc.tutorial.wood", "text": "50 моҥҥор хомуй: олохтооҕу талан, моҥҥорго уң кнопканан баттаҥ. Баара панель эн моҥҥорун көрдөрөр."}
+{"name": "aoe2mc.victory", "text": "Кыайыы"}
+{"name": "aoe2mc.wonder.built", "text": "Оонньооччу %s аатырар дьыаланы тутта."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Оонньооччу %s аатырар дьыалата буолла."}
