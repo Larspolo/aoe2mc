@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "jan %s li tawa tenpo %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: pakala li kama tawa nanpa kipisi ni: li weka e ma lon %s. ona li weka e jan kulupu li tomo lon ma."}
+{"name": "aoe2mc.bot.cannot_build", "text": "mi ken ala pali e %s lon ni tenpo."}
+{"name": "aoe2mc.bot.cannot_train", "text": "mi ken ala kama pali e jan ni: mi jo ala e tomo tawa ona."}
+{"name": "aoe2mc.bot.flare_two", "text": "pana e sona tu lon ni: lipu."}
+{"name": "aoe2mc.bot.no_flare", "text": "mi lukin ala e sona."}
+{"name": "aoe2mc.bot.no_market", "text": "mi jo ala e tomo ijo: mi ken ala pana e mani."}
+{"name": "aoe2mc.bot.no_onager", "text": "mi jo ala e ilo wawa."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "mi jo ala e ijo mute tawa lipu."}
+{"name": "aoe2mc.bot.no_water", "text": "telo li lon ala lon tomo mi: mi ken ala pali e ilo tawa telo."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "ilo wawa mi li ken ala tawa kasi."}
+{"name": "aoe2mc.build.cost", "text": "ijo li lili: %s li wile e %s."}
+{"name": "aoe2mc.build.flat", "text": "%s o lon ma sama."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s o lon lipu mi, lon linja pi poki nanpa tu, anu lon linja pi poki nanpa tu sama."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "pali: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s o lon telo kama lon tenpo ma."}
+{"name": "aoe2mc.build.space", "text": "ma li lili ala tawa %s lon ni."}
+{"name": "aoe2mc.build.tiles_cost", "text": "ijo li lili: poki %s pi %s li wile e %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: o tawa sewi pi lipu ni, pana e ilo kon."}
+{"name": "aoe2mc.build.water", "text": "%s o lon telo."}
+{"name": "aoe2mc.camera.fov", "text": "ilo lukin li tawa wawa li kama sin e ilo jo. o weka e ni: o lukin e lipu lukin > sona pi ken wawa > tawa tawa ilo lon OFF. ilo lukin li suli e lukin, li lukin e ma mute. o lukin e lukin sama: o lukin e lipu lukin > sona pi ken wawa > FOV 0 %."}
+{"name": "aoe2mc.camera.off", "text": "ilo lukin: weka"}
+{"name": "aoe2mc.camera.on", "text": "ilo lukin: lon, tawa x%s. o pana e ilo kon tawa nanpa: tawa ilo ni."}
+{"name": "aoe2mc.camera.speed", "text": "tawa ilo lukin: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "weka e jan pi ilo ali, o weka e jan lili taso"}
+{"name": "aoe2mc.challenge.booming", "text": "kama pali e jan pi ma ni 100, o tawa tenpo suli"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "tawa tenpo tomo wawa, o pini e ali pi jan ike"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "weka e tomo wawa pi jan ike"}
+{"name": "aoe2mc.challenge.early-economy", "text": "kama jo e moku 200, kasi 200, mani 100 en kiwen 200, kama pali e jan pi ma 21, pali e tomo kasi en tomo telo, o tawa tenpo pi jan tawa"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "kama pali e jan pi ma 27, pali e tomo lili 5, o tawa tenpo wawa"}
+{"name": "aoe2mc.challenge.land-battle", "text": "weka e pini nanpa tu pi ali ike"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "jan pi ilo wawa li moli %s, sijelo ko tawa %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "jan pi ilo wawa li moli %s, sijelo mani tawa %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "jan pi ilo wawa li moli %s, sijelo ala"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "jan pi ilo wawa li moli %s, sijelo kiwen tawa %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "sijelo ko"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "sijelo mani"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "sijelo kiwen"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "weka e ilo tawa telo ike ali"}
+{"name": "aoe2mc.challenge.no_medal", "text": "sijelo ala"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "moli e jan pi ma ike 5"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "sijelo ko lon %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "sijelo mani lon %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "sijelo kiwen lon %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "ijo pini: weka"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "ijo pini: lon"}
+{"name": "aoe2mc.cheat.beyond", "text": "pali sin: pini mute tawa 256"}
+{"name": "aoe2mc.cheat.cpu", "text": "nanpa jan suli: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "kon lukin: weka"}
+{"name": "aoe2mc.cheat.fog_on", "text": "kon lukin: lon"}
+{"name": "aoe2mc.cheat.free_techs", "text": "pali sin li kama ala e mani"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "pona la, jan pona li pana: mani sina li tawa jan pona sina"}
+{"name": "aoe2mc.cheat.wonders", "text": "sina lawa e ma: soweli %s"}
+{"name": "aoe2mc.conquest.allies_end", "text": "jan pona taso li lon: pona li pini. jan pi tenpo pini li jo e ijo."}
+{"name": "aoe2mc.conquest.defeated", "text": "jan %s li moli."}
+{"name": "aoe2mc.controls.attack", "text": "tawa wawa: o wan e jan ni, o kon e ilo sina tawa jan ike."}
+{"name": "aoe2mc.controls.build", "text": "pali: o wan e jan pi ma, o kon tawa ona la ilo pali li lukin. o wan e tomo, o tawa ma. shift + kon lon: pali mute. kon lon: weka."}
+{"name": "aoe2mc.controls.camera", "text": "ilo lukin: o kon e ilo lukin lon poki 2, o tawa tawa anpa lon sewi ma. shift kon: tawa nanpa kama. o kon lon: o tawa anpa."}
+{"name": "aoe2mc.controls.garrison", "text": "tomo: o wan e jan, o kon e tomo sina. ona li open e jan. lipu tomo: o pana e tawa tomo."}
+{"name": "aoe2mc.controls.gather", "text": "kama jo: o wan e jan pi ma, o kon tawa kasi, kiwen, moku, anu kasi pi kili."}
+{"name": "aoe2mc.controls.goto", "text": "o tawa: o kon e ilo sewi, lipu tomo sina en jan pi tenpo ala."}
+{"name": "aoe2mc.controls.groups", "text": "kulupu: o wan e jan, o kama jo e poki 5 tawa 9, o shift kon lon: o awen e kulupu. o kon: o wan e kulupu ni."}
+{"name": "aoe2mc.controls.head", "text": "ilo (o jo e ilo soweli; ilo nasin li sona e nasin kama):"}
+{"name": "aoe2mc.controls.menu", "text": "lipu ilo: o kon e lipu ilo (poki 4): pana, mani, awen, pini tenpo, en lipu pali."}
+{"name": "aoe2mc.controls.move", "text": "tawa: jan li lon ilo, o kon lon ma."}
+{"name": "aoe2mc.controls.research", "text": "sona pali en tawa tenpo: o kon e tomo sina, o wan e pali sin anu tenpo kama."}
+{"name": "aoe2mc.controls.select", "text": "wan: o wan e jan. o awen e kon lon ma: lipu li tawa. o kon: o pana e nasin."}
+{"name": "aoe2mc.controls.train", "text": "kama pali: o kon e tomo sina (tomo suli, tomo pali). o wan e jan lon lipu."}
+{"name": "aoe2mc.defeat", "text": "moli"}
+{"name": "aoe2mc.diplomacy.ally", "text": "pona"}
+{"name": "aoe2mc.diplomacy.changed", "text": "jan %s li ante e nasin sina: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "ike"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "ala"}
+{"name": "aoe2mc.diplomacy.speed", "text": "jan %s li ante e tawa tenpo: %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "jan %s li pana e %s %s tawa jan %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: sona lon %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "tawa kepeken: o wan e jan sina"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "awen: o wan e jan sina anu tomo sina"}
+{"name": "aoe2mc.gaia.joins", "text": "%s li kama pona tawa sina."}
+{"name": "aoe2mc.garrison.all_back", "text": "jan ale li tawa pali"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "ilo ko li kalama: jan pi ma %s li alasa e awen"}
+{"name": "aoe2mc.garrison.no_villager", "text": "jan pi ma li wan ala."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "jan pi ma li lon ala."}
+{"name": "aoe2mc.garrison.out", "text": "jan %s li tawa"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "jan pi ma %s li alasa e awen"}
+{"name": "aoe2mc.gather.act_attack", "text": "tawa wawa"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "lipu pali"}
+{"name": "aoe2mc.gather.act_garrison", "text": "awen"}
+{"name": "aoe2mc.gather.act_gather", "text": "kama jo"}
+{"name": "aoe2mc.gather.act_hunt", "text": "alasa"}
+{"name": "aoe2mc.gather.act_move", "text": "tawa"}
+{"name": "aoe2mc.gather.act_select", "text": "wan"}
+{"name": "aoe2mc.gather.act_select_type", "text": "wan e ale pi kind sama"}
+{"name": "aoe2mc.gather.act_trade", "text": "ko"}
+{"name": "aoe2mc.gather.act_train", "text": "kama pali"}
+{"name": "aoe2mc.gather.attack_siege", "text": "tawa wawa: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "poki wan: weka"}
+{"name": "aoe2mc.gather.bush", "text": "kili kasi"}
+{"name": "aoe2mc.gather.carcass", "text": "moli soweli"}
+{"name": "aoe2mc.gather.corner", "text": "poki wan: o kon e sewi ante"}
+{"name": "aoe2mc.gather.enemy", "text": "%s pi ike"}
+{"name": "aoe2mc.gather.enemy_building", "text": "tomo pi ike"}
+{"name": "aoe2mc.gather.farm", "text": "ma kasi"}
+{"name": "aoe2mc.gather.ground", "text": "ma"}
+{"name": "aoe2mc.gather.group", "text": "kulupu %s: jan %s"}
+{"name": "aoe2mc.gather.group_saved", "text": "kulupu %s: jan %s li awen"}
+{"name": "aoe2mc.gather.mine", "text": "tomo kiwen %s"}
+{"name": "aoe2mc.gather.paused", "text": "tenpo li awen."}
+{"name": "aoe2mc.gather.point", "text": "%s · kon lon: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "kasi sin li kama: %s"}
+{"name": "aoe2mc.gather.selected", "text": "wan: jan %s"}
+{"name": "aoe2mc.gather.tree", "text": "kasi"}
+{"name": "aoe2mc.hill.holds", "text": "jan %s li jo e ijo sewi."}
+{"name": "aoe2mc.hints.attack_ground", "text": "tawa wawa ma: o kon lon ma"}
+{"name": "aoe2mc.hints.attack_move", "text": "tawa wawa: o kon lon ma"}
+{"name": "aoe2mc.hints.building", "text": "o pana e %s: o kon lon ma · shift kon: pali mute · weka: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: o kon lon tawa pana · shift: pali mute · kon lon: weka"}
+{"name": "aoe2mc.hints.corner", "text": "poki wan: o kon e sewi ante"}
+{"name": "aoe2mc.hints.count_military", "text": "jan ilo %s"}
+{"name": "aoe2mc.hints.count_military_many", "text": "jan ilo %s"}
+{"name": "aoe2mc.hints.count_villager", "text": "jan pi ma %s"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "jan pi ma %s"}
+{"name": "aoe2mc.hints.deselect", "text": "poki ala: weka e wan"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "kon lon: weka e wan"}
+{"name": "aoe2mc.hints.follow", "text": "tawa kepeken: o kon e jan pona sina"}
+{"name": "aoe2mc.hints.guard", "text": "awen: o kon e jan pona sina anu tomo pona sina"}
+{"name": "aoe2mc.hints.military", "text": "%s · kon lon: tawa wawa tawa jan ike, lipu nasin · %s"}
+{"name": "aoe2mc.hints.none", "text": "kon lon: o wan e jan · o awen kon lon: poki wan"}
+{"name": "aoe2mc.hints.none_wand", "text": "kon lon: o wan e jan · ilo kasi: poki wan"}
+{"name": "aoe2mc.hints.patrol", "text": "lukin: o kon lon ma"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · kon lon: kama jo, pali, lipu pali · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s li ken"}
+{"name": "aoe2mc.lobby.you_play", "text": "sina jan %s."}
+{"name": "aoe2mc.monk.converts", "text": "jan sewi li pana e %s tawa pona."}
+{"name": "aoe2mc.monk.dies", "text": "%s li moli (jan ike sona)."}
+{"name": "aoe2mc.pause.continued", "text": "jan %s li tawa e tenpo."}
+{"name": "aoe2mc.pause.paused", "text": "jan %s li awen e tenpo."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "kulupu %s (nanpa sama %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "tenpo pini. o kon e lipu sona lon poki sina la, o kon kon lon. o weka e ilo pi lipu lukin Ctrl-C lon ilo."}
+{"name": "aoe2mc.relic_victory.all", "text": "jan %s li jo e ijo suli ale."}
+{"name": "aoe2mc.relic_victory.lost", "text": "jan %s li weka e ijo suli."}
+{"name": "aoe2mc.repair.no_resources", "text": "ijo li lili: sina ken ala pona e %s."}
+{"name": "aoe2mc.replay.army", "text": "kulupu ilo: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", kulupu ilo lon pini: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", moli: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "nasin pali:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · awen %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | jo e %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "pali %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "moku %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "mani %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "ala %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "kiwen %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "kasi %s"}
+{"name": "aoe2mc.replay.flare", "text": "sona"}
+{"name": "aoe2mc.replay.game_ends", "text": "tenpo pi musi li pini"}
+{"name": "aoe2mc.replay.game_time", "text": "tenpo musi %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · awen %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "ilo %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "jan %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "ijo %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "jan ma %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s li jo e ijo sewi: sewi li pona tawa %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s wawa %s/%s awen%s"}
+{"name": "aoe2mc.replay.join_help", "text": "kon lon tu: lukin pi jan lukin (sina ken tawa lon ijo). kon lon ilo poki: awen e lipu musi."}
+{"name": "aoe2mc.replay.king_died", "text": ": jan wan li moli lon %s. moli wan: jan li weka."}
+{"name": "aoe2mc.replay.king_killed", "text": "jan wan li moli lon %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "lipu musi li tenpo ni: tawa li pini lon tenpo pi musi."}
+{"name": "aoe2mc.replay.lost", "text": "moli: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " li jo e tomo sewi lon %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: tomo sewi, tenpo %s li ken"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: tomo sewi, tenpo %s li ken"}
+{"name": "aoe2mc.replay.no_camera", "text": "lipu musi ni li jo ala e lukin pi jan ni."}
+{"name": "aoe2mc.replay.now", "text": " tenpo ni"}
+{"name": "aoe2mc.replay.out", "text": "%s li weka"}
+{"name": "aoe2mc.replay.players", "text": "jan musi"}
+{"name": "aoe2mc.replay.range", "text": " sewi %s"}
+{"name": "aoe2mc.replay.relic_won", "text": " li kama tawa tomo pona lon ijo suli, li pona."}
+{"name": "aoe2mc.replay.replay_ended", "text": "lipu musi li pini"}
+{"name": "aoe2mc.replay.research", "text": " li sona e %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s li weka"}
+{"name": "aoe2mc.replay.restart_jump", "text": "ilo sona li open sin tawa tenpo pi tawa lon monsi: o kama tawa ona sin."}
+{"name": "aoe2mc.replay.share_buildings", "text": "tomo %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "mani %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "ilo %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "sona %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "ale %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "tomo wawa %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "jo %s, pana %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "ijo suli %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "ijo suli %s, "}
+{"name": "aoe2mc.replay.spent", "text": "pana:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "pali %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "mani %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "ilo %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "sona %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": jan pi ma li kama %s, kama jo %s, tenpo ala pi jan ma %s, tenpo ala pi tomo sewi %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": jan li jo e tomo sewi (sewi wan)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": tomo sewi %s li pona (sewi wan)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": ilo li kama %s, ilo moli %s, tomo moli %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": jan wan moli %s (moli wan)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": pona, ijo suli lon tomo pona %s (kama jo e ijo suli)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %spana %s, kama %s, jan ma suli %s (nanpa)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": tomo sewi li weka %s (moli pi tenpo kiwen)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, sona %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": tenpo ijo suli li open lon %s, li pini lon %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "lipu lili (nanpa)"}
+{"name": "aoe2mc.replay.task_building", "text": "pali tomo"}
+{"name": "aoe2mc.replay.task_following", "text": "tawa kepeken"}
+{"name": "aoe2mc.replay.task_food", "text": "kama jo e moku"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "awen"}
+{"name": "aoe2mc.replay.task_gold", "text": "kama jo e mani"}
+{"name": "aoe2mc.replay.task_guarding", "text": "awen"}
+{"name": "aoe2mc.replay.task_idle", "text": "ala"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "lukin"}
+{"name": "aoe2mc.replay.task_resources", "text": "kama jo e ijo"}
+{"name": "aoe2mc.replay.task_stone", "text": "kama jo e kiwen"}
+{"name": "aoe2mc.replay.task_walking", "text": "tawa"}
+{"name": "aoe2mc.replay.task_wood", "text": "kama jo e kasi"}
+{"name": "aoe2mc.replay.team", "text": "kulupu %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "jan tawa %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "ko pi jan tawa %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "jo %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "ko pi soweli %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "ma kasi %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "mani %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "ko pi jan ike %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "ilo kasi %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "wawa noka %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "kiwen %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "kasi %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "tomo wawa"}
+{"name": "aoe2mc.replay.tl_king", "text": "jan wan li moli"}
+{"name": "aoe2mc.replay.tl_military", "text": "kulupu ilo wan: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "ijo suli"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "weka"}
+{"name": "aoe2mc.replay.town_fell", "text": ": tomo sewi li weka lon %s. tenpo kiwen: jan li weka."}
+{"name": "aoe2mc.replay.town_lost", "text": "tomo sewi li weka lon %s"}
+{"name": "aoe2mc.replay.training", "text": "kama pali: %s"}
+{"name": "aoe2mc.replay.university", "text": "tomo sona:"}
+{"name": "aoe2mc.replay.up_counts", "text": "mani %s · tomo sona %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " li pali e ijo suli lon %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "utala: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", ilo %s"}
+{"name": "aoe2mc.replay_input.fights", "text": "utala suli:"}
+{"name": "aoe2mc.replay_input.help", "text": "lipu musi: o kon e ijo lon poki sina, anu o kon e: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "o jo e ona: "}
+{"name": "aoe2mc.replay_input.units", "text": " (ilo %s)"}
+{"name": "aoe2mc.replay_input.vs", "text": " li utala kepeken "}
+{"name": "aoe2mc.resource.food", "text": "moku"}
+{"name": "aoe2mc.resource.gold", "text": "mani"}
+{"name": "aoe2mc.resource.stone", "text": "kiwen"}
+{"name": "aoe2mc.resource.wood", "text": "kasi"}
+{"name": "aoe2mc.run.back", "text": "jan %s li tawa"}
+{"name": "aoe2mc.run.campaign_complete", "text": "utala li pini"}
+{"name": "aoe2mc.run.chat_hint", "text": "toki: toki lili li tawa ale; /tm TOKI tawa jan pona; /msg NIMI TOKI tawa jan wan."}
+{"name": "aoe2mc.run.left_bot", "text": "jan %s li tawa: ilo pi toki sina li musi kepeken jan %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "lipu musi %s li open. o kama tawa sin."}
+{"name": "aoe2mc.run.starts_in", "text": "musi li open lon %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "o open e \"wan e jan sina\", o kon lon \"ken\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "ilo ale: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "wan: o jo e kipisi pi nasin, o kon lon e jan pi ma sina."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "wan: o jo e kipisi pi nasin, o kon anpa e jan pi ma sina."}
+{"name": "aoe2mc.run.welcome_goal", "text": "wile: pona lon musi. nasin pona: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "musi li awen: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "jan %s li tawa"}
+{"name": "aoe2mc.stance.auto_scout", "text": "lukin lon ni"}
+{"name": "aoe2mc.stance.formation", "text": "kulupu: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "ilo ala li ken tawa ma"}
+{"name": "aoe2mc.stance.unpack", "text": "o weka e poki ilo wawa"}
+{"name": "aoe2mc.train.active", "text": "%s li tawa pali."}
+{"name": "aoe2mc.train.rally", "text": "kon lon ma: ni li tawa kulupu."}
+{"name": "aoe2mc.train.researched", "text": "%s li sona."}
+{"name": "aoe2mc.transport.out", "text": "jan %s li tawa"}
+{"name": "aoe2mc.treaty.ended", "text": "lawa li pini: jan ale li ken tawa wawa."}
+{"name": "aoe2mc.treaty.refuse", "text": "lawa: sina ken ala tawa wawa lon tenpo kama %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "lawa: sina ken ala tawa wawa lon musi ni."}
+{"name": "aoe2mc.treaty.start", "text": "lawa: lon tenpo kama %s la, jan ala li ken tawa wawa tawa jan ante."}
+{"name": "aoe2mc.treaty.start_endless", "text": "lawa: lon musi ni la, jan ala li ken tawa wawa tawa jan ante."}
+{"name": "aoe2mc.tutorial.barracks", "text": "pali e tomo utala: o kon lon jan pi ma wan, o wan e tomo utala, o pana e ona. ilo nasin li sona e ma."}
+{"name": "aoe2mc.tutorial.camera", "text": "tawa wawa lon ma: o kon lon ilo \"lukin\", o tawa, o kon lon ona sin."}
+{"name": "aoe2mc.tutorial.camp", "text": "weka e tomo utala pi ike lon ma: o wan e jan utala sina, o kon lon tomo. ilo sewi lon sewi sona li lukin e tenpo."}
+{"name": "aoe2mc.tutorial.camps", "text": "pali e tomo kasi lon kasi, pali e tomo kasi kama lon kili kasi. lipu lukin li sona e kasi."}
+{"name": "aoe2mc.tutorial.complete", "text": "kalama musi li pini. kama: musi kepeken jan pi ilo: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "kalama li pini"}
+{"name": "aoe2mc.tutorial.feudal", "text": "tawa tenpo utala: o kon lon tomo sewi, o wan e tenpo utala. lipu lukin li sona e moku sina."}
+{"name": "aoe2mc.tutorial.food", "text": "kama jo e moku 100: o tawa e jan pi ma tawa kili kasi. lipu lukin li sona e moku sina."}
+{"name": "aoe2mc.tutorial.house", "text": "pali e tomo: o kon lon jan pi ma wan, o wan e tomo, o pana e ona. ilo nasin li sona e ma."}
+{"name": "aoe2mc.tutorial.militia", "text": "kama pali e jan utala 3: o kon lon tomo utala, o wan e jan utala. lipu lukin li sona e moku en mani."}
+{"name": "aoe2mc.tutorial.raid", "text": "jan ike li tawa e jan pi ma sina! o kon e nimi loje lon toki, tawa ona. o wan e jan utala, o kon lon jan ike."}
+{"name": "aoe2mc.tutorial.select", "text": "o wan e jan pi ma: o kon anpa lon jan pi ma wan kepeken kipisi nasin. ilo sewi lukin li sona e jan."}
+{"name": "aoe2mc.tutorial.step_done", "text": "pali ni li pini"}
+{"name": "aoe2mc.tutorial.step_of", "text": "nanpa %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "toki pona: tomo utala li pali e jan utala. jan utala li lili mani, li pona tawa tomo."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "toki pona: o tawa wawa kepeken jan ale. kulupu lili li moli a taso."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "toki pona: pali e tomo pi weka ijo kepeken ijo kasi, ni la jan pi ma li tawa lili."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "toki pona: tenpo kama li pana e tomo sin, ilo sin, en sona sin. o awen e jan pi ma lon pali tawa tenpo kama."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "toki pona: kili kasi lon tomo kasi li pona lon tenpo open. ma kasi li pana e moku ala pini."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "toki pona: tomo lili li pana e ken tawa jan 5 mute. o lukin e nanpa jan lon lipu lukin, o pali e tomo lili kama."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "toki pona: lon tomo sina, o ken pana e ilo 15 lon lipu tawa."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "toki pona: lon AoE2, ilo ko li tawa jan pi ma lon tomo sewi. o kalama ona tenpo jan ike li tawa tomo sina."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "toki pona: lipu lukin lon poki ala li sona e jan ala pali. o pana e pali tawa ona."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "toki pona: tenpo open la, o kama pali e jan pi ma tenpo ale. jan pi ma mute li kama jo e ijo mute."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "toki pona: jan pi ma li kama jo e kasi lon tomo kasi. o pali e tomo kasi lon kasi."}
+{"name": "aoe2mc.tutorial.villager", "text": "kama pali e jan pi ma: o kon lon tomo sewi sina, o wan e jan pi ma. lipu lukin li sona e moku ona."}
+{"name": "aoe2mc.tutorial.wood", "text": "kama jo e kasi 50: o wan e jan pi ma, o kon lon kasi. lipu lukin li sona e kasi sina."}
+{"name": "aoe2mc.victory", "text": "pona"}
+{"name": "aoe2mc.wonder.built", "text": "jan %s li pali e ijo suli."}
+{"name": "aoe2mc.wonder.destroyed", "text": "ijo suli pi jan %s li moli."}

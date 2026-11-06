@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "tlhIngan %s, %s Qap."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Qagh tu'lu' Dujmey %s, pagh tIQ wIj. Qagh tlhaQ nIH 'ej ramqu' Hoch."}
+{"name": "aoe2mc.bot.cannot_build", "text": "jIH ghoS ghotlh %s DaSov."}
+{"name": "aoe2mc.bot.cannot_train", "text": "jIH ghoS wa' Hoch: 'oH jIH wa' De' DaSov."}
+{"name": "aoe2mc.bot.flare_two", "text": "pa' qaSpu' pagh SIbnI' jIH'a'."}
+{"name": "aoe2mc.bot.no_flare", "text": "jIH Sov ghobe' pa'."}
+{"name": "aoe2mc.bot.no_market", "text": "jIH wa' De' Duj: jIH ghoS mIS."}
+{"name": "aoe2mc.bot.no_onager", "text": "jIH wa' De' 'Iv."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "jIH ghoS ghobe' Hoch rur."}
+{"name": "aoe2mc.bot.no_water", "text": "jIH ghoS 'Ip 'ej wa' Duj 'e' DaSov."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "jIH 'Iv Dung ghobe' 'ej Hoch."}
+{"name": "aoe2mc.build.cost", "text": "Hoch ghobe': %s 'oH %s."}
+{"name": "aoe2mc.build.flat", "text": "%s pagh Huch Dung 'ej ghotlh."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s pagh wa' 'ej 4 Tu' 'ej rur, 'ach wa' 'ej 3 Tu' 'ej chIchDIlpu'."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "DaSov: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s pagh Duj 'ej SuS 'e' pagh."}
+{"name": "aoe2mc.build.space", "text": "%s ghobe' Dung 'ej 'Iv."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Hoch ghobe': %s Tu' %s 'oH %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: pagh rur 'ej tIQ DIlpu' wIj."}
+{"name": "aoe2mc.build.water", "text": "%s pagh Duj."}
+{"name": "aoe2mc.camera.fov", "text": "Dung 'Hoch tlhIngan wa' quv. 'oH tlhIngan qaS, puS: Options > Accessibility Settings > View Bobbing 'oH OFF. Dung Hoch ghaH chaw'. Dung chaw', puS: Options > Accessibility Settings > FOV Effects 'oH 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Dung: ghobe'"}
+{"name": "aoe2mc.camera.on", "text": "Dung: Qap, Sopta' x%s. Shift 'ej 'Hoch: Sopta' Dung."}
+{"name": "aoe2mc.camera.speed", "text": "Dung Sopta': x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Hoch 'Iv 'ej Duj chaw', 'ach 'oH 'Iv ghobe'"}
+{"name": "aoe2mc.challenge.booming", "text": "tlhIngan 100 vaS, 'ej Imperial 'Ir Qap"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Castle 'Ir Qap 'ej Hoch 'Iv wa' 'ej"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Hoch 'e' Dujmey tu' 'ej"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Hoch: 'oH 200 ghurm, 200 ngoq, 100 ghom, 200 'ach; vaS 21 tlhIngan, Hoch 'e' 'ej 'e' 'ej, 'ej Feudal 'Ir Qap"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "tlhIngan 27 vaS, Hoch 5 'Iv, 'ej Castle 'Ir Qap"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Hoch 'ej Dujmey 6 'Iv 'e' tu'"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s 'Iv ghobe', ghotlh 'Iv bIQ up %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s 'Iv ghobe', ghotlh 'Iv ghom up %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s 'Iv ghobe', ghotlh ghobe'"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s 'Iv ghobe', ghotlh 'Iv 'Ip up %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "bIQ ghotlh"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "ghom ghotlh"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "'Ip ghotlh"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Dujmey Hoch 'e' 'ej Duj wa'"}
+{"name": "aoe2mc.challenge.no_medal", "text": "ghotlh ghobe'"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Dujmey tlhIngan 5 nuq"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "bIQ ghotlh pagh %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "ghom ghotlh pagh %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "'Ip ghotlh pagh %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis ghobe'"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis Qap"}
+{"name": "aoe2mc.cheat.beyond", "text": "Hoch: 256 'e' tu' DaSov"}
+{"name": "aoe2mc.cheat.cpu", "text": "tlhIngan Dor: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Hoch: ghobe' 'ej chIch"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Hoch: Qap 'ej chIch"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Hoch 'e' ghobe' ghom"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Sharing is caring: jIH ghom Duj tlhIngan 'e' chaw'"}
+{"name": "aoe2mc.cheat.wonders", "text": "Hoch vorgh 'oH: %s 'uy'"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Duj 'Iv chaw': Duj Qap ghobe'. vaj Duj Hoch."}
+{"name": "aoe2mc.conquest.defeated", "text": "Duj %s wa'."}
+{"name": "aoe2mc.controls.attack", "text": "Hoch 'e': Dujmey tlhIngan Dung, 'ej Dujmey wIj, Dujmey 'Iv."}
+{"name": "aoe2mc.controls.build", "text": "DaSov: vaS tlhIngan, Dung DaSov wIj, DaSov, pagh Dung 'ej Huch. Shift + Dung: DaSov Hoch. Dung 'oH: Dung ghobe'."}
+{"name": "aoe2mc.controls.camera", "text": "Dung: Dung 'ej SovrIn (pagh 2), Dung Hoch. Shift Dung: Sopta' 'Iv. Dung chaw': Dung wIj."}
+{"name": "aoe2mc.controls.garrison", "text": "Hut: Dung, Dung DaSov wIj. 'Iv 'e' Hut. Hoch 'e' Dung: Bell."}
+{"name": "aoe2mc.controls.gather", "text": "Hoch: vaS tlhIngan, Dung ghurm, Hoch, ngoq, Dungpu' 'ej 'Ip."}
+{"name": "aoe2mc.controls.goto", "text": "Hoch: Dung Qapla' (pagh 3): Dung ghotlh pagh Duj 'ej Dung."}
+{"name": "aoe2mc.controls.groups", "text": "Dung: Dung 'Iv, Hoch Dung (pagh 5-9), Shift + Dung: Dung DIS. Dung: Dung Dung."}
+{"name": "aoe2mc.controls.head", "text": "Dung (Hoch Dung; 'Iv DaSov):"}
+{"name": "aoe2mc.controls.menu", "text": "Hoch 'e': Dung 'Iv (pagh 4): tu', mIS, ghur, Sov."}
+{"name": "aoe2mc.controls.move", "text": "Hoch: Hoch, Dung Dung."}
+{"name": "aoe2mc.controls.research", "text": "Hoch 'ej Qap: Dung DaSov, Dung 'Iv 'e'."}
+{"name": "aoe2mc.controls.select", "text": "Dung: Dung tlhIngan. Dung Dung: Dung 'Iv. Dung: Dung 'Iv."}
+{"name": "aoe2mc.controls.train", "text": "vaS: Dung DaSov (Hoch 'Ir), Dung 'Iv."}
+{"name": "aoe2mc.defeat", "text": "wa'"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Duj"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Duj %s Dung 'Iv: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Dujmey"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "ghobe'"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Duj %s Sopta' tu': %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Duj %s 'Iv %s %s Duj %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: pa' pagh %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Follow: Dung DaSov Dung"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Guard: Dung DaSov Dung 'ej DaSov"}
+{"name": "aoe2mc.gaia.joins", "text": "%s 'Iv Qap."}
+{"name": "aoe2mc.garrison.all_back", "text": "ghotlh Dung"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Hut Bell: tlhIngan %s Hut"}
+{"name": "aoe2mc.garrison.no_villager", "text": "tlhIngan ghobe' Dung."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "jIH tlhIngan ghobe'."}
+{"name": "aoe2mc.garrison.out", "text": "%s 'Iv 'Ip"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "tlhIngan %s Hut"}
+{"name": "aoe2mc.gather.act_attack", "text": "Hoch"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "DaSov Huch"}
+{"name": "aoe2mc.gather.act_garrison", "text": "Hut"}
+{"name": "aoe2mc.gather.act_gather", "text": "vaS"}
+{"name": "aoe2mc.gather.act_hunt", "text": "Hoch"}
+{"name": "aoe2mc.gather.act_move", "text": "Hoch"}
+{"name": "aoe2mc.gather.act_select", "text": "Dung"}
+{"name": "aoe2mc.gather.act_select_type", "text": "Dung 'Iv 'ej SuS"}
+{"name": "aoe2mc.gather.act_trade", "text": "mIS"}
+{"name": "aoe2mc.gather.act_train", "text": "vaS"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Hoch: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Dung: ghobe'"}
+{"name": "aoe2mc.gather.bush", "text": "ngoq Hoch"}
+{"name": "aoe2mc.gather.carcass", "text": "ghurm Hoch"}
+{"name": "aoe2mc.gather.corner", "text": "Dung: Dung chaw' DIlpu'"}
+{"name": "aoe2mc.gather.enemy", "text": "Dujmey %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Dujmey DaSov"}
+{"name": "aoe2mc.gather.farm", "text": "'Ip"}
+{"name": "aoe2mc.gather.ground", "text": "Dung"}
+{"name": "aoe2mc.gather.group", "text": "Dung %s: %s 'Iv"}
+{"name": "aoe2mc.gather.group_saved", "text": "Dung %s: %s 'Iv DIS"}
+{"name": "aoe2mc.gather.mine", "text": "%s ghom"}
+{"name": "aoe2mc.gather.paused", "text": "Hoch 'ej 'Ip."}
+{"name": "aoe2mc.gather.point", "text": "%s · Dung: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Hoch 'ej vaS: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Dung: %s 'Iv"}
+{"name": "aoe2mc.gather.tree", "text": "ngoq"}
+{"name": "aoe2mc.hill.holds", "text": "Duj %s Hoch 'ej Dung."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Hoch Dung: Dung Dung"}
+{"name": "aoe2mc.hints.attack_move", "text": "Hoch Hoch: Dung Dung"}
+{"name": "aoe2mc.hints.building", "text": "DaSov %s: Dung Dung · Shift + Dung: DaSov Hoch · ghobe': /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: Dung DaSov · Shift: DaSov Hoch · Dung: ghobe'"}
+{"name": "aoe2mc.hints.corner", "text": "Dung: Dung chaw' DIlpu'"}
+{"name": "aoe2mc.hints.count_military", "text": "%s Hoch 'Iv"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s Hoch 'Iv"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s tlhIngan"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s tlhIngan"}
+{"name": "aoe2mc.hints.deselect", "text": "Dung ghobe': ghobe' Dung"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Dung: ghobe' Dung"}
+{"name": "aoe2mc.hints.follow", "text": "Follow: Dung DaSov 'ej Duj 'Iv"}
+{"name": "aoe2mc.hints.guard", "text": "Guard: Dung DaSov 'ej Duj 'Iv 'ej DaSov"}
+{"name": "aoe2mc.hints.military", "text": "%s · Dung: Hoch Dujmey, Dung Hoch · %s"}
+{"name": "aoe2mc.hints.none", "text": "Dung: Dung 'Iv · Dung Dung: Dung"}
+{"name": "aoe2mc.hints.none_wand", "text": "Dung: Dung 'Iv · Wand: Dung"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrol: Dung Dung"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Dung: vaS, DaSov, DaSov Huch · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s Qap"}
+{"name": "aoe2mc.lobby.you_play", "text": "SoH %s."}
+{"name": "aoe2mc.monk.converts", "text": "Monk 'e' %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s wa' (Heresy)."}
+{"name": "aoe2mc.pause.continued", "text": "Duj %s 'e' Hoch."}
+{"name": "aoe2mc.pause.paused", "text": "Duj %s 'Ip Hoch."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Duj %s (Dung %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Hoch ghotlh. Dung Recap Dung 'Iv. Ctrl-C Dung."}
+{"name": "aoe2mc.relic_victory.all", "text": "Duj %s Dung 'Iv Hoch."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Duj %s Hoch 'Iv."}
+{"name": "aoe2mc.repair.no_resources", "text": "Hoch ghobe': %s DaSov."}
+{"name": "aoe2mc.replay.army", "text": "Hoch: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", Hoch Hoch: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", 'Iv: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "DaSov Dung:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · Hut %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | vIH %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "DaSov %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "ghurm %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "ghom %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "ghobe' %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "'ach %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "ngoq %s"}
+{"name": "aoe2mc.replay.flare", "text": "pa'"}
+{"name": "aoe2mc.replay.game_ends", "text": "Hoch ghotlh"}
+{"name": "aoe2mc.replay.game_time", "text": "Hoch Dor %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · Hut %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Hoch %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "tlhIngan %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Hoch %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "vaS %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s Hoch Hoch: Hoch Qap pagh %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s Hoch %s/%s Hut%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift Dung: Dung Dung. Dung 'Iv: Hoch Hoch."}
+{"name": "aoe2mc.replay.king_died", "text": ": Hoch wa' pagh %s. Hoch wa': Duj chaw'."}
+{"name": "aoe2mc.replay.king_killed", "text": "Hoch wa' pagh %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Dung Hoch: Dung Hoch ghaH Dung tu'."}
+{"name": "aoe2mc.replay.lost", "text": "'Iv: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " Hoch Dung pagh %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: Dung, %s Dung"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: Dung, %s Dung"}
+{"name": "aoe2mc.replay.no_camera", "text": "Dung 'Iv ghobe' Dung."}
+{"name": "aoe2mc.replay.now", "text": " DaH"}
+{"name": "aoe2mc.replay.out", "text": "%s wa'"}
+{"name": "aoe2mc.replay.players", "text": "Duj"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " Dung Hoch 'ej Qap."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Dung ghotlh"}
+{"name": "aoe2mc.replay.research", "text": " Hoch %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s chaw'"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Hoch Dung Dung tu': Dung Dung."}
+{"name": "aoe2mc.replay.share_buildings", "text": "DaSov %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "vaS %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Hoch %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Hoch %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Hoch %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "Hoch %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "mIS %s, 'Iv %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "Hoch %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "Hoch %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Hoch:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "DaSov %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "vaS %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Hoch %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Hoch %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": vaS vaS %s, Hoch %s, ghobe' vaS Dor %s, ghobe' DaSov Dor %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": Dung Hoch (Hoch Dung)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": Dung Hoch %s (Hoch Dung)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": Hoch vaS %s, 'Iv %s, DaSov 'Iv %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Hoch wa' %s (Hoch wa')"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": Qap, Dung pagh Hoch %s (Hoch Dung)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %smIS %s, 'Iv %s, tlhIngan Hoch %s (vIvI')"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": DaSov Dung 'Iv %s (ghItlh Hoch)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, Hoch %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": Dung Hoch pagh %s, Dung pagh %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Dung (vIvI')"}
+{"name": "aoe2mc.replay.task_building", "text": "DaSov"}
+{"name": "aoe2mc.replay.task_following", "text": "Follow"}
+{"name": "aoe2mc.replay.task_food", "text": "vaS ghurm"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "Hut"}
+{"name": "aoe2mc.replay.task_gold", "text": "vaS ghom"}
+{"name": "aoe2mc.replay.task_guarding", "text": "Guard"}
+{"name": "aoe2mc.replay.task_idle", "text": "ghobe' vaS"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "Patrol"}
+{"name": "aoe2mc.replay.task_resources", "text": "vaS Hoch"}
+{"name": "aoe2mc.replay.task_stone", "text": "vaS 'ach"}
+{"name": "aoe2mc.replay.task_walking", "text": "Hoch"}
+{"name": "aoe2mc.replay.task_wood", "text": "vaS ngoq"}
+{"name": "aoe2mc.replay.team", "text": "Duj %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Hoch %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Hoch Hut %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "vIH %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Hoch 'Iv Hut %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "'Ip %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "ghom %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Hoch Hut %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Hoch Dung %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Hoch %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "'ach %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "ngoq %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castle"}
+{"name": "aoe2mc.replay.tl_king", "text": "Hoch wa'"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. Hoch: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Dung"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "chaw'"}
+{"name": "aoe2mc.replay.town_fell", "text": ": Hut Dung pagh %s. ghItlh Hoch: Duj chaw'."}
+{"name": "aoe2mc.replay.town_lost", "text": "Hut Dung 'Iv pagh %s"}
+{"name": "aoe2mc.replay.training", "text": "vaS: %s"}
+{"name": "aoe2mc.replay.university", "text": "Dung:"}
+{"name": "aoe2mc.replay.up_counts", "text": "vaS %s · Dung %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " DaSov Dung pagh %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Hoch: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s 'Iv"}
+{"name": "aoe2mc.replay_input.fights", "text": "Hoch Hoch:"}
+{"name": "aoe2mc.replay_input.help", "text": "Dung: Dung DaSov, pagh Dung: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Hoch: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s 'Iv)"}
+{"name": "aoe2mc.replay_input.vs", "text": " 'ej "}
+{"name": "aoe2mc.resource.food", "text": "ghurm"}
+{"name": "aoe2mc.resource.gold", "text": "ghom"}
+{"name": "aoe2mc.resource.stone", "text": "'ach"}
+{"name": "aoe2mc.resource.wood", "text": "ngoq"}
+{"name": "aoe2mc.run.back", "text": "%s Qap"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Hoch ghotlh"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: Dung Dung Duj; /tm TEXT Duj; /msg NAME TEXT tlhIngan."}
+{"name": "aoe2mc.run.left_bot", "text": "%s chaw': bot Duj %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenario %s Qap. Dung Dung."}
+{"name": "aoe2mc.run.starts_in", "text": "Hoch Qap pagh %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Dung \"Choose your player\" 'ej Dung \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Dung Dung: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "ghItlh Dung: Dung Dung, Dung vaS tlhIngan."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "ghItlh Dung: Dung Dung, Dung vaS tlhIngan."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Dung: Dung Hoch. Hoch: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Hoch Dung: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s 'Iv 'Ip"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Dung Dung"}
+{"name": "aoe2mc.stance.formation", "text": "Dung: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Hoch 'Iv ghobe' Dung"}
+{"name": "aoe2mc.stance.unpack", "text": "Dung 'Iv 'Ip: Dung Hoch"}
+{"name": "aoe2mc.train.active", "text": "%s Qap."}
+{"name": "aoe2mc.train.rally", "text": "Dung Dung pagh Dung."}
+{"name": "aoe2mc.train.researched", "text": "%s Hoch."}
+{"name": "aoe2mc.transport.out", "text": "%s 'Iv 'Ip"}
+{"name": "aoe2mc.treaty.ended", "text": "Dung chaw': Duj Hoch Qap."}
+{"name": "aoe2mc.treaty.refuse", "text": "Dung: Hoch ghobe' pagh %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Dung: Hoch ghobe' Dung 'uy'."}
+{"name": "aoe2mc.treaty.start", "text": "Dung: %s, Duj ghobe' Hoch Duj."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Dung: Dung 'uy', Duj ghobe' Hoch Duj."}
+{"name": "aoe2mc.tutorial.barracks", "text": "DaSov Hoch: Dung tlhIngan, Dung DaSov, DaSov. Dung ghotlh Dung."}
+{"name": "aoe2mc.tutorial.camera", "text": "Hoch Dung: Dung \"Dung\" Dung, Hoch, Dung Dung."}
+{"name": "aoe2mc.tutorial.camp", "text": "Hoch Dujmey Dung: Dung 'Iv, Dung DaSov. Dung tu' Hoch."}
+{"name": "aoe2mc.tutorial.camps", "text": "Dung ngoq DaSov, Dung 'ach DaSov. Dung 'Iv."}
+{"name": "aoe2mc.tutorial.complete", "text": "tutorial ghotlh. Dung: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "tutorial ghotlh"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Feudal 'Ir Qap: Dung Dung DaSov, Dung Feudal. Dung ghurm Dung."}
+{"name": "aoe2mc.tutorial.food", "text": "vaS ghurm 100: Dung tlhIngan ngoq Hoch. Dung ghurm Dung."}
+{"name": "aoe2mc.tutorial.house", "text": "DaSov Hut: Dung tlhIngan, Dung Hut, Dung. Dung Dung."}
+{"name": "aoe2mc.tutorial.militia", "text": "vaS 3 Militia: Dung DaSov Hoch, Dung Militia. Dung ghurm 'ej ghom."}
+{"name": "aoe2mc.tutorial.raid", "text": "Dujmey Hoch tlhIngan! Dung Dung Dung, Dung Hoch Dung. Dung Dung Dung Hoch."}
+{"name": "aoe2mc.tutorial.select", "text": "Dung tlhIngan: Dung tlhIngan Dung. Dung Dung Dung Dung."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Dung ghotlh"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Dung %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIP: DaSov Hoch Hoch. Hoch Hoch 'ej Dujmey."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIP: Hoch Dung 'Iv. Dung ghobe' Hoch."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIP: DaSov DaSov Dung, tlhIngan Hoch."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIP: Qap DaSov, Hoch, Dung. Dung tlhIngan Dung."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIP: 'Ip Dung Dung. 'Ip ghobe' Dung."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIP: Hut 5 tlhIngan. Dung Dung, DaSov Hut."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIP: Dung DaSov Dung 15 'Iv."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIP: Dung AoE2, Bell tlhIngan Hut. Dung Dung Dujmey Hut."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIP: Dung 'Iv Dung ghobe' vaS. Dung vaS."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIP: vaS tlhIngan Dung. tlhIngan ngoq ghurm."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIP: tlhIngan vaS Dung DaSov. DaSov ngoq."}
+{"name": "aoe2mc.tutorial.villager", "text": "vaS tlhIngan: Dung Hut, Dung tlhIngan. Dung ghurm."}
+{"name": "aoe2mc.tutorial.wood", "text": "vaS ngoq 50: Dung tlhIngan, Dung ngoq. Dung ngoq."}
+{"name": "aoe2mc.victory", "text": "Qap"}
+{"name": "aoe2mc.wonder.built", "text": "Duj %s DaSov Hoch."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Duj %s Hoch 'ej wa'."}
