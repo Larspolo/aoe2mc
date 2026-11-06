@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Spēlētājs %s sasniedz %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Korupcija %s laikā ieņem karti no malas līdz centram. Tā iznīcina visas tajā esošās vienības un ēkas."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Tagad es tur nevaru būvēt: %s."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Es nevaru apmācīt šo vienību: man nav ēkas tās apmācībai."}
+{"name": "aoe2mc.bot.flare_two", "text": "Novietojiet divus signālus sienai."}
+{"name": "aoe2mc.bot.no_flare", "text": "Es neredzu signālu."}
+{"name": "aoe2mc.bot.no_market", "text": "Man nav tirgus: es nevaru sūtīt tributu."}
+{"name": "aoe2mc.bot.no_onager", "text": "Man nav onagra."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Man nav pietiekami resursu sienai."}
+{"name": "aoe2mc.bot.no_water", "text": "Manas pilsētas tuvumā nav ūdens: es nevaru būvēt floti."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Mani onagri nevar cirst kokus."}
+{"name": "aoe2mc.build.cost", "text": "Nepietiek resursu: %s maksā %s."}
+{"name": "aoe2mc.build.flat", "text": "%s jāstāv uz līdzenas zemes."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s jāstāv uz 4 savas sienas laukumiem taisnā līnijā vai uz 3 slīpiem laukumiem."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Būvēt: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s jāstāv ūdenī pie krasta."}
+{"name": "aoe2mc.build.space", "text": "Šeit nav vietas: %s."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Nepietiek resursu: %s laukumi no %s maksā %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: noklikšķiniet ar peles labo pogu uz sienas gala."}
+{"name": "aoe2mc.build.water", "text": "%s jāstāv uz ūdens."}
+{"name": "aoe2mc.camera.fov", "text": "Ātrā kamera liek turētajam priekšmetam šūpoties. Lai tas paliktu uz vietas, iestatiet Iestatījumi > Pieejamības iestatījumi > View Bobbing uz OFF. Kamera arī paplašina skatu, tāpēc redzams vairāk kartes. Lai paliktu parastais skats, iestatiet Iestatījumi > Pieejamības iestatījumi > FOV Effects uz 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: izslēgta"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: ieslēgta, ātrums x%s. Shift un labā peles poga: nākamais ātrums."}
+{"name": "aoe2mc.camera.speed", "text": "Kameras ātrums: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Uzvariet visas pretinieka vienības un zaudējiet nedaudz vienību"}
+{"name": "aoe2mc.challenge.booming", "text": "Apmāciet 100 zemniekus un pārejiet uz Impērijas laikmetu"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Pārejiet uz Pils laikmetu un izturiet pretinieka uzbrukumus"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Iznīciniet pretinieka pili"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Savāciet 200 pārtikas, 200 koka, 100 zelta un 200 akmens, apmāciet 21 zemnieku, uzbūvējiet kokgatavotavu un dzirnavas un pārejiet uz Feodālo laikmetu"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Apmāciet 27 zemniekus, uzbūvējiet 5 mājas un pārejiet uz Pils laikmetu"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Uzvariet visus sešus pretinieka vilnus"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "Zaudētas %s vienības, bronzas medaļa līdz %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "Zaudētas %s vienības, zelta medaļa līdz %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "Zaudētas %s vienības, medaļas nav"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "Zaudētas %s vienības, sudraba medaļa līdz %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronzas medaļa"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Zelta medaļa"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Sudraba medaļa"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Iznīciniet visus pretinieka karakuģus"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Medaļas nav"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Nogalinājiet 5 pretinieka zemniekus"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronzas medaļa %s laikā"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Zelta medaļa %s laikā"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Sudraba medaļa %s laikā"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis izslēgts"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis ieslēgts"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tehnoloģijas: līdz 256 pētījumiem"}
+{"name": "aoe2mc.cheat.cpu", "text": "Iedzīvotāju ierobežojums: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Kara migla: izslēgta"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Kara migla: ieslēgta"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Tehnoloģijas ir bez maksas"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Dalīšanās ir rūpes: jūsu ienākumi iet sabiedrotajiem"}
+{"name": "aoe2mc.cheat.wonders", "text": "Jūs kontrolējat dabu: %s dzīvnieki"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Palikuši tikai sabiedrotie: alianses beidzas. Uzvar pēdējais dzīvais spēlētājs."}
+{"name": "aoe2mc.conquest.defeated", "text": "Spēlētājs %s ir sakauts."}
+{"name": "aoe2mc.controls.attack", "text": "Uzbrukums: atlasiet karaspēka vienības un pēc tam ar peles labo pogu noklikšķiniet uz pretinieka."}
+{"name": "aoe2mc.controls.build", "text": "Būvēt: atlasiet zemniekus, ar peles labo pogu noklikšķiniet uz tiem būvēšanas izvēlnei, izvēlieties ēku un pēc tam ar peles kreiso pogu noklikšķiniet uz zemes. Shift + kreisā poga: novietot vairāk. Labā poga: atcelt."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: ar peles labo pogu noklikšķiniet ar tālskati Kamera (karstā taustiņa 2): jūs ātri lidojat augstu virs kartes. Shift un labā poga: nākamais ātrums. Vēlreiz labā poga: jūs nolaižaties."}
+{"name": "aoe2mc.controls.garrison", "text": "Garnizons: atlasiet vienības un pēc tam ar peles labo pogu noklikšķiniet uz savas ēkas. Tās izvēlne ļauj tās izlaist. Pilsētas centra izvēlne: Zvanīt pilsētas zvanu."}
+{"name": "aoe2mc.controls.gather", "text": "Vākt: atlasiet zemniekus un pēc tam ar peles labo pogu noklikšķiniet uz koka, ogu krūma, raktuves vai lauka."}
+{"name": "aoe2mc.controls.goto", "text": "Iet uz: ar peles labo pogu noklikšķiniet ar kompasu Iet uz (karstā taustiņa 3): izvēlne ar jūsu pilsētas centriem, vadības grupām un nākamo dīkstāvošo zemnieku."}
+{"name": "aoe2mc.controls.groups", "text": "Vadības grupas: atlasiet vienības, paņemiet grupas priekšmetu (karstie taustiņi 5 līdz 9) un Shift + labā poga, lai saglabātu atlasi. Labā poga: atlasīt grupu."}
+{"name": "aoe2mc.controls.head", "text": "Vadība (turiet burkānu uz nūjas; darbību joslā redzams nākamais solis):"}
+{"name": "aoe2mc.controls.menu", "text": "Spēles izvēlne: ar peles labo pogu noklikšķiniet ar grāmatu Spēles izvēlne (karstā taustiņa 4): diplomātija un tributs, signāls, saglabāšana, pauze un tehnoloģiju koks."}
+{"name": "aoe2mc.controls.move", "text": "Pārvietoties: ar atlasi ar peles labo pogu noklikšķiniet uz zemes."}
+{"name": "aoe2mc.controls.research", "text": "Pētīt un pāriet uz nākamo laikmetu: ar peles labo pogu noklikšķiniet uz savas ēkas un tās izvēlnē noklikšķiniet uz tehnoloģijas vai nākamā laikmeta."}
+{"name": "aoe2mc.controls.select", "text": "Atlasīt: ar kreiso peles pogu noklikšķiniet uz vienības. Turiet kreiso pogu un velciet pāri zemei: atlases lodziņš. Labā poga: dot pavēles."}
+{"name": "aoe2mc.controls.train", "text": "Apmācīt: ar peles labo pogu noklikšķiniet uz savas ēkas (pilsētas centra, kazarmām u. c.) un tās izvēlnē noklikšķiniet uz vienības."}
+{"name": "aoe2mc.defeat", "text": "Zaudējums"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Sabiedrotais"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Spēlētājs %s mainīja savu nostāju pret jums: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Ienaidnieks"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neitrāls"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Spēlētājs %s iestatīja spēles ātrumu: %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Spēlētājs %s nosūtīja %s %s spēlētājam %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: signāls pie %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Sekot: noklikšķiniet uz savas vienības"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Sargāt: noklikšķiniet uz savas vienības vai ēkas"}
+{"name": "aoe2mc.gaia.joins", "text": "%s pievienojas jums."}
+{"name": "aoe2mc.garrison.all_back", "text": "Visi atgriežas darbā"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Skan pilsētas zvans: %s zemnieki meklē patvērumu"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Nav atlasīts neviens zemnieks."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Jums nav zemnieku."}
+{"name": "aoe2mc.garrison.out", "text": "%s vienības izgāja ārā"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s zemnieki meklē patvērumu"}
+{"name": "aoe2mc.gather.act_attack", "text": "uzbrukt"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "būvēšanas izvēlne"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garnizons"}
+{"name": "aoe2mc.gather.act_gather", "text": "vākt"}
+{"name": "aoe2mc.gather.act_hunt", "text": "medīt"}
+{"name": "aoe2mc.gather.act_move", "text": "pārvietoties"}
+{"name": "aoe2mc.gather.act_select", "text": "atlasīt"}
+{"name": "aoe2mc.gather.act_select_type", "text": "atlasīt visus šī tipa"}
+{"name": "aoe2mc.gather.act_trade", "text": "tirgoties"}
+{"name": "aoe2mc.gather.act_train", "text": "apmācīt"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Uzbrukums: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Atlases lodziņš: atcelts"}
+{"name": "aoe2mc.gather.bush", "text": "Ogu krūms"}
+{"name": "aoe2mc.gather.carcass", "text": "Līķis"}
+{"name": "aoe2mc.gather.corner", "text": "Atlases lodziņš: noklikšķiniet uz otra stūra"}
+{"name": "aoe2mc.gather.enemy", "text": "Ienaidnieka %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Ienaidnieka ēka"}
+{"name": "aoe2mc.gather.farm", "text": "Lauks"}
+{"name": "aoe2mc.gather.ground", "text": "Zeme"}
+{"name": "aoe2mc.gather.group", "text": "Grupa %s: %s vienības"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grupa %s: saglabātas %s vienības"}
+{"name": "aoe2mc.gather.mine", "text": "%s raktuve"}
+{"name": "aoe2mc.gather.paused", "text": "Spēle ir apturēta."}
+{"name": "aoe2mc.gather.point", "text": "%s · Labā poga: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Sējumi rindā: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Atlasītas: %s vienības"}
+{"name": "aoe2mc.gather.tree", "text": "Koks"}
+{"name": "aoe2mc.hill.holds", "text": "Spēlētājs %s tur pieminekli."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Uzbrukt zemei: ar peles labo pogu noklikšķiniet uz zemes"}
+{"name": "aoe2mc.hints.attack_move", "text": "Uzbrukums ceļā: ar peles labo pogu noklikšķiniet uz zemes"}
+{"name": "aoe2mc.hints.building", "text": "Novietojiet %s: ar peles labo pogu noklikšķiniet uz zemes · Shift + labā poga: novietot vairāk · Atcelt: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: ar kreiso pogu noklikšķiniet, lai novietotu · Shift: novietot vairāk · Labā poga: atcelt"}
+{"name": "aoe2mc.hints.corner", "text": "Atlases lodziņš: ar peles labo pogu noklikšķiniet uz otra stūra"}
+{"name": "aoe2mc.hints.count_military", "text": "%s karavīrs"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s karavīri"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s zemnieks"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s zemnieki"}
+{"name": "aoe2mc.hints.deselect", "text": "Tukšs lodziņš: noņemt atlasi"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Kreisā poga: noņemt atlasi"}
+{"name": "aoe2mc.hints.follow", "text": "Sekot: ar peles labo pogu noklikšķiniet uz savas vai sabiedrotā vienības"}
+{"name": "aoe2mc.hints.guard", "text": "Sargāt: ar peles labo pogu noklikšķiniet uz savas vai sabiedrotā vienības vai ēkas"}
+{"name": "aoe2mc.hints.military", "text": "%s · Labā poga: uzbrukt ienaidniekam, nostājas izvēlne · %s"}
+{"name": "aoe2mc.hints.none", "text": "Kreisā poga: atlasīt vienību · Turiet kreiso pogu: atlases lodziņš"}
+{"name": "aoe2mc.hints.none_wand", "text": "Labā poga: atlasīt vienību · Nūja: atlases lodziņš"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrulēt: ar peles labo pogu noklikšķiniet uz zemes"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Labā poga: vākt, būvēt, būvēšanas izvēlne · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s gatavi"}
+{"name": "aoe2mc.lobby.you_play", "text": "Jūs spēlējat: %s."}
+{"name": "aoe2mc.monk.converts", "text": "Mūks pārvērš %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s mirst (Ķeceriskums)."}
+{"name": "aoe2mc.pause.continued", "text": "Spēlētājs %s turpināja spēli."}
+{"name": "aoe2mc.pause.paused", "text": "Spēlētājs %s apturēja spēli."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Komanda %s (vidējais reitings %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Spēle ir beigusies. Ar peles labo pogu noklikšķiniet uz Pārskata grāmatas savā rokā, lai redzētu rezultātus. Apturiet spēles programmu ar Ctrl-C tās konsolē."}
+{"name": "aoe2mc.relic_victory.all", "text": "Spēlētājs %s tur visas relikvijas."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Spēlētājs %s zaudēja relikviju."}
+{"name": "aoe2mc.repair.no_resources", "text": "Nepietiek resursu, lai remontētu %s."}
+{"name": "aoe2mc.replay.army", "text": "Armija: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", armija beigās: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", zaudētas: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Būvēšanas secība:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garnizons %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | nes %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "būvē %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "pārtika %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "zelts %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "dīkstāv %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "akmens %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "koks %s"}
+{"name": "aoe2mc.replay.flare", "text": "Signāls"}
+{"name": "aoe2mc.replay.game_ends", "text": "Spēle beidzas"}
+{"name": "aoe2mc.replay.game_time", "text": "Spēles laiks %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · garnizons %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Karavīri %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Iedz %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Zem %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s turēja pieminekli: Kalna karaļa uzvara %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s uzbr. %s/%s bruņas%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Divreiz nospiediet Shift: skatītāja skats (lidojiet cauri blokiem). Ar peles labo pogu noklikšķiniet uz karstās joslas priekšmetiem: atkārtojuma vadība."}
+{"name": "aoe2mc.replay.king_died", "text": ": karalis nomira %s. Karaļa nogalināšana: spēlētājs ir ārā."}
+{"name": "aoe2mc.replay.king_killed", "text": "Karalis nogalināts %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Tiešraides atkārtojums: lēciens apstājas aiz spēles aiztures."}
+{"name": "aoe2mc.replay.lost", "text": "Zaudēts: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " tur pieminekli %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: piemineklis, paliek %s gads"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: piemineklis, paliek %s gadi"}
+{"name": "aoe2mc.replay.no_camera", "text": "Šim ierakstam nav sava spēlētāja kameras."}
+{"name": "aoe2mc.replay.now", "text": " tagad"}
+{"name": "aoe2mc.replay.out", "text": "%s ir ārā"}
+{"name": "aoe2mc.replay.players", "text": "Spēlētāji"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " nes relikviju uz klosteri un uzvar."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Atkārtojums beidzies"}
+{"name": "aoe2mc.replay.research", "text": " pēta %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s padodas"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Serveris restartējas lēcienam atpakaļ: pievienojieties tam vēlreiz."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Ēkas %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekonomika %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Karaspēks %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tehnoloģijas %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Kopā %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "pilis %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "nopirkti %s, pārdoti %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relikvijas %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "brīnumi %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Iztērēts:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Būvē %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eko %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Karavīri %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tehn %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": zemnieki apmācīti %s, savākti %s, zemnieku dīkstāves laiks %s, pilsētas centra dīkstāves laiks %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": tur pieminekli (Kalna karalis)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": piemineklis iegūts %s (Kalna karalis)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": karavīri apmācīti %s, zaudētas vienības %s, zaudētas ēkas %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": karalis nogalināts %s (Karaļa nogalināšana)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": uzvaras, relikvija klosterī %s (Relikvijas iegūšana)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stributs nosūtīts %s, saņemts %s, zemnieku maksimums %s (apt.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": pilsētas centrs zaudēts %s (Pēkšņā nāve)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tehnoloģijas %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": brīnuma taimeris no %s, beidzas %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Kopsavilkums (apt.)"}
+{"name": "aoe2mc.replay.task_building", "text": "būvē"}
+{"name": "aoe2mc.replay.task_following", "text": "seko"}
+{"name": "aoe2mc.replay.task_food", "text": "vāc pārtiku"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "garnizonā"}
+{"name": "aoe2mc.replay.task_gold", "text": "vāc zeltu"}
+{"name": "aoe2mc.replay.task_guarding", "text": "sargā"}
+{"name": "aoe2mc.replay.task_idle", "text": "dīkstāv"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrulē"}
+{"name": "aoe2mc.replay.task_resources", "text": "vāc resursus"}
+{"name": "aoe2mc.replay.task_stone", "text": "vāc akmeni"}
+{"name": "aoe2mc.replay.task_walking", "text": "iet"}
+{"name": "aoe2mc.replay.task_wood", "text": "vāc koksni"}
+{"name": "aoe2mc.replay.team", "text": "Komanda %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Loka šāvējs %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Loka šāvēju bruņas %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Nešana %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Kavalērijas bruņas %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Lauks %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Zelts %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Kājnieku bruņas %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Stelles %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Tuvcīņa %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Akmens %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Koks %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Pils"}
+{"name": "aoe2mc.replay.tl_king", "text": "Karalis nogalināts"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. karaspēks: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relikvija"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Padodas"}
+{"name": "aoe2mc.replay.town_fell", "text": ": pilsētas centrs krita %s. Pēkšņā nāve: spēlētājs ir ārā."}
+{"name": "aoe2mc.replay.town_lost", "text": "Pilsētas centrs zaudēts %s"}
+{"name": "aoe2mc.replay.training", "text": "Apmāca: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitāte:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekonomika %s · Universitāte %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " uzbūvēja brīnumu %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Kauja: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s vienības"}
+{"name": "aoe2mc.replay_input.fights", "text": "Lielas kaujas:"}
+{"name": "aoe2mc.replay_input.help", "text": "Atkārtojums: ar peles labo pogu noklikšķiniet uz karstās joslas priekšmetiem vai noklikšķiniet: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Pārņemt: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s vienības)"}
+{"name": "aoe2mc.replay_input.vs", "text": " pret "}
+{"name": "aoe2mc.resource.food", "text": "pārtika"}
+{"name": "aoe2mc.resource.gold", "text": "zelts"}
+{"name": "aoe2mc.resource.stone", "text": "akmens"}
+{"name": "aoe2mc.resource.wood", "text": "koks"}
+{"name": "aoe2mc.run.back", "text": "%s ir atpakaļ"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampaņa pabeigta"}
+{"name": "aoe2mc.run.chat_hint", "text": "Tērzēšana: parasta rindiņa iet visiem, /tm TEKSTS – jūsu sabiedrotajiem, /msg VĀRDS TEKSTS – vienam cilvēkam."}
+{"name": "aoe2mc.run.left_bot", "text": "%s aizgāja: bots spēlē spēlētāja %s vietā"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenārijs %s sākas. Pievienojieties vēlreiz."}
+{"name": "aoe2mc.run.starts_in", "text": "Spēle sākas pēc %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Atveriet “Izvēlieties savu spēlētāju” un noklikšķiniet uz “Gatavs”"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Visas vadības: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Pirmais solis: turiet komandas nūju un ar peles labo pogu noklikšķiniet uz viena no saviem zemniekiem."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Pirmais solis: turiet komandas nūju un ar kreiso pogu noklikšķiniet uz viena no saviem zemniekiem."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Mērķis: uzvarēt spēlē. Uzvaras iestatījums: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Spēle saglabāta: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s vienības izgāja ārā"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Automātiska izlūkošana"}
+{"name": "aoe2mc.stance.formation", "text": "Formācija: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Neviena vienība nevar uzbrukt zemei"}
+{"name": "aoe2mc.stance.unpack", "text": "Vispirms izpakojiet Trebuchet"}
+{"name": "aoe2mc.train.active", "text": "%s ir aktīvs."}
+{"name": "aoe2mc.train.rally", "text": "Ar peles labo pogu noklikšķiniet uz zemes, lai iestatītu sapulcēšanās punktu."}
+{"name": "aoe2mc.train.researched", "text": "%s ir izpētīts."}
+{"name": "aoe2mc.transport.out", "text": "%s vienības izgāja ārā"}
+{"name": "aoe2mc.treaty.ended", "text": "Līgums beidzies: spēlētāji tagad var uzbrukt."}
+{"name": "aoe2mc.treaty.refuse", "text": "Līgums: jūs nevarat uzbrukt pirms %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Līgums: šajā spēlē jūs nevarat uzbrukt."}
+{"name": "aoe2mc.treaty.start", "text": "Līgums: neviens spēlētājs nevar uzbrukt citam spēlētājam pirms %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Līgums: šajā spēlē neviens spēlētājs nevar uzbrukt citam spēlētājam."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Uzbūvējiet kazarmas: ar peles labo pogu noklikšķiniet uz atlasīta zemnieka, izvēlieties kazarmas un novietojiet tās. Darbību josla virs karstās joslas parāda, kur novietot."}
+{"name": "aoe2mc.tutorial.camera", "text": "Ātri pārvietojieties pa karti: ar peles labo pogu noklikšķiniet ar priekšmetu “Kamera”, ejiet un tad vēlreiz ar peles labo pogu noklikšķiniet ar to."}
+{"name": "aoe2mc.tutorial.camp", "text": "Iznīciniet pretinieka nometni kartes centrā: atlasiet savus Milicijas karavīrus un ar peles labo pogu noklikšķiniet uz ēkas. Augšējā bosa josla rāda soli."}
+{"name": "aoe2mc.tutorial.camps", "text": "Uzbūvējiet kokgatavotavu pie kokiem un dzirnavas pie ogām. Labajā pusē esošā josla rāda, cik koksnes tās maksā."}
+{"name": "aoe2mc.tutorial.complete", "text": "Apmācība pabeigta. Nākamais: spēlējiet pret botu: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Apmācība pabeigta"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Pārejiet uz Feodālo laikmetu: ar peles labo pogu noklikšķiniet uz sava pilsētas centra un izvēlieties Feodālo laikmetu. Labajā pusē esošā josla rāda jūsu pārtiku."}
+{"name": "aoe2mc.tutorial.food", "text": "Savāciet 100 pārtikas: sūtiet zemnieku pie ogām. Labajā pusē esošā josla rāda jūsu pārtiku."}
+{"name": "aoe2mc.tutorial.house", "text": "Uzbūvējiet māju: ar peles labo pogu noklikšķiniet uz atlasīta zemnieka, izvēlieties māju un novietojiet to. Darbību josla virs karstās joslas parāda, kur novietot."}
+{"name": "aoe2mc.tutorial.militia", "text": "Apmāciet 3 Milicijas: ar peles labo pogu noklikšķiniet uz savām kazarmām un izvēlieties milicijas. Labajā pusē esošā josla rāda jūsu pārtiku un zeltu."}
+{"name": "aoe2mc.tutorial.raid", "text": "Ienaidnieks uzbrūk jūsu zemniekiem! Noklikšķiniet uz sarkanās brīdinājuma rindas tērzēšanā, lai tur aizietu, tad atlasiet savus Milicijas karavīrus un ar peles labo pogu noklikšķiniet uz ienaidniekiem. Augšējā bosa josla rāda atlasītās vienības veselību."}
+{"name": "aoe2mc.tutorial.select", "text": "Atlasiet zemnieku: ar kreiso peles pogu noklikšķiniet uz viena no saviem zemniekiem ar komandas nūju. Augšējā bosa josla rāda atlasīto vienību, bet darbību josla virs karstās joslas – nākamo darbību."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Solis izpildīts"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Solis %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "PADOMS: kazarmas apmāca kājniekus. Kājnieki ir lēti un labi pret ēkām."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "PADOMS: uzbrūciet ar visām savām vienībām kopā. Maza grupa nomirst, pirms paspēj nodarīt kaitējumu."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "PADOMS: būvējiet nogādāšanas ēkas resursu tuvumā, lai zemnieki ietu īsu ceļu."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "PADOMS: nākamais laikmets atver jaunas ēkas, vienības un tehnoloģijas. Kamēr virzāties uz priekšu, turiet zemniekus darbā."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "PADOMS: ogas pie dzirnavām ir droša pārtikas sākumā. Vēlāk lauki dod pārtiku, kas nebeidzas."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "PADOMS: māja dod vietu 5 jauniem iedzīvotājiem. Skatiet iedzīvotājus sānu joslā un būvējiet mājas, pirms vieta beidzas."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "PADOMS: kad jums ir resursi, ēkā rindā var ielikt līdz 15 vienībām."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "PADOMS: AoE2 pilsētas zvans nosūta zemniekus uz pilsētas centru. Zvaniet, kad ienaidnieks uzbrūk jūsu pilsētai."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "PADOMS: sānu joslas rinda “Dīkstāv” skaita zemniekus bez darba. Dodiet viņiem darbu."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "PADOMS: pirmajos laikmetos pastāvīgi apmāciet zemniekus. Vairāk zemnieku dod vairāk resursu."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "PADOMS: zemnieki vāc ātrāk pie nogādāšanas ēkas. Būvējiet kokgatavotavu blakus kokiem."}
+{"name": "aoe2mc.tutorial.villager", "text": "Apmāciet zemnieku: ar peles labo pogu noklikšķiniet uz sava pilsētas centra un izvēlieties zemnieku. Labajā pusē esošā josla rāda, cik pārtikas tas maksā."}
+{"name": "aoe2mc.tutorial.wood", "text": "Savāciet 50 koksnes: atlasiet zemnieku un ar peles labo pogu noklikšķiniet uz koka. Labajā pusē esošā josla rāda jūsu koksni."}
+{"name": "aoe2mc.victory", "text": "Uzvara"}
+{"name": "aoe2mc.wonder.built", "text": "Spēlētājs %s uzbūvēja brīnumu."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Spēlētāja %s brīnums ir iznīcināts."}

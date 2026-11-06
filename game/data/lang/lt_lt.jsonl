@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Žaidėjas %s pasiekia %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Korupcija per %s užima žemėlapį nuo krašto iki centro. Ji sunaikina visus jame esančius vienetus ir pastatus."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Dabar čia negaliu statyti: %s."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Negaliu apmokyti šio vieneto: neturiu pastato jam."}
+{"name": "aoe2mc.bot.flare_two", "text": "Pastatykite du signalus sienai."}
+{"name": "aoe2mc.bot.no_flare", "text": "Nematau signalo."}
+{"name": "aoe2mc.bot.no_market", "text": "Neturiu turgaus: negaliu siųsti duoklės."}
+{"name": "aoe2mc.bot.no_onager", "text": "Neturiu onagro."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Neturiu pakankamai išteklių sienai."}
+{"name": "aoe2mc.bot.no_water", "text": "Mano mieste nėra vandens netoli: negaliu statyti laivyno."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Mano onagrai negali kirsti medžių."}
+{"name": "aoe2mc.build.cost", "text": "Nepakanka išteklių: %s kainuoja %s."}
+{"name": "aoe2mc.build.flat", "text": "%s turi stovėti ant lygios žemės."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s turi stovėti ant 4 savo sienos plytelių tiesia linija arba ant 3 įstrižų plytelių."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Statyti: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s turi stovėti vandenyje prie kranto."}
+{"name": "aoe2mc.build.space", "text": "Čia nėra vietos: %s."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Nepakanka išteklių: %s plytelių iš %s kainuoja %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: spustelėkite dešiniu pelės mygtuku sienos galą."}
+{"name": "aoe2mc.build.water", "text": "%s turi stovėti vandenyje."}
+{"name": "aoe2mc.camera.fov", "text": "Greita kamera verčia laikomą daiktą siūbuoti. Kad jis liktų vietoje, nustatykite Nustatymai > Prieinamumo nustatymai > View Bobbing į OFF. Kamera taip pat praplečia vaizdą, todėl matoma daugiau žemėlapio. Kad liktų įprastas vaizdas, nustatykite Nustatymai > Prieinamumo nustatymai > FOV Effects į 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: išjungta"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: įjungta, greitis x%s. Shift dešinysis klavišas: kitas greitis."}
+{"name": "aoe2mc.camera.speed", "text": "Kameros greitis: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Nugalėkite visus priešo vienetus ir netekite nedaug vienetų"}
+{"name": "aoe2mc.challenge.booming", "text": "Apmokykite 100 kaimiečių ir pereikite į Imperijos amžių"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Pereikite į Pilies amžių ir atsilaikykite prieš priešo puolimus"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Sunaikinkite priešo pilį"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Surinkite 200 maisto, 200 medienos, 100 aukso ir 200 akmens, apmokykite 21 kaimietį, pastatykite medienos stovyklą ir malūną bei pereikite į Feodalinį amžių"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Apmokykite 27 kaimiečius, pastatykite 5 namus ir pereikite į Pilies amžių"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Nugalėkite visas šešias priešo bangas"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "Netekta %s vienetų, bronzos medalis iki %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "Netekta %s vienetų, aukso medalis iki %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "Netekta %s vienetų, medalio nėra"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "Netekta %s vienetų, sidabro medalis iki %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronzos medalis"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Aukso medalis"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Sidabro medalis"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Sunaikinkite visus priešo karo laivus"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Medalio nėra"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Nužudykite 5 priešo kaimiečius"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronzos medalis per %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Aukso medalis per %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Sidabro medalis per %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis išjungtas"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis įjungtas"}
+{"name": "aoe2mc.cheat.beyond", "text": "Technologijos: iki 256 tyrimų"}
+{"name": "aoe2mc.cheat.cpu", "text": "Gyventojų riba: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Karo rūkas: išjungtas"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Karo rūkas: įjungtas"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Technologijos nemokamos"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Dalijimasis yra rūpestis: jūsų pajamos eina sąjungininkams"}
+{"name": "aoe2mc.cheat.wonders", "text": "Jūs valdote gamtą: %s gyvūnų"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Liko tik sąjungininkai: sąjungos baigiasi. Laimi paskutinis gyvas žaidėjas."}
+{"name": "aoe2mc.conquest.defeated", "text": "Žaidėjas %s pralaimėjo."}
+{"name": "aoe2mc.controls.attack", "text": "Ataka: pasirinkite karinius vienetus, tada spustelėkite priešą dešiniuoju pelės mygtuku."}
+{"name": "aoe2mc.controls.build", "text": "Statyti: pasirinkite kaimiečius, spustelėkite juos dešiniuoju pelės mygtuku statybos meniu, pasirinkite pastatą, tada spustelėkite žemę kairiuoju pelės mygtuku. Shift + kairysis pelės mygtukas: statyti daugiau. Dešinysis pelės mygtukas: atšaukti."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: dešiniuoju pelės mygtuku spustelėkite žiūronų Kamera (greitojo klavišo 2): skrendate greitai aukštai virš žemėlapio. Shift dešinysis pelės mygtukas: kitas greitis. Dar kartą dešinysis pelės mygtukas: nusileidžiate."}
+{"name": "aoe2mc.controls.garrison", "text": "Įgula: pasirinkite vienetus, tada dešiniuoju pelės mygtuku spustelėkite savo pastatą. Jo meniu leidžia juos ištraukti. Miesto centro meniu: Skambinti miesto varpu."}
+{"name": "aoe2mc.controls.gather", "text": "Rinkti: pasirinkite kaimiečius, tada dešiniuoju pelės mygtuku spustelėkite medį, uogienojų krūmą, kasyklą ar ūkį."}
+{"name": "aoe2mc.controls.goto", "text": "Eiti į: dešiniuoju pelės mygtuku spustelėkite kompasą Eiti į (greitojo klavišo 3): meniu su jūsų miesto centrais, valdymo grupėmis ir kitu laisvu kaimiečiu."}
+{"name": "aoe2mc.controls.groups", "text": "Valdymo grupės: pasirinkite vienetus, paimkite grupės daiktą (greitieji klavišai 5–9) ir Shift + dešinysis pelės mygtukas, kad išsaugotumėte pasirinkimą. Dešinysis pelės mygtukas: pasirinkti grupę."}
+{"name": "aoe2mc.controls.head", "text": "Valdymas (laikykite morkos ant lazdos; veiksmų juostoje rodomas kitas žingsnis):"}
+{"name": "aoe2mc.controls.menu", "text": "Žaidimo meniu: dešiniuoju pelės mygtuku spustelėkite knygą Žaidimo meniu (greitojo klavišo 4): diplomatija ir duoklė, signalas, įrašymas, pauzė ir technologijų medis."}
+{"name": "aoe2mc.controls.move", "text": "Judėti: pasirinkus vienetus, dešiniuoju pelės mygtuku spustelėkite žemę."}
+{"name": "aoe2mc.controls.research", "text": "Tirti ir pereiti į kitą amžių: dešiniuoju pelės mygtuku spustelėkite savo pastatą ir savo meniu spustelėkite technologiją arba kitą amžių."}
+{"name": "aoe2mc.controls.select", "text": "Pasirinkti: kairiuoju pelės mygtuku spustelėkite vienetą. Laikykite kairįjį pelės mygtuką ir vilkite per žemę: pasirinkimo langelis. Dešinysis pelės mygtukas: duoti įsakymus."}
+{"name": "aoe2mc.controls.train", "text": "Apmokyti: dešiniuoju pelės mygtuku spustelėkite savo pastatą (miesto centrą, kareivinės ir kt.) ir jo meniu spustelėkite vienetą."}
+{"name": "aoe2mc.defeat", "text": "Pralaimėjimas"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Sąjungininkas"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Žaidėjas %s pakeitė savo požiūrį į jus: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Priešas"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutralus"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Žaidėjas %s nustatė žaidimo greitį: %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Žaidėjas %s išsiuntė %s %s žaidėjui %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: signalas ties %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Sekti: spustelėkite savo vienetą"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Saugoti: spustelėkite savo vienetą arba pastatą"}
+{"name": "aoe2mc.gaia.joins", "text": "%s prisijungia prie jūsų."}
+{"name": "aoe2mc.garrison.all_back", "text": "Visi grįžta į darbą"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Skamba miesto varpas: %s kaimiečiai ieško prieglobsčio"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Nepasirinktas joks kaimietis."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Neturite kaimiečių."}
+{"name": "aoe2mc.garrison.out", "text": "%s vienetai išėjo"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s kaimiečiai ieško prieglobsčio"}
+{"name": "aoe2mc.gather.act_attack", "text": "pulti"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "statybos meniu"}
+{"name": "aoe2mc.gather.act_garrison", "text": "įgula"}
+{"name": "aoe2mc.gather.act_gather", "text": "rinkti"}
+{"name": "aoe2mc.gather.act_hunt", "text": "medžioti"}
+{"name": "aoe2mc.gather.act_move", "text": "judėti"}
+{"name": "aoe2mc.gather.act_select", "text": "pasirinkti"}
+{"name": "aoe2mc.gather.act_select_type", "text": "pasirinkti visus šio tipo"}
+{"name": "aoe2mc.gather.act_trade", "text": "prekiauti"}
+{"name": "aoe2mc.gather.act_train", "text": "apmokyti"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Ataka: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Pasirinkimo langelis: atšauktas"}
+{"name": "aoe2mc.gather.bush", "text": "Uogienojų krūmas"}
+{"name": "aoe2mc.gather.carcass", "text": "Lavonas"}
+{"name": "aoe2mc.gather.corner", "text": "Pasirinkimo langelis: spustelėkite kitą kampą"}
+{"name": "aoe2mc.gather.enemy", "text": "Priešo %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Priešo pastatas"}
+{"name": "aoe2mc.gather.farm", "text": "Ūkis"}
+{"name": "aoe2mc.gather.ground", "text": "Žemė"}
+{"name": "aoe2mc.gather.group", "text": "Grupė %s: %s vienetai"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grupė %s: išsaugoti %s vienetai"}
+{"name": "aoe2mc.gather.mine", "text": "%s kasykla"}
+{"name": "aoe2mc.gather.paused", "text": "Žaidimas sustabdytas."}
+{"name": "aoe2mc.gather.point", "text": "%s · Dešinysis pelės mygtukas: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Eilėje pasėjimų: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Pasirinkta: %s vienetų"}
+{"name": "aoe2mc.gather.tree", "text": "Medis"}
+{"name": "aoe2mc.hill.holds", "text": "Žaidėjas %s laiko paminklą."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Pulti žemę: dešiniuoju pelės mygtuku spustelėkite žemę"}
+{"name": "aoe2mc.hints.attack_move", "text": "Ataka judant: dešiniuoju pelės mygtuku spustelėkite žemę"}
+{"name": "aoe2mc.hints.building", "text": "Pastatykite %s: dešiniuoju pelės mygtuku spustelėkite žemę · Shift + dešinysis pelės mygtukas: statyti daugiau · Atšaukti: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: kairiuoju pelės mygtuku spustelėkite, kad pastatytumėte · Shift: statyti daugiau · Dešinysis pelės mygtukas: atšaukti"}
+{"name": "aoe2mc.hints.corner", "text": "Pasirinkimo langelis: dešiniuoju pelės mygtuku spustelėkite kitą kampą"}
+{"name": "aoe2mc.hints.count_military", "text": "%s karinis vienetas"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s kariniai vienetai"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s kaimietis"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s kaimiečiai"}
+{"name": "aoe2mc.hints.deselect", "text": "Tuščias langelis: panaikinti pasirinkimą"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Kairysis pelės mygtukas: panaikinti pasirinkimą"}
+{"name": "aoe2mc.hints.follow", "text": "Sekti: dešiniuoju pelės mygtuku spustelėkite savo arba sąjungininko vienetą"}
+{"name": "aoe2mc.hints.guard", "text": "Saugoti: dešiniuoju pelės mygtuku spustelėkite savo arba sąjungininko vienetą ar pastatą"}
+{"name": "aoe2mc.hints.military", "text": "%s · Dešinysis pelės mygtukas: pulti priešą, laikysenos meniu · %s"}
+{"name": "aoe2mc.hints.none", "text": "Kairysis pelės mygtukas: pasirinkti vienetą · Laikyti kairįjį pelės mygtuką: pasirinkimo langelis"}
+{"name": "aoe2mc.hints.none_wand", "text": "Dešinysis pelės mygtukas: pasirinkti vienetą · Lazdelė: pasirinkimo langelis"}
+{"name": "aoe2mc.hints.patrol", "text": "Patruliuoti: dešiniuoju pelės mygtuku spustelėkite žemę"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Dešinysis pelės mygtukas: rinkti, statyti, statybos meniu · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s pasirengę"}
+{"name": "aoe2mc.lobby.you_play", "text": "Jūs žaidžiate: %s."}
+{"name": "aoe2mc.monk.converts", "text": "Vienuolis paverčia %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s miršta (Ereziją)."}
+{"name": "aoe2mc.pause.continued", "text": "Žaidėjas %s tęsė žaidimą."}
+{"name": "aoe2mc.pause.paused", "text": "Žaidėjas %s sustabdė žaidimą."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Komanda %s (vidutinis reitingas %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Žaidimas baigtas. Dešiniuoju pelės mygtuku spustelėkite Apžvalgos knygą rankoje, kad pamatytumėte rezultatus. Sustabdykite žaidimo programą Ctrl-C jos konsolėje."}
+{"name": "aoe2mc.relic_victory.all", "text": "Žaidėjas %s laiko visas relikvijas."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Žaidėjas %s prarado relikviją."}
+{"name": "aoe2mc.repair.no_resources", "text": "Nepakanka išteklių %s remontuoti."}
+{"name": "aoe2mc.replay.army", "text": "Kariuomenė: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", kariuomenė pabaigoje: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", netekta: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Statybos eilė:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · įgula %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | neša %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "statyba %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "maistas %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "auksas %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "bevelgiai %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "akmuo %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "mediena %s"}
+{"name": "aoe2mc.replay.flare", "text": "Signalas"}
+{"name": "aoe2mc.replay.game_ends", "text": "Žaidimas baigiasi"}
+{"name": "aoe2mc.replay.game_time", "text": "Žaidimo laikas %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · įgula %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Kar %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Gyv %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Iš %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Kai %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s laikė paminklą: Karaliaus kalno pergalė %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s ataka %s/%s šarvai%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Du kartus paspauskite Shift: stebėtojo vaizdas (skrenda per blokus). Dešiniuoju pelės mygtuku spustelėkite greitojo klavišo daiktus: įrašo valdymas."}
+{"name": "aoe2mc.replay.king_died", "text": ": karalius žuvo %s. Karaliaus žudymas: žaidėjas pašalinamas."}
+{"name": "aoe2mc.replay.king_killed", "text": "Karalius nužudytas %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Tiesioginis įrašas: šuolis sustoja ties vėlavimu už žaidimo."}
+{"name": "aoe2mc.replay.lost", "text": "Prarasta: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " laiko paminklą %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: paminklas, liko %s metai"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: paminklas, liko %s metų"}
+{"name": "aoe2mc.replay.no_camera", "text": "Šis įrašas neturi savo žaidėjo kameros."}
+{"name": "aoe2mc.replay.now", "text": " dabar"}
+{"name": "aoe2mc.replay.out", "text": "%s pašalintas"}
+{"name": "aoe2mc.replay.players", "text": "Žaidėjai"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " nuneša relikviją į vienuolyną ir laimi."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Įrašas baigėsi"}
+{"name": "aoe2mc.replay.research", "text": " tiria %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s pasiduoda"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Serveris paleidžiamas iš naujo šuoliui atgal: prisijunkite iš naujo."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Pastatai %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekonomika %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Kariuomenė %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Technologijos %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Iš viso %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "pilys %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "nupirkta %s, parduota %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relikvijos %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "stebuklai %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Išleista:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Statyba %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Ekon %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Kar %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tech %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": kaimiečių apmokyta %s, surinkta %s, kaimiečių bevelgiavimo laikas %s, miesto centro bevelgiavimo laikas %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": laiko paminklą (Karaliaus kalnas)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": paminklas laimėtas %s (Karaliaus kalnas)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": kariniai vienetai apmokyti %s, vienetų netekta %s, pastatų netekta %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": karalius nužudytas %s (Karaliaus žudymas)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": pergalės, relikvija vienuolyne %s (Relikvijos paėmimas)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sduoklė išsiųsta %s, gauta %s, kaimiečių aukštumas %s (apskaič.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": miesto centras prarastas %s (Staigi mirtis)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, technologijos %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": stebuklo laikmatis nuo %s, baigiasi %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Santrauka (apskaič.)"}
+{"name": "aoe2mc.replay.task_building", "text": "statyba"}
+{"name": "aoe2mc.replay.task_following", "text": "seka"}
+{"name": "aoe2mc.replay.task_food", "text": "renka maistą"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "įgulos"}
+{"name": "aoe2mc.replay.task_gold", "text": "renka auksą"}
+{"name": "aoe2mc.replay.task_guarding", "text": "saugo"}
+{"name": "aoe2mc.replay.task_idle", "text": "bevelgiauja"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patruliuoja"}
+{"name": "aoe2mc.replay.task_resources", "text": "renka išteklius"}
+{"name": "aoe2mc.replay.task_stone", "text": "renka akmenį"}
+{"name": "aoe2mc.replay.task_walking", "text": "eina"}
+{"name": "aoe2mc.replay.task_wood", "text": "renka medieną"}
+{"name": "aoe2mc.replay.team", "text": "Komanda %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Lankininkas %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Lankininkų šarvai %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Nešimas %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Raitininkų šarvai %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Ūkis %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Auksas %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Pėstininkų šarvai %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Staklės %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Artimasis %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Akmuo %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Mediena %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Pilis"}
+{"name": "aoe2mc.replay.tl_king", "text": "Karalius nužudytas"}
+{"name": "aoe2mc.replay.tl_military", "text": "1-oji kariuomenė: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relikvija"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Pasiduoda"}
+{"name": "aoe2mc.replay.town_fell", "text": ": miesto centras žuvo %s. Staigi mirtis: žaidėjas pašalinamas."}
+{"name": "aoe2mc.replay.town_lost", "text": "Miesto centras prarastas %s"}
+{"name": "aoe2mc.replay.training", "text": "Mokoma: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitetas:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekonomika %s · Universitetas %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " pastatė stebuklą %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Mūšis: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s vienetai"}
+{"name": "aoe2mc.replay_input.fights", "text": "Dideli mūšiai:"}
+{"name": "aoe2mc.replay_input.help", "text": "Įrašas: dešiniuoju pelės mygtuku spustelėkite greitojo klavišo daiktus arba spustelėkite: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Perimti: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s vienetai)"}
+{"name": "aoe2mc.replay_input.vs", "text": " prieš "}
+{"name": "aoe2mc.resource.food", "text": "maistas"}
+{"name": "aoe2mc.resource.gold", "text": "auksas"}
+{"name": "aoe2mc.resource.stone", "text": "akmuo"}
+{"name": "aoe2mc.resource.wood", "text": "mediena"}
+{"name": "aoe2mc.run.back", "text": "%s grįžo"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampanija baigta"}
+{"name": "aoe2mc.run.chat_hint", "text": "Pokalbis: įprasta eilutė eina visiems, /tm TEKSTAS – jūsų sąjungininkams, /msg VARDAS TEKSTAS – vienam asmeniui."}
+{"name": "aoe2mc.run.left_bot", "text": "%s išėjo: robotas žaidžia už žaidėją %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenarijus %s prasideda. Prisijunkite iš naujo."}
+{"name": "aoe2mc.run.starts_in", "text": "Žaidimas prasidės po %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Atidarykite „Pasirinkite savo žaidėją“ ir spustelėkite „Pasirengęs“"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Visi valdymo elementai: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Pirmas žingsnis: laikykite komandos lazdą ir dešiniuoju pelės mygtuku spustelėkite vieną iš savo kaimiečių."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Pirmas žingsnis: laikykite komandos lazdą ir kairiuoju pelės mygtuku spustelėkite vieną iš savo kaimiečių."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Tikslas: laimėti žaidimą. Pergalės nustatymas: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Žaidimas įrašytas: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s vienetai išėjo"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Automatinis žvalgymas"}
+{"name": "aoe2mc.stance.formation", "text": "Formacija: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Nė vienas vienetas negali pulti žemės"}
+{"name": "aoe2mc.stance.unpack", "text": "Pirmiausia išpakuokite Katapultą"}
+{"name": "aoe2mc.train.active", "text": "%s aktyvus."}
+{"name": "aoe2mc.train.rally", "text": "Dešiniuoju pelės mygtuku spustelėkite žemę, kad nustatytumėte susirinkimo tašką."}
+{"name": "aoe2mc.train.researched", "text": "%s ištirta."}
+{"name": "aoe2mc.transport.out", "text": "%s vienetai išėjo"}
+{"name": "aoe2mc.treaty.ended", "text": "Sutartis baigėsi: žaidėjai dabar gali pulti."}
+{"name": "aoe2mc.treaty.refuse", "text": "Sutartis: negalite pulti iki %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Sutartis: šiame žaidime negalite pulti."}
+{"name": "aoe2mc.treaty.start", "text": "Sutartis: joks žaidėjas negali pulti kito žaidėjo iki %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Sutartis: šiame žaidime joks žaidėjas negali pulti kito žaidėjo."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Pastatykite kareivinės: dešiniuoju pelės mygtuku spustelėkite pasirinktą kaimietį, pasirinkite kareivines ir pastatykite jas. Veiksmų juosta virš greitojo klavišo juostos parodo, kur statyti."}
+{"name": "aoe2mc.tutorial.camera", "text": "Greitai judėkite per žemėlapį: dešiniuoju pelės mygtuku spustelėkite daiktą „Kamera“, eikite, tada dar kartą dešiniuoju pelės mygtuku spustelėkite su juo."}
+{"name": "aoe2mc.tutorial.camp", "text": "Sunaikinkite priešo stovyklą žemėlapio centre: pasirinkite savo Milicijas ir dešiniuoju pelės mygtuku spustelėkite pastatą. Viršutinė boso juosta rodo žingsnį."}
+{"name": "aoe2mc.tutorial.camps", "text": "Pastatykite medienos stovyklą prie medžių ir malūną prie uogų. Dešinėje esanti juosta rodo, kiek medienos jie kainuoja."}
+{"name": "aoe2mc.tutorial.complete", "text": "Mokymas baigtas. Kitas: sužaiskite prieš robotą: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Mokymas baigtas"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Pereikite į Feodalinį amžių: dešiniuoju pelės mygtuku spustelėkite savo miesto centrą ir pasirinkite Feodalinį amžių. Dešinėje esanti juosta rodo jūsų maistą."}
+{"name": "aoe2mc.tutorial.food", "text": "Surinkite 100 maisto: siųskite kaimietį prie uogų. Dešinėje esanti juosta rodo jūsų maistą."}
+{"name": "aoe2mc.tutorial.house", "text": "Pastatykite namą: dešiniuoju pelės mygtuku spustelėkite pasirinktą kaimietį, pasirinkite namą ir pastatykite jį. Veiksmų juosta virš greitojo klavišo juostos parodo, kur statyti."}
+{"name": "aoe2mc.tutorial.militia", "text": "Apmokykite 3 Milicijas: dešiniuoju pelės mygtuku spustelėkite savo kareivines ir pasirinkite milicijas. Dešinėje esanti juosta rodo jūsų maistą ir auksą."}
+{"name": "aoe2mc.tutorial.raid", "text": "Priešas puola jūsų kaimiečius! Spustelėkite raudoną pavojaus eilutę pokalbyje, kad nueitumėte ten, tada pasirinkite savo Milicijas ir dešiniuoju pelės mygtuku spustelėkite priešus. Viršutinė boso juosta rodo pasirinkto vieneto gyvybes."}
+{"name": "aoe2mc.tutorial.select", "text": "Pasirinkite kaimietį: kairiuoju pelės mygtuku spustelėkite vieną iš savo kaimiečių su komandos lazda. Viršutinė boso juosta rodo pasirinktą vienetą, o veiksmų juosta virš greitojo klavišo juostos – kitą veiksmą."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Žingsnis atliktas"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Žingsnis %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "PATARIMAS: kareivinės apmoko pėstininkus. Pėstininkai pigūs ir geri prieš pastatus."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "PATARIMAS: pulkite visais savo vienetais kartu. Maža grupė žūva, prieš spėdama padaryti žalos."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "PATARIMAS: statykite pristatymo pastatus prie išteklių, kad kaimiečiai eitų trumpą kelią."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "PATARIMAS: kitas amžius atrakina naujus pastatus, vienetus ir technologijas. Kol pereinate į kitą amžių, palikite kaimiečius dirbti."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "PATARIMAS: uogos prie malūno – saugi maisto pradžia. Vėliau ūkiai duoda maisto, kuris nesibaigia."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "PATARIMAS: namas suteikia vietos 5 gyventojams. Žiūrėkite gyventojus šoninėje juostoje ir statykite namus, kol jų nebėra vietos."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "PATARIMAS: kai turite išteklių, pastate galite eilėje laikyti iki 15 vienetų."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "PATARIMAS: AoE2 miesto varpas siunčia kaimiečius į miesto centrą. Skambinkite juo, kai priešas puola jūsų miestą."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "PATARIMAS: dešinėje esanti juostos eilutė „Bevelgiai“ skaičiuoja kaimiečius be darbo. Suteikite jiems darbo."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "PATARIMAS: pirmaisiais amžiais nuolat mokykite kaimiečius. Daugiau kaimiečių duoda daugiau išteklių."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "PATARIMAS: kaimiečiai renka greičiau prie pristatymo pastato. Pastatykite medienos stovyklą šalia medžių."}
+{"name": "aoe2mc.tutorial.villager", "text": "Apmokykite kaimietį: dešiniuoju pelės mygtuku spustelėkite savo miesto centrą ir pasirinkite kaimietį. Dešinėje esanti juosta rodo, kiek maisto jis kainuoja."}
+{"name": "aoe2mc.tutorial.wood", "text": "Surinkite 50 medienos: pasirinkite kaimietį ir dešiniuoju pelės mygtuku spustelėkite medį. Dešinėje esanti juosta rodo jūsų medieną."}
+{"name": "aoe2mc.victory", "text": "Pergalė"}
+{"name": "aoe2mc.wonder.built", "text": "Žaidėjas %s pastatė stebuklą."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Žaidėjo %s stebuklas sunaikintas."}

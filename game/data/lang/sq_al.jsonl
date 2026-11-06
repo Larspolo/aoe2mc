@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Lojtari %s arrin në %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Korrupsioni e merr hartën nga kufiri deri në qendër për %s. Ai shkatërron të gjitha njësitë dhe ndërtesat që ka brenda."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Nuk mund të ndërtoj një %s atje tani."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Nuk mund ta stërvit atë njësi: nuk kam ndërtesë për të."}
+{"name": "aoe2mc.bot.flare_two", "text": "Vendos dy sinjale për murin."}
+{"name": "aoe2mc.bot.no_flare", "text": "Nuk shoh asnjë sinjal."}
+{"name": "aoe2mc.bot.no_market", "text": "Nuk kam treg: nuk mund të dërgoj haraç."}
+{"name": "aoe2mc.bot.no_onager", "text": "Nuk kam onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Nuk kam burime të mjaftueshme për një mur."}
+{"name": "aoe2mc.bot.no_water", "text": "Nuk kam ujë afër qytetit tim: nuk mund të ndërtoj flotë."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Onagrët e mi nuk mund të presin pemë."}
+{"name": "aoe2mc.build.cost", "text": "Burime të pamjaftueshme: një %s kushton %s."}
+{"name": "aoe2mc.build.flat", "text": "%s duhet të qëndrojë në tokë të sheshtë."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s duhet të qëndrojë mbi 4 pllaka të murit tënd në një vijë të drejtë, ose mbi 3 pllaka diagonale."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Ndërto: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s duhet të qëndrojë në ujë pranë bregut."}
+{"name": "aoe2mc.build.space", "text": "Nuk ka hapësirë për %s këtu."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Burime të pamjaftueshme: %s pllaka të %s kushtojnë %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: kliko me butonin e djathtë në fundin e murit."}
+{"name": "aoe2mc.build.water", "text": "%s duhet të qëndrojë mbi ujë."}
+{"name": "aoe2mc.camera.fov", "text": "Kamera e shpejtë e bën objektin në dorë të lëkundet. Për ta mbajtur të palëvizur, vendos Opsionet > Cilësimet e aksesueshmërisë > View Bobbing në OFF. Kamera gjithashtu e zgjeron pamjen, kështu shihet më shumë nga harta. Për ta mbajtur pamjen normale, vendos Opsionet > Cilësimet e aksesueshmërisë > FOV Effects në 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: joaktive"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: aktive, shpejtësia x%s. Shift + kliko djathtas: shpejtësia tjetër."}
+{"name": "aoe2mc.camera.speed", "text": "Shpejtësia e kamerës: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Mund të mposhtësh të gjitha njësitë armike dhe të humbasësh pak njësi"}
+{"name": "aoe2mc.challenge.booming", "text": "Stërvit 100 fshatarë dhe arrij në Epokën Perandorake"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Arrij në Epokën e Kalasë dhe mbijeto sulmet armike"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Shkatërro kalanë armike"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Mblidh 200 ushqim, 200 dru, 100 ar dhe 200 gur, stërvit 21 fshatarë, ndërto një kamp druri dhe një mulli, dhe arrij në Epokën Feudale"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Stërvit 27 fshatarë, ndërto 5 shtëpi dhe arrij në Epokën e Kalasë"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Mposht të gjashtë valët armike"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s njësi të humbura, medalje bronzi deri në %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s njësi të humbura, medalje ari deri në %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s njësi të humbura, pa medalje"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s njësi të humbura, medalje argjendi deri në %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Medalje bronzi"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Medalje ari"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Medalje argjendi"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Shkatërro të gjitha anijet luftarake armike"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Pa medalje"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Vrit 5 fshatarë armikë"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Medalje bronzi në %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Medalje ari në %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Medalje argjendi në %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis joaktiv"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis aktiv"}
+{"name": "aoe2mc.cheat.beyond", "text": "Teknologjitë: deri në 256 kërkime"}
+{"name": "aoe2mc.cheat.cpu", "text": "Kufiri i popullsisë: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Mjegulla e luftës: joaktive"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Mjegulla e luftës: aktive"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Teknologjitë janë falas"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Ndarja është kujdes: të ardhurat e tua shkojnë te aleatët"}
+{"name": "aoe2mc.cheat.wonders", "text": "Ti kontrollon natyrën: %s kafshë"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Kanë mbetur vetëm aleatët: aleancat mbarojnë. Lojtari i fundit i gjallë fiton."}
+{"name": "aoe2mc.conquest.defeated", "text": "Lojtari %s është mundur."}
+{"name": "aoe2mc.controls.attack", "text": "Sulm: zgjidh njësitë ushtarake, pastaj kliko me butonin e djathtë një armik."}
+{"name": "aoe2mc.controls.build", "text": "Ndërto: zgjidh fshatarët, kliko me butonin e djathtë mbi ta për menynë e ndërtimit, zgjidh një ndërtesë, pastaj kliko me butonin e majtë në tokë. Shift + kliko majtas: vendos më shumë. Kliko djathtas: anulo."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: kliko me butonin e djathtë me teleskopin Kamera (tasti i shpejtë 2): ti ecën shpejt lart mbi hartë. Shift + kliko djathtas: shpejtësia tjetër. Kliko djathtas përsëri: zbret poshtë."}
+{"name": "aoe2mc.controls.garrison", "text": "Garnizon: zgjidh njësitë, pastaj kliko me butonin e djathtë mbi ndërtesën tënde. Menyja e saj i lë ata të dalin. Menyja e qendrës së qytetit: Trokit zilen e qytetit."}
+{"name": "aoe2mc.controls.gather", "text": "Mblidh: zgjidh fshatarët, pastaj kliko me butonin e djathtë një pemë, një shkurre me fruta, një minierë ose një fermë."}
+{"name": "aoe2mc.controls.goto", "text": "Shko te: kliko me butonin e djathtë me busullën Shko te (tasti i shpejtë 3): një menu me qendrat e qytetit, grupet e kontrollit dhe fshatarin e radhës pa punë."}
+{"name": "aoe2mc.controls.groups", "text": "Grupet e kontrollit: zgjidh njësitë, merr një artikull grupi (tastet e shpejta 5 deri 9) dhe Shift + kliko djathtas për të ruajtur zgjedhjen. Kliko djathtas: zgjidh grupin."}
+{"name": "aoe2mc.controls.head", "text": "Kontrollet (mbaje karotën mbi një shkop; shiriti i veprimeve tregon hapin tjetër):"}
+{"name": "aoe2mc.controls.menu", "text": "Menyja e lojës: kliko me butonin e djathtë me librin Menyja e lojës (tasti i shpejtë 4): diplomacia dhe haraçi, sinjali, ruajtja, pauza dhe pema e teknologjive."}
+{"name": "aoe2mc.controls.move", "text": "Lëviz: me një zgjedhje, kliko me butonin e djathtë në tokë."}
+{"name": "aoe2mc.controls.research", "text": "Kërko dhe kalo në epokën tjetër: kliko me butonin e djathtë mbi ndërtesën tënde dhe kliko një teknologji ose epokën tjetër në menynë e saj."}
+{"name": "aoe2mc.controls.select", "text": "Zgjidh: kliko me butonin e majtë mbi një njësi. Mbaj butonin e majtë të shtypur dhe lëviz mbi tokë: një kuti zgjedhjeje. Kliko djathtas: jep urdhra."}
+{"name": "aoe2mc.controls.train", "text": "Stërvit: kliko me butonin e djathtë mbi ndërtesën tënde (qendrën e qytetit, kazermën ...) dhe kliko një njësi në menynë e saj."}
+{"name": "aoe2mc.defeat", "text": "Humbje"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Aleat"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Lojtari %s e ndryshoi qëndrimin e vet ndaj teje: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Armik"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutral"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Lojtari %s e vendosi shpejtësinë e lojës në %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Lojtari %s dërgoi %s %s te lojtari %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Sinjal te %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Ndiq: kliko një njësi tënden"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Ruaj: kliko një njësi ose ndërtesë tënde"}
+{"name": "aoe2mc.gaia.joins", "text": "Një %s bashkohet me ty."}
+{"name": "aoe2mc.garrison.all_back", "text": "Të gjithë kthehen në punë"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Zilja e qytetit bie: %s fshatarë kërkojnë strehim"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Nuk është zgjedhur asnjë fshatar."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Nuk ke fshatarë."}
+{"name": "aoe2mc.garrison.out", "text": "%s njësi dolën"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s fshatarë kërkojnë strehim"}
+{"name": "aoe2mc.gather.act_attack", "text": "sulm"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menyja e ndërtimit"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garnizon"}
+{"name": "aoe2mc.gather.act_gather", "text": "mblidh"}
+{"name": "aoe2mc.gather.act_hunt", "text": "gjuaj"}
+{"name": "aoe2mc.gather.act_move", "text": "lëviz"}
+{"name": "aoe2mc.gather.act_select", "text": "zgjidh"}
+{"name": "aoe2mc.gather.act_select_type", "text": "zgjidh të gjitha të këtij lloji"}
+{"name": "aoe2mc.gather.act_trade", "text": "tregto"}
+{"name": "aoe2mc.gather.act_train", "text": "stërvit"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Sulm: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Kutia e zgjedhjes: anuluar"}
+{"name": "aoe2mc.gather.bush", "text": "Shkurre me fruta"}
+{"name": "aoe2mc.gather.carcass", "text": "Kufomë"}
+{"name": "aoe2mc.gather.corner", "text": "Kutia e zgjedhjes: kliko qoshen tjetër"}
+{"name": "aoe2mc.gather.enemy", "text": "%s armik"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Ndërtesë armike"}
+{"name": "aoe2mc.gather.farm", "text": "Fermë"}
+{"name": "aoe2mc.gather.ground", "text": "Toka"}
+{"name": "aoe2mc.gather.group", "text": "Grupi %s: %s njësi"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grupi %s: %s njësi të ruajtura"}
+{"name": "aoe2mc.gather.mine", "text": "Minierë %s"}
+{"name": "aoe2mc.gather.paused", "text": "Loja është vendosur në pauzë."}
+{"name": "aoe2mc.gather.point", "text": "%s · Kliko djathtas: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Mbjellje në radhë: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Të zgjedhura: %s njësi"}
+{"name": "aoe2mc.gather.tree", "text": "Pemë"}
+{"name": "aoe2mc.hill.holds", "text": "Lojtari %s mban monumentin."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Sulm mbi tokë: kliko me butonin e djathtë në tokë"}
+{"name": "aoe2mc.hints.attack_move", "text": "Sulm gjatë lëvizjes: kliko me butonin e djathtë në tokë"}
+{"name": "aoe2mc.hints.building", "text": "Vendos %s: kliko me butonin e djathtë në tokë · Shift + kliko djathtas: vendos më shumë · Anulo: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: kliko majtas për të vendosur · Shift: vendos më shumë · Kliko djathtas: anulo"}
+{"name": "aoe2mc.hints.corner", "text": "Kutia e zgjedhjes: kliko djathtas qoshen tjetër"}
+{"name": "aoe2mc.hints.count_military", "text": "%s njësi ushtarake"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s njësi ushtarake"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s fshatar"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s fshatarë"}
+{"name": "aoe2mc.hints.deselect", "text": "Kuti bosh: hiq zgjedhjen"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Kliko majtas: hiq zgjedhjen"}
+{"name": "aoe2mc.hints.follow", "text": "Ndiq: kliko djathtas një njësi tënde ose aleate"}
+{"name": "aoe2mc.hints.guard", "text": "Ruaj: kliko djathtas një njësi ose ndërtesë tënde ose aleate"}
+{"name": "aoe2mc.hints.military", "text": "%s · Kliko djathtas: sulmo një armik, menyja e qëndrimit · %s"}
+{"name": "aoe2mc.hints.none", "text": "Kliko majtas: zgjidh një njësi · Mbaj butonin e majtë: kuti zgjedhjeje"}
+{"name": "aoe2mc.hints.none_wand", "text": "Kliko djathtas: zgjidh një njësi · Shkopi: kuti zgjedhjeje"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrullo: kliko me butonin e djathtë në tokë"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Kliko djathtas: mblidh, ndërto, menyja e ndërtimit · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s gati"}
+{"name": "aoe2mc.lobby.you_play", "text": "Ti luan %s."}
+{"name": "aoe2mc.monk.converts", "text": "Një murg e konverton %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s vdes (Herezi)."}
+{"name": "aoe2mc.pause.continued", "text": "Lojtari %s e vazhdoi lojën."}
+{"name": "aoe2mc.pause.paused", "text": "Lojtari %s e vendosi lojën në pauzë."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Ekipi %s (vlerësimi mesatar %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Loja mbaroi. Kliko me butonin e djathtë librin e Përmbledhjes në dorë për të parë rezultatet. Ndalo programin e lojës me Ctrl-C në konsolën e tij."}
+{"name": "aoe2mc.relic_victory.all", "text": "Lojtari %s i mban të gjitha relikët."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Lojtari %s humbi një relike."}
+{"name": "aoe2mc.repair.no_resources", "text": "Burime të pamjaftueshme për të riparuar %s."}
+{"name": "aoe2mc.replay.army", "text": "Ushtria: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", ushtria në fund: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", të humbura: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Radha e ndërtimit:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garnizon %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | mban %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "ndërton %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "ushqim %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "ar %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "pa punë %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "gur %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "dru %s"}
+{"name": "aoe2mc.replay.flare", "text": "Sinjal"}
+{"name": "aoe2mc.replay.game_ends", "text": "Loja mbaron"}
+{"name": "aoe2mc.replay.game_time", "text": "Koha e lojës %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · garnizon %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Ush %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Bur %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Fsh %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s mbante monumentin: fitore e Mbretit të Kodrës më %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s sulm %s/%s armatim%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shtyp dy herë Shift: pamja e shikuesit (fluturo përmes blloqeve). Kliko me butonin e djathtë artikujt e shiritit të shpejtë: kontroll i riprodhimit."}
+{"name": "aoe2mc.replay.king_died", "text": ": mbreti vdiq më %s. Vrasja e mbretit: lojtari del jashtë."}
+{"name": "aoe2mc.replay.king_killed", "text": "Mbreti u vra më %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Riprodhimi i drejtpërdrejtë: kërcimi ndalon te vonesa pas lojës."}
+{"name": "aoe2mc.replay.lost", "text": "Humbur: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " mban monumentin më %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monument, mbeten %s vit"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monument, mbeten %s vjet"}
+{"name": "aoe2mc.replay.no_camera", "text": "Ky regjistrim nuk ka kamerën e lojtarit të vet."}
+{"name": "aoe2mc.replay.now", "text": " tani"}
+{"name": "aoe2mc.replay.out", "text": "%s është jashtë"}
+{"name": "aoe2mc.replay.players", "text": "Lojtarët"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " e çon relikën në një manastir dhe fiton."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Riprodhimi mbaroi"}
+{"name": "aoe2mc.replay.research", "text": " kërkon %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s dorëzohet"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Serveri rindizet për kthimin mbrapa: bashkohu sërish."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Ndërtesat %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekonomia %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Ushtria %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Teknologjitë %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Gjithsej %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "kalatë %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "blerë %s, shitur %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relike %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "mrekulli %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Shpenzuar:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Ndërtim %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eko %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Ush %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tek %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": fshatarë të stërvitur %s, të mbledhur %s, koha pa punë e fshatarëve %s, koha pa punë e qendrës së qytetit %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": mban monumentin (Mbreti i Kodrës)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monumenti i fituar %s (Mbreti i Kodrës)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": njësi ushtarake të stërvitura %s, njësi të humbura %s, ndërtesa të humbura %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": mbreti i vrarë %s (Vrasja e mbretit)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": fitore, relikia në manastir %s (Kapja e relikës)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sharaçi i dërguar %s, i marrë %s, kulmi i fshatarëve %s (vlerësim)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": qendra e qytetit e humbur %s (Vdekja e papritur)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, teknologjitë %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": kohëmatësi i mrekullisë nga %s, mbaron %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Përmbledhja (vlerësim)"}
+{"name": "aoe2mc.replay.task_building", "text": "ndërton"}
+{"name": "aoe2mc.replay.task_following", "text": "ndjek"}
+{"name": "aoe2mc.replay.task_food", "text": "mbledh ushqim"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "në garnizon"}
+{"name": "aoe2mc.replay.task_gold", "text": "mbledh ar"}
+{"name": "aoe2mc.replay.task_guarding", "text": "ruan"}
+{"name": "aoe2mc.replay.task_idle", "text": "pa punë"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrullon"}
+{"name": "aoe2mc.replay.task_resources", "text": "mbledh burime"}
+{"name": "aoe2mc.replay.task_stone", "text": "mbledh gur"}
+{"name": "aoe2mc.replay.task_walking", "text": "ecën"}
+{"name": "aoe2mc.replay.task_wood", "text": "mbledh dru"}
+{"name": "aoe2mc.replay.team", "text": "Ekipi %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Harkëtar %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armatimi i harkëtarëve %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Mbajtja %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armatimi i kalorësisë %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Fermë %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Ar %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armatimi i këmbësorisë %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Vegla e endjes %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Luftimi i afërt %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Gur %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Dru %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Kalaja"}
+{"name": "aoe2mc.replay.tl_king", "text": "Mbreti u vra"}
+{"name": "aoe2mc.replay.tl_military", "text": "Ushtria e 1-rë: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relikia"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Dorëzohet"}
+{"name": "aoe2mc.replay.town_fell", "text": ": qendra e qytetit u rrëzua më %s. Vdekja e papritur: lojtari del jashtë."}
+{"name": "aoe2mc.replay.town_lost", "text": "Qendra e qytetit e humbur më %s"}
+{"name": "aoe2mc.replay.training", "text": "Stërvitja: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universiteti:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekonomia %s · Universiteti %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " ndërtoi një mrekulli më %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Luftë: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s njësi"}
+{"name": "aoe2mc.replay_input.fights", "text": "Beteja të mëdha:"}
+{"name": "aoe2mc.replay_input.help", "text": "Riprodhimi: kliko me butonin e djathtë artikujt e shiritit të shpejtë, ose kliko: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Merr kontrollin: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s njësi)"}
+{"name": "aoe2mc.replay_input.vs", "text": " kundër "}
+{"name": "aoe2mc.resource.food", "text": "ushqim"}
+{"name": "aoe2mc.resource.gold", "text": "ar"}
+{"name": "aoe2mc.resource.stone", "text": "gur"}
+{"name": "aoe2mc.resource.wood", "text": "dru"}
+{"name": "aoe2mc.run.back", "text": "%s u kthye"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Fushata u përfundua"}
+{"name": "aoe2mc.run.chat_hint", "text": "Biseda: një rresht i zakonshëm shkon te të gjithë, /tm TEKSTI te aleatët e tu, /msg EMRI TEKSTI te një person."}
+{"name": "aoe2mc.run.left_bot", "text": "%s u largua: një bot luan për lojtarin %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Skenari %s fillon. Bashkohu sërish."}
+{"name": "aoe2mc.run.starts_in", "text": "Loja fillon pas %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Hap „Zgjidh lojtarin tënd“ dhe kliko „Gati“"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Të gjitha kontrollet: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Hapi i parë: mbaje shkopin e komandës dhe kliko me butonin e djathtë një nga fshatarët e tu."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Hapi i parë: mbaje shkopin e komandës dhe kliko me butonin e majtë një nga fshatarët e tu."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Qëllimi: fito lojën. Cilësimi i fitores: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Loja u ruajt: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s njësi dolën"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Zbulim automatik"}
+{"name": "aoe2mc.stance.formation", "text": "Formacioni: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Asnjë njësi nuk mund të sulmojë tokën"}
+{"name": "aoe2mc.stance.unpack", "text": "Hap së pari Trebuchet-in"}
+{"name": "aoe2mc.train.active", "text": "%s është aktiv."}
+{"name": "aoe2mc.train.rally", "text": "Kliko me butonin e djathtë në tokë për pikën e mbledhjes."}
+{"name": "aoe2mc.train.researched", "text": "%s është kërkuar."}
+{"name": "aoe2mc.transport.out", "text": "%s njësi dolën"}
+{"name": "aoe2mc.treaty.ended", "text": "Traktati mbaroi: lojtarët tani mund të sulmojnë."}
+{"name": "aoe2mc.treaty.refuse", "text": "Traktati: nuk mund të sulmosh para %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Traktati: nuk mund të sulmosh në këtë lojë."}
+{"name": "aoe2mc.treaty.start", "text": "Traktati: asnjë lojtar nuk mund të sulmojë një lojtar tjetër para %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Traktati: asnjë lojtar nuk mund të sulmojë një lojtar tjetër në këtë lojë."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Ndërto një kazermë: kliko me butonin e djathtë mbi një fshatar të zgjedhur, zgjidh kazermën dhe vendose atë. Shiriti i veprimeve mbi shiritin e shpejtë tregon ku ta vendosësh."}
+{"name": "aoe2mc.tutorial.camera", "text": "Lëviz shpejt mbi hartë: kliko me butonin e djathtë me artikullin „Kamera“, ec, pastaj kliko përsëri me butonin e djathtë me të."}
+{"name": "aoe2mc.tutorial.camp", "text": "Shkatërro kampin armik në mes të hartës: zgjidh Milicitë e tua dhe kliko me butonin e djathtë mbi një ndërtesë. Shiriti i shefit lart tregon hapin."}
+{"name": "aoe2mc.tutorial.camps", "text": "Ndërto një kamp druri pranë pemëve dhe një mulli pranë manave. Shiriti anësor djathtas tregon drurin që kushtojnë."}
+{"name": "aoe2mc.tutorial.complete", "text": "Udhëzuesi përfundoi. Më pas: luaj kundër botit: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Udhëzuesi përfundoi"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Arrij në Epokën Feudale: kliko me butonin e djathtë mbi qendrën e qytetit dhe zgjidh Epokën Feudale. Shiriti anësor djathtas tregon ushqimin tënd."}
+{"name": "aoe2mc.tutorial.food", "text": "Mblidh 100 ushqim: dërgo një fshatar te manat. Shiriti anësor djathtas tregon ushqimin tënd."}
+{"name": "aoe2mc.tutorial.house", "text": "Ndërto një shtëpi: kliko me butonin e djathtë mbi një fshatar të zgjedhur, zgjidh shtëpinë dhe vendose atë. Shiriti i veprimeve mbi shiritin e shpejtë tregon ku ta vendosësh."}
+{"name": "aoe2mc.tutorial.militia", "text": "Stërvit 3 Milici: kliko me butonin e djathtë mbi kazermën tënde dhe zgjidh milicinë. Shiriti anësor djathtas tregon ushqimin dhe arin tënd."}
+{"name": "aoe2mc.tutorial.raid", "text": "Armiku po sulmon fshatarët e tu! Kliko rreshtin e kuq të alarmit në bisedë për të shkuar atje, pastaj zgjidh Milicitë e tua dhe kliko me butonin e djathtë mbi armiqtë. Shiriti i shefit lart tregon jetën e njësisë së zgjedhur."}
+{"name": "aoe2mc.tutorial.select", "text": "Zgjidh një fshatar: kliko me butonin e majtë mbi një nga fshatarët e tu me shkopin e komandës. Shiriti i shefit lart tregon njësinë e zgjedhur, shiriti i veprimeve mbi shiritin e shpejtë tregon veprimin tjetër."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Hapi u krye"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Hapi %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "KËSHILLË: kazerma stërvit këmbësorinë. Këmbësoria është e lirë dhe e mirë kundër ndërtesave."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "KËSHILLË: sulmo me të gjitha njësitë e tua së bashku. Një grup i vogël vdes përpara se të bëjë dëm."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "KËSHILLË: ndërto ndërtesat e dorëzimit pranë burimeve, që fshatarët të ecin një rrugë të shkurtër."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "KËSHILLË: epoka tjetër zhbllokon ndërtesa, njësi dhe teknologji të reja. Mbaji fshatarët në punë ndërsa përparon."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "KËSHILLË: manat pranë një mulliri janë një fillim i sigurt për ushqimin. Më vonë, fermat japin ushqim që nuk mbaron."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "KËSHILLË: një shtëpi jep vend për 5 banorë të tjerë. Shiko popullsinë në shiritin anësor dhe ndërto shtëpi përpara se të mbushet."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "KËSHILLË: kur ke burime, mund të vendosesh deri në 15 njësi në radhë në një ndërtesë."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "KËSHILLË: në AoE2 zilja e qytetit i dërgon fshatarët në qendrën e qytetit. Bije kur armiku sulmon qytetin tënd."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "KËSHILLË: rreshti Pa punë i shiritit anësor djathtas numëron fshatarët pa punë. Jepju atyre punë."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "KËSHILLË: stërvit fshatarë vazhdimisht në epokat e para. Më shumë fshatarë japin më shumë burime."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "KËSHILLË: fshatarët mbledhin më shpejt pranë një ndërtese dorëzimi. Ndërto një kamp druri pranë pemëve."}
+{"name": "aoe2mc.tutorial.villager", "text": "Stërvit një fshatar: kliko me butonin e djathtë mbi qendrën e qytetit dhe zgjidh fshatarin. Shiriti anësor djathtas tregon ushqimin që kushton."}
+{"name": "aoe2mc.tutorial.wood", "text": "Mblidh 50 dru: zgjidh një fshatar dhe kliko me butonin e djathtë mbi një pemë. Shiriti anësor djathtas tregon drurin tënd."}
+{"name": "aoe2mc.victory", "text": "Fitore"}
+{"name": "aoe2mc.wonder.built", "text": "Lojtari %s ndërtoi një mrekulli."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Mrekullia e lojtarit %s është shkatërruar."}
