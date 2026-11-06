@@ -41,19 +41,26 @@ world `OUTWorld`. You can also convert your own `.aoe2scenario` file.
 ## 3. Start and join
 
 Start with the tutorial. It shows each step in the boss bar and the chat (select a villager, gather wood, build a
-house). After the last step, stop the game with Ctrl-C and start the bot game.
+house). After the last step, stop the game with Ctrl-C and start the bot game. A game changes its world, so make
+a new world for the bot game (here `BotWorld`, as in section 2).
 
 With the installer:
 
     aoe2mc-game OUTWorld --play --tutorial
-    aoe2mc-game OUTWorld --play --bot --ai-difficulty easiest
+    aoe2mc --random-map arabia --seed 1 BotWorld
+    aoe2mc-game BotWorld --play --bot --ai-difficulty easiest
 
 With Python:
 
     python3 game/run.py OUTWorld --play --tutorial
-    python3 game/run.py OUTWorld --play --bot --ai-difficulty easiest
+    python3 aoe2mc.py OUT.aoe2scenario BotWorld
+    python3 game/run.py BotWorld --play --bot --ai-difficulty easiest
 
 For a stronger bot, use `--ai-difficulty standard`, `moderate`, `hard`, `hardest` or `extreme`.
+
+To play with more people, add `--people N` (with `--bot`, the bot plays player N + 1). Each person joins the same
+address, opens the Game menu (section 4), clicks "Choose your player" and then "Ready". The game starts when all
+people are ready.
 
 The first start downloads the Minecraft server (about 1 minute). When the console shows
 "Join the server localhost:PORT", start Minecraft 26.3, click "Multiplayer", "Direct Connection" and type that
@@ -63,6 +70,8 @@ command to continue (`--load`). With the installer, use `aoe2mc-game` in place o
 in that command.
 
 Add `--cheats` to use the AoE2 cheat codes in the chat (for example `aegis`: fast building and training).
+With `--cheats`, the Minecraft command `/give @s gold` (also `food`, `wood`, `stone`) gives the resource as the
+cheat codes do (for example `robin hood`: 10000 gold).
 
 ## 4. Controls
 
@@ -85,6 +94,8 @@ tutorial (section 3) teaches the same controls. Type /controls in the game to se
   view, which shows more of the map; set it to 0 % to keep the normal view.
 - Go to: right click with the compass "Go to" (hotbar key 3): a menu of your town centers, your control groups and the next idle villager.
 - Game menu: right click with the book "Game menu" (hotbar key 4): diplomacy and tribute, flare, save, pause and the tech tree.
+  Two switches: "Unique Player Colors" off shows you in blue, your allies in yellow and your enemies in red.
+  "Highlight huntable animals" makes the deer, boars and sheep glow for you.
 - Control groups: select units, take a group item (hotbar keys 5 to 9) and Shift + right click to save the selection. Right click: select the group.
 
 The sidebar shows your wood, food, gold and stone.
