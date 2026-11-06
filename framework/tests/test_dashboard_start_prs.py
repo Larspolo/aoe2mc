@@ -11,7 +11,8 @@ def issue(n, body=""):
     return dict(number=n, title=f"Ticket {n}", labels=[{"name": "P2"}], body=body)
 
 
-def test_start_after_a_count_of_merged_prs():
+def test_start_after_a_count_of_merged_prs(monkeypatch):
+    monkeypatch.setattr(dashboard, "merges", lambda **k: [(datetime.datetime(2026, 10, 28, tzinfo=UTC), 1)])  # no network
     issues = [issue(1, "## Goal\nStart after: 100 PRs after #2026\n"), issue(2), issue(3, "Start after: 1 PR after #7"),
               issue(4, "Text: Start after: 5 PRs after #9 in a sentence."), issue(5, "Start after: 2026-10-27 05:15 UTC")]
     now = datetime.datetime(2026, 10, 28, tzinfo=UTC)
