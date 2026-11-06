@@ -20,7 +20,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
  * The relation colors of one player (#5510, AoE2 DE "Unique Player Colors" off: game/relation_colors.py):
- * aoe teamcolors <player> pN=color ... | off. Vanilla sends one color per team to all clients, so the player gets a
+ * aoe teamcolors <player> pN=color ... | off | show. Vanilla sends one color per team to all clients, so the player gets a
  * mirror of the main scoreboard (Player.setScoreboard): the same teams, entries and options, with the given colors,
  * and the objectives of the display slots. The server logic keeps the main scoreboard; tick() copies it each second.
  * The sidebar of the own team color goes to the plain sidebar of the mirror (its own team has another color there).
@@ -42,6 +42,21 @@ final class RelationColors {
             boards.remove(p.getUniqueId());
             p.setScoreboard(main);
             sender.sendMessage("Team colors: off");
+            return true;
+        }
+        if (args.length == 3 && args[2].equals("show")) {              // a read of the mirror sidebar (tests, #5884)
+            Objective o = p.getScoreboard().getObjective(DisplaySlot.SIDEBAR);
+            StringBuilder t = new StringBuilder("Sidebar:");
+            if (o != null) {
+                for (String x : p.getScoreboard().getEntries()) {
+                    Score s = o.getScore(x);
+                    if (s.isScoreSet()) {
+                        t.append(' ').append(x).append('=').append(s.customName() == null ? "" : net.kyori.adventure
+                            .text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(s.customName()));
+                    }
+                }
+            }
+            sender.sendMessage(t.toString());
             return true;
         }
         Map<String, NamedTextColor> c = new HashMap<>();
@@ -156,6 +171,14 @@ final class RelationColors {
                     set.add(x);
                     if (m.getScore(x).getScore() != s.getScore() || !m.getScore(x).isScoreSet()) {
                         m.getScore(x).setScore(s.getScore());
+                    }
+                    // The sidebar names come from `scoreboard players display name` (#5884).
+                    Score ms = m.getScore(x);
+                    if (!java.util.Objects.equals(ms.customName(), s.customName())) {
+                        ms.customName(s.customName());
+                    }
+                    if (!java.util.Objects.equals(ms.numberFormat(), s.numberFormat())) {
+                        ms.numberFormat(s.numberFormat());
                     }
                 }
             }
