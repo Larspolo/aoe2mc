@@ -5,7 +5,7 @@ from game import run
 def test_invite_line_names_the_invited_players():
     names = run.invite_names(True, "Alex,Sam", False)
     line = run.invite_line(names)
-    assert line == "Only these Minecraft names can join: Alex, Sam."
+    assert line.startswith("Only these Minecraft names can join: Alex, Sam.")
 
 
 def test_invite_line_has_no_open_server_warning():

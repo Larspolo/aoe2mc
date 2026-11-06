@@ -23,7 +23,7 @@ def test_line():
 
 def ok_args():
     return (("10.0.0.5", "25601"), 25601, "http://10.0.0.5:25602/resources.zip", ["10.0.0.5"],
-            "Test passed", ["Disconnecting eve (/10.0.0.5:5): You are not white-listed on this server!"], False, [])
+            "Test passed", ["Disconnecting eve (/10.0.0.5:5): You are not white-listed on this server!"], False, [], True)
 
 
 def test_result_ok(tmp_path):
