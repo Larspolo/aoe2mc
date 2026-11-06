@@ -1,6 +1,6 @@
 name: Automerge
 
-# Merges an agent PR (branch agent/*, claude/* or ccr-*, #3382, or any branch with the label automerge, #3383) when its CI is green, so that the runs do not wait for CI (#232).
+# Merges an agent PR (branch agent/*, claude/*, ccr-* or claim/*, #3382, #5988, or any branch with the label automerge, #3383) when its CI is green, so that the runs do not wait for CI (#232).
 # A merge with GITHUB_TOKEN starts no workflows, so this job starts CI on main, the dashboard and the claim clean-up.
 # CI runs on a head that Unconflict pushed with GITHUB_TOKEN start no workflow_run event, also not after a re-run:
 # the sweep merges those PRs. The job `sweep` of ci.yml starts it (#734): GitHub drops the cron runs (#581).
@@ -59,7 +59,7 @@ jobs:
         run: |
           merged=0 conflict=0
           # An agent branch, or any branch with the label automerge (the owner's opt-in, #3383).
-          AGENT='(.head.ref | test("^(agent/|claude/|ccr-)")) or ([.labels[].name] | index("automerge") != null)'
+          AGENT='(.head.ref | test("^(agent/|claude/|ccr-|claim/)")) or ([.labels[].name] | index("automerge") != null)'
           # The check runs of the PR's own CI decide, not a `full` dispatch on the head (its job `slow` ran): the slow
           # and server tests do not gate a PR, and the red jobs of a dispatch on a `hold` PR kept #5410 out of each
           # sweep for 5 hours (#5462, as `pacer.pr_checks`).

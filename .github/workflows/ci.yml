@@ -126,7 +126,7 @@ jobs:
   # Unconflict push: Unconflict then starts no dispatch (#4809).
   sweep:
     needs: quick
-    if: (github.event_name == 'workflow_dispatch' || github.actor == 'github-actions[bot]') && (startsWith((github.head_ref || github.ref_name), 'agent/') || startsWith((github.head_ref || github.ref_name), 'claude/') || startsWith((github.head_ref || github.ref_name), 'ccr-'))
+    if: (github.event_name == 'workflow_dispatch' || github.actor == 'github-actions[bot]') && (startsWith((github.head_ref || github.ref_name), 'agent/') || startsWith((github.head_ref || github.ref_name), 'claude/') || startsWith((github.head_ref || github.ref_name), 'ccr-') || startsWith((github.head_ref || github.ref_name), 'claim/'))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
