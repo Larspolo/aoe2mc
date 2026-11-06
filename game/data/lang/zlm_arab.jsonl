@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "ڤemain %s مـلـاۤج ke %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: ڬوروڤسي مـنـݢامبيل ڤتا دري سمڤادananya ke ڤوساتnya دالم %s. ڤي مموسناکن سموا اونيت دان بڠوڬن دالمڽ."}
+{"name": "aoe2mc.bot.cannot_build", "text": "ساي تيداق بوليه ممبينا %s دi سيني سکاراڠ."}
+{"name": "aoe2mc.bot.cannot_train", "text": "ساي تيداق بوليه ملاتيه اونيت ايت: ساي تياد بڠوڬن اونتوقnya."}
+{"name": "aoe2mc.bot.flare_two", "text": "ڤاسڠ دوا سوار اونتوق دينڠ."}
+{"name": "aoe2mc.bot.no_flare", "text": "ساي تيدق ناميڤ سوار."}
+{"name": "aoe2mc.bot.no_market", "text": "ساي تياد ڤاسر: ساي تيداق بوليه هنتر اوفتي."}
+{"name": "aoe2mc.bot.no_onager", "text": "ساي تياد اونيجر."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "ساي تيداق چوكوڤ سومبر اونتوق دينڠ."}
+{"name": "aoe2mc.bot.no_water", "text": "ساي تياد اير برهampiran بندر ساي: ساي تيداق بوليه ممبينا armada."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "اونيجر ساي تيداق بوليه منبڠ ڤوهون."}
+{"name": "aoe2mc.build.cost", "text": "سومبر تيداق چوكوڤ: %s منلان کوس %s."}
+{"name": "aoe2mc.build.flat", "text": "%s مستي برديري ді atas تانه راته."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s مستي برada دi atas 4 جوبين دينڠ سنديري دalam satu garis lurus, atau دi atas 3 جوبين ڤيڤنجورو."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "بينا: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s مستي برديري دi atas اير برhampiran ڤنتاي."}
+{"name": "aoe2mc.build.space", "text": "تياد روڠ اونتوق %s دi سيني."}
+{"name": "aoe2mc.build.tiles_cost", "text": "سومبر تيداق چوكوڤ: %s جوبين %s منلان کوس %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: کليک کاناn ڤد هوجوڠ دينڠ."}
+{"name": "aoe2mc.build.water", "text": "%s مستي برديري دi اتس اير."}
+{"name": "aoe2mc.camera.fov", "text": "کامرا ڤانتس مڠيسباکن اينتيت يڠ دڤڬڠ برايون. اونتوق مڠكلکن ايت تيدق برݢرق، تتاڤكن Options > Accessibility Settings > View Bobbing کڤد OFF. کامرا جوݢا ملبرکن ڤندڠن، يڠ مڠتونجوقکن لبيه باניك ڤتا. اونتوق مڠكلکن ڤندڠن بياسا، تتاڤكن Options > Accessibility Settings > FOV Effects کڤد 0 %."}
+{"name": "aoe2mc.camera.off", "text": "کامرا: ماتي"}
+{"name": "aoe2mc.camera.on", "text": "کامرا: ادا، کلاجوان x%s. Shift کليک کانan: کلاجوان سترusnya."}
+{"name": "aoe2mc.camera.speed", "text": "کلاجوان کامرا: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "کالاهکن سموا اونيت موسوه دان هيلڠکن سedikit اونيت"}
+{"name": "aoe2mc.challenge.booming", "text": "لاتيه 100 ڤندودوق کمڤوڠ دان نائيق ke Imperial Age"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "نائيق ke Castle Age دان برتahan داريڤد سرڠن موسوه"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "موسنهکن استان موسوه"}
+{"name": "aoe2mc.challenge.early-economy", "text": "کومڤول 200 ماكنن، 200 کايو، 100 امس دان 200 باتو، لاتيه 21 ڤندودوق کمڤوڠ، بينا کم کايو دان کيلڠ، دان نائيق ke Feudal Age"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "لاتيه 27 ڤندودوق کمڤوڠ، بينا 5 روما دان نائيق ke Castle Age"}
+{"name": "aoe2mc.challenge.land-battle", "text": "کالاهکن سموا انام ݢلومبڠ موسوه"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s اونيت هيلڠ، ڤيڠݢت ݢڠسا sehingga %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s اونيت هيلڠ، ڤيڠݢت امس sehingga %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s اونيت هيلڠ، تياد ڤيڠݢت"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s اونيت هيلڠ، ڤيڠݢت ڤراق sehingga %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "ڤيڠݢت ݢڠسا"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "ڤيڠݢت امس"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "ڤيڠݢت ڤراق"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "موسنهکن سموا کاڤل ڤرڠ موسوه"}
+{"name": "aoe2mc.challenge.no_medal", "text": "تياد ڤيڠݢت"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "بونوه 5 ڤندودوق کمڤوڠ موسوه"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "ڤيڠݢت ݢڠسا دalam %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "ڤيڠݢت امس دalam %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "ڤيڠݢت ڤراق دalam %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis ماتي"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis ادا"}
+{"name": "aoe2mc.cheat.beyond", "text": "تيکنولوݢي: سهingga 256 ڤڽيلidikan"}
+{"name": "aoe2mc.cheat.cpu", "text": "حد ڤوڤوليسي: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "کابوت ڤرڠ: ماتي"}
+{"name": "aoe2mc.cheat.fog_on", "text": "کابوت ڤرڠ: ادا"}
+{"name": "aoe2mc.cheat.free_techs", "text": "تيکنولوݢي اداله ڤرcuma"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "برکوڠسي ايت mengambil berat: ڤندڤتن اندا ڤرݢي ke سکوتو اندا"}
+{"name": "aoe2mc.cheat.wonders", "text": "اندا ممڠول الم: %s هيوان"}
+{"name": "aoe2mc.conquest.allies_end", "text": "هاڽ سکوتو يڠ تيݢل: ڤكتن تامت. ڤمain تراخير يڠ حيدوڤ مناڠ."}
+{"name": "aoe2mc.conquest.defeated", "text": "ڤمain %s تله دikalahkan."}
+{"name": "aoe2mc.controls.attack", "text": "سراڠ: ڤيليه اونيت تنتره، کموديان کليک کانan ڤد موسوه."}
+{"name": "aoe2mc.controls.build", "text": "بينا: ڤيليه ڤندودوق کمڤوڠ، کليک کانan ڤد مريک اونتوق منو بينا، ڤيليه بڠوڬن، کموديان کليک کيري ڤد تانه. Shift + کليک کيري: بينا لبيه. کليک کانan: باتال."}
+{"name": "aoe2mc.controls.camera", "text": "کامرا: کليک کانan دڠن کامرا تلسکوڤ (باره ڤنتس 2): اندا برجالن ڤنتس تيڠݢي دi atas ڤتا. Shift کليک کانan: کلاجوان سترusnya. کليک کانan سکali لاݢي: اندا ترباڠ توروڽ."}
+{"name": "aoe2mc.controls.garrison", "text": "ݢارنيسون: ڤيليه اونيت، کموديان کليک کانan ڤد بڠوڬن سنديري. ميونيا ممبنرکن مريک کلوار. ميونو ڤوساط بندر: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "کومڤول: ڤيليه ڤندودوق کمڤوڠ، کموديان کليک کانan ڤد ڤوهون، سمق بوه، لومبوڠ اتau لادڠ."}
+{"name": "aoe2mc.controls.goto", "text": "ڤرݢي ke: کليک کانan دڠن کومڤاس Go to (باره ڤنتس 3): ميونو ڤوساط بندر اندا، کومڤولن کاولن اندا دان ڤندودوق کمڤوڠ منݢڠݢور يڠ سستروسnya."}
+{"name": "aoe2mc.controls.groups", "text": "کومڤولن کاولن: ڤيليه اونيت، امبيل ايتيم کومڤولن (باره ڤنتس 5 ke 9) دان Shift + کليک کانan اونتوق سيمڤن ڤيليهن. کليک کانan: ڤيليه کومڤولن."}
+{"name": "aoe2mc.controls.head", "text": "کاولن (ڤݢڠ لobak ڤد تونݢکت؛ باره تيندقن منونجوقکن لڠكه سترusnya):"}
+{"name": "aoe2mc.controls.menu", "text": "ميونو ڤرماينن: کليک کانan دڠن بوکو ميونو ڤرماينن (باره ڤنتس 4): ديڤلوماسي دان اوفتي، سوار، سيمڤن، جيدا دان ڤوهون تيکنولوݢي."}
+{"name": "aoe2mc.controls.move", "text": "ݢرق: دڠن ڤيليهن، کليک کانan ڤد تانه."}
+{"name": "aoe2mc.controls.research", "text": "ڤڽيلidik دان نائيق زمن: کليک کانan ڤد بڠوڬن سنديري دan کليک تيکنولوݢي اتau زمن سترusnya دalam ميونونيا."}
+{"name": "aoe2mc.controls.select", "text": "ڤيليه: کليک کيري ڤد اونيت. تاهن کليک کيري دan لينتس مرentas تانه: کوتق ڤيليهن. کليک کانan: برikan ارهan."}
+{"name": "aoe2mc.controls.train", "text": "لاتيه: کليک کانan ڤد بڠوڬن سنديري (ڤوساط بندر، بروق ...) دان کليک اونيت دalam ميونونيا."}
+{"name": "aoe2mc.defeat", "text": "کالah"}
+{"name": "aoe2mc.diplomacy.ally", "text": "سکوتو"}
+{"name": "aoe2mc.diplomacy.changed", "text": "ڤمain %s منوکر ڤندیريننيا ترهادڤ اندا: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "موسوه"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "نيوترل"}
+{"name": "aoe2mc.diplomacy.speed", "text": "ڤمain %s menetapkan kelajuan permainan kepada %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "ڤمain %s menghantar %s %s kepada ڤمain %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: سوار دi %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "اikut: کليک اونيت سنديري"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "کاول: کليک اونيت اتau بڠوڬن سنديري"}
+{"name": "aoe2mc.gaia.joins", "text": "سکور %s مڠيكوت اندا."}
+{"name": "aoe2mc.garrison.all_back", "text": "سموا کمبali بکرja"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "لوچڠ بندر بربونyi: %s ڤندودوق کمڤوڠ ممچاري ڤرلينڠڬوڠن"}
+{"name": "aoe2mc.garrison.no_villager", "text": "تياد ڤندودوق کمڤوڠ دڤيليه."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "اندا تياد ڤندودوق کمڤوڠ."}
+{"name": "aoe2mc.garrison.out", "text": "%s اونيت تله کلوار"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s ڤندودوق کمڤوڠ ممچاري ڤرلينڠڬوڠن"}
+{"name": "aoe2mc.gather.act_attack", "text": "سراڠ"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "ميونو بينا"}
+{"name": "aoe2mc.gather.act_garrison", "text": "ݢارنيسون"}
+{"name": "aoe2mc.gather.act_gather", "text": "کومڤول"}
+{"name": "aoe2mc.gather.act_hunt", "text": "بوro"}
+{"name": "aoe2mc.gather.act_move", "text": "ݢرق"}
+{"name": "aoe2mc.gather.act_select", "text": "ڤيليه"}
+{"name": "aoe2mc.gather.act_select_type", "text": "ڤيليه سموا جنيس"}
+{"name": "aoe2mc.gather.act_trade", "text": "داݢڠ"}
+{"name": "aoe2mc.gather.act_train", "text": "لاتيه"}
+{"name": "aoe2mc.gather.attack_siege", "text": "سراڠ: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "کوتق ڤيليهن: دibatalkan"}
+{"name": "aoe2mc.gather.bush", "text": "سمق بيري"}
+{"name": "aoe2mc.gather.carcass", "text": "بڠكاي"}
+{"name": "aoe2mc.gather.corner", "text": "کوتق ڤيليهن: کليک ڤد بوچو يڠ ساتu لاݢي"}
+{"name": "aoe2mc.gather.enemy", "text": "موسوه %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "بڠوڬن موسوه"}
+{"name": "aoe2mc.gather.farm", "text": "لادڠ"}
+{"name": "aoe2mc.gather.ground", "text": "تانه"}
+{"name": "aoe2mc.gather.group", "text": "کومڤولن %s: %s اونيت"}
+{"name": "aoe2mc.gather.group_saved", "text": "کومڤولن %s: %s اونيت دisimpan"}
+{"name": "aoe2mc.gather.mine", "text": "لومبوڠ %s"}
+{"name": "aoe2mc.gather.paused", "text": "ڤرماينن دijeda."}
+{"name": "aoe2mc.gather.point", "text": "%s · کليک کانan: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "بنيه سمولا دalam ݢيليرan: %s"}
+{"name": "aoe2mc.gather.selected", "text": "دڤيليه: %s اونيت"}
+{"name": "aoe2mc.gather.tree", "text": "ڤوهون"}
+{"name": "aoe2mc.hill.holds", "text": "ڤمain %s memegang monumen."}
+{"name": "aoe2mc.hints.attack_ground", "text": "سراڠ تانه: کليک کانan ڤد تانه"}
+{"name": "aoe2mc.hints.attack_move", "text": "ݢرق سراڠ: کليک کانan ڤد تانه"}
+{"name": "aoe2mc.hints.building", "text": "لتق %s: کليک کانan ڤد تانه · Shift + کليک کانan: لتق لبيه · باتال: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: کليک کيري اونتوق لتق · Shift: لتق لبيه · کليک کانan: باتال"}
+{"name": "aoe2mc.hints.corner", "text": "کوتق ڤيليهن: کليک کانan ڤد بوچو يڠ ساتو لاݢي"}
+{"name": "aoe2mc.hints.count_military", "text": "%s اونيت تنتره"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s اونيت تنتره"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s ڤندودوق کمڤوڠ"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s ڤندودوق کمڤوڠ"}
+{"name": "aoe2mc.hints.deselect", "text": "کوتق کوسوڠ: ڽahpilih"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "کليک کيري: ڽahpilih"}
+{"name": "aoe2mc.hints.follow", "text": "اikut: کليک کانan ڤد اونيت سنديري اتau سکوتو"}
+{"name": "aoe2mc.hints.guard", "text": "کاول: کليک کانan ڤد اونيت اتau بڠوڬن سنديري اتau سکوتو"}
+{"name": "aoe2mc.hints.military", "text": "%s · کليک کانan: سراڠ موسوه، ميونو ڤندirian · %s"}
+{"name": "aoe2mc.hints.none", "text": "کليک کيري: ڤيليه اونيت · تاهن کليک کيري: کوتق ڤيليهن"}
+{"name": "aoe2mc.hints.none_wand", "text": "کليک کانan: ڤيليه اونيت · تونݢکت: کوتق ڤيليهن"}
+{"name": "aoe2mc.hints.patrol", "text": "رونداٴن: کليک کانan ڤد تانه"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · کليک کانan: کومڤول، بينا، ميونو بينا · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s سدia"}
+{"name": "aoe2mc.lobby.you_play", "text": "اندا برمain %s."}
+{"name": "aoe2mc.monk.converts", "text": "سorang راهب منوکر %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s ماتي (بيدعه)."}
+{"name": "aoe2mc.pause.continued", "text": "ڤمain %s منyambung ڤرماينن."}
+{"name": "aoe2mc.pause.paused", "text": "ڤمain %s منجيدا ڤرماينن."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "ڤاسوکن %s (ڤنilaian ڤورات %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "ڤرماينن تامت. کليک کانan ڤد بوکو Recap دi تاڠن اندا اونتوق ملihat کيسيمڤولan. هنتيکن ڤروݢرام ڤرماينن دڠن Ctrl-C دalam کونسولnya."}
+{"name": "aoe2mc.relic_victory.all", "text": "ڤمain %s memegang سموا ريليک."}
+{"name": "aoe2mc.relic_victory.lost", "text": "ڤمain %s کهيلڠن سبواه ريليک."}
+{"name": "aoe2mc.repair.no_resources", "text": "سومبر تيداق چوكوڤ اونتوق مميباiki %s."}
+{"name": "aoe2mc.replay.army", "text": "تنتره: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", تنتره ڤد اخير: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", هيلڠ: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "اوروتن بينا:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · ݢارنيسون %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | ممباوا %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "بينا %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "ماکنن %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "امس %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "مڠڠڠور %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "باتو %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "کايو %s"}
+{"name": "aoe2mc.replay.flare", "text": "سوار"}
+{"name": "aoe2mc.replay.game_ends", "text": "ڤرماينن تامت"}
+{"name": "aoe2mc.replay.game_time", "text": "ماس ڤرماينن %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · ݢارنيسون %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "تنت %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "ڤوڤ %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "سوم %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "کمڤوڠ %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s memegang monumen: kemenangan Raja Bukit pada %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s سراڠ %s/%s زيرah%s"}
+{"name": "aoe2mc.replay.join_help", "text": "دua کali تکن Shift: ڤندڠن ڤڠنتون (تربڠ ملالui بلوک). کليک کانan ايتيم باره ڤنتس: کاولن اولڠن."}
+{"name": "aoe2mc.replay.king_died", "text": ": راج ماتي ڤد %s. ريڬيسيد: ڤمain تريسيڠکير."}
+{"name": "aoe2mc.replay.king_killed", "text": "راج دibunuh ڤد %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "اولڠن لڠسung: لومڤatan برهنتي ڤد کلمبتن دibelakang ڤرماينن."}
+{"name": "aoe2mc.replay.lost", "text": "هيلڠ: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " memegang monumen ڤد %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: مونومن، تينggal %s تاهون"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: مونومن، تينggal %s تاهون"}
+{"name": "aoe2mc.replay.no_camera", "text": "ريكود اini تياد کامرا ڤمainnya."}
+{"name": "aoe2mc.replay.now", "text": " سکاراڠ"}
+{"name": "aoe2mc.replay.out", "text": "%s تله تريسيڠکير"}
+{"name": "aoe2mc.replay.players", "text": "ڤمain"}
+{"name": "aoe2mc.replay.range", "text": " j%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " ممباوا ريليک ke بياره دan مناڠ."}
+{"name": "aoe2mc.replay.replay_ended", "text": "اولڠن تامت"}
+{"name": "aoe2mc.replay.research", "text": " ميڽيليديک %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s منيرح"}
+{"name": "aoe2mc.replay.restart_jump", "text": "ڤلاين دimulakan سمولا اونتوق لومڤatan باليق: سertai سکali لاݢي."}
+{"name": "aoe2mc.replay.share_buildings", "text": "بڠوڬن %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "اکونومي %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "تنتره %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "تيکنولوݢي %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "جومله %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "استان %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "بيli %s، جوال %s، "}
+{"name": "aoe2mc.replay.soc_relics", "text": "ريليک %s، "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "کاجائiban %s، "}
+{"name": "aoe2mc.replay.spent", "text": "ديبلانجاكن:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "بينا %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "اکو %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "تنت %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "تيک %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": ڤندودوق کمڤوڠ دilatih %s، دikumpul %s، ماس ڤندودوق کمڤوڠ مڠڠڠور %s، ماس ڤوساط بندر مڠڠڠور %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": memegang monumen (Raja Bukit)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monumen dimenangi %s (Raja Bukit)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": اونيت تنتره دilatih %s، اونيت هيلڠ %s، بڠوڬن هيلڠ %s، APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": راج دibunuh %s (ريڬيسيد)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": مناڠ، ريليک دalam بياره %s (Rebut Relik)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sufti دihantar %s، دiterima %s، puncak ڤندودوق کمڤوڠ %s (anggaran)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": ڤوساط بندر هيلڠ %s (Kematian Mendadak)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s، تيکنولوݢي %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": ڤماسا کاجائiban داري %s، تامت %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "رينڬکسن (anggaran)"}
+{"name": "aoe2mc.replay.task_building", "text": "ممبينا"}
+{"name": "aoe2mc.replay.task_following", "text": "مڠikut"}
+{"name": "aoe2mc.replay.task_food", "text": "مڠومڤول ماکنن"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "دi ݢارنيسون"}
+{"name": "aoe2mc.replay.task_gold", "text": "مڠومڤول امس"}
+{"name": "aoe2mc.replay.task_guarding", "text": "مڠاول"}
+{"name": "aoe2mc.replay.task_idle", "text": "مڠڠڠور"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "مروندai"}
+{"name": "aoe2mc.replay.task_resources", "text": "مڠومڤول سومبر"}
+{"name": "aoe2mc.replay.task_stone", "text": "مڠومڤول باتو"}
+{"name": "aoe2mc.replay.task_walking", "text": "برجالن"}
+{"name": "aoe2mc.replay.task_wood", "text": "مڠومڤول کايو"}
+{"name": "aoe2mc.replay.team", "text": "ڤاسوکن %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "ڤماناه %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "زيرah ڤماناه %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "باوا %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "زيرah کاوالري %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "لادڠ %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "امس %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "زيرah اينفنتري %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "تنون %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "تمڤور جارق دekat %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "باتو %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "کايو %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "استان"}
+{"name": "aoe2mc.replay.tl_king", "text": "راج دibunuh"}
+{"name": "aoe2mc.replay.tl_military", "text": "تنتره ڤرتام: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "ريليک"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "منيرح"}
+{"name": "aoe2mc.replay.town_fell", "text": ": ڤوساط بندر تومبڠ ڤد %s. کماتين مندادق: ڤمain تريسيڠکير."}
+{"name": "aoe2mc.replay.town_lost", "text": "ڤوساط بندر هيلڠ ڤد %s"}
+{"name": "aoe2mc.replay.training", "text": "لاتيهن: %s"}
+{"name": "aoe2mc.replay.university", "text": "اونيورسيتي:"}
+{"name": "aoe2mc.replay.up_counts", "text": "اکونومي %s · اونيورسيتي %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " ممبينا کاجائiban ڤد %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "ڤرتمڤورن: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s اونيت"}
+{"name": "aoe2mc.replay_input.fights", "text": "ڤرتمڤورن بسر:"}
+{"name": "aoe2mc.replay_input.help", "text": "اولڠن: کليک کانan ايتيم دalam باره ڤنتس اندا، اتau کليک: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "امبيل الih: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s اونيت)"}
+{"name": "aoe2mc.replay_input.vs", "text": " لاون "}
+{"name": "aoe2mc.resource.food", "text": "ماکنن"}
+{"name": "aoe2mc.resource.gold", "text": "امس"}
+{"name": "aoe2mc.resource.stone", "text": "باتو"}
+{"name": "aoe2mc.resource.wood", "text": "کايو"}
+{"name": "aoe2mc.run.back", "text": "%s تله کمبali"}
+{"name": "aoe2mc.run.campaign_complete", "text": "کمڤيين سلساي"}
+{"name": "aoe2mc.run.chat_hint", "text": "سمبڠ: باريس بياسا ڤرݢي ke سموا، /tm TEKS ke سکوتو اندا، /msg NAMA TEKS ke سorang."}
+{"name": "aoe2mc.run.left_bot", "text": "%s کلوار: بوت برمain سباݢai ڤمain %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "سناريو %s برمولا. سertai سکali لاݢي."}
+{"name": "aoe2mc.run.starts_in", "text": "ڤرماينن برمولا دalam %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "بوک \"Choose your player\" دan کليک \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "سموا کاولن: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "لڠكه ڤرتام: ڤڠڠ تونݢکت ارهan دan کليک کانan ڤد سالah سatu ڤندودوق کمڤوڠ اندا."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "لڠكه ڤرتام: ڤڠڠ تونݢکت ارهan دan کليک کيري ڤد سالah سatu ڤندودوق کمڤوڠ اندا."}
+{"name": "aoe2mc.run.welcome_goal", "text": "ماتلماݢ: مناڠ ڤرماينن. تتاڤان کمناڠan: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "ڤرماينن دisimpan: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s اونيت تله کلوار"}
+{"name": "aoe2mc.stance.auto_scout", "text": "ڤينيجau اوتو"}
+{"name": "aoe2mc.stance.formation", "text": "فورماسي: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "تياد اونيت بوليه سراڠ تانه"}
+{"name": "aoe2mc.stance.unpack", "text": "بوکاکن Trebuchet دahulu"}
+{"name": "aoe2mc.train.active", "text": "%s سدڠ aktif."}
+{"name": "aoe2mc.train.rally", "text": "کليک کانan ڤد تانه اونتوق تيتيق کومڤول."}
+{"name": "aoe2mc.train.researched", "text": "%s تله دڤڽيلidik."}
+{"name": "aoe2mc.transport.out", "text": "%s اونيت تله کلوار"}
+{"name": "aoe2mc.treaty.ended", "text": "ڤرجنجين تامت: ڤمain بوليه سراڠ سكاراڠ."}
+{"name": "aoe2mc.treaty.refuse", "text": "ڤرجنجين: اندا تيداق بوليه سراڠ سبلوم %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "ڤرجنجين: اندا تيداق بوليه سراڠ دalam ڤرماينن اini."}
+{"name": "aoe2mc.treaty.start", "text": "ڤرجنجين: تياد ڤمain بوليه سراڠ ڤمain لاين سبلوم %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "ڤرجنجين: تياد ڤمain بوليه سراڠ ڤمain لاين دalam ڤرماينن اini."}
+{"name": "aoe2mc.tutorial.barracks", "text": "بينا بروق: کليک کانan ڤد ڤندودوق کمڤوڠ يڠ دڤيليه، ڤيليه بروق دan لتقکنڽ. باره تيندقن د آتس باره ڤنتس ممبيريتاهو تمڤت اونتوق لتق."}
+{"name": "aoe2mc.tutorial.camera", "text": "برجالن ڤنتس مرentas ڤتا: کليک کانan دڠن اينتيم \"Camera\"، برجالن، ددان کليک کانan سکali لاݢي دڠنڽ."}
+{"name": "aoe2mc.tutorial.camp", "text": "موسنهکن کم موسوه دi تڠه ڤتا: ڤيليه Militia اندا دan کليک کانan ڤد بڠوڬن. باره بوس د آتس منونjukkan لڠكه."}
+{"name": "aoe2mc.tutorial.camps", "text": "بينا کم کايو برهampiran ڤوهون دan کيلڠ برهampiran بري. باره سيسي د سebelah کانan منونjukkan کايو يڠ دkosnya."}
+{"name": "aoe2mc.tutorial.complete", "text": "توتوريال تامت. سترusnya: مaiin ڤرماينن مڠلاون بوت: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "توتوريال تامت"}
+{"name": "aoe2mc.tutorial.feudal", "text": "نائيق ke Feudal Age: کليک کانan ڤد ڤوساط بندر اندا دan ڤيليه Feudal Age. باره سيسي د سebelah کانan منونjukkan ماکنن اندا."}
+{"name": "aoe2mc.tutorial.food", "text": "کومڤول 100 ماکنن: هنتر ڤندودوق کمڤوڠ ke بري. باره سيسي د سebelah کانan منونjukkan ماکنن اندا."}
+{"name": "aoe2mc.tutorial.house", "text": "بينا روما: کليک کانan ڤد ڤندودوق کمڤوڠ يڠ دڤيليه، ڤيليه روما دan لتقکنڽ. باره تيندقن د آتس باره ڤنتس ممبيريتاهو تمڤت اونتوق لتق."}
+{"name": "aoe2mc.tutorial.militia", "text": "لاتيه 3 Militia: کليک کانan ڤد بروق اندا دan ڤيليه militia. باره سيسي د سebelah کانan منونjukkan ماکنن دan امس اندا."}
+{"name": "aoe2mc.tutorial.raid", "text": "موسوه مڽerang ڤندودوق کمڤوڠ اندا! کليک باريس امرن merah دalam سمبڠ اونتوق ڤرݢي ke سانا، ددان ڤيليه Militia اندا دan کليک کانan ڤد موسوه. باره بوس د آتس منونjukkan نياوا اونيت يڠ دڤيليه."}
+{"name": "aoe2mc.tutorial.select", "text": "ڤيليه ڤندودوق کمڤوڠ: کليک کيري ڤد سorang ڤندودوق کمڤوڠ اندا دڠن تونݢکت ارهan. باره بوس د آتس منونjukkan اونيت يڠ دڤيليه، باره تيندقن د آتس باره ڤنتس منونjukkan تيندقن سترusnya."}
+{"name": "aoe2mc.tutorial.step_done", "text": "لڠكه سلساي"}
+{"name": "aoe2mc.tutorial.step_of", "text": "لڠكه %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIP: بروق لاتيه اينفنتري. اينفنتري مورah دan بايق ملاوان بڠوڬن."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIP: سراڠ دڠن سموا اونيت اندا برسام. کومڤولن کچيل ماتي سebelum سempat memberi kerosakan."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIP: بينا بڠوڬن ڤڽيمڤنن برهampiran سومبر، سوڤaya ڤندودوق کمڤوڠ برjalan jarak yang pendek."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIP: زمن سترusnya ميمbuka بڠوڬن، اونيت دan تيکنولوݢي بارو. ککلکن ڤندودوق کمڤوڠ بکرja سemasa اندا نائيق."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIP: بري برهampiran کيلڠ ialah ڤرمولaan ماکنن يڠ سلamat. کمودian، لادڠ memberi ماکنن يڠ تيداق هابيس."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIP: روما memberi روڠ اونتوق 5 ڤندودوق لاݢي. لihat ڤوڤولاسي دalam باره سيسي دan بينا روما سebelum ڤنوه."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIP: اندا بوليه بريتري سehingga 15 اونيت دalam بڠوڬن اڤabila اندا اد سومبر."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIP: دalam AoE2 لوچڠ بندر مڽهantar ڤندودوق کمڤوڠ ke ڤوساط بندر. بونيکنن اين اڤabila موسوه مڽerang بندر اندا."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIP: باريس Idle د سebelah کانan باره سيسي مڠيرا ڤندودوق کمڤوڠ اندا يڠ تياد کرجا. بري مريک کرجا."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIP: لاتيه ڤندودوق کمڤوڠ سentiasa د zaman awal. لبيه راماي ڤندودوق کمڤوڠ memberi لبيه باڽق سومبر."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIP: ڤندودوق کمڤوڠ مڠومڤول لبيه ڤنتس برهampiran بڠوڬن ڤڽيمڤنن. بينا کم کايو د سebelah ڤوهون."}
+{"name": "aoe2mc.tutorial.villager", "text": "لاتيه ڤندودوق کمڤوڠ: کليک کانan ڤد ڤوساط بندر اندا دan ڤيليه ڤندودوق کمڤوڠ. باره سيسي د سebelah کانan منونjukkan ماکنن يڠ دکosnya."}
+{"name": "aoe2mc.tutorial.wood", "text": "کومڤول 50 کايو: ڤيليه ڤندودوق کمڤوڠ دan کليک کانan ڤد ڤوهون. باره سيسي د سebelah کانan منونjukkan کايو اندا."}
+{"name": "aoe2mc.victory", "text": "کمناڠan"}
+{"name": "aoe2mc.wonder.built", "text": "ڤمain %s ممبينا کاجائiban."}
+{"name": "aoe2mc.wonder.destroyed", "text": "کاجائiban ڤمain %s تله دimusnahkan."}

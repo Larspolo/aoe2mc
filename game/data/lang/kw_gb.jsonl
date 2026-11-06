@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Chy %s a dhe an %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: an Corruption a gemmer an map dhia y vyl dhe y greus yn %s. Hi a dhystrw oll an bobel ha'n adeilyow ynno."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ny allav owth edhi %s ena vel."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ny allav dyski an bobel na: nyns eus gen vy adeilyans rag hynny."}
+{"name": "aoe2mc.bot.flare_two", "text": "Gwrewgh dew flare rag an fos."}
+{"name": "aoe2mc.bot.no_flare", "text": "Ny welav flare vyth."}
+{"name": "aoe2mc.bot.no_market", "text": "Nyns eus gen vy marghas: ny allav danvon tribute."}
+{"name": "aoe2mc.bot.no_onager", "text": "Nyns eus gen vy onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Nyns eus gen vy kettermyn rag fos."}
+{"name": "aoe2mc.bot.no_water", "text": "Nyns eus dour ogas dhe'm tre: ny allav edhi navy."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Ny allav ow onagers tori gwydhenn."}
+{"name": "aoe2mc.build.cost", "text": "Nyns eus kettermyn ahanas: %s a gost %s."}
+{"name": "aoe2mc.build.flat", "text": "Y %s a res bos war tir lev."}
+{"name": "aoe2mc.build.gate_spot", "text": "Y %s a res bos war 4 tewlva a fos y hun yn lin unsyk, bos war 3 tewlva diagonal."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Edhi: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Y %s a res bos war dour ogas dhe'n dyrow."}
+{"name": "aoe2mc.build.space", "text": "Nyns eus spas rag an %s ena."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Nyns eus kettermyn ahanas: %s tewlva a %s a gost %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: gwrewgh clik gwyr war fin an fos."}
+{"name": "aoe2mc.build.water", "text": "Y %s a res bos war an dour."}
+{"name": "aoe2mc.camera.fov", "text": "An kamera hwithrik a wra an tool yn y dhorn semya. Rag y gala bos sad, gorfennough Options > Accessibility Settings > View Bobbing dhe OFF. An kamera a wra an gweladow bos ledan, hag a dhysk moy a'n map. Rag gwelen normal, gorfennough Options > Accessibility Settings > FOV Effects dhe 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: dhe ves"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: yn ober, bysy x%s. Shift clik gwyr: an bysy nesa."}
+{"name": "aoe2mc.camera.speed", "text": "Bysy kamera: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Drehevel oll an bobel a'n eskern ha kollenwi nebes bobel"}
+{"name": "aoe2mc.challenge.booming", "text": "Dyski 100 tus dyson ha mos dhe Imperial Age"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Mos dhe Castle Age ha bewa an ympoy an eskern"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Distruwa castel an eskern"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Gwrians 200 boos, 200 gwydhenn, 100 owr ha 200 mean, dyski 21 tus dyson, edhi tre gwydhenn ha melin, ha mos dhe Feudal Age"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Dyski 27 tus dyson, edhi 5 chy, ha mos dhe Castle Age"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Drehevel oll an whe gwithvow an eskern"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s bobel kollys, medal bronsys bys %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s bobel kollys, medal owr bys %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s bobel kollys, nyns eus medal"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s bobel kollys, medal arghans bys %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Medal bronsys"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Medal owr"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Medal arghans"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Distruwa oll an longow-bressel an eskern"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Nyns eus medal"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Ladha 5 tus dyson an eskern"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Medal bronsys yn %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Medal owr yn %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Medal arghans yn %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis dhe ves"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis yn ober"}
+{"name": "aoe2mc.cheat.beyond", "text": "Teknologieth: bys 256 ymchwilyans"}
+{"name": "aoe2mc.cheat.cpu", "text": "Mentranans a bobel: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Niwl a vrassa: dhe ves"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Niwl a vrassa: yn ober"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Teknologieth yw rydh"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Rannans yw cares: agas godhven a vs dhe agas kowethes"}
+{"name": "aoe2mc.cheat.wonders", "text": "Ty a reol an natur: %s bestes"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Nyns eus lowr marnas kowethes: an kowethasow a dhiwedh. An chyf dhe vewa a sows."}
+{"name": "aoe2mc.conquest.defeated", "text": "Chy %s a vs trehys."}
+{"name": "aoe2mc.controls.attack", "text": "Omsenza: dewis tus eskerns, ha gwrewgh clik gwyr war eskerna."}
+{"name": "aoe2mc.controls.build", "text": "Edhi: dewis tus dyson, gwrewgh clik gwyr war anodhans rag an bownder edhi, dewis adeilyans, ha gwrewgh clik klav war an tir. Shift + clik klav: edhi moy. Clik gwyr: dyllel."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: gwrewgh clik gwyr gans an spyglass Kamera (kleuvan 2): yth esowgh ow kerdhes buan ughel a'n map. Shift clik gwyr: an bysy nesa. Clik gwyr arta: y fyllydh y jy."}
+{"name": "aoe2mc.controls.garrison", "text": "Garrison: dewis tus, ha gwrewgh clik gwyr war agas adeilyans agas hun. Y dhewlen a'n las. Dewlen an tre: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "Gather: dewis tus dyson, ha gwrewgh clik gwyr war gwydhenn, tus bush, mynsy po fer."}
+{"name": "aoe2mc.controls.goto", "text": "Mos dhe: gwrewgh clik gwyr gans an kompas Mos dhe (kleuvan 3): dewlen a'n trevow agas hun, agas grupow ha'n tus dyson nesa idle."}
+{"name": "aoe2mc.controls.groups", "text": "Grupow rewlyans: dewis tus, kemer tens grupow (kleuvan 5 dhe 9) ha Shift + clik gwyr dhe gadwel an dewisyans. Clik gwyr: dewis an grupow."}
+{"name": "aoe2mc.controls.head", "text": "Reolyansow (dal an carot war bolghen; an bar gweythredh a dhysk an gam nesa):"}
+{"name": "aoe2mc.controls.menu", "text": "Dewlen an gêm: gwrewgh clik gwyr gans an lyver Dewlen an gêm (kleuvan 4): diplomatyth ha tribute, flare, gwithvos, pause ha an wiasva teknologieth."}
+{"name": "aoe2mc.controls.move", "text": "Movya: gans dewisyans, gwrewgh clik gwyr war an tir."}
+{"name": "aoe2mc.controls.research", "text": "Ymchwilya ha mos dhe'n oes nesa: gwrewgh clik gwyr war agas adeilyans agas hun ha clikya war teknologieth po an oes nesa y dhewlen."}
+{"name": "aoe2mc.controls.select", "text": "Dewis: clik klav war unn tus. Dal clik klav ha mirowgh war an tir: kas dewisyans. Clik gwyr: ry commandys."}
+{"name": "aoe2mc.controls.train", "text": "Dyski: gwrewgh clik gwyr war agas adeilyans agas hun (tre a'n kestyl, barrak ...) ha clikya war tus y dhewlen."}
+{"name": "aoe2mc.defeat", "text": "Trehevel"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Kowethes"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Chy %s a newidyas y sens dhywgh: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Eskerns"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Nyns yw ynner"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Chy %s a settyas bysy an gêm dhe %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Chy %s a dhanvonas %s %s dhe chy %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Flare yn %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Sewya: clikya war unn tus agas hun"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Gwithva: clikya war unn tus po adeilyans agas hun"}
+{"name": "aoe2mc.gaia.joins", "text": "Unn %s a dhyllans dhywgh."}
+{"name": "aoe2mc.garrison.all_back", "text": "Pubonan tre dhe obery"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Ring an tre a erthyl: %s tus dyson a bys ledh"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Nyns eus tus dyson dewisys."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Nyns eus tus dyson gen jy."}
+{"name": "aoe2mc.garrison.out", "text": "%s tus a dheuth yn-mes"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s tus dyson a bys ledh"}
+{"name": "aoe2mc.gather.act_attack", "text": "omsenza"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "dewlen edhi"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garrison"}
+{"name": "aoe2mc.gather.act_gather", "text": "gwydhenna"}
+{"name": "aoe2mc.gather.act_hunt", "text": "hela"}
+{"name": "aoe2mc.gather.act_move", "text": "movya"}
+{"name": "aoe2mc.gather.act_select", "text": "dewis"}
+{"name": "aoe2mc.gather.act_select_type", "text": "dewis oll a'n sort"}
+{"name": "aoe2mc.gather.act_trade", "text": "marghasa"}
+{"name": "aoe2mc.gather.act_train", "text": "dyski"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Omsenza: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Kas dewisyans: dyllys"}
+{"name": "aoe2mc.gather.bush", "text": "Bush gwynnans"}
+{"name": "aoe2mc.gather.carcass", "text": "Karkas"}
+{"name": "aoe2mc.gather.corner", "text": "Kas dewisyans: clik war an kornel aral"}
+{"name": "aoe2mc.gather.enemy", "text": "Eskerns %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Adeilyans eskerns"}
+{"name": "aoe2mc.gather.farm", "text": "Ferm"}
+{"name": "aoe2mc.gather.ground", "text": "Tir"}
+{"name": "aoe2mc.gather.group", "text": "Grupp %s: %s tus"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grupp %s: %s tus a vs gwithys"}
+{"name": "aoe2mc.gather.mine", "text": "Mynsy %s"}
+{"name": "aoe2mc.gather.paused", "text": "Yth yw an gêm pausys."}
+{"name": "aoe2mc.gather.point", "text": "%s · Clik gwyr: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Hadhow ow kortos: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Dewisys: %s tus"}
+{"name": "aoe2mc.gather.tree", "text": "Gwydhenn"}
+{"name": "aoe2mc.hill.holds", "text": "Chy %s a dhal an monument."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Omsenza tir: clik gwyr war an tir"}
+{"name": "aoe2mc.hints.attack_move", "text": "Omsenza movya: clik gwyr war an tir"}
+{"name": "aoe2mc.hints.building", "text": "Edhi an %s: clik gwyr war an tir · Shift + clik gwyr: edhi moy · Dyllel: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: clik klav rag edhi · Shift: edhi moy · Clik gwyr: dyllel"}
+{"name": "aoe2mc.hints.corner", "text": "Kas dewisyans: clik gwyr war an kornel aral"}
+{"name": "aoe2mc.hints.count_military", "text": "%s tus milita"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s tus milita"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s tus dyson"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s tus dyson"}
+{"name": "aoe2mc.hints.deselect", "text": "Kas gwag: dyswa dewisyans"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Clik klav: dyswa dewisyans"}
+{"name": "aoe2mc.hints.follow", "text": "Sewya: clik gwyr war unn tus po adeilyans agas hun po kowethes"}
+{"name": "aoe2mc.hints.guard", "text": "Gwithva: clik gwyr war unn tus po adeilyans agas hun po kowethes"}
+{"name": "aoe2mc.hints.military", "text": "%s · Clik gwyr: omsenza eskerns, dewlen sens · %s"}
+{"name": "aoe2mc.hints.none", "text": "Clik klav: dewis unn tus · Dal clik klav: kas dewisyans"}
+{"name": "aoe2mc.hints.none_wand", "text": "Clik gwyr: dewis unn tus · Wand: kas dewisyans"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrol: clik gwyr war an tir"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Clik gwyr: gwydhenna, edhi, dewlen edhi · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s parys"}
+{"name": "aoe2mc.lobby.you_play", "text": "Ty a dhalvia %s."}
+{"name": "aoe2mc.monk.converts", "text": "Mynach a dhro an %s."}
+{"name": "aoe2mc.monk.dies", "text": "An %s a varow (Heresy)."}
+{"name": "aoe2mc.pause.continued", "text": "Chy %s a sewyas an gêm."}
+{"name": "aoe2mc.pause.paused", "text": "Chy %s a bausyas an gêm."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Kowethes %s (ratio kevyskys %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "An gêm a dhiwedh. Gwrewgh clik gwyr gans an lyver Recap yn agas dorn dhe weles an pennyn. Hedhewgh an programm gêm gans Ctrl-C yn y konsol."}
+{"name": "aoe2mc.relic_victory.all", "text": "Chy %s a dhal oll an relicow."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Chy %s a gollas unn relik."}
+{"name": "aoe2mc.repair.no_resources", "text": "Nyns eus kettermyn ahanas dhe dhreusweres an %s."}
+{"name": "aoe2mc.replay.army", "text": "Lu: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", lu a'n dibenn: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", kollys: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Urdhyans edhi:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garrison %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | ow tegi %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "edhi %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "boos %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "owr %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "idle %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "mean %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "gwydhenn %s"}
+{"name": "aoe2mc.replay.flare", "text": "Flare"}
+{"name": "aoe2mc.replay.game_ends", "text": "An gêm a dhiwedh"}
+{"name": "aoe2mc.replay.game_time", "text": "Termyn an gêm %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · garrison %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Vil %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s a dhalvia an monument: gwithvos Brenn an Menydh ow %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atk %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift diw weyth: gwel an gwelyer (ow hedhi dres blokys). Clik gwyr war an tylwyth hotbar: kontrol replay."}
+{"name": "aoe2mc.replay.king_died", "text": ": an Myghtern a varow ow %s. Regisyde: an chy a bys mes."}
+{"name": "aoe2mc.replay.king_killed", "text": "Myghtern ladhys ow %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Replay byw: an lam a dhe dhe'n dalvoth wosa'n gêm."}
+{"name": "aoe2mc.replay.lost", "text": "Kollys: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " a dhal an monument ow %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monument, %s bledhen a'n mes"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monument, %s bledhen a'n mes"}
+{"name": "aoe2mc.replay.no_camera", "text": "Nyns eus kamera a'n chy yn kovadhwr ma."}
+{"name": "aoe2mc.replay.now", "text": " lemmyn"}
+{"name": "aoe2mc.replay.out", "text": "%s yw mes"}
+{"name": "aoe2mc.replay.players", "text": "Chy"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " a dhro an relik dhe vonastry ha a dhyllans."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Replay a dhiwedh"}
+{"name": "aoe2mc.replay.research", "text": " ymchwilya %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s a ros"}
+{"name": "aoe2mc.replay.restart_jump", "text": "An servor a dhalleth rag an lam ena: join arta dhodho."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Adeilyansow %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekonomi %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Milita %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Teknologieth %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Hollas %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "castellow %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "prynnys %s, gwerthys %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relicow %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "wonders %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Gwariys:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Edhi %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eko %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tek %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": tus dyson dyskys %s, gwydhenna %s, termyn tus dyson idle %s, termyn TC idle %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": a dhal an monument (Myghtern an Menydh)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monument gwrys %s (Myghtern an Menydh)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": tus milita dyskys %s, tus kollys %s, adeilyansow kollys %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Myghtern ladhys %s (Regisyde)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": gwithvos, relik ena monastry %s (Kemeres an Relik)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stribute dhanvonas %s, receyvys %s, huni tus dyson %s (est.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": tre a'n kestyl gollys %s (Sudden Death)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, teknologieth %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": termyn wonder dhyworth %s, a dhiwedh %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Kompendys (est.)"}
+{"name": "aoe2mc.replay.task_building", "text": "edhi"}
+{"name": "aoe2mc.replay.task_following", "text": "sewya"}
+{"name": "aoe2mc.replay.task_food", "text": "gwydhenna boos"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "garrisonys"}
+{"name": "aoe2mc.replay.task_gold", "text": "gwydhenna owr"}
+{"name": "aoe2mc.replay.task_guarding", "text": "gwithva"}
+{"name": "aoe2mc.replay.task_idle", "text": "idle"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrolya"}
+{"name": "aoe2mc.replay.task_resources", "text": "gwydhenna kettermyn"}
+{"name": "aoe2mc.replay.task_stone", "text": "gwydhenna mean"}
+{"name": "aoe2mc.replay.task_walking", "text": "kerdhes"}
+{"name": "aoe2mc.replay.task_wood", "text": "gwydhenna gwydhenn"}
+{"name": "aoe2mc.replay.team", "text": "Kowethes %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Sagetor %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Arvow sagetor %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Tegi %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Arvow marghogydh %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Ferm %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Owr %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Arvow tus-troys %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Gwehen %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Krev %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Mean %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Gwydhenn %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castel"}
+{"name": "aoe2mc.replay.tl_king", "text": "Myghtern ladhys"}
+{"name": "aoe2mc.replay.tl_military", "text": "1As milita: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relik"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "A ros"}
+{"name": "aoe2mc.replay.town_fell", "text": ": an adeilyans tre a godhas ow %s. Sudden Death: an chy a bys mes."}
+{"name": "aoe2mc.replay.town_lost", "text": "Tre a'n kestyl kollys ow %s"}
+{"name": "aoe2mc.replay.training", "text": "Dyskans: %s"}
+{"name": "aoe2mc.replay.university", "text": "Skol:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekonomi %s · Skol %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " a dhrehedhas wonder ow %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Brewder: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s tus"}
+{"name": "aoe2mc.replay_input.fights", "text": "Brewderow brassa:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: gwrewgh clik gwyr war an tylwyth hotbar, po clikya: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Kemeres: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s tus)"}
+{"name": "aoe2mc.replay_input.vs", "text": " yn erbyn "}
+{"name": "aoe2mc.resource.food", "text": "boos"}
+{"name": "aoe2mc.resource.gold", "text": "owr"}
+{"name": "aoe2mc.resource.stone", "text": "mean"}
+{"name": "aoe2mc.resource.wood", "text": "gwydhenn"}
+{"name": "aoe2mc.run.back", "text": "%s a dhistowe"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Ymgyrch kowlwyr"}
+{"name": "aoe2mc.run.chat_hint", "text": "Kewsel: ynsel dhe bubonan, /tm TEXT dhe agas kowethes, /msg NAMM TEXT dhe unn person."}
+{"name": "aoe2mc.run.left_bot", "text": "%s a dhyllas: bot a dhalvia chy %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenario %s a dhallath. Join arta."}
+{"name": "aoe2mc.run.starts_in", "text": "An gêm a dhallath yn %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Gwrewgh \"Choose your player\" ha clikya \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Oll an reolyansow: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "An kynsa gam: dal an bagh kommand ha gwrewgh clik gwyr war unn a'gas tus dyson."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "An kynsa gam: dal an bagh kommand ha gwrewgh clik klav war unn a'gas tus dyson."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Amkan: gwithvos an gêm. Settyans gwithvos: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Gwithvos an gêm: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s tus a dheuth yn-mes"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Skoutya otomatek"}
+{"name": "aoe2mc.stance.formation", "text": "Furm: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Nyns yw tus vyth a allow omsenza an tir"}
+{"name": "aoe2mc.stance.unpack", "text": "Dyllo an Trebuchet kynsa"}
+{"name": "aoe2mc.train.active", "text": "%s yw yn ober."}
+{"name": "aoe2mc.train.rally", "text": "Gwrewgh clik gwyr war an tir rag an poynt kynnull."}
+{"name": "aoe2mc.train.researched", "text": "%s yw ymchwilys."}
+{"name": "aoe2mc.transport.out", "text": "%s tus a dheuth yn-mes"}
+{"name": "aoe2mc.treaty.ended", "text": "An kowses a dhiwedh: chy a yll omsenza nowodh."}
+{"name": "aoe2mc.treaty.refuse", "text": "Kowses: nyns yw possybyl omsenza kyn %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Kowses: nyns yw possybyl omsenza y'n gêm ma."}
+{"name": "aoe2mc.treaty.start", "text": "Kowses: nyns yw possybyl dhe chy vyth omsenza chy aral kyn %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Kowses: nyns yw possybyl dhe chy vyth omsenza chy aral y'n gêm ma."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Edhi barrak: gwrewgh clik gwyr war unn tus dyson dewisys, dewis an barrak ha'y settya. An bar gweythredh uchel an kledhar a dhisk ple y settya."}
+{"name": "aoe2mc.tutorial.camera", "text": "Movya buan dres an map: gwrewgh clik gwyr gans an tool \"Kamera\", kerdhes, ha gwrewgh clik gwyr arta gans hi."}
+{"name": "aoe2mc.tutorial.camp", "text": "Dystrowa an kampmanta eskerns yn kreiz an map: dewis agas Militia ha gwrewgh clik gwyr war unn adeilyans. An bar boss uhel a dhisk an gam."}
+{"name": "aoe2mc.tutorial.camps", "text": "Edhi kampmanta gwydhenn ogas dhe'n gwydhenn ha melin ogas dhe'n gwyns. An barr kledhar a dhisk an gwydhenn y gost."}
+{"name": "aoe2mc.tutorial.complete", "text": "An tutorial a dhiwedh. Nessa: gwari yn erbyn an bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutorial a dhiwedh"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Mos dhe Feudal Age: gwrewgh clik gwyr war agas tre ha dewis Feudal Age. An barr kledhar a dhisk agas boos."}
+{"name": "aoe2mc.tutorial.food", "text": "Gwydhenna 100 boos: danvon unn tus dyson dhe'n gwyns. An barr kledhar a dhisk agas boos."}
+{"name": "aoe2mc.tutorial.house", "text": "Edhi chy: gwrewgh clik gwyr war unn tus dyson dewisys, dewis an chy ha'y settya. An bar gweythredh uchel an kledhar a dhisk ple y settya."}
+{"name": "aoe2mc.tutorial.militia", "text": "Dyski 3 Militia: gwrewgh clik gwyr war agas barrak ha dewis an militia. An barr kledhar a dhisk agas boos ha owr."}
+{"name": "aoe2mc.tutorial.raid", "text": "An eskerns a omsenz agas tus dyson! Clikya an linen rudh y'n chat rag mos ena, dewis agas Militia ha gwrewgh clik gwyr war an eskerns. An bar boss uhel a dhisk bewnans an unn dewisys."}
+{"name": "aoe2mc.tutorial.select", "text": "Dewis unn tus dyson: clik klav war unn a'gas tus dyson gans an bagh kommand. An bar boss uhel a dhisk an unn dewisys, an bar gweythredh uchel an kledhar a dhisk an gweythred nesa."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Gam gwres"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Gam %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIP: an barrak a dhyski tus infantry. Infantry yw re wel ha da warbydn adeilyansow."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIP: omsenza gans oll agas tus warbydn yn kowethes. Ynsel bian a varow kyn y yll gul dhe ledha."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIP: edhi an adeilyansow dhe ganna ogas dhe'n kottyow, rag bos an tus dyson ow kerdhes berr."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIP: an oes nesa a dhigeth adeilyansow, tus ha teknologieth nowydh. Gwithvewgh an tus dyson yn ober wosa'gas myns dhe'n oes nesa."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIP: pesk ogas dhe melin yw dalleth diogel a boos. Diwettha, ferm a ro boos na vydh dyweth."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIP: chy a re le rag 5 pobel moy. Gwelewgh an pobel y'n barr kledhar hag edhewgh chyow kyns bos leun."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIP: y yllir ostya bys 15 tus y'n adeilyans pan vo kettermyn genowgh."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIP: y'n Oes Awtrow an ren dhe'n tus dyson dhe'n tre. Ryngewgh an kloghen pan vo eskerns ow hwilas agas tre."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIP: linenn Idle an barr kledhar a gont agas tus dyson heb oberow. Rewgewgh oberow dhedha."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIP: dyskewgh tus dyson bys vykken y'n oesow kynsa. Moy tus dyson a ro moy a dhefnydhyow."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIP: tus dyson a wra gwydhenna gwell ogas dhe adeilyans ganna. Edhewgh kampmanta gwydhenn ogas dhe'n gwydhenn."}
+{"name": "aoe2mc.tutorial.villager", "text": "Dyski tus dyson: gwrewgh clik gwyr war agas tre kledhar ha dewis an tus dyson. An barr kledhar a dhisk an boos y gost."}
+{"name": "aoe2mc.tutorial.wood", "text": "Gwydhenna 50 gwydhenn: dewis unn tus dyson ha gwrewgh clik gwyr war unn gwydhenn. An barr kledhar a dhisk agas gwydhenn."}
+{"name": "aoe2mc.victory", "text": "Gwithvos"}
+{"name": "aoe2mc.wonder.built", "text": "Chy %s a dhrehedhas wonder."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Wonder chy %s a vs distrowys."}

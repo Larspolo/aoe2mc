@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Tlacatl %s quiza ōn %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: in Tlazōlōliztli quīzāz tlālli ītlahtzin ōn %s, ītlaxilīltzin tlanōnōcā. Quīnpolōz mochi tlaca īhuān calli īpan."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ahmo nic tlachīhuaz %s inīn tlālli."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ahmo nic tēnēhuaz inīn tlaca: ahmo nēchiuh calli."}
+{"name": "aoe2mc.bot.flare_two", "text": "Xiquitta ome tlāhtōlōlli tētlān tlaxilli."}
+{"name": "aoe2mc.bot.no_flare", "text": "Ahmo nicpia tlahtōlli."}
+{"name": "aoe2mc.bot.no_market", "text": "Ahmo nēchiuh tianquiztli: ahmo nic tlapōhuaz tlāhuīlli."}
+{"name": "aoe2mc.bot.no_onager", "text": "Ahmo nēchiuh onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Ahmo nēchiuh tlapōhualli tlaxilli tlachīhuāltīsnequi."}
+{"name": "aoe2mc.bot.no_water", "text": "Ahmo nēchiuh atl ītlān nō altepētl: ahmo nic chīhuaz ātlahuīlli."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Nōmon onager ahmo quiza quahuitl."}
+{"name": "aoe2mc.build.cost", "text": "Ahmo tlapōhualli: %s tlāmach %s."}
+{"name": "aoe2mc.build.flat", "text": "%s quimonīnīz tlalpan tlālli pātlāhuac."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s tlatlan nāhui tlaxilli ītlahtlāhuan nō ōn tlaxilli tlah ōn tlaxilli, anozo ōme tlaxilli ōn tlahuitlān."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Tlachīhuāliztli: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s quimonīnīz atl ītlān tlahtzin."}
+{"name": "aoe2mc.build.space", "text": "Ahmo tlālli %s inīn."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Ahmo tlapōhualli: %s tlāmach %s tlāmach %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: xiquinhuiti tlāhtōlōlli tlaxilli ītzontecon."}
+{"name": "aoe2mc.build.water", "text": "%s quimonīnīz atl."}
+{"name": "aoe2mc.camera.fov", "text": "Cāmara tlahuēlīlōltic quimacēhuiz tlāmatilli tlamanaliztli. Xiquitchīhua: Options > Accessibility Settings > View Bobbing ihuīn OFF. Cāmara nō quimpahuiz tlachiualiztli, quitlazaliz yancuic tlālli. Tlachiualiztli tēlpopolli: Options > Accessibility Settings > FOV Effects ihuīn 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Cāmara: ahmo"}
+{"name": "aoe2mc.camera.on", "text": "Cāmara: quiza, tlaquīxtli x%s. Shift tlahuēlīlōltic: yancuic tlaquīxtli."}
+{"name": "aoe2mc.camera.speed", "text": "Cāmara tlaquīxtli: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Xiquimmiquiliz mochi cuāhuitlah īnāmic, ahuiyaz ce cuahuitlah"}
+{"name": "aoe2mc.challenge.booming", "text": "Xiquinmācēhua 100 tlacatl ōn quiāhuiz Imperial Age"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Quiāhuiz Castle Age īhuān quinpōlōz tlahuēlīlōltin"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Xiquinpōlō īnāmic tepēctli"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Xiquinmaca 200 tlaxcalli, 200 quahuitl, 100 cuauhnēntli īhuān 200 tetl, xiquitēnēhua 21 tlacatl, xiquitlachīhua quahuitlāhuac īhuān molino, īhuān quiāhuiz Feudal Age"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Xiquitēnēhua 27 tlacatl, xiquitlachīhua 5 calli īhuān quiāhuiz Castle Age"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Xiquimmiquiliz mochi ōme tlahuēlīlōltin"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s tlaca polihui, tepoztētl medalla ōn %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s tlaca polihui, cuauhnēntli medalla ōn %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s tlaca polihui, ahmo medalla"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s tlaca polihui, tlaxcalli medalla ōn %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Tepoztētl medalla"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Cuauhnēntli medalla"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Tlaxcalli medalla"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Xiquimmiquiliz mochi ātlāhuia"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Ahmo medalla"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Xiquimmiquiliz 5 tlacatl īnāmic"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Tepoztētl medalla ōn %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Cuauhnēntli medalla ōn %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Tlaxcalli medalla ōn %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis ahmo"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis quiza"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tēnāhuatilli: achi 256 tlatlāhuīlli"}
+{"name": "aoe2mc.cheat.cpu", "text": "Tlacatl tlapōhualli: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Tlapōhualli tlatlāhuīlli: ahmo"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Tlapōhualli tlatlāhuīlli: quiza"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Tēnāhuatilli ahmo tlapōhualli"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Tlapōhualiztli: mocōntlān ītlāhuīlli quiyāz mohuāncā"}
+{"name": "aoe2mc.cheat.wonders", "text": "Tlaltzin tlahuēlīlōltic: %s tlānmiquiliztli"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Ahmo quiyās ihuān mochi tlacatl ōn tlāhuēlīlōltin tlaxilli: tlahuiliztli ōmotlāhuan. Īmpa mochīhua inic cē tlacatl nemi ōn quiāhuiz."}
+{"name": "aoe2mc.conquest.defeated", "text": "Tlacatl %s ōmopolōz."}
+{"name": "aoe2mc.controls.attack", "text": "Tlahuēlīlōltic: xiquitlapōhua tēpilōlli tēcuacuahuitl, xiquitlapōhua tlahuēlīlōltic tlāhuītl ītēmō."}
+{"name": "aoe2mc.controls.build", "text": "Tlachīhuāliztli: xiquitlapōhua tlacatl, xiquimpōhua ītlachīhuāliztlān tlāmatilli, xiquitlapōhua calli, ōn xiquitlapōhua tlālli. Shift + tlahuēlīlōltic: tlapohua ahmo tlahuitl. Tlahuēlīlōltic: cuahuiyaz."}
+{"name": "aoe2mc.controls.camera", "text": "Cāmara: tlahuēlīlōltic ītlahtlahuan cāmara tlahuēlīlōltic (tlāmatilli 2): tlahuiz tlapēhuiztli ītlān tlālli. Shift tlahuēlīlōltic: yancuic tlaquīxtli. Tlahuēlīlōltic ōme: ōmotlāhuīz."}
+{"name": "aoe2mc.controls.garrison", "text": "Calpōlōliztli: xiquitlapōhua tlacatl, xiquimpōhua mocalli. Īmpa tlahuēlīlōltic quimonēlpōlōz tlacatl. Altepētl tlāhuēlīlōltic: Ring Town Bell."}
+{"name": "aoe2mc.controls.gather", "text": "Tlapōhualiztli: xiquitlapōhua tlacatl, xiquimpōhua quahuitl, tlamapōhualli, tlāmach, ōn tlālli."}
+{"name": "aoe2mc.controls.goto", "text": "Tlahuiz ōn: tlahuēlīlōltic ītlahtlahuan brújula Go to (tlāmatilli 3): tlapōhualli altepētl, tlacatl, ōn yancuic tlacatl ahmo tēnēhuiz."}
+{"name": "aoe2mc.controls.groups", "text": "Tlacatl tlapōhualli: xiquitlapōhua tlacatl, xiquimpōhua tlāmatilli (tlāmatilli 5 ihuān 9) īhuān Shift + tlahuēlīlōltic: xiquintlapōhua. Tlahuēlīlōltic: tlapōhua tlapōhualli."}
+{"name": "aoe2mc.controls.head", "text": "Tlāmatilli (xiquitlapōhua tlāmatilli in tlatzēntli; tlapōhualli tlatzīntli quīnnōnōtzaz ītlahtlahuan)"}
+{"name": "aoe2mc.controls.menu", "text": "Tlapōhualiztli tlahuēlīlōltic: tlahuēlīlōltic ītlahtlahuan amoxtli Game menu (tlāmatilli 4): tlahtōlōliztli ihuān tlāhuīlli, tlahtōlōlli, tlapōhualli, tlapōhua ihuān tlāmatilli."}
+{"name": "aoe2mc.controls.move", "text": "Tlahuiz: ōn tlapōhualli, tlahuēlīlōltic tlālli."}
+{"name": "aoe2mc.controls.research", "text": "Tlamatiliztli ihuān tlaxiliztli: tlahuēlīlōltic ītlachīhuāliztlān ihuān tlāmatilli ōn ītlatzin."}
+{"name": "aoe2mc.controls.select", "text": "Tlapōhua: tlahuēlīlōltic tlacatl. Tlapōhua tlāmatilli ītlān tlālli: tlāhuīlli. Tlahuēlīlōltic: tlapōhua."}
+{"name": "aoe2mc.controls.train", "text": "Tēnēhualiztli: tlahuēlīlōltic ītlachīhuāliztlān (calli tlāhuīlli, cuartel ...) ihuān tlapōhua tlacatl."}
+{"name": "aoe2mc.defeat", "text": "Tlahuēlīlōliztli"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Tlaneltoquiliztli"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Tlacatl %s ōmotlatlahtlānōz ītlahtlahuan: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Tēmiquiliztli"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Ahmo tlahuiz"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Tlacatl %s ōmotlaquīxtli tlaxilli: %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Tlacatl %s quitēmōz %s %s tlacatl %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Tlahtōlōlli ōn %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Tlahuiz: xiquitlapōhua mochīhua tlacatl"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Tēnēhuaz: xiquitlapōhua mochīhua tlacatl anozo calli"}
+{"name": "aoe2mc.gaia.joins", "text": "Ce %s quiyāz mohuāncā."}
+{"name": "aoe2mc.garrison.all_back", "text": "Mochi quimotlapōhuaz tlachīhuāliztli"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Altepētl tlāhuēlīlōltic tlanāhuatl: %s tlacatl quitlapōhuaz calpōlōliztli"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Ahmo tlacatl tlapōhua."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Ahmo nēchiuh tlacatl."}
+{"name": "aoe2mc.garrison.out", "text": "%s tlaca quiyāz"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s tlacatl quitlapōhuaz calpōlōliztli"}
+{"name": "aoe2mc.gather.act_attack", "text": "tlahuēlīlōltic"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "tlachīhuāliztli tlāhuīlli"}
+{"name": "aoe2mc.gather.act_garrison", "text": "calpōlōliztli"}
+{"name": "aoe2mc.gather.act_gather", "text": "tlapōhualiztli"}
+{"name": "aoe2mc.gather.act_hunt", "text": "tēchiliztli"}
+{"name": "aoe2mc.gather.act_move", "text": "tlahuiz"}
+{"name": "aoe2mc.gather.act_select", "text": "tlapōhua"}
+{"name": "aoe2mc.gather.act_select_type", "text": "tlapōhua mochi īnīn tlāhuīlli"}
+{"name": "aoe2mc.gather.act_trade", "text": "tlanamaquiliztli"}
+{"name": "aoe2mc.gather.act_train", "text": "tēnēhualiztli"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Tlahuēlīlōltic: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Tlapōhualli cuahuiyaz: ōmomiquiliz"}
+{"name": "aoe2mc.gather.bush", "text": "Xōchitl tlāhuīlli"}
+{"name": "aoe2mc.gather.carcass", "text": "Tēmiquiliztli"}
+{"name": "aoe2mc.gather.corner", "text": "Tlapōhualli: xiquitlahuēlīlōltic ītlahtzin ōmomōhua"}
+{"name": "aoe2mc.gather.enemy", "text": "Tēmiquiliztli %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Tēmiquiliztli calli"}
+{"name": "aoe2mc.gather.farm", "text": "Milpa"}
+{"name": "aoe2mc.gather.ground", "text": "Tlālli"}
+{"name": "aoe2mc.gather.group", "text": "Tlapōhualli %s: %s tlaca"}
+{"name": "aoe2mc.gather.group_saved", "text": "Tlapōhualli %s: %s tlaca quīnpiyaz"}
+{"name": "aoe2mc.gather.mine", "text": "%s tetl"}
+{"name": "aoe2mc.gather.paused", "text": "Tlāmatilli ōmotlāhuan."}
+{"name": "aoe2mc.gather.point", "text": "%s · Tlahuēlīlōltic: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Tlaxinaliztli tlamatilli: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Tlapōhua: %s tlaca"}
+{"name": "aoe2mc.gather.tree", "text": "Quahuitl"}
+{"name": "aoe2mc.hill.holds", "text": "Tlacatl %s quipiya tēocuicatl."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Tlahuēlīlōltic tlālli: tlahuēlīlōltic tlālli"}
+{"name": "aoe2mc.hints.attack_move", "text": "Tlahuēlīlōltic tlahuiz: tlahuēlīlōltic tlālli"}
+{"name": "aoe2mc.hints.building", "text": "Xiquinpōhua %s: tlahuēlīlōltic tlālli · Shift + tlahuēlīlōltic: tlapohua ahmo · Cuahuiyaz: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: tlahuēlīlōltic ītlān · Shift: tlapohua ahmo · Tlahuēlīlōltic: cuahuiyaz"}
+{"name": "aoe2mc.hints.corner", "text": "Tlapōhualli: tlahuēlīlōltic ītlahtzin ōmomōhua"}
+{"name": "aoe2mc.hints.count_military", "text": "%s tlacatl tēnēhuaz"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s tlaca tēnēhuaz"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s tlacatl"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s tlaca"}
+{"name": "aoe2mc.hints.deselect", "text": "Ahmo tlāmatilli: cuahuiyaz tlapōhua"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Tlahuēlīlōltic ītlahtzin: cuahuiyaz tlapōhua"}
+{"name": "aoe2mc.hints.follow", "text": "Tlahuiz: tlahuēlīlōltic mochīhua anozo tlāneltoquiliztli tlacatl"}
+{"name": "aoe2mc.hints.guard", "text": "Tēnēhuaz: tlahuēlīlōltic mochīhua anozo tlāneltoquiliztli tlacatl anozo calli"}
+{"name": "aoe2mc.hints.military", "text": "%s · Tlahuēlīlōltic: tēmiquiliztli tlahuēlīlōltic, tlahuēlīlōltic tlāhuīlli · %s"}
+{"name": "aoe2mc.hints.none", "text": "Tlahuēlīlōltic: tlapōhua tlacatl · Tlahuēlīlōltic ītlahtzin: tlapōhualli"}
+{"name": "aoe2mc.hints.none_wand", "text": "Tlahuēlīlōltic: tlapōhua tlacatl · Tlāmatilli: tlapōhualli"}
+{"name": "aoe2mc.hints.patrol", "text": "Tlahuiz tlapōhualli: tlahuēlīlōltic tlālli"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Tlahuēlīlōltic: tlapōhua, tlachīhua, tlachīhuāliztli tlāhuīlli · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s quiza"}
+{"name": "aoe2mc.lobby.you_play", "text": "Tiquintēmōz %s."}
+{"name": "aoe2mc.monk.converts", "text": "Tēopixqui quimonextiliz %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s ōmomiquiliz (Tlahuiliztli)."}
+{"name": "aoe2mc.pause.continued", "text": "Tlacatl %s quitlapōhuaz tlahuēlīlōltic."}
+{"name": "aoe2mc.pause.paused", "text": "Tlacatl %s quimonīnīz tlahuēlīlōltic."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Tlacatl %s (tlapōhualli tlaneltoquiliztli %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Tlahuēlīlōltic ōmotlāhuan. Tlahuēlīlōltic ītlahtlahuan tlāmatilli: Recap ītlahtlahuan tlapōhualli. Xiquitlapōhua Ctrl-C ītlān tlahuēlīlōltic."}
+{"name": "aoe2mc.relic_victory.all", "text": "Tlacatl %s quipiya mochi tēteuhtli."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Tlacatl %s ōmopolōz ce tēteuhtli."}
+{"name": "aoe2mc.repair.no_resources", "text": "Ahmo tlapōhualli tlachīhuāliztli %s."}
+{"name": "aoe2mc.replay.army", "text": "Tlahuēlīlōltic: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", tlahuēlīlōltic tlacuahuitl: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", polihui: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Tlachīhuāliztli tlapōhualli:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · calpōlōliztli %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | quihuica %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "tlachīhua %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "tlaxcalli %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "cuauhnēntli %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "ahmo tlachīhuāliztli %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "tetl %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "quahuitl %s"}
+{"name": "aoe2mc.replay.flare", "text": "Tlahtōlōlli"}
+{"name": "aoe2mc.replay.game_ends", "text": "Tlahuēlīlōltic tlapōhua"}
+{"name": "aoe2mc.replay.game_time", "text": "Tlahuēlīlōltic tonalli %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · calpōlōliztli %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Tēnēhuaz %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Tlacatl %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Tlapōhualli %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Altepētl %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s quipiya tēocuicatl: tlahuiliztli Tēocuicatl ōn %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s tlahuēlīlōltic %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift ōme tlahuēlīlōltic: tēzcatlahtōlli tlahuiz (tlahuiz tētzōntli). Tlahuēlīlōltic tlāmatilli ītlahtlahuan: tlahuēlīlōltic tlapōhualli."}
+{"name": "aoe2mc.replay.king_died", "text": ": tlahtōhuāni ōmomiquiliz ōn %s. Tlahtōhuāniliztli: tlacatl ōmopolōz."}
+{"name": "aoe2mc.replay.king_killed", "text": "Tlahtōhuāni ōmomiquiliz ōn %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Tlahuēlīlōltic tlapōhualli: tlahuiz quīnhuiya ītlahtzin tlahuēlīlōltic."}
+{"name": "aoe2mc.replay.lost", "text": "Polihui: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " quipiya tēocuicatl ōn %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: tēocuicatl, %s xihuitl quimpiya"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: tēocuicatl, %s xihuitl quimpiya"}
+{"name": "aoe2mc.replay.no_camera", "text": "Inīn tlahuēlīlōltic ahmo nēchiuh cāmara īnīn tlacatl."}
+{"name": "aoe2mc.replay.now", "text": " oc"}
+{"name": "aoe2mc.replay.out", "text": "%s ōmopolōz"}
+{"name": "aoe2mc.replay.players", "text": "Tlacatl"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " quiyāz tēteuhtli ītlāhuīlli ōn monasterio ihuān quiāhuiz."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Tlahuēlīlōltic ōmotlāhuan"}
+{"name": "aoe2mc.replay.research", "text": " tlamatiliztli %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s quimpolōz"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Tlahuēlīlōltic ōmotlāhuan tlahuiz ītlahtzin: xiquimpōhua yancuic tlahuēlīlōltic."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Calli %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Tlapōhualiztli %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Tēnēhualiztli %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tlamatiliztli %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Mochi %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "calli %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "tlanamacac %s, tlatlaliz %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "tēteuhtli %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "tēteuhtli %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Tlapōhua:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Tlachīhua %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Tlapōhualiztli %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Tēnēhuaz %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tlamatiliztli %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": tlacatl tēnēhuaz %s, tlapōhua %s, ahmo tlachīhuāliztli tlacatl tonalli %s, ahmo calli tonalli %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": quipiya tēocuicatl (Tēocuicatl)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": tēocuicatl quiyāz %s (Tēocuicatl)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": tlahuēlīlōltic tēnēhuaz %s, tlaca polihui %s, calli polihui %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": tlahtōhuāni ōmomiquiliz %s (Tlahtōhuāniliztli)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": quiyāz, tēteuhtli ītlāhuīlli monasterio %s (Tēteuhtli tlāhuīlli)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stribute quitēmōz %s, quipiya %s, tlacatl achi tlaxcalli %s (est.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": calli polihui %s (Mictlān tlahuiz)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tlamatiliztli %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": tēteuhtli tonalli ōn %s, ōmopolōz %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Tlapōhualli (est.)"}
+{"name": "aoe2mc.replay.task_building", "text": "tlachīhua"}
+{"name": "aoe2mc.replay.task_following", "text": "tlahuiz"}
+{"name": "aoe2mc.replay.task_food", "text": "tlapōhua tlaxcalli"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "calpōlōlli"}
+{"name": "aoe2mc.replay.task_gold", "text": "tlapōhua cuauhnēntli"}
+{"name": "aoe2mc.replay.task_guarding", "text": "tēnēhuaz"}
+{"name": "aoe2mc.replay.task_idle", "text": "ahmo tlachīhuāliztli"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "tlahuiz tlapōhualli"}
+{"name": "aoe2mc.replay.task_resources", "text": "tlapōhua tlapōhualli"}
+{"name": "aoe2mc.replay.task_stone", "text": "tlapōhua tetl"}
+{"name": "aoe2mc.replay.task_walking", "text": "tlahuiz"}
+{"name": "aoe2mc.replay.task_wood", "text": "tlapōhua quahuitl"}
+{"name": "aoe2mc.replay.team", "text": "Tlaneltoquiliztli %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Tlahuēlīlōltic %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Tlahuēlīlōltic tlapōhualli %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Quihuica %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Tlahuēlīlōltic tlapōhualli tēmatlatzin %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Milpa %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Cuauhnēntli %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Tēmatlatzin %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Ahuatl %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Tēnēhuaz %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Tetl %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Quahuitl %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Calli"}
+{"name": "aoe2mc.replay.tl_king", "text": "Tlahtōhuāni ōmomiquiliz"}
+{"name": "aoe2mc.replay.tl_military", "text": "1 tēnēhuaz: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Tēteuhtli"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Quimpolōz"}
+{"name": "aoe2mc.replay.town_fell", "text": ": altepētl calli ōmopolōz ōn %s. Mictlān tlahuiz: tlacatl ōmopolōz."}
+{"name": "aoe2mc.replay.town_lost", "text": "Altepētl calli polihui ōn %s"}
+{"name": "aoe2mc.replay.training", "text": "Tēnēhualiztli: %s"}
+{"name": "aoe2mc.replay.university", "text": "Tlamatiliztli calli:"}
+{"name": "aoe2mc.replay.up_counts", "text": "tlapōhualiztli %s · Tlamatiliztli calli %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " quitlachīhua tēteuhtli ōn %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Tlahuēlīlōltic: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s tlaca"}
+{"name": "aoe2mc.replay_input.fights", "text": "Tlahuēlīlōltic achi:"}
+{"name": "aoe2mc.replay_input.help", "text": "Tlahuēlīlōltic: tlahuēlīlōltic tlāmatilli ītlahtlahuan, anozo xiquitlapōhua: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Tlapōhua: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s tlaca)"}
+{"name": "aoe2mc.replay_input.vs", "text": " īhuān "}
+{"name": "aoe2mc.resource.food", "text": "tlaxcalli"}
+{"name": "aoe2mc.resource.gold", "text": "cuauhnēntli"}
+{"name": "aoe2mc.resource.stone", "text": "tetl"}
+{"name": "aoe2mc.resource.wood", "text": "quahuitl"}
+{"name": "aoe2mc.run.back", "text": "%s quiyāz"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Tlacuahuitl ōmotlāhuan"}
+{"name": "aoe2mc.run.chat_hint", "text": "Tlahtōlōlli: ce tlahtōlōlli quīnhuiya mochi, /tm TEXT ītlāhuīlli ītlahtlahuan, /msg NAME TEXT ce tlacatl."}
+{"name": "aoe2mc.run.left_bot", "text": "%s quiyāz: ce bot tlahuēlīlōltic tlacatl %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Tlahuēlīlōltic %s ōtlāhuan. Xiquimpōhua ōme."}
+{"name": "aoe2mc.run.starts_in", "text": "Tlahuēlīlōltic ōtlāhuan ōn %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Xiquimpōhua \"Choose your player\" ihuān xiquitlahuēlīlōltic \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Mochi tlahuēlīlōltic: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Tlahuēlīlōltic cē: xiquitlapōhua tlahuēlīlōltic tlatzēntli ihuān tlahuēlīlōltic ōn ce mochi tlacatl."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Tlahuēlīlōltic cē: xiquitlapōhua tlahuēlīlōltic tlatzēntli ihuān tlahuēlīlōltic ōn ce mochi tlacatl."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Tēlpōchiliztli: tlahuiliztli tlahuēlīlōltic. Tlahuiliztli tlapōhualli: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Tlahuēlīlōltic ōmopiya: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s tlaca quiyāz"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Tlahuiz tēcuitlahuiliztli"}
+{"name": "aoe2mc.stance.formation", "text": "Tlaxilliztli: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ahmo tlacatl quimonēlpōlōz tlālli"}
+{"name": "aoe2mc.stance.unpack", "text": "Xiquimpōhua tlatzīntli Trebuchet"}
+{"name": "aoe2mc.train.active", "text": "%s tlahuēlīlōltic."}
+{"name": "aoe2mc.train.rally", "text": "Tlahuēlīlōltic tlālli: tlatlāhuīlli ītlahtzin."}
+{"name": "aoe2mc.train.researched", "text": "%s ōmotlamatiliz."}
+{"name": "aoe2mc.transport.out", "text": "%s tlaca quiyāz"}
+{"name": "aoe2mc.treaty.ended", "text": "Tlatlāhuīlli ōmotlāhuan: tlacatl tlahuiz quīnpolōz tlacatl."}
+{"name": "aoe2mc.treaty.refuse", "text": "Tlatlāhuīlli: ahmo tlahuiz ōn %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Tlatlāhuīlli: ahmo tlahuiz inīn tlahuēlīlōltic."}
+{"name": "aoe2mc.treaty.start", "text": "Tlatlāhuīlli: ahmo tlacatl quipolōz tlacatl ōn %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Tlatlāhuīlli: ahmo tlacatl quipolōz tlacatl inīn tlahuēlīlōltic."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Xiquitlachīhua cuartel: tlahuēlīlōltic tlapōhua tlacatl, tlapōhua cuartel ihuān xiquitēquiti. Tlahuēlīlōltic tlāmatilli ītlahtlahuan tlālli ītlahtzin."}
+{"name": "aoe2mc.tutorial.camera", "text": "Tlahuiz tēpilōlli ītlān tlālli: tlahuēlīlōltic ītlahtlahuan \"Camera\", tlahuiz, ihuān tlahuēlīlōltic ōme."}
+{"name": "aoe2mc.tutorial.camp", "text": "Xiquinpōlō tēmiquiliztli calli tlālli ītlahtzin: tlapōhua tlacatl ihuān tlahuēlīlōltic calli. Tlahuēlīlōltic tlāmatilli ītlahtzin tlahuiz."}
+{"name": "aoe2mc.tutorial.camps", "text": "Xiquitlachīhua quahuitlāhuac ītlān quahuitl ihuān molino ītlān xōchitl. Tlāmatilli tlahuēlīlōltic tlāmach quahuitl."}
+{"name": "aoe2mc.tutorial.complete", "text": "Tlahuēlīlōltic ōmotlāhuan. Yancuic: tlahuēlīlōltic ītlahtlahuan bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tlahuēlīlōltic ōmotlāhuan"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Xiquiāhuiz Feudal Age: tlahuēlīlōltic ītlahtzin altepētl calli ihuān tlapōhua Feudal Age. Tlāmatilli tlāmach tlaxcalli."}
+{"name": "aoe2mc.tutorial.food", "text": "Xiquinmaca 100 tlaxcalli: xiquitēquiti tlacatl xōchitl. Tlāmatilli tlāmach tlaxcalli."}
+{"name": "aoe2mc.tutorial.house", "text": "Xiquitlachīhua calli: tlahuēlīlōltic tlapōhua tlacatl, tlapōhua calli ihuān xiquitēquiti. Tlahuēlīlōltic tlāmatilli ītlahtzin."}
+{"name": "aoe2mc.tutorial.militia", "text": "Xiquitēnēhua 3 Militia: tlahuēlīlōltic ītlahtlahuan cuartel ihuān tlapōhua militia. Tlāmatilli tlāmach tlaxcalli ihuān cuauhnēntli."}
+{"name": "aoe2mc.tutorial.raid", "text": "Tēmiquiliztli quinpōhua tlacatl! Tlahuēlīlōltic tlahtōlōlli tlapōhualli chiquiuhtli ōn, quiāhuiz, ihuān tlapōhua Militia ihuān tlahuēlīlōltic tēmiquiliztli. Tlāmatilli tlahuēlīlōltic tēpōhualli."}
+{"name": "aoe2mc.tutorial.select", "text": "Tlapōhua tlacatl: tlahuēlīlōltic ce tlacatl tlatzēntli ītlān. Tlāmatilli tlahuēlīlōltic tlacatl, tlapōhualli tlāhuīlli."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Tlahuiliztli ōmotlāhuan"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Tlahuiliztli %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIP: cuartel tēnēhua tlacatl tlāmach. Tlacatl chīhuaz ihuān tēpōhualli tēmiquiliztli."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIP: tlahuēlīlōltic mochi tlacatl ōnmomōhua. Ce chīhualli quimiquiliz ahmo quiza tēmiquiliztli."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIP: xiquitlachīhua calli quiāhuiz tlaxilli tlālli, inīc tlacatl tlahuiz achi."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIP: yancuic tlāmach quiyāz calli, tlacatl ihuān tlamatiliztli. Xiquinpōhua tlacatl tlapōhualli tlahuiz."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIP: xōchitl ītlān molino chīhua tlaxcalli tlahuēlīlōltic. Milpa quiyāz tlaxcalli ahmo tlahuiz."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIP: calli quimacēhuiz tlāmach 5 tlacatl. Xiquitlapōhua tlacatl tlapōhualli, ihuān xiquitlachīhua calli ōmpa quipiya."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIP: quiza 15 tlacatl calli ītlān tlaxilli tlāmach."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIP: AoE2 tlahuēlīlōltic altepētl tēcuitlahuiliztli quimonēlpōlōz tlacatl altepētl calli. Xiquitlapōhua tlahuēlīlōltic chiquiuhtli ōn tēmiquiliztli."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIP: tlapōhualli ahmo tlāhuīlli ītlān tlahuēlīlōltic. Xiquimmaca tlahuiliztli."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIP: xiquitēnēhua tlacatl mochi tlacatl tlamatiliztli. Achi tlacatl quiyāz achi tlāmatilli."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIP: tlacatl quiyāz achi quahuitl ōn calli. Xiquitlachīhua quahuitlāhuac quahuitl ītlahtzin."}
+{"name": "aoe2mc.tutorial.villager", "text": "Xiquitēnēhua tlacatl: tlahuēlīlōltic tlatzēntli calli ihuān tlapōhua tlacatl. Tlāmatilli tlāmach tlaxcalli."}
+{"name": "aoe2mc.tutorial.wood", "text": "Xiquinmaca 50 quahuitl: xiquitlapōhua tlacatl ihuān tlahuēlīlōltic quahuitl. Tlāmatilli quahuitl."}
+{"name": "aoe2mc.victory", "text": "Tlahuiliztli"}
+{"name": "aoe2mc.wonder.built", "text": "Tlacatl %s quitlachīhua tēteuhtli."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Tēteuhtli tlacatl %s ōmopolōz."}
