@@ -195,7 +195,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *                                              unit or building of these classes ("-": each) deals this damage over
  *                                              time (Dot.java, #4339)
  *   aoe stop <selector>                        stop the walk and turn the AI off: the unit stands still (#437)
- *   aoe teamcolors <player> <pN=color ...|off>  the team colors of one client only (#5510, RelationColors.java)
+ *   aoe teamcolors <player> <pN=color ...|off|show> the team colors of one client only (#5510, RelationColors.java)
  *   aoe throw <selector> <ticks> <gap> <blocks> <shots>
  *                                              Gothikon (#4368): a melee unit also throws an axe (an arrow with the
  *                                              values of the unit) at its target within blocks; it holds at most shots
