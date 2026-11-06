@@ -1370,8 +1370,21 @@ public final class AoePlugin extends JavaPlugin implements Listener {
         getLogger().info(ev.getPlayer().getName() + " loaded the world");   // mc_shot.Client.wait_loaded: keys go to the game
     }
 
+    /** The commands that stop the server or change who can join (#5925): Paper checks these Bukkit permissions
+     * (default "op"), not the vanilla op-permission-level. */
+    private static final List<String> HOST_ONLY = List.of("ban", "ban-ip", "deop", "kick", "op", "pardon",
+        "pardon-ip", "save-all", "stop", "whitelist");
+
     @EventHandler
     public void onJoin(PlayerJoinEvent ev) {                           // the view of one replay player (#1302)
+        java.net.InetSocketAddress a = ev.getPlayer().getAddress();
+        if (a == null || !a.getAddress().isLoopbackAddress()) {         // a friend of a --host game, not the host (#5925)
+            org.bukkit.permissions.PermissionAttachment pa = ev.getPlayer().addAttachment(this);
+            for (String c : HOST_ONLY) {
+                pa.setPermission("minecraft.command." + c, false);
+            }
+            ev.getPlayer().updateCommands();
+        }
         for (UUID u : hidden.keySet()) {
             Entity e = Bukkit.getEntity(u);
             if (e != null && hiddenFor(ev.getPlayer(), u)) {

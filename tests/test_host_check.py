@@ -23,7 +23,8 @@ def test_line():
 
 def ok_args():
     return (("10.0.0.5", "25601"), 25601, "http://10.0.0.5:25602/resources.zip", ["10.0.0.5"],
-            "Test passed", ["Disconnecting eve (/10.0.0.5:5): You are not white-listed on this server!"], False, [], True)
+            "Test passed", ["Disconnecting eve (/10.0.0.5:5): You are not white-listed on this server!"], False, [],
+            (True, ["Unknown or incomplete command, see below for error"], ["Controls: ..."]), True)
 
 
 def test_result_ok(tmp_path):
@@ -40,7 +41,9 @@ def test_result_ok(tmp_path):
     assert set(data) == set(r) and all(len(v) == 2 for v in data.values())
 
 
-@pytest.mark.parametrize("i,value", [(0, ("localhost", "25601")), (3, ["127.0.0.1"]), (4, ""), (5, []), (6, True)])
+@pytest.mark.parametrize("i,value", [(0, ("localhost", "25601")), (3, ["127.0.0.1"]), (4, ""), (5, []), (6, True),
+                                             (8, (False, ["Unknown or incomplete command"], ["x"])), (8, (True, [], ["x"])),
+                                             (8, (True, ["Unknown or incomplete command"], []))])
 def test_result_fail(i, value):
     args = list(ok_args())
     args[i] = value
