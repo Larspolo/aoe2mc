@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Il-plejer %s jimxi għall-%s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: il-Korruzzjoni tieħu l-mappa mill-fruntiera sad-denb f'%s. Hija teqred l-unitajiet u l-bini kollha fiha."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ma nistax nibni %s hemm issa."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ma nistax nahriġ dik l-unità: m'għandix bini għaliha."}
+{"name": "aoe2mc.bot.flare_two", "text": "Poġġi żewġ sinjali għall-ħajt."}
+{"name": "aoe2mc.bot.no_flare", "text": "Ma nara l-ebda sinjal."}
+{"name": "aoe2mc.bot.no_market", "text": "M'għandix suq: ma nistax nibgħat tribut."}
+{"name": "aoe2mc.bot.no_onager", "text": "M'għandix onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "M'għandix riżorsi biżżejjed għal ħajt."}
+{"name": "aoe2mc.bot.no_water", "text": "M'għandix ilma qrib il-belt tiegħi: ma nistax nibni flotta."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "L-onagers tiegħi ma jistgħux iqattgħu siġar."}
+{"name": "aoe2mc.build.cost", "text": "Riżorsi mhux biżżejjed: %s jiswa %s."}
+{"name": "aoe2mc.build.flat", "text": "Il-%s irid jitqiegħed fuq art ċatta."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s irid jitqiegħed fuq 4 bloċċi ta' ħajt tiegħek f'linja dritta, jew fuq 3 bloċċi dijagonali."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Bini: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s irid jitqiegħed fuq l-ilma ħdejn ix-xatt."}
+{"name": "aoe2mc.build.space", "text": "M'hemm l-ebda spazju għall-%s hawn."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Riżorsi mhux biżżejjed: %s bloċċi ta' %s jiswew %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: ikklikkja bil-lemin fuq it-tmiem tal-ħajt."}
+{"name": "aoe2mc.build.water", "text": "Il-%s irid jitqiegħed fuq l-ilma."}
+{"name": "aoe2mc.camera.fov", "text": "Il-kamera mgħaġġla tagħmel l-oġġett fl-idejn jitħarrek. Biex tibqa' ċerta, issettja Għażliet > Settings tal-Aċċessibbiltà > View Bobbing għal OFF. Il-kamera tagħmel ukoll il-veduta usa', li turi aktar mill-mappa. Biex iżżomm il-veduta normali, issettja Għażliet > Settings tal-Aċċessibbiltà > FOV Effects għal 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: mitfija"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: mixgħula, veloċità x%s. Shift ikklikkja bil-lemin: il-veloċità li jmiss."}
+{"name": "aoe2mc.camera.speed", "text": "Veloċità tal-kamera: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Għelb l-unitajiet nemiċi kollha u itlef ftit unitajiet"}
+{"name": "aoe2mc.challenge.booming", "text": "Ħarreġ 100 raħħal u mur għall-Era Imperjali"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Mur għall-Era tal-Kastell u sopravvivi l-attakki tan-nemiċi"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Qered il-kastell tan-nemiku"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Iġbor 200 ikel, 200 injam, 100 deheb u 200 ġebel, ħarreġ 21 raħħal, ibni kamp tal-injam u mitħna, u mur għall-Era Feudali"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Ħarreġ 27 raħħal, ibni 5 djar u mur għall-Era tal-Kastell"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Għelb is-sitt mewġiet nemiċi kollha"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s unitajiet mitlufa, midalja tal-bronż sa %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s unitajiet mitlufa, midalja tad-deheb sa %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s unitajiet mitlufa, l-ebda midalja"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s unitajiet mitlufa, midalja tal-fidda sa %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Midalja tal-bronż"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Midalja tad-deheb"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Midalja tal-fidda"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Qered il-bastimenti tal-gwerra nemiċi kollha"}
+{"name": "aoe2mc.challenge.no_medal", "text": "L-ebda midalja"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Oqtol 5 raħħala nemiċi"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Midalja tal-bronż f'%s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Midalja tad-deheb f'%s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Midalja tal-fidda f'%s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis mitfi"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis mixgħul"}
+{"name": "aoe2mc.cheat.beyond", "text": "Teknoloġiji: sa 256 riċerki"}
+{"name": "aoe2mc.cheat.cpu", "text": "Limitu tal-popolazzjoni: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Ċpar tal-gwerra: mitfi"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Ċpar tal-gwerra: mixgħul"}
+{"name": "aoe2mc.cheat.free_techs", "text": "It-teknoloġiji huma b'xejn"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Il-qsim huwa l-għoti: id-dħul tiegħek imur għall-alleati tiegħek"}
+{"name": "aoe2mc.cheat.wonders", "text": "Int tikkontrolla n-natura: %s annimali"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Baqgħu biss l-alleati: l-alleanzi jispiċċaw. L-aħħar plejer ħaj jirbaħ."}
+{"name": "aoe2mc.conquest.defeated", "text": "Il-plejer %s ġie megħlub."}
+{"name": "aoe2mc.controls.attack", "text": "Attakk: agħżel unitajiet militari, imbagħad ikklikkja bil-lemin fuq nemiku."}
+{"name": "aoe2mc.controls.build", "text": "Bini: agħżel raħħala, ikklikkja bil-lemin fuqhom għall-menu tal-bini, agħżel bini, imbagħad ikklikkja bil-lemin fuq l-art. Shift + ikklikkja bil-lemin: poġġi aktar. Ikklikkja bil-lemin: ikkanċella."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: ikklikkja bil-lemin bl-għajnejn tal-ispettur Kamera (buttuna 2): timxi bil-mgħaġġel għoli fuq il-mappa. Shift ikklikkja bil-lemin: il-veloċità li jmiss. Ikklikkja bil-lemin mill-ġdid: tiżen 'l isfel."}
+{"name": "aoe2mc.controls.garrison", "text": "Gwarniġjon: agħżel unitajiet, imbagħad ikklikkja bil-lemin fuq il-bini tiegħek stess. Il-menu tiegħu jħallihom joħorġu. Menu taċ-ċentru tal-belt: Ħabbat il-Kampnella tal-Belt."}
+{"name": "aoe2mc.controls.gather", "text": "Ġbir: agħżel raħħala, imbagħad ikklikkja bil-lemin fuq siġra, arbuxxell tal-frawli, minjiera jew għalqa."}
+{"name": "aoe2mc.controls.goto", "text": "Mur għal: ikklikkja bil-lemin bil-kompass Mur għal (buttuna 3): menu taċ-ċentri tal-belt tiegħek, il-gruppi ta' kontroll tiegħek u r-raħħal idle li jmiss."}
+{"name": "aoe2mc.controls.groups", "text": "Gruppi ta' kontroll: agħżel unitajiet, ħu oġġett tal-grupp (buttuni 5 sa 9) u Shift + ikklikkja bil-lemin biex issalva l-għażla. Ikklikkja bil-lemin: agħżel il-grupp."}
+{"name": "aoe2mc.controls.head", "text": "Kontrolli (żomm il-karrotta fuq bastun; il-barra tal-azzjoni turi l-pass li jmiss):"}
+{"name": "aoe2mc.controls.menu", "text": "Menu tal-logħba: ikklikkja bil-lemin bil-ktieb Menu tal-logħba (buttuna 4): djplomazija u tribut, sinjal, salva, waqfa u s-siġra tat-teknoloġiji."}
+{"name": "aoe2mc.controls.move", "text": "Mexxi: b'għażla, ikklikkja bil-lemin fuq l-art."}
+{"name": "aoe2mc.controls.research", "text": "Irriċerka u mur għall-era li jmiss: ikklikkja bil-lemin fuq il-bini tiegħek stess u ikklikkja teknoloġija jew l-era li jmiss fil-menu tiegħu."}
+{"name": "aoe2mc.controls.select", "text": "Agħżel: ikklikkja bix-xellug fuq unità. Żomm il-buttuna tax-xellug u ara madwar l-art: kaxxa tal-għażla. Ikklikkja bil-lemin: agħti ordnijiet."}
+{"name": "aoe2mc.controls.train", "text": "Ħarreġ: ikklikkja bil-lemin fuq il-bini tiegħek stess (ċentru tal-belt, kazerma ...) u ikklikkja unità fil-menu tiegħu."}
+{"name": "aoe2mc.defeat", "text": "Telf"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Alleat"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Il-plejer %s biddel l-atteġġjament tiegħu lejk: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Nemiku"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Newtrali"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Il-plejer %s issettja l-veloċità tal-logħba għal %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Il-plejer %s bagħat %s %s lill-plejer %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Sinjal f'%s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Segwi: ikklikkja fuq unità tiegħek"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Ħares: ikklikkja fuq unità jew bini tiegħek"}
+{"name": "aoe2mc.gaia.joins", "text": "%s jingħaqad magħek."}
+{"name": "aoe2mc.garrison.all_back", "text": "Kulħadd lura għax-xogħol"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Il-kampnella tal-belt tħabbat: %s raħħala jfittxu kenn"}
+{"name": "aoe2mc.garrison.no_villager", "text": "L-ebda raħħal ma huwa magħżul."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "M'għandekx raħħala."}
+{"name": "aoe2mc.garrison.out", "text": "%s unitajiet ħarġu"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s raħħala jfittxu kenn"}
+{"name": "aoe2mc.gather.act_attack", "text": "attakk"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menu tal-bini"}
+{"name": "aoe2mc.gather.act_garrison", "text": "gwarniġjon"}
+{"name": "aoe2mc.gather.act_gather", "text": "ġbir"}
+{"name": "aoe2mc.gather.act_hunt", "text": "kaċċa"}
+{"name": "aoe2mc.gather.act_move", "text": "mexxi"}
+{"name": "aoe2mc.gather.act_select", "text": "agħżel"}
+{"name": "aoe2mc.gather.act_select_type", "text": "agħżel lilhom kollha tat-tip"}
+{"name": "aoe2mc.gather.act_trade", "text": "negozju"}
+{"name": "aoe2mc.gather.act_train", "text": "ħarreġ"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Attakk: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Kaxxa tal-għażla: ikkanċellata"}
+{"name": "aoe2mc.gather.bush", "text": "Arbuxxell tal-frawli"}
+{"name": "aoe2mc.gather.carcass", "text": "Ġisem"}
+{"name": "aoe2mc.gather.corner", "text": "Kaxxa tal-għażla: ikklikkja fuq il-kantuniera l-oħra"}
+{"name": "aoe2mc.gather.enemy", "text": "%s nemiku"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Bini nemiku"}
+{"name": "aoe2mc.gather.farm", "text": "Għalqa"}
+{"name": "aoe2mc.gather.ground", "text": "L-art"}
+{"name": "aoe2mc.gather.group", "text": "Grupp %s: %s unitajiet"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grupp %s: %s unitajiet salvati"}
+{"name": "aoe2mc.gather.mine", "text": "Minjiera ta' %s"}
+{"name": "aoe2mc.gather.paused", "text": "Il-logħba hija fil-waqfa."}
+{"name": "aoe2mc.gather.point", "text": "%s · Ikklikkja bil-lemin: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Żrigħ mill-ġdid fil-kju: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Magħżul: %s unitajiet"}
+{"name": "aoe2mc.gather.tree", "text": "Siġra"}
+{"name": "aoe2mc.hill.holds", "text": "Il-plejer %s iżomm il-monument."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Attakk fuq l-art: ikklikkja bil-lemin fuq l-art"}
+{"name": "aoe2mc.hints.attack_move", "text": "Mixja tal-attakk: ikklikkja bil-lemin fuq l-art"}
+{"name": "aoe2mc.hints.building", "text": "Poġġi l-%s: ikklikkja bil-lemin fuq l-art · Shift + ikklikkja bil-lemin: poġġi aktar · Ikkanċella: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: ikklikkja bix-xellug biex tpoġġi · Shift: poġġi aktar · Ikklikkja bil-lemin: ikkanċella"}
+{"name": "aoe2mc.hints.corner", "text": "Kaxxa tal-għażla: ikklikkja bil-lemin fuq il-kantuniera l-oħra"}
+{"name": "aoe2mc.hints.count_military", "text": "%s unità militari"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s unitajiet militari"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s raħħal"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s raħħala"}
+{"name": "aoe2mc.hints.deselect", "text": "Kaxxa vojta: neħħi l-għażla"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Ikklikkja bix-xellug: neħħi l-għażla"}
+{"name": "aoe2mc.hints.follow", "text": "Segwi: ikklikkja bil-lemin fuq unità tiegħek jew alleata"}
+{"name": "aoe2mc.hints.guard", "text": "Ħares: ikklikkja bil-lemin fuq unità jew bini tiegħek jew alleat"}
+{"name": "aoe2mc.hints.military", "text": "%s · Ikklikkja bil-lemin: attakka nemiku, menu tal-atteġġjament · %s"}
+{"name": "aoe2mc.hints.none", "text": "Ikklikkja bix-xellug: agħżel unità · Żomm il-buttuna tax-xellug: kaxxa tal-għażla"}
+{"name": "aoe2mc.hints.none_wand", "text": "Ikklikkja bil-lemin: agħżel unità · Bakketta: kaxxa tal-għażla"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrol: ikklikkja bil-lemin fuq l-art"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Ikklikkja bil-lemin: iġbor, ibni, menu tal-bini · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s lesti"}
+{"name": "aoe2mc.lobby.you_play", "text": "Int tilgħab bħala %s."}
+{"name": "aoe2mc.monk.converts", "text": "Monk jikkonverti l-%s."}
+{"name": "aoe2mc.monk.dies", "text": "Il-%s imut (Ereżija)."}
+{"name": "aoe2mc.pause.continued", "text": "Il-plejer %s kompla l-logħba."}
+{"name": "aoe2mc.pause.paused", "text": "Il-plejer %s waqqaf il-logħba."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Tim %s (rating medju %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Il-logħba spiċċat. Ikklikkja bil-lemin fuq il-ktieb tar-Riepilogu f'idejk biex tara r-riżultati. Waqqaf il-programm tal-logħba b'Ctrl-C fil-console tiegħu."}
+{"name": "aoe2mc.relic_victory.all", "text": "Il-plejer %s iżomm ir-relikwji kollha."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Il-plejer %s tilef relikwa."}
+{"name": "aoe2mc.repair.no_resources", "text": "Riżorsi mhux biżżejjed biex tirranġa l-%s."}
+{"name": "aoe2mc.replay.army", "text": "Armata: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", l-armata fl-aħħar: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", tilfu: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Ordni tal-bini:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · gwarniġjon %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | iġorr %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "bini %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "ikel %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "deheb %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "idle %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "ġebel %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "injam %s"}
+{"name": "aoe2mc.replay.flare", "text": "Sinjal"}
+{"name": "aoe2mc.replay.game_ends", "text": "Il-logħba tispiċċa"}
+{"name": "aoe2mc.replay.game_time", "text": "Ħin tal-logħba %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · gwarniġjon %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Ris %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Raħ %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s żamm il-monument: rebħa tar-Re tal-Għolja f'%s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s att %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Ikklikkja darbtejn bil-Shift: veduta tal-osservatur (titjir minn ġo l-blokki). Ikklikkja bil-lemin fuq l-oġġetti tal-hotbar: kontroll tar-replay."}
+{"name": "aoe2mc.replay.king_died", "text": ": ir-Re miet f'%s. Regiċidju: il-plejer ħareġ."}
+{"name": "aoe2mc.replay.king_killed", "text": "Ir-Re maqtul f'%s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Replay ħaj: il-qabża tieqaf fid-dewmien wara l-logħba."}
+{"name": "aoe2mc.replay.lost", "text": "Tilef: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " iżomm il-monument f'%s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monument, sena %s x'tibqa'"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monument, %s snin x'jibqgħu"}
+{"name": "aoe2mc.replay.no_camera", "text": "Dan ir-rekord m'għandux kamera tal-plejer tiegħu."}
+{"name": "aoe2mc.replay.now", "text": " issa"}
+{"name": "aoe2mc.replay.out", "text": "%s ħareġ"}
+{"name": "aoe2mc.replay.players", "text": "Plejers"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " jieħu r-relikwa f'monasteru u jirbaħ."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Ir-replay spiċċa"}
+{"name": "aoe2mc.replay.research", "text": " jirriċerka %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s jirrinunzja"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Is-server jerġa' jibda għall-qabża lura: ingħaqad mill-ġdid."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Bini %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekonomija %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Militari %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Teknoloġiji %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Total %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "kastelli %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "xtara %s, bjagħ %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relikwi %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "għeġubijiet %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Infaq:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Bini %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eko %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tek %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": raħħala mħarrġa %s, miġbura %s, ħin idle tar-raħħal %s, ħin idle taċ-ċentru tal-belt %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": iżomm il-monument (Re tal-Għolja)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monument rebaħ %s (Re tal-Għolja)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": unitajiet militari mħarrġa %s, unitajiet mitlufa %s, bini mitluf %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": ri maqtul %s (Regiċidju)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": rebħiet, relikwa f'monasteru %s (Ħu r-Relikwa)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stribut mibgħut %s, merfugħ %s, qofol raħħal %s (stima)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": ċentru tal-belt intilef %s (Mewt Sudden)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, teknoloġiji %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": tajmer tal-għeġubija mill-%s, jispiċċa %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Sommarju (stima)"}
+{"name": "aoe2mc.replay.task_building", "text": "jibni"}
+{"name": "aoe2mc.replay.task_following", "text": "isegwi"}
+{"name": "aoe2mc.replay.task_food", "text": "jiġbor ikel"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "fi gwarniġjon"}
+{"name": "aoe2mc.replay.task_gold", "text": "jiġbor deheb"}
+{"name": "aoe2mc.replay.task_guarding", "text": "iħares"}
+{"name": "aoe2mc.replay.task_idle", "text": "idle"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "jipatrolja"}
+{"name": "aoe2mc.replay.task_resources", "text": "jiġbor riżorsi"}
+{"name": "aoe2mc.replay.task_stone", "text": "jiġbor ġebel"}
+{"name": "aoe2mc.replay.task_walking", "text": "jimxi"}
+{"name": "aoe2mc.replay.task_wood", "text": "jiġbor injam"}
+{"name": "aoe2mc.replay.team", "text": "Tim %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Ramla %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armatura tar-ramla %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Iġġorr %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armatura tal-kavallerija %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Għalqa %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Deheb %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armatura tal-infanterija %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Mazz %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Qrib %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Ġebel %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Injam %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Kastell"}
+{"name": "aoe2mc.replay.tl_king", "text": "Ir-Re maqtul"}
+{"name": "aoe2mc.replay.tl_military", "text": "L-ewwel militari: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relikwa"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Jirrinunzja"}
+{"name": "aoe2mc.replay.town_fell", "text": ": iċ-ċentru tal-belt waqa' f'%s. Mewt Sudden: il-plejer ħareġ."}
+{"name": "aoe2mc.replay.town_lost", "text": "Ċentru tal-belt intilef f'%s"}
+{"name": "aoe2mc.replay.training", "text": "Taħriġ: %s"}
+{"name": "aoe2mc.replay.university", "text": "Università:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekonomija %s · Università %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " bena għeġubija f'%s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Ġlieda: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s unitajiet"}
+{"name": "aoe2mc.replay_input.fights", "text": "Ġlidiet kbar:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: ikklikkja bil-lemin fuq l-oġġetti fil-hotbar tiegħek, jew ikklikkja: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Ħu kontroll: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s unitajiet)"}
+{"name": "aoe2mc.replay_input.vs", "text": " kontra "}
+{"name": "aoe2mc.resource.food", "text": "ikel"}
+{"name": "aoe2mc.resource.gold", "text": "deheb"}
+{"name": "aoe2mc.resource.stone", "text": "ġebel"}
+{"name": "aoe2mc.resource.wood", "text": "injam"}
+{"name": "aoe2mc.run.back", "text": "%s reġa' lura"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampanja lestita"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: linja normali tmur għal kulħadd, /tm TEST għall-alleati tiegħek, /msg ISEM TEST lil persuna waħda."}
+{"name": "aoe2mc.run.left_bot", "text": "%s telaq: bot qed jilgħab bħala l-plejer %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "L-iskenarju %s jibda. Ingħaqad mill-ġdid."}
+{"name": "aoe2mc.run.starts_in", "text": "Il-logħba tibda f'%s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Iftaħ \"Agħżel il-plejer tiegħek\" u ikklikkja \"Lest\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Il-kontrolli kollha: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "L-ewwel pass: żomm il-bastun tal-kmandi u ikklikkja bil-lemin fuq wieħed mir-raħħala tiegħek."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "L-ewwel pass: żomm il-bastun tal-kmandi u ikklikkja bix-xellug fuq wieħed mir-raħħala tiegħek."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Għan: irbaħ il-logħba. Issettjar tar-rebħa: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Il-logħba ġiet salvata: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s unitajiet ħarġu"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Skawt Awtomatiku"}
+{"name": "aoe2mc.stance.formation", "text": "Formazzjoni: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "L-ebda unità ma tista' tattakka l-art"}
+{"name": "aoe2mc.stance.unpack", "text": "Ftaħ it-Trebuchet l-ewwel"}
+{"name": "aoe2mc.train.active", "text": "%s huwa attiv."}
+{"name": "aoe2mc.train.rally", "text": "Ikklikkja bil-lemin fuq l-art għall-punt tal-laqgħa."}
+{"name": "aoe2mc.train.researched", "text": "%s ġie rriċerkat."}
+{"name": "aoe2mc.transport.out", "text": "%s unitajiet ħarġu"}
+{"name": "aoe2mc.treaty.ended", "text": "It-trattat spiċċa: il-plejers jistgħu jattakkaw issa."}
+{"name": "aoe2mc.treaty.refuse", "text": "Trattat: ma tistax tattakka qabel %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Trattat: ma tistax tattakka f'din il-logħba."}
+{"name": "aoe2mc.treaty.start", "text": "Trattat: l-ebda plejer ma jista' jattakka plejer ieħor qabel %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Trattat: l-ebda plejer ma jista' jattakka plejer ieħor f'din il-logħba."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Ibni kazerma: ikklikkja bil-lemin fuq raħħal magħżul, agħżel il-kazerma u poġġiha. Il-barra tal-azzjoni 'l fuq mill-hotbar tgħidlek fejn tpoġġiha."}
+{"name": "aoe2mc.tutorial.camera", "text": "Mxi malajr fuq il-mappa: ikklikkja bil-lemin bl-oġġett \"Kamera\", imxi, imbagħad ikklikkja bil-lemin bih mill-ġdid."}
+{"name": "aoe2mc.tutorial.camp", "text": "Qered il-kamp nemiku f'nofs il-mappa: agħżel il-Militia tiegħek u ikklikkja bil-lemin fuq bini. Il-barra tal-boss 'il fuq turi l-pass."}
+{"name": "aoe2mc.tutorial.camps", "text": "Ibni kamp tal-injam qrib is-siġar u mitħna qrib l-arbuxxelli tal-frawli. Il-barra tal-ġenb fuq il-lemin turi l-injam li jiswew."}
+{"name": "aoe2mc.tutorial.complete", "text": "It-tutorjal lesta. Li jmiss: ilgħab logħba kontra l-bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "It-tutorjal lesta"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Mur għall-Era Feudali: ikklikkja bil-lemin fuq iċ-ċentru tal-belt tiegħek u agħżel l-Era Feudali. Il-barra tal-ġenb fuq il-lemin turi l-ikel tiegħek."}
+{"name": "aoe2mc.tutorial.food", "text": "Iġbor 100 ikel: ibgħat raħħal lejn l-arbuxxelli tal-frawli. Il-barra tal-ġenb fuq il-lemin turi l-ikel tiegħek."}
+{"name": "aoe2mc.tutorial.house", "text": "Ibni dar: ikklikkja bil-lemin fuq raħħal magħżul, agħżel id-dar u poġġiha. Il-barra tal-azzjoni 'l fuq mill-hotbar tgħidlek fejn tpoġġiha."}
+{"name": "aoe2mc.tutorial.militia", "text": "Ħarreġ 3 Militia: ikklikkja bil-lemin fuq il-kazerma tiegħek u agħżel il-militia. Il-barra tal-ġenb fuq il-lemin turi l-ikel u d-deheb tiegħek."}
+{"name": "aoe2mc.tutorial.raid", "text": "In-nemiku qed jattakka r-raħħala tiegħek! Ikklikkja fuq il-linja l-ħamra tal-allarm fil-chat biex tmur hemm, imbagħad agħżel il-Militia tiegħek u ikklikkja bil-lemin fuq in-nemiċi. Il-barra tal-boss 'il fuq turi s-saħħa tal-unità magħżula."}
+{"name": "aoe2mc.tutorial.select", "text": "Agħżel raħħal: ikklikkja bix-xellug fuq wieħed mir-raħħala tiegħek bil-bastun tal-kmandi. Il-barra tal-boss 'il fuq turi l-unità magħżula, u l-barra tal-azzjoni 'l fuq mill-hotbar turi l-azzjoni li jmiss."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Pass lest"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Pass %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIP: il-kazerma tħarreġ infanterija. L-infanterija hija irħisa u tajba kontra l-bini."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIP: attakka bl-unitajiet kollha tiegħek flimkien. Grupp żgħir jmut qabel ma jkun jista' jagħmel ħsara."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIP: ibni l-bini tat-tkaxkir qrib ir-riżorsi, sabiex ir-raħħala jimxu triq qasira."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIP: l-era li jmiss tiftaħ bini, unitajiet u teknoloġiji ġodda. Żomm ir-raħħala fuq ix-xogħol waqt li timxi 'l quddiem."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIP: l-arbuxxelli tal-frawli qrib mitħna huma bidu sigur tal-ikel. Aktar tard, l-għelieqi jagħtu ikel li ma jispiċċax."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIP: dar tagħti post għal 5 abitanti oħra. Ara l-popolazzjoni fil-barra tal-ġenb u ibni djar qabel ma tkun mimlija."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIP: tista' tpoġġi sa 15 unità fil-kju f'bini meta jkollok ir-riżorsi."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIP: fl-AoE2 il-kampnella tal-belt tibgħat ir-raħħala lejn iċ-ċentru tal-belt. Ħabbatha meta n-nemiku jattakka l-belt tiegħek."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIP: il-linja Idle tal-barra tal-ġenb fuq il-lemin tgħodd ir-raħħala tiegħek bla xogħol. Agħtihom xogħol."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIP: ħarreġ raħħala kontinwament fl-ewwel eras. Aktar raħħala jagħtu aktar riżorsi."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIP: ir-raħħala jiġbru aktar malajr qrib bini tat-tkaxkir. Ibni kamp tal-injam ħdejn is-siġar."}
+{"name": "aoe2mc.tutorial.villager", "text": "Ħarreġ raħħal: ikklikkja bil-lemin fuq iċ-ċentru tal-belt tiegħek u agħżel ir-raħħal. Il-barra tal-ġenb fuq il-lemin turi l-ikel li jiswa."}
+{"name": "aoe2mc.tutorial.wood", "text": "Iġbor 50 injam: agħżel raħħal u ikklikkja bil-lemin fuq siġra. Il-barra tal-ġenb fuq il-lemin turi l-injam tiegħek."}
+{"name": "aoe2mc.victory", "text": "Rebħa"}
+{"name": "aoe2mc.wonder.built", "text": "Il-plejer %s bena għeġubija."}
+{"name": "aoe2mc.wonder.destroyed", "text": "L-għeġubija tal-plejer %s ġiet meqruda."}
