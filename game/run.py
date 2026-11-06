@@ -788,9 +788,6 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     if unknown := sorted(set(settings) - set(SETTINGS)):
         raise TypeError(f"play() has no setting {', '.join(unknown)} (SETTINGS)")
     settings = mode_defaults({**SETTINGS, **settings})
-    if not settings["tutorial"]:                     # the world keeps the bar of a stopped tutorial game (#5883)
-        import tutorial
-        game.command(f"bossbar remove {tutorial.BAR}")
 
     players = max(getattr(game, "seats", ()), default=people)   # --seats: fewer players than people (#3489)
 
@@ -841,6 +838,9 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
     g.victory_value = settings["victory_value"]                  # time_limit.tick (#2356)
     g.challenge = settings["challenge"]                          # challenge.tick (#3900)
     g.tutorial = settings["tutorial"]                            # tutorial.tick (#5161)
+    if not settings["tutorial"]:                     # the world keeps the bar of a stopped tutorial game (#5883)
+        import tutorial
+        game.command(f"bossbar remove {tutorial.BAR}")
     g.unlock_speed = settings["unlock_speed"]                    # the Game menu of player 1 (diplomacy.faster, #2933)
     if people > 1 or getattr(game, "seats", ()):     # one Gather for each person, in the join order (#1308, #1310, #5451)
         g.bots = [Side(make(n)) for n in range(2, players + 1) if n in getattr(game, "seats", ()) or not getattr(game, "seats", ())]

@@ -18,14 +18,27 @@ class FakeGame:
     def __init__(self):
         self.sent = []
 
+    def forceload(self):
+        pass
+
     def command(self, cmd):
         self.sent.append(cmd)
         if not cmd.startswith("bossbar remove"):
-            raise Stop                                       # the first game command after the bar: enough
+            raise Stop                                       # the next game command: the bar is done
+
+
+class FakeGather:
+    def __init__(self, game, data, **kw):
+        self.villagers, self.units = {}, []
+
+    def setup(self):
+        pass
 
 
 @pytest.mark.parametrize("on", [False, True])
-def test_play_removes_the_tutorial_bar_only_without_tutorial(on, tmp_path):
+def test_play_removes_the_tutorial_bar_only_without_tutorial(on, tmp_path, monkeypatch):
+    (tmp_path / "aoe2mc.json").write_text("{}")
+    monkeypatch.setattr("gather.Gather", FakeGather)
     game = FakeGame()
     with pytest.raises(Exception):
         run.play(game, str(tmp_path), tutorial=on)
