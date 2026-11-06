@@ -1,0 +1,314 @@
+{"name": "aoe2mc.age_up", "text": "플레이어 %s이(가) %s(으)로 발전합니다."}
+{"name": "aoe2mc.battle_royale.start", "text": "배틀 로얄: 타락이 %s 동안 맵의 가장자리에서 중심으로 퍼집니다. 그 안의 모든 유닛과 건물이 파괴됩니다."}
+{"name": "aoe2mc.bot.cannot_build", "text": "지금 그곳에 %s을(를) 지을 수 없습니다."}
+{"name": "aoe2mc.bot.cannot_train", "text": "그 유닛을 생산할 수 없습니다: 그 건물이 없습니다."}
+{"name": "aoe2mc.bot.flare_two", "text": "성벽을 위해 두 곳에 신호를 보내세요."}
+{"name": "aoe2mc.bot.no_flare", "text": "신호가 보이지 않습니다."}
+{"name": "aoe2mc.bot.no_market", "text": "시장이 없습니다: 공물을 보낼 수 없습니다."}
+{"name": "aoe2mc.bot.no_onager", "text": "오나거가 없습니다."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "성벽을 지을 자원이 부족합니다."}
+{"name": "aoe2mc.bot.no_water", "text": "마을 근처에 물이 없습니다: 해군을 만들 수 없습니다."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "내 오나거는 나무를 벨 수 없습니다."}
+{"name": "aoe2mc.build.cost", "text": "자원이 부족합니다: %s의 비용은 %s입니다."}
+{"name": "aoe2mc.build.flat", "text": "%s은(는) 평지에 지어야 합니다."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s은(는) 자기 성벽의 직선 4타일 또는 대각선 3타일 위에 놓아야 합니다."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "건설: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s은(는) 해안에 붙은 물 위에 지어야 합니다."}
+{"name": "aoe2mc.build.space", "text": "여기에는 %s을(를) 놓을 공간이 없습니다."}
+{"name": "aoe2mc.build.tiles_cost", "text": "자원이 부족합니다: %s타일의 %s 비용은 %s입니다."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: 성벽의 끝을 우클릭하세요."}
+{"name": "aoe2mc.build.water", "text": "%s은(는) 물 위에 지어야 합니다."}
+{"name": "aoe2mc.camera.fov", "text": "빠른 카메라는 손에 든 아이템을 흔들리게 합니다. 고정하려면 옵션 > 접근성 설정 > 화면 흔들림을 끔으로 설정하세요. 카메라는 시야도 넓혀 맵을 더 많이 보여 줍니다. 일반 시야를 유지하려면 옵션 > 접근성 설정 > 시야 효과를 0 %로 설정하세요."}
+{"name": "aoe2mc.camera.off", "text": "카메라: 끔"}
+{"name": "aoe2mc.camera.on", "text": "카메라: 켬, 속도 x%s. Shift 우클릭: 다음 속도."}
+{"name": "aoe2mc.camera.speed", "text": "카메라 속도: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "적 유닛을 모두 물리치고 유닛을 적게 잃기"}
+{"name": "aoe2mc.challenge.booming", "text": "주민 100명을 생산하고 제국 시대로 발전"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "성주 시대로 발전하고 적의 공격에서 살아남기"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "적의 성 파괴"}
+{"name": "aoe2mc.challenge.early-economy", "text": "식량 200, 나무 200, 금 100, 돌 200을 채집하고, 주민 21명을 생산하고, 벌목소와 방앗간을 지은 뒤 봉건 시대로 발전"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "주민 27명을 생산하고, 집 5채를 지은 뒤 성주 시대로 발전"}
+{"name": "aoe2mc.challenge.land-battle", "text": "적의 공격 여섯 차례를 모두 물리치기"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "잃은 유닛 %s, %s까지 동메달"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "잃은 유닛 %s, %s까지 금메달"}
+{"name": "aoe2mc.challenge.lost_none", "text": "잃은 유닛 %s, 메달 없음"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "잃은 유닛 %s, %s까지 은메달"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "동메달"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "금메달"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "은메달"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "적의 군함 모두 파괴"}
+{"name": "aoe2mc.challenge.no_medal", "text": "메달 없음"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "적 주민 5명 처치"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "%s에 동메달"}
+{"name": "aoe2mc.challenge.time_gold", "text": "%s에 금메달"}
+{"name": "aoe2mc.challenge.time_silver", "text": "%s에 은메달"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "이지스 끔"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "이지스 켬"}
+{"name": "aoe2mc.cheat.beyond", "text": "기술: 최대 256개 연구"}
+{"name": "aoe2mc.cheat.cpu", "text": "인구 제한: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "전장의 안개: 끔"}
+{"name": "aoe2mc.cheat.fog_on", "text": "전장의 안개: 켬"}
+{"name": "aoe2mc.cheat.free_techs", "text": "기술이 무료입니다"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "나눔은 배려: 당신의 수입이 동맹에게 갑니다"}
+{"name": "aoe2mc.cheat.wonders", "text": "자연을 다스립니다: 동물 %s"}
+{"name": "aoe2mc.conquest.allies_end", "text": "동맹만 남았습니다: 동맹이 끝납니다. 마지막까지 살아남은 플레이어가 승리합니다."}
+{"name": "aoe2mc.conquest.defeated", "text": "플레이어 %s이(가) 패배했습니다."}
+{"name": "aoe2mc.controls.attack", "text": "공격: 군사 유닛을 선택한 뒤 적을 우클릭."}
+{"name": "aoe2mc.controls.build", "text": "건설: 주민을 선택하고 우클릭해 건설 메뉴를 열고, 건물을 고른 뒤 땅을 좌클릭. Shift + 좌클릭: 계속 배치. 우클릭: 취소."}
+{"name": "aoe2mc.controls.camera", "text": "카메라: 망원경 \"카메라\"(단축바 키 2)로 우클릭하면 맵 위 높은 곳을 빠르게 이동합니다. Shift 우클릭: 다음 속도. 다시 우클릭: 내려옵니다."}
+{"name": "aoe2mc.controls.garrison", "text": "주둔: 유닛을 선택한 뒤 자기 건물을 우클릭. 건물 메뉴에서 내보낼 수 있습니다. 마을 회관 메뉴: 마을 종 울리기."}
+{"name": "aoe2mc.controls.gather", "text": "채집: 주민을 선택한 뒤 나무, 열매 덤불, 광산 또는 농장을 우클릭."}
+{"name": "aoe2mc.controls.goto", "text": "이동하기: 나침반 \"이동하기\"(단축바 키 3)로 우클릭: 마을 회관, 부대, 다음 유휴 주민의 메뉴."}
+{"name": "aoe2mc.controls.groups", "text": "부대: 유닛을 선택하고 부대 아이템(단축바 키 5~9)을 든 뒤 Shift + 우클릭으로 선택을 저장. 우클릭: 부대 선택."}
+{"name": "aoe2mc.controls.head", "text": "조작 (당근 낚싯대를 드세요. 액션 바에 다음 단계가 표시됩니다):"}
+{"name": "aoe2mc.controls.menu", "text": "게임 메뉴: 책 \"게임 메뉴\"(단축바 키 4)로 우클릭: 외교와 공물, 신호, 저장, 일시 정지, 기술 트리."}
+{"name": "aoe2mc.controls.move", "text": "이동: 선택한 상태에서 땅을 우클릭."}
+{"name": "aoe2mc.controls.research", "text": "연구와 시대 발전: 자기 건물을 우클릭하고 메뉴에서 기술 또는 다음 시대를 클릭."}
+{"name": "aoe2mc.controls.select", "text": "선택: 유닛을 좌클릭. 좌클릭을 누른 채 땅을 훑어보면 선택 상자. 우클릭: 명령."}
+{"name": "aoe2mc.controls.train", "text": "생산: 자기 건물(마을 회관, 병영 ...)을 우클릭하고 메뉴에서 유닛을 클릭."}
+{"name": "aoe2mc.defeat", "text": "패배"}
+{"name": "aoe2mc.diplomacy.ally", "text": "동맹"}
+{"name": "aoe2mc.diplomacy.changed", "text": "플레이어 %s이(가) 당신에 대한 태도를 바꿨습니다: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "적"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "중립"}
+{"name": "aoe2mc.diplomacy.speed", "text": "플레이어 %s이(가) 게임 속도를 %s(으)로 설정했습니다."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "플레이어 %s이(가) %s %s을(를) 플레이어 %s에게 보냈습니다."}
+{"name": "aoe2mc.flare.placed", "text": "%s: %s %s에 신호"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "따라가기: 자기 유닛을 클릭"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "호위: 자기 유닛이나 건물을 클릭"}
+{"name": "aoe2mc.gaia.joins", "text": "%s이(가) 합류합니다."}
+{"name": "aoe2mc.garrison.all_back", "text": "모두 일터로"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "마을 종이 울립니다: 주민 %s명이 대피합니다"}
+{"name": "aoe2mc.garrison.no_villager", "text": "선택된 주민이 없습니다."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "주민이 없습니다."}
+{"name": "aoe2mc.garrison.out", "text": "유닛 %s개가 나왔습니다"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "주민 %s명이 대피합니다"}
+{"name": "aoe2mc.gather.act_attack", "text": "공격"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "건설 메뉴"}
+{"name": "aoe2mc.gather.act_garrison", "text": "주둔"}
+{"name": "aoe2mc.gather.act_gather", "text": "채집"}
+{"name": "aoe2mc.gather.act_hunt", "text": "사냥"}
+{"name": "aoe2mc.gather.act_move", "text": "이동"}
+{"name": "aoe2mc.gather.act_select", "text": "선택"}
+{"name": "aoe2mc.gather.act_select_type", "text": "같은 종류 모두 선택"}
+{"name": "aoe2mc.gather.act_trade", "text": "교역"}
+{"name": "aoe2mc.gather.act_train", "text": "생산"}
+{"name": "aoe2mc.gather.attack_siege", "text": "공격: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "선택 상자: 취소됨"}
+{"name": "aoe2mc.gather.bush", "text": "열매 덤불"}
+{"name": "aoe2mc.gather.carcass", "text": "사체"}
+{"name": "aoe2mc.gather.corner", "text": "선택 상자: 다른 모서리를 클릭"}
+{"name": "aoe2mc.gather.enemy", "text": "적 %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "적 건물"}
+{"name": "aoe2mc.gather.farm", "text": "농장"}
+{"name": "aoe2mc.gather.ground", "text": "땅"}
+{"name": "aoe2mc.gather.group", "text": "부대 %s: 유닛 %s개"}
+{"name": "aoe2mc.gather.group_saved", "text": "부대 %s: 유닛 %s개 저장됨"}
+{"name": "aoe2mc.gather.mine", "text": "%s 광산"}
+{"name": "aoe2mc.gather.paused", "text": "게임이 일시 정지되었습니다."}
+{"name": "aoe2mc.gather.point", "text": "%s · 우클릭: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "재파종 예약: %s"}
+{"name": "aoe2mc.gather.selected", "text": "선택됨: 유닛 %s개"}
+{"name": "aoe2mc.gather.tree", "text": "나무"}
+{"name": "aoe2mc.hill.holds", "text": "플레이어 %s이(가) 기념비를 차지하고 있습니다."}
+{"name": "aoe2mc.hints.attack_ground", "text": "지면 공격: 땅을 우클릭"}
+{"name": "aoe2mc.hints.attack_move", "text": "공격 이동: 땅을 우클릭"}
+{"name": "aoe2mc.hints.building", "text": "%s 배치: 땅을 우클릭 · Shift + 우클릭: 계속 배치 · 취소: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: 좌클릭으로 배치 · Shift: 계속 배치 · 우클릭: 취소"}
+{"name": "aoe2mc.hints.corner", "text": "선택 상자: 다른 모서리를 우클릭"}
+{"name": "aoe2mc.hints.count_military", "text": "군사 유닛 %s개"}
+{"name": "aoe2mc.hints.count_military_many", "text": "군사 유닛 %s개"}
+{"name": "aoe2mc.hints.count_villager", "text": "주민 %s명"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "주민 %s명"}
+{"name": "aoe2mc.hints.deselect", "text": "빈 상자: 선택 해제"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "좌클릭: 선택 해제"}
+{"name": "aoe2mc.hints.follow", "text": "따라가기: 자기 또는 동맹 유닛을 우클릭"}
+{"name": "aoe2mc.hints.guard", "text": "호위: 자기 또는 동맹 유닛이나 건물을 우클릭"}
+{"name": "aoe2mc.hints.military", "text": "%s · 우클릭: 적 공격, 태세 메뉴 · %s"}
+{"name": "aoe2mc.hints.none", "text": "좌클릭: 유닛 선택 · 좌클릭 유지: 선택 상자"}
+{"name": "aoe2mc.hints.none_wand", "text": "우클릭: 유닛 선택 · 지팡이: 선택 상자"}
+{"name": "aoe2mc.hints.patrol", "text": "순찰: 땅을 우클릭"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · 우클릭: 채집, 건설, 건설 메뉴 · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s 준비됨"}
+{"name": "aoe2mc.lobby.you_play", "text": "당신은 %s(으)로 플레이합니다."}
+{"name": "aoe2mc.monk.converts", "text": "수도사가 %s을(를) 개종시킵니다."}
+{"name": "aoe2mc.monk.dies", "text": "%s이(가) 죽습니다 (이단)."}
+{"name": "aoe2mc.pause.continued", "text": "플레이어 %s이(가) 게임을 계속했습니다."}
+{"name": "aoe2mc.pause.paused", "text": "플레이어 %s이(가) 게임을 일시 정지했습니다."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "팀 %s (평균 레이팅 %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "게임이 끝났습니다. 손에 든 \"요약\" 책을 우클릭하면 결과를 볼 수 있습니다. 게임 프로그램은 콘솔에서 Ctrl-C로 멈추세요."}
+{"name": "aoe2mc.relic_victory.all", "text": "플레이어 %s이(가) 모든 유물을 가지고 있습니다."}
+{"name": "aoe2mc.relic_victory.lost", "text": "플레이어 %s이(가) 유물을 잃었습니다."}
+{"name": "aoe2mc.repair.no_resources", "text": "%s을(를) 수리할 자원이 부족합니다."}
+{"name": "aoe2mc.replay.army", "text": "군대: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", 종료 시 군대: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", 손실: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "빌드 오더:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · 주둔 %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | %s %s 운반 중"}
+{"name": "aoe2mc.replay.eco_build", "text": "건설 %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "식량 %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "금 %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "유휴 %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "돌 %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "나무 %s"}
+{"name": "aoe2mc.replay.flare", "text": "신호"}
+{"name": "aoe2mc.replay.game_ends", "text": "게임이 끝납니다"}
+{"name": "aoe2mc.replay.game_time", "text": "게임 시간 %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · 주둔 %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "군사 %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "인구 %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "자원 %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "주민 %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s이(가) 기념비를 차지: %s에 언덕의 왕 승리."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s 공격 %s/%s 방어%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift 두 번: 관전 시점 (블록을 통과해 비행). 단축바 아이템 우클릭: 리플레이 조작."}
+{"name": "aoe2mc.replay.king_died", "text": ": %s에 왕이 죽었습니다. 국왕 시해: 이 플레이어는 탈락입니다."}
+{"name": "aoe2mc.replay.king_killed", "text": "%s에 왕 사망"}
+{"name": "aoe2mc.replay.live_jump", "text": "실시간 리플레이: 이동은 게임보다 지연된 지점에서 멈춥니다."}
+{"name": "aoe2mc.replay.lost", "text": "손실: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " 이(가) %s에 기념비를 차지합니다."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: 기념비, %s년 남음"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: 기념비, %s년 남음"}
+{"name": "aoe2mc.replay.no_camera", "text": "이 기록에는 해당 플레이어의 카메라가 없습니다."}
+{"name": "aoe2mc.replay.now", "text": " 지금"}
+{"name": "aoe2mc.replay.out", "text": "%s 탈락"}
+{"name": "aoe2mc.replay.players", "text": "플레이어"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " 이(가) 유물을 수도원으로 옮겨 승리합니다."}
+{"name": "aoe2mc.replay.replay_ended", "text": "리플레이 종료"}
+{"name": "aoe2mc.replay.research", "text": " 이(가) %s을(를) 연구합니다"}
+{"name": "aoe2mc.replay.resigns", "text": "%s 항복"}
+{"name": "aoe2mc.replay.restart_jump", "text": "되돌리기를 위해 서버를 다시 시작합니다: 다시 접속하세요."}
+{"name": "aoe2mc.replay.share_buildings", "text": "건물 %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "경제 %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "군사 %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "기술 %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "합계 %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "성 %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "구매 %s, 판매 %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "유물 %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "불가사의 %s, "}
+{"name": "aoe2mc.replay.spent", "text": "소비:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "건설 %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "경제 %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "군사 %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "기술 %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": 생산한 주민 %s, 채집 %s, 주민 유휴 시간 %s, 마을 회관 유휴 시간 %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": 기념비 차지 (언덕의 왕)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": 기념비 승리 %s (언덕의 왕)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": 생산한 군사 유닛 %s, 잃은 유닛 %s, 잃은 건물 %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": 왕 사망 %s (국왕 시해)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": 승리, 수도원의 유물 %s (유물 쟁탈)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %s보낸 공물 %s, 받은 공물 %s, 최대 주민 %s (추정)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": 마을 회관 상실 %s (서든 데스)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, 기술 %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": 불가사의 타이머 시작 %s, 종료 %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "요약 (추정)"}
+{"name": "aoe2mc.replay.task_building", "text": "건설 중"}
+{"name": "aoe2mc.replay.task_following", "text": "따라가는 중"}
+{"name": "aoe2mc.replay.task_food", "text": "식량 채집 중"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "주둔 중"}
+{"name": "aoe2mc.replay.task_gold", "text": "금 채집 중"}
+{"name": "aoe2mc.replay.task_guarding", "text": "호위 중"}
+{"name": "aoe2mc.replay.task_idle", "text": "유휴"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "순찰 중"}
+{"name": "aoe2mc.replay.task_resources", "text": "자원 채집 중"}
+{"name": "aoe2mc.replay.task_stone", "text": "돌 채집 중"}
+{"name": "aoe2mc.replay.task_walking", "text": "걷는 중"}
+{"name": "aoe2mc.replay.task_wood", "text": "나무 채집 중"}
+{"name": "aoe2mc.replay.team", "text": "팀 %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "궁수 %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "궁수 방어구 %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "운반 %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "기병 방어구 %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "농장 %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "금 %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "보병 방어구 %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "베틀 %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "근접 %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "돌 %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "나무 %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "성"}
+{"name": "aoe2mc.replay.tl_king", "text": "왕 사망"}
+{"name": "aoe2mc.replay.tl_military", "text": "첫 군사: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "유물"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "항복"}
+{"name": "aoe2mc.replay.town_fell", "text": ": %s에 마을 회관이 함락되었습니다. 서든 데스: 이 플레이어는 탈락입니다."}
+{"name": "aoe2mc.replay.town_lost", "text": "%s에 마을 회관 상실"}
+{"name": "aoe2mc.replay.training", "text": "생산: %s"}
+{"name": "aoe2mc.replay.university", "text": "대학:"}
+{"name": "aoe2mc.replay.up_counts", "text": "경제 %s · 대학 %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " 이(가) %s에 불가사의를 지었습니다."}
+{"name": "aoe2mc.replay_input.fight", "text": "전투: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", 유닛 %s개"}
+{"name": "aoe2mc.replay_input.fights", "text": "대규모 전투:"}
+{"name": "aoe2mc.replay_input.help", "text": "리플레이: 단축바의 아이템을 우클릭하거나 클릭: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "인수: "}
+{"name": "aoe2mc.replay_input.units", "text": " (유닛 %s개)"}
+{"name": "aoe2mc.replay_input.vs", "text": " 대 "}
+{"name": "aoe2mc.resource.food", "text": "식량"}
+{"name": "aoe2mc.resource.gold", "text": "금"}
+{"name": "aoe2mc.resource.stone", "text": "돌"}
+{"name": "aoe2mc.resource.wood", "text": "나무"}
+{"name": "aoe2mc.run.campaign_complete", "text": "캠페인 완료"}
+{"name": "aoe2mc.run.chat_hint", "text": "채팅: 일반 줄은 모두에게, /tm TEXT 는 동맹에게, /msg NAME TEXT 는 한 사람에게 갑니다."}
+{"name": "aoe2mc.run.scenario_starts", "text": "시나리오 %s이(가) 시작됩니다. 다시 접속하세요."}
+{"name": "aoe2mc.run.starts_in", "text": "%s 후 게임이 시작됩니다"}
+{"name": "aoe2mc.run.wait_ready", "text": "\"플레이어 선택\"을 열고 \"준비\"를 클릭하세요"}
+{"name": "aoe2mc.run.welcome_controls", "text": "모든 조작: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "첫 단계: 지휘봉을 들고 주민 한 명을 우클릭하세요."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "첫 단계: 지휘봉을 들고 주민 한 명을 좌클릭하세요."}
+{"name": "aoe2mc.run.welcome_goal", "text": "목표: 게임에서 승리하세요. 승리 설정: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "게임을 저장했습니다: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "유닛 %s개가 나왔습니다"}
+{"name": "aoe2mc.stance.auto_scout", "text": "자동 정찰"}
+{"name": "aoe2mc.stance.formation", "text": "대형: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "지면을 공격할 수 있는 유닛이 없습니다"}
+{"name": "aoe2mc.stance.unpack", "text": "먼저 트레뷰셋을 해체하세요"}
+{"name": "aoe2mc.train.active", "text": "%s이(가) 활성화되었습니다."}
+{"name": "aoe2mc.train.rally", "text": "땅을 우클릭해 집결 지점을 정하세요."}
+{"name": "aoe2mc.train.researched", "text": "%s 연구가 완료되었습니다."}
+{"name": "aoe2mc.transport.out", "text": "유닛 %s개가 나왔습니다"}
+{"name": "aoe2mc.treaty.ended", "text": "휴전이 끝났습니다: 이제 공격할 수 있습니다."}
+{"name": "aoe2mc.treaty.refuse", "text": "휴전: %s 전에는 공격할 수 없습니다."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "휴전: 이 게임에서는 공격할 수 없습니다."}
+{"name": "aoe2mc.treaty.start", "text": "휴전: %s 전에는 어떤 플레이어도 다른 플레이어를 공격할 수 없습니다."}
+{"name": "aoe2mc.treaty.start_endless", "text": "휴전: 이 게임에서는 어떤 플레이어도 다른 플레이어를 공격할 수 없습니다."}
+{"name": "aoe2mc.tutorial.barracks", "text": "병영 짓기: 선택한 주민을 우클릭하고 병영을 골라 배치합니다. 단축바 위 액션 바가 배치할 곳을 알려 줍니다."}
+{"name": "aoe2mc.tutorial.camera", "text": "맵을 빠르게 이동: \"카메라\" 아이템으로 우클릭하고 걸은 뒤, 다시 우클릭합니다."}
+{"name": "aoe2mc.tutorial.camp", "text": "맵 중앙의 적 진영 파괴: 민병을 선택하고 건물을 우클릭하세요. 위쪽 보스 바에 단계가 표시됩니다."}
+{"name": "aoe2mc.tutorial.camps", "text": "나무 근처에 벌목소를, 열매 근처에 방앗간을 지으세요. 오른쪽 사이드바에 필요한 나무가 표시됩니다."}
+{"name": "aoe2mc.tutorial.complete", "text": "튜토리얼 완료. 다음: 봇과 게임하기: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "튜토리얼 완료"}
+{"name": "aoe2mc.tutorial.feudal", "text": "봉건 시대로 발전: 마을 회관을 우클릭하고 봉건 시대를 고릅니다. 오른쪽 사이드바에 식량이 표시됩니다."}
+{"name": "aoe2mc.tutorial.food", "text": "식량 100 채집: 주민을 열매로 보내세요. 오른쪽 사이드바에 식량이 표시됩니다."}
+{"name": "aoe2mc.tutorial.house", "text": "집 짓기: 선택한 주민을 우클릭하고 집을 골라 배치합니다. 단축바 위 액션 바가 배치할 곳을 알려 줍니다."}
+{"name": "aoe2mc.tutorial.militia", "text": "민병 3명 생산: 병영을 우클릭하고 민병을 고릅니다. 오른쪽 사이드바에 식량과 금이 표시됩니다."}
+{"name": "aoe2mc.tutorial.raid", "text": "적이 주민을 공격합니다! 채팅의 빨간 경고 줄을 클릭해 그곳으로 간 뒤, 민병을 선택하고 적을 우클릭하세요. 위쪽 보스 바에 선택한 유닛의 체력이 표시됩니다."}
+{"name": "aoe2mc.tutorial.select", "text": "주민 선택: 지휘봉으로 자기 주민 한 명을 우클릭합니다. 위쪽 보스 바에 선택한 유닛이, 단축바 위 액션 바에 다음 행동이 표시됩니다."}
+{"name": "aoe2mc.tutorial.step_done", "text": "단계 완료"}
+{"name": "aoe2mc.tutorial.step_of", "text": "단계 %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "팁: 병영은 보병을 생산합니다. 보병은 싸고 건물에 강합니다."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "팁: 모든 유닛으로 함께 공격하세요. 작은 무리는 피해를 주기 전에 죽습니다."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "팁: 보관 건물을 자원 근처에 지어 주민이 짧게 걷게 하세요."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "팁: 다음 시대는 새 건물, 유닛, 기술을 엽니다. 발전하는 동안 주민을 계속 일하게 하세요."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "팁: 방앗간 근처의 열매는 안전한 식량의 시작입니다. 나중에는 농장이 끝없는 식량을 줍니다."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "팁: 집 한 채는 인구를 5 늘립니다. 사이드바의 인구를 보고 가득 차기 전에 집을 지으세요."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "팁: 자원이 있으면 한 건물에 유닛을 15개까지 예약할 수 있습니다."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "팁: AoE2에서 마을 종은 주민을 마을 회관으로 보냅니다. 적이 마을을 습격하면 울리세요."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "팁: 오른쪽 사이드바의 유휴 줄은 일이 없는 주민 수입니다. 일을 주세요."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "팁: 초반 시대에는 계속 주민을 생산하세요. 주민이 많을수록 자원이 많아집니다."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "팁: 주민은 자원 보관 건물 근처에서 더 빨리 채집합니다. 나무 옆에 벌목소를 지으세요."}
+{"name": "aoe2mc.tutorial.villager", "text": "주민 생산: 마을 회관을 우클릭하고 주민을 고릅니다. 오른쪽 사이드바에 필요한 식량이 표시됩니다."}
+{"name": "aoe2mc.tutorial.wood", "text": "나무 50 채집: 주민을 선택하고 나무를 우클릭합니다. 오른쪽 사이드바에 나무가 표시됩니다."}
+{"name": "aoe2mc.victory", "text": "승리"}
+{"name": "aoe2mc.wonder.built", "text": "플레이어 %s이(가) 불가사의를 지었습니다."}
+{"name": "aoe2mc.wonder.destroyed", "text": "플레이어 %s의 불가사의가 파괴되었습니다."}

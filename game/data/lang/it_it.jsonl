@@ -1,0 +1,314 @@
+{"name": "aoe2mc.age_up", "text": "Il giocatore %s avanza all'%s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: la Corruzione prende la mappa dal bordo al centro in %s. Distrugge tutte le unità e gli edifici che raggiunge."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ora non posso costruire un %s lì."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Non posso addestrare quell'unità: non ho un edificio per essa."}
+{"name": "aoe2mc.bot.flare_two", "text": "Segnala due punti per il muro."}
+{"name": "aoe2mc.bot.no_flare", "text": "Non vedo nessun segnale."}
+{"name": "aoe2mc.bot.no_market", "text": "Non ho un mercato: non posso inviare tributi."}
+{"name": "aoe2mc.bot.no_onager", "text": "Non ho nessun onagro."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Non ho risorse sufficienti per un muro."}
+{"name": "aoe2mc.bot.no_water", "text": "Non c'è acqua vicino alla mia città: non posso costruire una flotta."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "I miei onagri non possono abbattere alberi."}
+{"name": "aoe2mc.build.cost", "text": "Risorse insufficienti: un %s costa %s."}
+{"name": "aoe2mc.build.flat", "text": "Il %s deve stare su terreno piano."}
+{"name": "aoe2mc.build.gate_spot", "text": "Un %s deve stare su 4 caselle di un proprio muro in linea retta, o su 3 caselle diagonali."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Costruisci: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Un %s deve stare in acqua vicino alla riva."}
+{"name": "aoe2mc.build.space", "text": "Non c'è spazio per il %s qui."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Risorse insufficienti: %s caselle di %s costano %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: clic destro sull'estremità del muro."}
+{"name": "aoe2mc.build.water", "text": "Un %s deve stare sull'acqua."}
+{"name": "aoe2mc.camera.fov", "text": "La telecamera veloce fa oscillare l'oggetto in mano. Per tenerlo fermo, imposta Opzioni > Accessibilità > Ondeggiamento visuale su NO. La telecamera allarga anche la vista, che mostra più mappa. Per tenere la vista normale, imposta Opzioni > Accessibilità > Effetti campo visivo su 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Telecamera: disattivata"}
+{"name": "aoe2mc.camera.on", "text": "Telecamera: attivata, velocità x%s. Maiusc + clic destro: velocità successiva."}
+{"name": "aoe2mc.camera.speed", "text": "Velocità telecamera: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Sconfiggi tutte le unità nemiche e perdi poche unità"}
+{"name": "aoe2mc.challenge.booming", "text": "Addestra 100 paesani e avanza all'Età imperiale"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Avanza all'Età dei castelli e sopravvivi agli attacchi nemici"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Distruggi il castello nemico"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Raccogli 200 cibo, 200 legno, 100 oro e 200 pietra, addestra 21 paesani, costruisci un campo di taglialegna e un mulino, e avanza all'Età feudale"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Addestra 27 paesani, costruisci 5 case e avanza all'Età dei castelli"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Sconfiggi tutte e sei le ondate nemiche"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s unità perse, medaglia di bronzo fino a %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s unità perse, medaglia d'oro fino a %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s unità perse, nessuna medaglia"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s unità perse, medaglia d'argento fino a %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Medaglia di bronzo"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Medaglia d'oro"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Medaglia d'argento"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Distruggi tutte le navi da guerra nemiche"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Nessuna medaglia"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Uccidi 5 paesani nemici"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Medaglia di bronzo in %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Medaglia d'oro in %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Medaglia d'argento in %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Egida disattivata"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Egida attivata"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tecnologie: fino a 256 ricerche"}
+{"name": "aoe2mc.cheat.cpu", "text": "Limite di popolazione: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Nebbia di guerra: disattivata"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Nebbia di guerra: attivata"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Le tecnologie sono gratis"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Condividere è bello: le tue entrate vanno ai tuoi alleati"}
+{"name": "aoe2mc.cheat.wonders", "text": "Controlli la natura: %s animali"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Restano solo alleati: le alleanze finiscono. Vince l'ultimo giocatore in vita."}
+{"name": "aoe2mc.conquest.defeated", "text": "Il giocatore %s è sconfitto."}
+{"name": "aoe2mc.controls.attack", "text": "Attacca: seleziona unità militari, poi clic destro su un nemico."}
+{"name": "aoe2mc.controls.build", "text": "Costruisci: seleziona i paesani, clic destro su di loro per il menu di costruzione, scegli un edificio, poi clic sinistro sul terreno. Maiusc + clic sinistro: piazzane altri. Clic destro: annulla."}
+{"name": "aoe2mc.controls.camera", "text": "Telecamera: clic destro con il cannocchiale Telecamera (tasto 2): voli veloce sopra la mappa. Maiusc + clic destro: velocità successiva. Di nuovo clic destro: scendi."}
+{"name": "aoe2mc.controls.garrison", "text": "Presidia: seleziona le unità, poi clic destro su un tuo edificio. Il suo menu le fa uscire. Menu del centro città: Suona la campana."}
+{"name": "aoe2mc.controls.gather", "text": "Raccogli: seleziona i paesani, poi clic destro su un albero, un cespuglio di bacche, una miniera o una fattoria."}
+{"name": "aoe2mc.controls.goto", "text": "Vai a: clic destro con la bussola Vai a (tasto 3): un menu dei tuoi centri città, dei tuoi gruppi e del prossimo paesano inattivo."}
+{"name": "aoe2mc.controls.groups", "text": "Gruppi: seleziona le unità, prendi un oggetto gruppo (tasti da 5 a 9) e Maiusc + clic destro per salvare la selezione. Clic destro: seleziona il gruppo."}
+{"name": "aoe2mc.controls.head", "text": "Comandi (tieni la canna con carota; la barra delle azioni mostra il prossimo passo):"}
+{"name": "aoe2mc.controls.menu", "text": "Menu di gioco: clic destro con il libro Menu di gioco (tasto 4): diplomazia e tributi, segnale, salva, pausa e albero tecnologico."}
+{"name": "aoe2mc.controls.move", "text": "Muovi: con una selezione, clic destro sul terreno."}
+{"name": "aoe2mc.controls.research", "text": "Ricerca e avanzamento d'età: clic destro su un tuo edificio e clicca una tecnologia o l'età successiva nel suo menu."}
+{"name": "aoe2mc.controls.select", "text": "Seleziona: clic sinistro su un'unità. Tieni premuto il clic sinistro e guarda sul terreno: un riquadro di selezione. Clic destro: dai ordini."}
+{"name": "aoe2mc.controls.train", "text": "Addestra: clic destro su un tuo edificio (centro città, caserma...) e clicca un'unità nel suo menu."}
+{"name": "aoe2mc.defeat", "text": "Sconfitta"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Alleato"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Il giocatore %s ha cambiato il suo atteggiamento verso di te: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Nemico"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutrale"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Il giocatore %s ha impostato la velocità di gioco a %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Il giocatore %s ha inviato %s di %s al giocatore %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Segnale a %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Segui: clicca un'unità propria"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Proteggi: clicca un'unità o un edificio proprio"}
+{"name": "aoe2mc.gaia.joins", "text": "Un %s si unisce a te."}
+{"name": "aoe2mc.garrison.all_back", "text": "Tutti al lavoro"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Suona la campana: %s paesani cercano riparo"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Nessun paesano selezionato."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Non hai paesani."}
+{"name": "aoe2mc.garrison.out", "text": "Sono uscite %s unità"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s paesani cercano riparo"}
+{"name": "aoe2mc.gather.act_attack", "text": "attacca"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menu di costruzione"}
+{"name": "aoe2mc.gather.act_garrison", "text": "presidia"}
+{"name": "aoe2mc.gather.act_gather", "text": "raccogli"}
+{"name": "aoe2mc.gather.act_hunt", "text": "caccia"}
+{"name": "aoe2mc.gather.act_move", "text": "muovi"}
+{"name": "aoe2mc.gather.act_select", "text": "seleziona"}
+{"name": "aoe2mc.gather.act_select_type", "text": "seleziona tutti del tipo"}
+{"name": "aoe2mc.gather.act_trade", "text": "commercia"}
+{"name": "aoe2mc.gather.act_train", "text": "addestra"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Attacco: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Riquadro di selezione: annullato"}
+{"name": "aoe2mc.gather.bush", "text": "Cespuglio di bacche"}
+{"name": "aoe2mc.gather.carcass", "text": "Carcassa"}
+{"name": "aoe2mc.gather.corner", "text": "Riquadro di selezione: clicca l'altro angolo"}
+{"name": "aoe2mc.gather.enemy", "text": "%s nemico"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Edificio nemico"}
+{"name": "aoe2mc.gather.farm", "text": "Fattoria"}
+{"name": "aoe2mc.gather.ground", "text": "Terreno"}
+{"name": "aoe2mc.gather.group", "text": "Gruppo %s: %s unità"}
+{"name": "aoe2mc.gather.group_saved", "text": "Gruppo %s: %s unità salvate"}
+{"name": "aoe2mc.gather.mine", "text": "Miniera di %s"}
+{"name": "aoe2mc.gather.paused", "text": "Il gioco è in pausa."}
+{"name": "aoe2mc.gather.point", "text": "%s · Clic destro: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Risemine in coda: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Selezionate: %s unità"}
+{"name": "aoe2mc.gather.tree", "text": "Albero"}
+{"name": "aoe2mc.hill.holds", "text": "Il giocatore %s controlla il monumento."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Attacca terreno: clic destro sul terreno"}
+{"name": "aoe2mc.hints.attack_move", "text": "Attacco in movimento: clic destro sul terreno"}
+{"name": "aoe2mc.hints.building", "text": "Piazza il %s: clic destro sul terreno · Maiusc + clic destro: piazzane altri · Annulla: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: clic sinistro per piazzare · Maiusc: piazzane altri · Clic destro: annulla"}
+{"name": "aoe2mc.hints.corner", "text": "Riquadro di selezione: clic destro sull'altro angolo"}
+{"name": "aoe2mc.hints.count_military", "text": "%s unità militare"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s unità militari"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s paesano"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s paesani"}
+{"name": "aoe2mc.hints.deselect", "text": "Riquadro vuoto: deseleziona"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Clic sinistro: deseleziona"}
+{"name": "aoe2mc.hints.follow", "text": "Segui: clic destro su un'unità propria o alleata"}
+{"name": "aoe2mc.hints.guard", "text": "Proteggi: clic destro su un'unità o un edificio proprio o alleato"}
+{"name": "aoe2mc.hints.military", "text": "%s · Clic destro: attacca un nemico, menu di assetto · %s"}
+{"name": "aoe2mc.hints.none", "text": "Clic sinistro: seleziona un'unità · Tieni il clic sinistro: riquadro di selezione"}
+{"name": "aoe2mc.hints.none_wand", "text": "Clic destro: seleziona un'unità · Bacchetta: riquadro di selezione"}
+{"name": "aoe2mc.hints.patrol", "text": "Pattuglia: clic destro sul terreno"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Clic destro: raccogli, costruisci, menu di costruzione · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s pronti"}
+{"name": "aoe2mc.lobby.you_play", "text": "Giochi con %s."}
+{"name": "aoe2mc.monk.converts", "text": "Un monaco converte il %s."}
+{"name": "aoe2mc.monk.dies", "text": "Il %s muore (Eresia)."}
+{"name": "aoe2mc.pause.continued", "text": "Il giocatore %s ha ripreso il gioco."}
+{"name": "aoe2mc.pause.paused", "text": "Il giocatore %s ha messo in pausa il gioco."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Squadra %s (punteggio medio %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "La partita è finita. Clic destro con il libro Riepilogo in mano per vedere i risultati. Ferma il programma di gioco con Ctrl-C nella sua console."}
+{"name": "aoe2mc.relic_victory.all", "text": "Il giocatore %s possiede tutte le reliquie."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Il giocatore %s ha perso una reliquia."}
+{"name": "aoe2mc.repair.no_resources", "text": "Risorse insufficienti per riparare il %s."}
+{"name": "aoe2mc.replay.army", "text": "Esercito: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", esercito alla fine: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", perso: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Ordine di costruzione:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · presidio %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | trasporta %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "costruzione %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "cibo %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "oro %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "inattivo %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "pietra %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "legno %s"}
+{"name": "aoe2mc.replay.flare", "text": "Segnale"}
+{"name": "aoe2mc.replay.game_ends", "text": "Il gioco finisce"}
+{"name": "aoe2mc.replay.game_time", "text": "Tempo di gioco %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · presidio %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Ris %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Pae %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s ha controllato il monumento: vittoria Re della Collina a %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s att %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Doppio tocco di Maiusc: vista spettatore (voli attraverso i blocchi). Clic destro sugli oggetti della barra: controllo del replay."}
+{"name": "aoe2mc.replay.king_died", "text": ": il Re è morto a %s. Regicidio: il giocatore è fuori."}
+{"name": "aoe2mc.replay.king_killed", "text": "Re ucciso a %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Replay dal vivo: il salto si ferma al ritardo dietro il gioco."}
+{"name": "aoe2mc.replay.lost", "text": "Perso: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " controlla il monumento a %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monumento, manca %s anno"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monumento, mancano %s anni"}
+{"name": "aoe2mc.replay.no_camera", "text": "Questa registrazione non ha la telecamera del suo giocatore."}
+{"name": "aoe2mc.replay.now", "text": " ora"}
+{"name": "aoe2mc.replay.out", "text": "%s è fuori"}
+{"name": "aoe2mc.replay.players", "text": "Giocatori"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " porta la reliquia in un monastero e vince."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Replay terminato"}
+{"name": "aoe2mc.replay.research", "text": " ricerca %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s si arrende"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Il server si riavvia per il salto indietro: rientra."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Edifici %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Economia %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Militare %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tecnologie %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Totale %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "castelli %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "comprato %s, venduto %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "reliquie %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "meraviglie %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Speso:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Costruzioni %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eco %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tec %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": paesani addestrati %s, raccolto %s, tempo paesani inattivi %s, tempo CC inattivo %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": controlla il monumento (Re della Collina)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monumento vinto %s (Re della Collina)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": unità militari addestrate %s, unità perse %s, edifici persi %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Re ucciso %s (Regicidio)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": vince, reliquia in un monastero %s (Cattura la reliquia)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stributi inviati %s, ricevuti %s, picco paesani %s (stima)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": centro città perso %s (Morte improvvisa)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tecnologie %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": timer della meraviglia da %s, finisce %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Riepilogo (stima)"}
+{"name": "aoe2mc.replay.task_building", "text": "costruisce"}
+{"name": "aoe2mc.replay.task_following", "text": "segue"}
+{"name": "aoe2mc.replay.task_food", "text": "raccoglie cibo"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "presidia"}
+{"name": "aoe2mc.replay.task_gold", "text": "raccoglie oro"}
+{"name": "aoe2mc.replay.task_guarding", "text": "protegge"}
+{"name": "aoe2mc.replay.task_idle", "text": "inattivo"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "pattuglia"}
+{"name": "aoe2mc.replay.task_resources", "text": "raccoglie risorse"}
+{"name": "aoe2mc.replay.task_stone", "text": "raccoglie pietra"}
+{"name": "aoe2mc.replay.task_walking", "text": "cammina"}
+{"name": "aoe2mc.replay.task_wood", "text": "raccoglie legno"}
+{"name": "aoe2mc.replay.team", "text": "Squadra %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Arciere %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armatura arcieri %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Carico %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armatura cavalleria %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Fattoria %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Oro %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armatura fanteria %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Telaio %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Mischia %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Pietra %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Legno %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castello"}
+{"name": "aoe2mc.replay.tl_king", "text": "Re ucciso"}
+{"name": "aoe2mc.replay.tl_military", "text": "1ª unità militare: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Reliquia"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Si arrende"}
+{"name": "aoe2mc.replay.town_fell", "text": ": il centro città è caduto a %s. Morte improvvisa: il giocatore è fuori."}
+{"name": "aoe2mc.replay.town_lost", "text": "Centro città perso a %s"}
+{"name": "aoe2mc.replay.training", "text": "In addestramento: %s"}
+{"name": "aoe2mc.replay.university", "text": "Università:"}
+{"name": "aoe2mc.replay.up_counts", "text": "economia %s · Università %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " ha costruito una meraviglia a %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Battaglia: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s unità"}
+{"name": "aoe2mc.replay_input.fights", "text": "Grandi battaglie:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: clic destro sugli oggetti della barra, o clicca: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Prendi il controllo: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s unità)"}
+{"name": "aoe2mc.replay_input.vs", "text": " vs "}
+{"name": "aoe2mc.resource.food", "text": "cibo"}
+{"name": "aoe2mc.resource.gold", "text": "oro"}
+{"name": "aoe2mc.resource.stone", "text": "pietra"}
+{"name": "aoe2mc.resource.wood", "text": "legno"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Campagna completata"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: una riga normale va a tutti, /tm TESTO ai tuoi alleati, /msg NOME TESTO a una persona."}
+{"name": "aoe2mc.run.scenario_starts", "text": "Inizia lo scenario %s. Rientra."}
+{"name": "aoe2mc.run.starts_in", "text": "La partita inizia tra %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Apri \"Scegli il tuo giocatore\" e clicca \"Pronto\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Tutti i comandi: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Primo passo: tieni il bastone di comando e clic destro su uno dei tuoi paesani."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Primo passo: tieni il bastone di comando e clic sinistro su uno dei tuoi paesani."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Obiettivo: vinci la partita. Condizione di vittoria: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Partita salvata: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "Sono uscite %s unità"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Esplorazione automatica"}
+{"name": "aoe2mc.stance.formation", "text": "Formazione: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Nessuna unità può attaccare il terreno"}
+{"name": "aoe2mc.stance.unpack", "text": "Prima schiera il trabucco"}
+{"name": "aoe2mc.train.active", "text": "%s è attivo."}
+{"name": "aoe2mc.train.rally", "text": "Clic destro sul terreno per il punto di raccolta."}
+{"name": "aoe2mc.train.researched", "text": "%s è ricercato."}
+{"name": "aoe2mc.transport.out", "text": "Sono uscite %s unità"}
+{"name": "aoe2mc.treaty.ended", "text": "Il trattato è finito: ora i giocatori possono attaccare."}
+{"name": "aoe2mc.treaty.refuse", "text": "Trattato: non puoi attaccare prima di %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Trattato: non puoi attaccare in questa partita."}
+{"name": "aoe2mc.treaty.start", "text": "Trattato: nessun giocatore può attaccare un altro prima di %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Trattato: nessun giocatore può attaccare un altro in questa partita."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Costruisci una caserma: clic destro su un paesano selezionato, scegli la caserma e piazzala. La barra delle azioni sopra la hotbar ti dice dove piazzarla."}
+{"name": "aoe2mc.tutorial.camera", "text": "Muoviti veloce sulla mappa: clic destro con l'oggetto \"Camera\", cammina, poi di nuovo clic destro con esso."}
+{"name": "aoe2mc.tutorial.camp", "text": "Distruggi il campo nemico al centro della mappa: seleziona i tuoi miliziani e clic destro su un edificio. La barra del boss in alto mostra il passo."}
+{"name": "aoe2mc.tutorial.camps", "text": "Costruisci un campo di taglialegna vicino agli alberi e un mulino vicino alle bacche. La barra laterale a destra mostra il legno che costano."}
+{"name": "aoe2mc.tutorial.complete", "text": "Il tutorial è completo. Prossimo passo: gioca una partita contro il bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutorial completato"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Avanza all'Età feudale: clic destro sul tuo centro città e scegli l'Età feudale. La barra laterale a destra mostra il tuo cibo."}
+{"name": "aoe2mc.tutorial.food", "text": "Raccogli 100 cibo: manda un paesano alle bacche. La barra laterale a destra mostra il tuo cibo."}
+{"name": "aoe2mc.tutorial.house", "text": "Costruisci una casa: clic destro su un paesano selezionato, scegli la casa e piazzala. La barra delle azioni sopra la hotbar ti dice dove piazzarla."}
+{"name": "aoe2mc.tutorial.militia", "text": "Addestra 3 miliziani: clic destro sulla tua caserma e scegli la milizia. La barra laterale a destra mostra il tuo cibo e oro."}
+{"name": "aoe2mc.tutorial.raid", "text": "Il nemico attacca i tuoi paesani! Clicca la riga rossa di allarme nella chat per andarci, poi seleziona i tuoi miliziani e clic destro sui nemici. La barra del boss in alto mostra la salute dell'unità selezionata."}
+{"name": "aoe2mc.tutorial.select", "text": "Seleziona un paesano: clic destro su uno dei tuoi paesani con il bastone di comando. La barra del boss in alto mostra l'unità selezionata, la barra delle azioni sopra la hotbar mostra la prossima azione."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Passo completato"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Passo %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "SUGGERIMENTO: la caserma addestra la fanteria. La fanteria è economica e buona contro gli edifici."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "SUGGERIMENTO: attacca con tutte le tue unità insieme. Un gruppo piccolo muore prima di fare danni."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "SUGGERIMENTO: costruisci gli edifici di deposito vicino alle risorse, così i paesani fanno poca strada."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "SUGGERIMENTO: l'età successiva sblocca nuovi edifici, unità e tecnologie. Tieni i paesani al lavoro mentre avanzi."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "SUGGERIMENTO: le bacche vicino a un mulino sono un inizio sicuro di cibo. Poi le fattorie danno cibo che non finisce."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "SUGGERIMENTO: una casa dà spazio a 5 abitanti in più. Guarda la popolazione nella barra laterale e costruisci case prima che sia piena."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "SUGGERIMENTO: puoi mettere in coda fino a 15 unità in un edificio se hai le risorse."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "SUGGERIMENTO: in AoE2 la campana manda i paesani nel centro città. Suonala quando il nemico razzia la tua città."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "SUGGERIMENTO: la riga Idle della barra laterale a destra conta i tuoi paesani senza lavoro. Dai loro lavoro."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "SUGGERIMENTO: addestra paesani di continuo nelle prime età. Più paesani danno più risorse."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "SUGGERIMENTO: i paesani raccolgono più in fretta vicino a un edificio di deposito. Costruisci un campo di taglialegna vicino agli alberi."}
+{"name": "aoe2mc.tutorial.villager", "text": "Addestra un paesano: clic destro sul tuo centro città e scegli il paesano. La barra laterale a destra mostra il cibo che costa."}
+{"name": "aoe2mc.tutorial.wood", "text": "Raccogli 50 legno: seleziona un paesano e clic destro su un albero. La barra laterale a destra mostra il tuo legno."}
+{"name": "aoe2mc.victory", "text": "Vittoria"}
+{"name": "aoe2mc.wonder.built", "text": "Il giocatore %s ha costruito una meraviglia."}
+{"name": "aoe2mc.wonder.destroyed", "text": "La meraviglia del giocatore %s è stata distrutta."}
