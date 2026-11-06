@@ -80,7 +80,10 @@ Edition 26.3 and a Minecraft account, not the game program.
 
 The host:
 
-1. Make a world (section 2).
+1. Make a world (section 2). With Python, add `--resource-pack`: the friends need the pack of the world.
+
+       python3 aoe2mc.py OUT.aoe2scenario OUTWorld --resource-pack
+
 2. Start the game with `--host`, `--invite` and `--people`. `--invite` gives the Minecraft names that can join:
    write your own name too, else the program stops. `--people` gives the number of people, you included. For you
    (Alex) and two friends:
@@ -105,10 +108,11 @@ A friend:
 
 1. Install Minecraft Java Edition 26.3 in the Minecraft launcher.
 2. Start Minecraft 26.3, click "Multiplayer", "Direct Connection" and type the address of the host.
-3. Accept the resource pack: the units need it. If you do not accept it, the server disconnects you.
+3. Accept the resource pack: the units need it. The server sends the pack only when the world has one
+   (`--resource-pack`). If you do not accept it, the server disconnects you.
 4. The page "Choose your player" opens: select your AoE2 player and click "Ready". The game starts when all people
    are ready.
-5. If the server says that you are not on the white-list, tell the host your exact Minecraft name. The host stops
+5. If the server says "You are not whitelisted on this server!", tell the host your exact Minecraft name. The host stops
    the game with Ctrl-C and starts it again with that name in `--invite`.
 
 A network with no internet: the host adds `--offline`. Then Minecraft does not check the login of the players, but
