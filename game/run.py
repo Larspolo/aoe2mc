@@ -1518,8 +1518,8 @@ def main(argv=None, scenario=None):
     ap.add_argument("--bench", type=int, metavar="N", help="send N commands, print the commands per second, stop")
     ap.add_argument("--play", action="store_true", help="play: villagers of player 1 gather resources (aoe2mc.json)")
     ap.add_argument("--replay", action="store_true", help="replay the timeline of a recorded game (aoe2mc.json)")
-    ap.add_argument("--editor", metavar="OUT", help="the map editor (#5999): no game time; the chat word save and the stop "
-                    "write the map to OUT (.aoe2scenario)")
+    ap.add_argument("--editor", metavar="OUT", help="the map editor (#5999): no game time; the chat word palette opens the "
+                    "palette of objects (#6013), the chat word save and the stop write the map to OUT (.aoe2scenario)")
     ap.add_argument("--speed", type=float, default=1.0, help="--replay, --play: times the game speed "
                     "(default 1; --play: the server ticks faster too)")
     ap.add_argument("--from", dest="start", default="0:00", metavar="MM:SS", help="--replay: start at this game time")

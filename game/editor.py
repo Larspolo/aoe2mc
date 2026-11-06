@@ -168,6 +168,7 @@ def run(game, out, alive, state=None):
     state = state or State(game)
     game.editor = state                                                # the save at the stop of run.main
     seen = len(game.server.log)
+    game.command("tellraw @a " + json.dumps(lang.text("aoe2mc.editor.start", color="yellow")))   # the chat words, once
     while alive():
         tick(state)
         for line in game.server.log[seen:]:
