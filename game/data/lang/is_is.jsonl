@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Spilari %s kemst á %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Spillingin tekur kortið frá jaðrinum að miðjunni á %s. Hún eyðir öllum einingum og byggingum á því."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ég get ekki byggt %s þar núna."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ég get ekki þjálfað þá einingu: ég hef enga byggingu fyrir hana."}
+{"name": "aoe2mc.bot.flare_two", "text": "Settu tvö blys fyrir vegginn."}
+{"name": "aoe2mc.bot.no_flare", "text": "Ég sé ekkert blys."}
+{"name": "aoe2mc.bot.no_market", "text": "Ég hef engan markað: ég get ekki sent skatt."}
+{"name": "aoe2mc.bot.no_onager", "text": "Ég hef engan onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Ég hef ekki nægar auðlindir fyrir vegg."}
+{"name": "aoe2mc.bot.no_water", "text": "Ég hef ekkert vatn nálægt bænum mínum: ég get ekki byggt flota."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Onagerarnir mínir geta ekki höggvið tré."}
+{"name": "aoe2mc.build.cost", "text": "Ekki nægar auðlindir: %s kostar %s."}
+{"name": "aoe2mc.build.flat", "text": "%s verður að standa á sléttu landi."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s verður að standa á 4 reitum af eigin vegg í beinni línu, eða á 3 reitum á ská."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Byggja: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s verður að standa á vatni við ströndina."}
+{"name": "aoe2mc.build.space", "text": "Ekkert pláss fyrir %s hér."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Ekki nægar auðlindir: %s reitir af %s kosta %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: hægrismelltu á enda veggjarins."}
+{"name": "aoe2mc.build.water", "text": "%s verður að standa á vatninu."}
+{"name": "aoe2mc.camera.fov", "text": "Hraða myndavélin lætur hlutinn í hendinni sveiflast. Til að halda honum kyrrum, stilltu Valkostir > Aðgengisstillingar > View Bobbing á SLÖKKT. Myndavélin gerir sjónsviðið líka breiðara, sem sýnir meira af kortinu. Til að halda venjulegu sjónsviði, stilltu Valkostir > Aðgengisstillingar > FOV Effects á 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Myndavél: slökkt"}
+{"name": "aoe2mc.camera.on", "text": "Myndavél: kveikt, hraði x%s. Shift hægrismellur: næsti hraði."}
+{"name": "aoe2mc.camera.speed", "text": "Hraði myndavélar: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Sigraðu allar óvinaeiningar og tapaðu fáum einingum"}
+{"name": "aoe2mc.challenge.booming", "text": "Þjálfaðu 100 þorpsbúa og kom þér á Keisaratímabilið"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Komdu þér á Kastalatímabilið og lifðu af árásir óvinarins"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Eyddu kastala óvinarins"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Safnaðu 200 mat, 200 timbri, 100 gulli og 200 steini, þjálfaðu 21 þorpsbúa, byggðu timburbúðir og myllu, og komdu þér á Lénstímabilið"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Þjálfaðu 27 þorpsbúa, byggðu 5 hús og komdu þér á Kastalatímabilið"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Sigraðu allar sex óvinabylgjurnar"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s einingar töpuðust, bronsverðlaun upp að %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s einingar töpuðust, gullverðlaun upp að %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s einingar töpuðust, engin verðlaun"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s einingar töpuðust, silfurverðlaun upp að %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronsverðlaun"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Gullverðlaun"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Silfurverðlaun"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Eyddu öllum óvinaherskipum"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Engin verðlaun"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Drepðu 5 þorpsbúa óvinarins"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronsverðlaun á %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Gullverðlaun á %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Silfurverðlaun á %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Egis slökkt"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Egis kveikt"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tækni: allt að 256 rannsóknir"}
+{"name": "aoe2mc.cheat.cpu", "text": "Mannfjöldamörk: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Þoka stríðsins: slökkt"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Þoka stríðsins: kveikt"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Tækni er ókeypis"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Að deila er að gefa: tekjur þínar fara til bandamanna þinna"}
+{"name": "aoe2mc.cheat.wonders", "text": "Þú stjórnar náttúrunni: %s dýr"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Aðeins bandamenn eru eftir: bandalögin enda. Síðasti lifandi spilarinn vinnur."}
+{"name": "aoe2mc.conquest.defeated", "text": "Spilari %s er sigraður."}
+{"name": "aoe2mc.controls.attack", "text": "Árás: veldu hernaðareiningar, hægrismelltu síðan á óvin."}
+{"name": "aoe2mc.controls.build", "text": "Byggja: veldu þorpsbúa, hægrismelltu á þá fyrir byggingavalmyndina, veldu byggingu, og vinstrismelltu síðan á jörðina. Shift + vinstrismellur: settu fleiri. Hægrismellur: hætta við."}
+{"name": "aoe2mc.controls.camera", "text": "Myndavél: hægrismelltu með sjónaukanum Myndavél (flýtilykill 2): þú gengur hratt hátt yfir kortið. Shift hægrismellur: næsti hraði. Hægrismelltu aftur: þú flýgur niður."}
+{"name": "aoe2mc.controls.garrison", "text": "Setulið: veldu einingar, hægrismelltu síðan á þína eigin byggingu. Valmynd hennar hleypir þeim út. Valmynd bæjarhallar: Hringdu bæjarklukkunni."}
+{"name": "aoe2mc.controls.gather", "text": "Safna: veldu þorpsbúa, hægrismelltu síðan á tré, berjarunn, námu eða akur."}
+{"name": "aoe2mc.controls.goto", "text": "Fara til: hægrismelltu með áttavitanum Fara til (flýtilykill 3): valmynd með bæjarhöllunum þínum, stjórnhópunum þínum og næsta iðjulausa þorpsbúa."}
+{"name": "aoe2mc.controls.groups", "text": "Stjórnhópar: veldu einingar, taktu hópatriði (flýtilyklar 5 til 9) og Shift + hægrismellur til að vista valið. Hægrismellur: veldu hópinn."}
+{"name": "aoe2mc.controls.head", "text": "Stjórntæki (haltu gulrótinni á priki; aðgerðastikan sýnir næsta skref):"}
+{"name": "aoe2mc.controls.menu", "text": "Leikjavalmynd: hægrismelltu með bókinni Leikjavalmynd (flýtilykill 4): diplómatí og skattur, blys, vista, hlé og tækniframvinduna."}
+{"name": "aoe2mc.controls.move", "text": "Færa: með valinu, hægrismelltu á jörðina."}
+{"name": "aoe2mc.controls.research", "text": "Rannsaka og færa þig á næsta tímabil: hægrismelltu á þína eigin byggingu og smelltu á tækni eða næsta tímabil í valmyndinni hennar."}
+{"name": "aoe2mc.controls.select", "text": "Velja: vinstrismelltu á einingu. Haltu vinstri músartakka inni og líttu yfir jörðina: valbox. Hægrismellur: gefðu skipanir."}
+{"name": "aoe2mc.controls.train", "text": "Þjálfa: hægrismelltu á þína eigin byggingu (bæjarhöll, herbúðir ...) og smelltu á einingu í valmyndinni hennar."}
+{"name": "aoe2mc.defeat", "text": "Ósigur"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Bandamaður"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Spilari %s breytti afstöðu sinni til þín: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Óvinur"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Hlutlaus"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Spilari %s stillti hraða leiksins á %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Spilari %s sendi %s %s til spilara %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Blys við %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Fylgja: smelltu á eina af þínum einingum"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Gæta: smelltu á eina af þínum einingum eða byggingum"}
+{"name": "aoe2mc.gaia.joins", "text": "%s gengur til liðs við þig."}
+{"name": "aoe2mc.garrison.all_back", "text": "Allir aftur til vinnu"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Bæjarklukkan hringir: %s þorpsbúar leita skjóls"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Enginn þorpsbúi er valinn."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Þú átt enga þorpsbúa."}
+{"name": "aoe2mc.garrison.out", "text": "%s einingar komu út"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s þorpsbúar leita skjóls"}
+{"name": "aoe2mc.gather.act_attack", "text": "árás"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "byggingavalmynd"}
+{"name": "aoe2mc.gather.act_garrison", "text": "setulið"}
+{"name": "aoe2mc.gather.act_gather", "text": "safna"}
+{"name": "aoe2mc.gather.act_hunt", "text": "veiða"}
+{"name": "aoe2mc.gather.act_move", "text": "færa"}
+{"name": "aoe2mc.gather.act_select", "text": "velja"}
+{"name": "aoe2mc.gather.act_select_type", "text": "velja allt af þessari tegund"}
+{"name": "aoe2mc.gather.act_trade", "text": "versla"}
+{"name": "aoe2mc.gather.act_train", "text": "þjálfa"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Árás: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Valbox: hætt við"}
+{"name": "aoe2mc.gather.bush", "text": "Berjarunni"}
+{"name": "aoe2mc.gather.carcass", "text": "Hræ"}
+{"name": "aoe2mc.gather.corner", "text": "Valbox: smelltu á hitt hornið"}
+{"name": "aoe2mc.gather.enemy", "text": "Óvinar-%s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Óvinabygging"}
+{"name": "aoe2mc.gather.farm", "text": "Akur"}
+{"name": "aoe2mc.gather.ground", "text": "Jörð"}
+{"name": "aoe2mc.gather.group", "text": "Hópur %s: %s einingar"}
+{"name": "aoe2mc.gather.group_saved", "text": "Hópur %s: %s einingar vistaðar"}
+{"name": "aoe2mc.gather.mine", "text": "%s náma"}
+{"name": "aoe2mc.gather.paused", "text": "Leiknum er í hléi."}
+{"name": "aoe2mc.gather.point", "text": "%s · Hægrismellur: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Endursáningar í röð: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Valið: %s einingar"}
+{"name": "aoe2mc.gather.tree", "text": "Tré"}
+{"name": "aoe2mc.hill.holds", "text": "Spilari %s heldur minnismerkinu."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Árás á jörð: hægrismelltu á jörðina"}
+{"name": "aoe2mc.hints.attack_move", "text": "Árásarfærsla: hægrismelltu á jörðina"}
+{"name": "aoe2mc.hints.building", "text": "Settu %s: hægrismelltu á jörðina · Shift + hægrismellur: settu fleiri · Hætta við: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: vinstrismelltu til að setja · Shift: settu fleiri · Hægrismellur: hætta við"}
+{"name": "aoe2mc.hints.corner", "text": "Valbox: hægrismelltu á hitt hornið"}
+{"name": "aoe2mc.hints.count_military", "text": "%s hernaðareining"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s hernaðareiningar"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s þorpsbúi"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s þorpsbúar"}
+{"name": "aoe2mc.hints.deselect", "text": "Tómur reitur: afvelja"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Vinstrismellur: afvelja"}
+{"name": "aoe2mc.hints.follow", "text": "Fylgja: hægrismelltu á eina af þínum eða bandamanna einingum"}
+{"name": "aoe2mc.hints.guard", "text": "Gæta: hægrismelltu á eina af þínum eða bandamanna einingum eða byggingum"}
+{"name": "aoe2mc.hints.military", "text": "%s · Hægrismellur: ráðast á óvin, afstöðuvalmynd · %s"}
+{"name": "aoe2mc.hints.none", "text": "Vinstrismellur: veldu einingu · Haltu vinstrismelli: valbox"}
+{"name": "aoe2mc.hints.none_wand", "text": "Hægrismellur: veldu einingu · Töfrasproti: valbox"}
+{"name": "aoe2mc.hints.patrol", "text": "Gæsla: hægrismelltu á jörðina"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Hægrismellur: safna, byggja, byggingavalmynd · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s tilbúnir"}
+{"name": "aoe2mc.lobby.you_play", "text": "Þú spilar %s."}
+{"name": "aoe2mc.monk.converts", "text": "Munkur snýr %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s deyr (Villutrú)."}
+{"name": "aoe2mc.pause.continued", "text": "Spilari %s hélt leiknum áfram."}
+{"name": "aoe2mc.pause.paused", "text": "Spilari %s setti leikinn í hlé."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Lið %s (meðaleinkunn %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Leiknum er lokið. Hægrismelltu á Yfirlitsbókina í hendinni til að sjá niðurstöðurnar. Stöðvaðu leikjaforritið með Ctrl-C í stjórnborðinu þess."}
+{"name": "aoe2mc.relic_victory.all", "text": "Spilari %s heldur öllum helgigripunum."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Spilari %s missti helgigrip."}
+{"name": "aoe2mc.repair.no_resources", "text": "Ekki nægar auðlindir til að gera við %s."}
+{"name": "aoe2mc.replay.army", "text": "Her: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", herinn í lokin: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", tapað: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Byggingarröð:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · setulið %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | ber %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "byggja %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "matur %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "gull %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "iðjulaus %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "steinn %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "timbur %s"}
+{"name": "aoe2mc.replay.flare", "text": "Blys"}
+{"name": "aoe2mc.replay.game_ends", "text": "Leiknum lýkur"}
+{"name": "aoe2mc.replay.game_time", "text": "Leiktími %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · setulið %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Her %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Íbúar %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Auðlindir %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Þorpsbúar %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s hélt minnismerkinu: Sigur Hæðarkonungsins á %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s árás %s/%s brynja%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Tvísmelltu á Shift: áhorfendasýn (flogið í gegnum kubba). Hægrismelltu á atriðin í flýtistikunni: stjórn endurspilunar."}
+{"name": "aoe2mc.replay.king_died", "text": ": konungurinn dó á %s. Konungsmorð: spilarinn er úti."}
+{"name": "aoe2mc.replay.king_killed", "text": "Konungur drepinn á %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Lifandi endurspilun: stökkið stöðvast við töfina á eftir leiknum."}
+{"name": "aoe2mc.replay.lost", "text": "Tapað: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " heldur minnismerkinu á %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: minnismerki, %s ár eftir"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: minnismerki, %s ár eftir"}
+{"name": "aoe2mc.replay.no_camera", "text": "Þessi upptaka hefur enga myndavél af sínum spilara."}
+{"name": "aoe2mc.replay.now", "text": " nú"}
+{"name": "aoe2mc.replay.out", "text": "%s er úti"}
+{"name": "aoe2mc.replay.players", "text": "Spilarar"}
+{"name": "aoe2mc.replay.range", "text": " d%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " fer með helgigripinn í klaustur og vinnur."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Endurspilun lokið"}
+{"name": "aoe2mc.replay.research", "text": " rannsakar %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s gefst upp"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Þjónninn endurræsist fyrir stökkið til baka: tengstu aftur."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Byggingar %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Hagkerfi %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Her %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tækni %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Samtals %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "kastalar %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "keypt %s, selt %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "helgigripir %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "undur %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Eytt:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Byggja %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Hagk. %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Her %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tækni %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": þorpsbúar þjálfaðir %s, safnað %s, iðjulaus tími þorpsbúa %s, iðjulaus tími bæjarhallar %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": heldur minnismerkinu (Hæðarkonungurinn)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": minnismerki unnið %s (Hæðarkonungurinn)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": herseiningar þjálfaðar %s, einingar tapaðar %s, byggingar tapaðar %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": konungar drepnir %s (Konungsmorð)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": sigrar, helgigripur í klaustri %s (Taktu helgigripinn)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sskattur sendur %s, móttekinn %s, hámark þorpsbúa %s (áætlað)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": bæjarhöll töpuð %s (Skyndidauði)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tækni %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": undurtímamælir frá %s, endar %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Samantekt (áætlað)"}
+{"name": "aoe2mc.replay.task_building", "text": "byggir"}
+{"name": "aoe2mc.replay.task_following", "text": "fylgir"}
+{"name": "aoe2mc.replay.task_food", "text": "safnar mat"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "í setuliði"}
+{"name": "aoe2mc.replay.task_gold", "text": "safnar gulli"}
+{"name": "aoe2mc.replay.task_guarding", "text": "gætir"}
+{"name": "aoe2mc.replay.task_idle", "text": "iðjulaus"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "gengur vakt"}
+{"name": "aoe2mc.replay.task_resources", "text": "safnar auðlindum"}
+{"name": "aoe2mc.replay.task_stone", "text": "safnar steini"}
+{"name": "aoe2mc.replay.task_walking", "text": "gengur"}
+{"name": "aoe2mc.replay.task_wood", "text": "safnar timbri"}
+{"name": "aoe2mc.replay.team", "text": "Lið %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Bogmaður %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Brynja bogmanna %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Burður %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Brynja riddara %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Akur %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Gull %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Brynja fótgönguliða %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Vefstóll %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Návígi %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Steinn %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Timbur %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Kastali"}
+{"name": "aoe2mc.replay.tl_king", "text": "Konungur drepinn"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. her: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Helgigripur"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Gefst upp"}
+{"name": "aoe2mc.replay.town_fell", "text": ": bæjarhöllin féll á %s. Skyndidauði: spilarinn er úti."}
+{"name": "aoe2mc.replay.town_lost", "text": "Bæjarhöll töpuð á %s"}
+{"name": "aoe2mc.replay.training", "text": "Þjálfun: %s"}
+{"name": "aoe2mc.replay.university", "text": "Háskóli:"}
+{"name": "aoe2mc.replay.up_counts", "text": "hagkerfi %s · Háskóli %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " reisti undur á %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Bardagi: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s einingar"}
+{"name": "aoe2mc.replay_input.fights", "text": "Stórir bardagar:"}
+{"name": "aoe2mc.replay_input.help", "text": "Endurspilun: hægrismelltu á atriðin í flýtistikunni þinni, eða smelltu: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Taka við: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s einingar)"}
+{"name": "aoe2mc.replay_input.vs", "text": " gegn "}
+{"name": "aoe2mc.resource.food", "text": "matur"}
+{"name": "aoe2mc.resource.gold", "text": "gull"}
+{"name": "aoe2mc.resource.stone", "text": "steinn"}
+{"name": "aoe2mc.resource.wood", "text": "timbur"}
+{"name": "aoe2mc.run.back", "text": "%s er kominn aftur"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Herför lokið"}
+{"name": "aoe2mc.run.chat_hint", "text": "Spjall: venjuleg lína fer til allra, /tm TEXTI til bandamanna, /msg NAFN TEXTI til einnar manneskju."}
+{"name": "aoe2mc.run.left_bot", "text": "%s fór: vélmenni spilar spilara %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Sviðsmyndin %s byrjar. Tengstu aftur."}
+{"name": "aoe2mc.run.starts_in", "text": "Leikurinn byrjar eftir %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Opnaðu \"Veldu spilarann þinn\" og smelltu á \"Tilbúinn\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Öll stjórntæki: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Fyrsta skref: haltu skipanapriknum og hægrismelltu á einn af þorpsbúum þínum."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Fyrsta skref: haltu skipanapriknum og vinstrismelltu á einn af þorpsbúum þínum."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Markmið: vinna leikinn. Sigurstilling: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Leiknum var vistaður: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s einingar komu út"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Sjálfvirk njósnun"}
+{"name": "aoe2mc.stance.formation", "text": "Fylking: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Engin eining getur ráðist á jörðina"}
+{"name": "aoe2mc.stance.unpack", "text": "Taktu fyrst Trebuchet úr umbúðum"}
+{"name": "aoe2mc.train.active", "text": "%s er virkt."}
+{"name": "aoe2mc.train.rally", "text": "Hægrismelltu á jörðina fyrir safnstaðinn."}
+{"name": "aoe2mc.train.researched", "text": "%s er rannsakað."}
+{"name": "aoe2mc.transport.out", "text": "%s einingar komu út"}
+{"name": "aoe2mc.treaty.ended", "text": "Sáttmálinn er runninn út: spilarar geta ráðist á núna."}
+{"name": "aoe2mc.treaty.refuse", "text": "Sáttmáli: þú getur ekki ráðist á fyrr en %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Sáttmáli: þú getur ekki ráðist á í þessum leik."}
+{"name": "aoe2mc.treaty.start", "text": "Sáttmáli: enginn spilari getur ráðist á annan spilara fyrr en %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Sáttmáli: enginn spilari getur ráðist á annan spilara í þessum leik."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Byggðu herbúðir: hægrismelltu á valinn þorpsbúa, veldu herbúðirnar og settu þær. Aðgerðastikan fyrir ofan flýtistikuna segir þér hvar á að setja þær."}
+{"name": "aoe2mc.tutorial.camera", "text": "Farðu hratt yfir kortið: hægrismelltu með hlutnum \"Myndavél\", gakktu, og hægrismelltu síðan aftur á hann."}
+{"name": "aoe2mc.tutorial.camp", "text": "Eyddu óvinabúðunum í miðju kortsins: veldu Herdeildina þína og hægrismelltu á byggingu. Yfirmannastikan efst sýnir skrefið."}
+{"name": "aoe2mc.tutorial.camps", "text": "Byggðu timburbúðir nálægt trjánum og myllu nálægt berjunum. Hliðarstikan til hægri sýnir timbrið sem þær kosta."}
+{"name": "aoe2mc.tutorial.complete", "text": "Kennslunni er lokið. Næst: spilaðu leik gegn vélmenninu: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Kennslu lokið"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Komdu þér á Lénstímabilið: hægrismelltu á bæjarhöllina og veldu Lénstímabilið. Hliðarstikan til hægri sýnir matinn þinn."}
+{"name": "aoe2mc.tutorial.food", "text": "Safnaðu 100 mat: sendu þorpsbúa að berjunum. Hliðarstikan til hægri sýnir matinn þinn."}
+{"name": "aoe2mc.tutorial.house", "text": "Byggðu hús: hægrismelltu á valinn þorpsbúa, veldu húsið og settu það. Aðgerðastikan fyrir ofan flýtistikuna segir þér hvar á að setja það."}
+{"name": "aoe2mc.tutorial.militia", "text": "Þjálfaðu 3 Herdeildarmenn: hægrismelltu á herbúðirnar þínar og veldu herdeildina. Hliðarstikan til hægri sýnir matinn og gullið þitt."}
+{"name": "aoe2mc.tutorial.raid", "text": "Óvinurinn ræðst á þorpsbúa þína! Smelltu á rauðu viðvörunarlínuna í spjallinu til að fara þangað, veldu síðan Herdeildina þína og hægrismelltu á óvinina. Yfirmannastikan efst sýnir heilsu valinnar einingar."}
+{"name": "aoe2mc.tutorial.select", "text": "Veldu þorpsbúa: vinstrismelltu á einn af þorpsbúum þínum með skipanapriknum. Yfirmannastikan efst sýnir valda einingu, og aðgerðastikan fyrir ofan flýtistikuna sýnir næstu aðgerð."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Skrefi lokið"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Skref %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "ÁBENDING: herbúðirnar þjálfa fótgönguliða. Fótgönguliðar eru ódýrir og góðir gegn byggingum."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "ÁBENDING: ráðastu á með öllum einingunum saman. Lítill hópur deyr áður en hann getur valdið skaða."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "ÁBENDING: byggðu skilabyggingarnar nálægt auðlindunum, svo að þorpsbúarnir gangi stutta leið."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "ÁBENDING: næsta tímabil opnar nýjar byggingar, einingar og tækni. Haltu þorpsbúunum við vinnu meðan þú kemur þér áfram."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "ÁBENDING: ber nálægt myllu er öruggt upphaf matar. Síðar gefa akrar mat sem endar ekki."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "ÁBENDING: hús gefur rúm fyrir 5 íbúa til viðbótar. Líttu á íbúafjöldann í hliðarstikunni og byggðu hús áður en allt er fullt."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "ÁBENDING: þú getur sett allt að 15 einingar í röð í byggingu þegar þú átt auðlindirnar."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "ÁBENDING: í AoE2 sendir bæjarklukkan þorpsbúana í bæjarhöllina. Hringdu henni þegar óvinurinn ræðst á bæinn þinn."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "ÁBENDING: Iðjulaus-línan í hliðarstikunni til hægri telur þorpsbúa án vinnu. Gefðu þeim vinnu."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "ÁBENDING: þjálfaðu þorpsbúa allan tímann á fyrstu tímabilunum. Fleiri þorpsbúar gefa fleiri auðlindir."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "ÁBENDING: þorpsbúar safna hraðar nálægt skilabyggingu. Byggðu timburbúðir við hliðina á trjánum."}
+{"name": "aoe2mc.tutorial.villager", "text": "Þjálfaðu þorpsbúa: hægrismelltu á bæjarhöllina þína og veldu þorpsbúann. Hliðarstikan til hægri sýnir matinn sem hann kostar."}
+{"name": "aoe2mc.tutorial.wood", "text": "Safnaðu 50 timbri: veldu þorpsbúa og hægrismelltu á tré. Hliðarstikan til hægri sýnir timbrið þitt."}
+{"name": "aoe2mc.victory", "text": "Sigur"}
+{"name": "aoe2mc.wonder.built", "text": "Spilari %s reisti undur."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Undur spilara %s er eytt."}
