@@ -1444,13 +1444,13 @@ class Gather:
                     self.wands.add(name)
                 if {"aoe_use", "aoe_talk"} & set(used) and (n := self.group_in_hand(name)):   # also on a unit (#5571)
                     self.grouping[name] = n, "passed" in self.command(f"execute as {name} if predicate {SNEAK}")
-                elif "aoe_use" in used and diplomacy.in_hand(self, name):   # the Game menu item (#1588): no ray
+                elif {"aoe_use", "aoe_talk"} & set(used) and diplomacy.in_hand(self, name):   # the Game menu item (#1588): no ray
                     out.remove(name)
                     diplomacy.open_menu(self, name)
-                elif "aoe_use" in used and goto.in_hand(self, name):    # the "Go to" compass (#1830): no ray
+                elif {"aoe_use", "aoe_talk"} & set(used) and goto.in_hand(self, name):    # the "Go to" compass (#1830): no ray
                     out.remove(name)
                     goto.open_menu(self, name)
-                elif "aoe_use" in used and self.paper and camera.in_hand(self, name):   # the camera mode: no ray
+                elif {"aoe_use", "aoe_talk"} & set(used) and self.paper and camera.in_hand(self, name):   # the camera mode: no ray
                     out.remove(name)
                     camera.click(self, name, "passed" in self.command(f"execute as {name} if predicate {SNEAK}"))
                 for obj in objs:
