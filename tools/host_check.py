@@ -51,6 +51,18 @@ class Tee:
         return getattr(self.f, k)
 
 
+class Client(mc_shot.Client):
+    """mc_shot.Client that keeps its log in OUT/<name>.log: the log of a failed join shows the cause."""
+
+    out = None
+
+    def __exit__(self, *exc):
+        if self.out and self.log:
+            self.log.flush()
+            shutil.copy(self.log_path, os.path.join(self.out, f"{self.name}.log"))
+        return super().__exit__(*exc)
+
+
 def result(line, port, pack_url, pack_gets, team, refused, eve_on, errors):
     """{point: (ok, detail)} of the check. line: the (ADDRESS, PORT) of the printed line or None; pack_gets: the
     client addresses of the pack downloads; refused: the server log lines of the refusal of eve."""
@@ -87,9 +99,9 @@ def drive(games, a, report, tee):
             time.sleep(1)
         m = next((LINE.search(x) for x in tee.lines if LINE.search(x)), None)
         line = m.groups() if m else None
-        with mc_shot.Client(game.game_port, game.version, name=A, world=a.copy, host="localhost") as ca:
+        with Client(game.game_port, game.version, name=A, world=a.copy, host="localhost") as ca:
             ca.wait_join(lambda: online(A))
-            with mc_shot.Client(game.game_port, game.version, name=B, world=a.copy,
+            with Client(game.game_port, game.version, name=B, world=a.copy,
                                 host=line[0] if line else "127.0.0.1") as cb:
                 cb.wait_join(lambda: online(B))
                 while not getattr(game, "wait", False):
@@ -99,7 +111,7 @@ def drive(games, a, report, tee):
                     time.sleep(0.5)
                 time.sleep(3)
                 team = game.command(f"execute if entity @a[name={B},team=p2]")
-                with mc_shot.Client(game.game_port, game.version, name=E, world=a.copy,
+                with Client(game.game_port, game.version, name=E, world=a.copy,
                                     host=line[0] if line else "127.0.0.1") as ce:
                     t, refused, eve_on = time.time(), [], False
                     while not refused and time.time() - t < 180 and ce.client.poll() is None:
@@ -141,6 +153,7 @@ def main(argv=None):
     if not os.path.isfile(os.path.join(a.world, "resourcepacks", "resources.zip")):
         sys.exit(f"no resource pack in {a.world}: convert with --resource-pack (the check loads the pack)")
     os.makedirs(a.out, exist_ok=True)
+    Client.out = a.out
     a.copy = os.path.join(tempfile.mkdtemp(), os.path.basename(os.path.normpath(a.world)))
     shutil.copytree(a.world, a.copy)                                   # the game changes the world
     games, report, init = [], {}, run.Game.__init__
