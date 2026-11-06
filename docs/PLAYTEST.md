@@ -73,6 +73,59 @@ Add `--cheats` to use the AoE2 cheat codes in the chat (for example `aegis`: fas
 With `--cheats`, the Minecraft command `/give @s gold` (also `food`, `wood`, `stone`) gives the resource as the
 cheat codes do (for example `robin hood`: 10000 gold).
 
+### Play with friends
+
+One computer is the host: it runs the game program and the Minecraft server. Each friend needs only Minecraft Java
+Edition 26.3 and a Minecraft account, not the game program.
+
+The host:
+
+1. Make a world (section 2).
+2. Start the game with `--host`, `--invite` and `--people`. `--invite` gives the Minecraft names that can join:
+   write your own name too, else the program stops. `--people` gives the number of people, you included. For you
+   (Alex) and two friends:
+
+       aoe2mc-game OUTWorld --play --host --invite Alex,Sam,Robin --people 3
+
+   With Python:
+
+       python3 game/run.py OUTWorld --play --host --invite Alex,Sam,Robin --people 3
+
+   You can add `--bot` or `--bots` as in section 3.
+3. The firewall of your computer must let the game port and the port of the resource pack in. Windows asks at the
+   first start: click "Allow" for Java and for the game program (with Python: for Python).
+4. The console shows two lines. "Join the server localhost:PORT" is for you. "Join the server ADDRESS:PORT (other
+   computers on the network)." is for your friends: send them ADDRESS:PORT.
+5. The program selects a free port at each start, also with `--load`. After each start, send the new address.
+6. Join on localhost:PORT as in section 3. The page "Choose your player" opens: select your AoE2 player and click
+   "Ready".
+
+A friend:
+
+1. Install Minecraft Java Edition 26.3 in the Minecraft launcher.
+2. Start Minecraft 26.3, click "Multiplayer", "Direct Connection" and type the address of the host.
+3. Accept the resource pack: the units need it. If you do not accept it, the server disconnects you.
+4. The page "Choose your player" opens: select your AoE2 player and click "Ready". The game starts when all people
+   are ready.
+5. If the server says that you are not on the white-list, tell the host your exact Minecraft name. The host stops
+   the game with Ctrl-C and starts it again with that name in `--invite`.
+
+A network with no internet: the host adds `--offline`. Then Minecraft does not check the login of the players, but
+the white-list still checks the names. The console shows "Warning: --offline: no Minecraft login check, a stranger
+can join with an invited name". Use `--offline` only on a network that you trust.
+
+Over the internet, ADDRESS is an address of the local network only. Do one of these steps:
+
+- Forward the game port (TCP, the PORT of the line) in the router of the host to the ADDRESS of the line. The
+  friends type the public address of the router and the PORT. The port changes at each start: change the forward
+  each time.
+- Use a VPN for games: it puts the computers on one virtual network. The friends type the VPN address of the host
+  and the PORT. This project has no VPN tool.
+
+Over the internet, use the installer and make the world with its `aoe2mc` command: then the friends download the
+resource pack from GitHub. With Python, the friends download the resource pack from the local ADDRESS of the host:
+that fails over the internet, and the server disconnects them.
+
 ## 4. Controls
 
 Hold the carrot on a stick. The action bar at the bottom of the screen always shows the next possible step. The
