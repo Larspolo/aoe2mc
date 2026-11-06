@@ -274,6 +274,11 @@ def invite_names(host, invite, offline):
     return names
 
 
+def invite_line(names):
+    """The console line of --host: only the invited names can join, the white-list checks them (#5913)."""
+    return f"Only these Minecraft names can join: {', '.join(names)}."
+
+
 def properties(game_port, rcon_port, password, pack=None, host=False, offline=False):
     """server.properties: only local players can join (127.0.0.1). They play in creative mode (#292).
     A missing white-list becomes "true" in 26.3: then no player can join (#285). Each player is an operator
@@ -1004,7 +1009,7 @@ def play(game, world, log=None, cheats=False, bot=False, seconds=None, bot_attac
           f"{len(g.villagers)} villagers of player 1. " + START_HINT, file=sys.stderr)
     if getattr(game, "host", False):                 # the address for the friends on the network (#5891)
         print(f"Join the server {network_address()}:{game.game_port} (other computers on the network).\n"
-              "Warning: each person on the network can join this game.", file=sys.stderr)
+              + invite_line(game.invite), file=sys.stderr)
     if people > 1:                                   # this console only: a person gets it in the chat on the join (#3555)
         print(CHAT_HINT, file=sys.stderr)
     game.g = g                                       # main saves its state on Ctrl-C (#2255)
