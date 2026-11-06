@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "El xugador %s avanza a la %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: la Corrupción toma el mapa desde la marxe hasta el centru en %s. Destruye toles unidaes y edificios que tean nél."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Agora nun puedo construir un %s equí."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Nun puedo entrenar esa unidá: nun tengo edificiu pa ella."}
+{"name": "aoe2mc.bot.flare_two", "text": "Pon dos señales pal muro."}
+{"name": "aoe2mc.bot.no_flare", "text": "Nun veo nenguna señal."}
+{"name": "aoe2mc.bot.no_market", "text": "Nun tengo mercáu: nun puedo unviar tributu."}
+{"name": "aoe2mc.bot.no_onager", "text": "Nun tengo nengún onagro."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Nun tengo recursos abondos pa un muro."}
+{"name": "aoe2mc.bot.no_water", "text": "Nun tengo agua cerca de la mio villa: nun puedo construir una armada."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Los mios onagros nun pueden cortar árboles."}
+{"name": "aoe2mc.build.cost", "text": "Nun hai recursos abondos: un %s cuesta %s."}
+{"name": "aoe2mc.build.flat", "text": "El %s tien que tar sobre terrén llanu."}
+{"name": "aoe2mc.build.gate_spot", "text": "Un %s tien que dir sobre 4 cuadrículos d'un muro propiu en llinia recta, o sobre 3 cuadrículos en diagonal."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Construir: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Un %s tien que tar sobre agua, xunto a la marxe."}
+{"name": "aoe2mc.build.space", "text": "Nun hai sitiu pal %s equí."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Nun hai recursos abondos: %s cuadrículos de %s cuesten %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: fai clic derechu al final del muro."}
+{"name": "aoe2mc.build.water", "text": "Un %s tien que tar sobre l'agua."}
+{"name": "aoe2mc.camera.fov", "text": "La cámara rápida fai que l'oxetu que tienes na mano se bambolee. Pa que quede quietu, pon Opciones > Configuración d'accesibilidá > Bamboleu de la vista en OFF. La cámara tamién fai la vista más ancha, lo que amuesa más del mapa. Pa caltener la vista normal, pon Opciones > Configuración d'accesibilidá > Efeutos del FOV a 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Cámara: apagada"}
+{"name": "aoe2mc.camera.on", "text": "Cámara: encendida, velocidá x%s. Mayús + clic derechu: velocidá siguiente."}
+{"name": "aoe2mc.camera.speed", "text": "Velocidá de la cámara: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Derrota toles unidaes enemigues y pierde poces unidaes"}
+{"name": "aoe2mc.challenge.booming", "text": "Entrena 100 aldeanos y avanza a la Edá Imperial"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Avanza a la Edá del Castiellu y sobrevive a los ataques enemigos"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Destruye el castiellu enemigu"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Recoyi 200 comida, 200 madera, 100 oru y 200 piedra, entrena 21 aldeanos, construye un campamentu de madera y un molín, y avanza a la Edá Feudal"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Entrena 27 aldeanos, construye 5 cases y avanza a la Edá del Castiellu"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Derrota les seis ondes enemigues"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s unidaes perdíes, medalla de bronce hasta %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s unidaes perdíes, medalla d'oru hasta %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s unidaes perdíes, ensin medalla"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s unidaes perdíes, medalla de plata hasta %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Medalla de bronce"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Medalla d'oru"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Medalla de plata"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Destruye tolos barcos de guerra enemigos"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Ensin medalla"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Mata 5 aldeanos enemigos"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Medalla de bronce en %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Medalla d'oru en %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Medalla de plata en %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Escudu desactiváu"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Escudu activáu"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tecnoloxíes: hasta 256 investigaciones"}
+{"name": "aoe2mc.cheat.cpu", "text": "Llende de población: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Niebla de guerra: desactivada"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Niebla de guerra: activada"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Les tecnoloxíes son gratuites"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Compartir ye quereles: los tos ingresos van pa los tos aliaos"}
+{"name": "aoe2mc.cheat.wonders", "text": "Controles la naturaleza: %s animales"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Solo quedan aliaos: les alianzes acaben. Gana el postreru xugador vivu."}
+{"name": "aoe2mc.conquest.defeated", "text": "El xugador %s ta derrotáu."}
+{"name": "aoe2mc.controls.attack", "text": "Atacar: seleiciona les unidaes militares y fai clic derechu sobre un enemigu."}
+{"name": "aoe2mc.controls.build", "text": "Construir: seleiciona los aldeanos, fai-yos clic derechu pa la mena de construcción, seleiciona un edificiu y dempués fai clic izquierdu nel suelu. Mayús + clic izquierdu: pon más. Clic derechu: cancela."}
+{"name": "aoe2mc.controls.camera", "text": "Cámara: fai clic derechu cola Cámara del espiadimensiones (tecla 2 de la barra rápida): camines rápido muncho per riba del mapa. Mayús + clic derechu: la velocidá siguiente. Otru clic derechu: baxes."}
+{"name": "aoe2mc.controls.garrison", "text": "Guarnición: seleiciona unidaes y dempués fai clic derechu nel to propiu edificiu. El so menú déxales salir. Menú del centru de la villa: Tocar la campana de la villa."}
+{"name": "aoe2mc.controls.gather", "text": "Recoyer: seleiciona los aldeanos y dempués fai clic derechu nun árbol, nun arbustu de frutos, nuna mina o nun campu."}
+{"name": "aoe2mc.controls.goto", "text": "Ir a: fai clic derechu cola Brúxula Ir a (tecla 3 de la barra rápida): un menú colos tos centros de la villa, los tos grupos de control y el siguiente aldeanu ociosu."}
+{"name": "aoe2mc.controls.groups", "text": "Grupos de control: seleiciona unidaes, coye un oxetu de grupu (tecles 5 a 9 de la barra rápida) y fai Mayús + clic derechu pa guardar la selección. Clic derechu: seleiciona el grupu."}
+{"name": "aoe2mc.controls.head", "text": "Controles (caltién la zanahoria nun pal; la barra d'aiciones amuesa el siguiente pasu):"}
+{"name": "aoe2mc.controls.menu", "text": "Menú del xuegu: fai clic derechu col llibru Menú del xuegu (tecla 4 de la barra rápida): diplomacia y tributu, señal, guardar, pausa y l'árbol de tecnoloxíes."}
+{"name": "aoe2mc.controls.move", "text": "Mover: con una seleición, fai clic derechu nel suelu."}
+{"name": "aoe2mc.controls.research", "text": "Investigar y pasar de edá: fai clic derechu nel to propiu edificiu y fai clic nuna tecnoloxía o na edá siguiente nel so menú."}
+{"name": "aoe2mc.controls.select", "text": "Seleicionar: fai clic izquierdu sobre una unidá. Caltién el clic izquierdu y mira pel suelu: una caxa de seleición. Clic derechu: da órdenes."}
+{"name": "aoe2mc.controls.train", "text": "Entrenar: fai clic derechu nel to propiu edificiu (centru de la villa, cuartel...) y fai clic nuna unidá del so menú."}
+{"name": "aoe2mc.defeat", "text": "Derrota"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Aliáu"}
+{"name": "aoe2mc.diplomacy.changed", "text": "El xugador %s cambió la so postura faciate: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Enemigu"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutral"}
+{"name": "aoe2mc.diplomacy.speed", "text": "El xugador %s puso la velocidá del xuegu en %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "El xugador %s unvió %s %s al xugador %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Señal en %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Siguir: fai clic nuna unidá propia"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Guardar: fai clic nuna unidá o edificiu propiu"}
+{"name": "aoe2mc.gaia.joins", "text": "Un %s xúnese a ti."}
+{"name": "aoe2mc.garrison.all_back", "text": "Tolos a trabayar otra vez"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Tocar la campana de la villa: %s aldeanos busquen refugiu"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Nun hai nengún aldeanu seleicionáu."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Nun tienes aldeanos."}
+{"name": "aoe2mc.garrison.out", "text": "Salieron %s unidaes"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s aldeanos busquen refugiu"}
+{"name": "aoe2mc.gather.act_attack", "text": "atacar"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menú de construcción"}
+{"name": "aoe2mc.gather.act_garrison", "text": "guarnición"}
+{"name": "aoe2mc.gather.act_gather", "text": "recoyer"}
+{"name": "aoe2mc.gather.act_hunt", "text": "cazar"}
+{"name": "aoe2mc.gather.act_move", "text": "mover"}
+{"name": "aoe2mc.gather.act_select", "text": "seleicionar"}
+{"name": "aoe2mc.gather.act_select_type", "text": "seleiciona tolos del tipu"}
+{"name": "aoe2mc.gather.act_trade", "text": "comerciar"}
+{"name": "aoe2mc.gather.act_train", "text": "entrenar"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Ataque: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Caxa de seleición: cancelada"}
+{"name": "aoe2mc.gather.bush", "text": "Arbustu de moras"}
+{"name": "aoe2mc.gather.carcass", "text": "Carcasa"}
+{"name": "aoe2mc.gather.corner", "text": "Caxa de seleición: fai clic na otra esquina"}
+{"name": "aoe2mc.gather.enemy", "text": "%s enemigu"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Edificiu enemigu"}
+{"name": "aoe2mc.gather.farm", "text": "Granxa"}
+{"name": "aoe2mc.gather.ground", "text": "Suelu"}
+{"name": "aoe2mc.gather.group", "text": "Grupu %s: %s unidaes"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grupu %s: %s unidaes guardaes"}
+{"name": "aoe2mc.gather.mine", "text": "Mina de %s"}
+{"name": "aoe2mc.gather.paused", "text": "El xuegu ta en pausa."}
+{"name": "aoe2mc.gather.point", "text": "%s · Clic derechu: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Resiembres en cola: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Seleicionaes: %s unidaes"}
+{"name": "aoe2mc.gather.tree", "text": "Árbol"}
+{"name": "aoe2mc.hill.holds", "text": "El xugador %s tien el monumentu."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Atacar el suelu: fai clic derechu nel suelu"}
+{"name": "aoe2mc.hints.attack_move", "text": "Ataque en movimientu: fai clic derechu nel suelu"}
+{"name": "aoe2mc.hints.building", "text": "Pon el %s: fai clic derechu nel suelu · Mayús + clic derechu: pon más · Cancelar: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: fai clic izquierdu pa poner · Mayús: pon más · Clic derechu: cancela"}
+{"name": "aoe2mc.hints.corner", "text": "Caxa de seleición: fai clic derechu na otra esquina"}
+{"name": "aoe2mc.hints.count_military", "text": "%s unidá militar"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s unidaes militares"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s aldeanu"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s aldeanos"}
+{"name": "aoe2mc.hints.deselect", "text": "Caxa vacía: deseleicionar"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Clic izquierdu: deseleicionar"}
+{"name": "aoe2mc.hints.follow", "text": "Siguir: fai clic derechu nuna unidá propia o aliada"}
+{"name": "aoe2mc.hints.guard", "text": "Guardar: fai clic derechu nuna unidá o edificiu propiu o aliáu"}
+{"name": "aoe2mc.hints.military", "text": "%s · Clic derechu: ataca un enemigu, menú de postura · %s"}
+{"name": "aoe2mc.hints.none", "text": "Clic izquierdu: seleiciona una unidá · Caltién el clic izquierdu: caxa de seleición"}
+{"name": "aoe2mc.hints.none_wand", "text": "Clic derechu: seleiciona una unidá · Vara: caxa de seleición"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrullar: fai clic derechu nel suelu"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Clic derechu: recoyer, construir, menú de construcción · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s llistos"}
+{"name": "aoe2mc.lobby.you_play", "text": "Xugues con %s."}
+{"name": "aoe2mc.monk.converts", "text": "Un monxe convierte el %s."}
+{"name": "aoe2mc.monk.dies", "text": "El %s muerre (Herexía)."}
+{"name": "aoe2mc.pause.continued", "text": "El xugador %s siguió col xuegu."}
+{"name": "aoe2mc.pause.paused", "text": "El xugador %s puso el xuegu en pausa."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Equipu %s (valoración media %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "El xuegu acabó. Fai clic derechu col llibru Resume que tienes na mano pa ver los resultaos. Para el programa del xuegu con Ctrl-C na so consola."}
+{"name": "aoe2mc.relic_victory.all", "text": "El xugador %s tien toles reliquies."}
+{"name": "aoe2mc.relic_victory.lost", "text": "El xugador %s perdió una reliquia."}
+{"name": "aoe2mc.repair.no_resources", "text": "Nun hai recursos abondos pa reparar el %s."}
+{"name": "aoe2mc.replay.army", "text": "Exércitu: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", exércitu al final: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", perdíu: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Orde de construcción:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · guarnición %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | lleva %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "construir %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "comida %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "oru %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "ociosu %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "piedra %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "madera %s"}
+{"name": "aoe2mc.replay.flare", "text": "Señal"}
+{"name": "aoe2mc.replay.game_ends", "text": "El xuegu acaba"}
+{"name": "aoe2mc.replay.game_time", "text": "Tiempu de xuegu %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · guarnición %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pob %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Rec %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Ald %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s tenía el monumentu: victoria del Rei de la Montaña en %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s ataque %s/%s armadura%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Primi Mayús dos veces: vista d'espectador (vuela por dentro los bloques). Clic derechu nos oxetos de la barra rápida: control de la repetición."}
+{"name": "aoe2mc.replay.king_died", "text": ": el Rei morrió en %s. Regicidiu: el xugador quede fuera."}
+{"name": "aoe2mc.replay.king_killed", "text": "Rei morto en %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Repetición en direutu: el saltu para nel retardu respeutu del xuegu."}
+{"name": "aoe2mc.replay.lost", "text": "Perdíu: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " tien el monumentu en %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monumentu, falta %s añu"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monumentu, falten %s años"}
+{"name": "aoe2mc.replay.no_camera", "text": "Esta grabación nun tien cámara del so xugador."}
+{"name": "aoe2mc.replay.now", "text": " agora"}
+{"name": "aoe2mc.replay.out", "text": "%s quedó fuera"}
+{"name": "aoe2mc.replay.players", "text": "Xugadores"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " lleva la reliquia a un monasteriu y gana."}
+{"name": "aoe2mc.replay.replay_ended", "text": "La repetición acabó"}
+{"name": "aoe2mc.replay.research", "text": " investiga %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s ríndese"}
+{"name": "aoe2mc.replay.restart_jump", "text": "El sirvidor reinicia pal saltu p'atrás: entra otra vez."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Edificios %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Economía %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Militar %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tecnoloxíes %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Total %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "castiellos %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "comprao %s, vendío %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "reliquies %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "maravíes %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Gastao:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Constr. %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Econ. %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil. %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tec. %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": aldeanos entrenaos %s, recoyíos %s, tiempu ociosu de los aldeanos %s, tiempu ociosu del centru de la villa %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": tien el monumentu (Rei de la Montaña)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monumentu ganáu %s (Rei de la Montaña)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": unidaes militares entrenaes %s, unidaes perdíes %s, edificios perdíos %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Rei morto %s (Regicidiu)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": gana, reliquia nun monasteriu %s (Captura la reliquia)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stributu unviáu %s, recibíu %s, máximu d'aldeanos %s (est.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": centru de la villa perdíu %s (Muerte súbita)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tecnoloxíes %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": temporizador de la maravía dende %s, acaba %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Resume (est.)"}
+{"name": "aoe2mc.replay.task_building", "text": "construyendo"}
+{"name": "aoe2mc.replay.task_following", "text": "siguiendo"}
+{"name": "aoe2mc.replay.task_food", "text": "recoyendo comida"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "en guarnición"}
+{"name": "aoe2mc.replay.task_gold", "text": "recoyendo oru"}
+{"name": "aoe2mc.replay.task_guarding", "text": "guardando"}
+{"name": "aoe2mc.replay.task_idle", "text": "ociosu"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrullando"}
+{"name": "aoe2mc.replay.task_resources", "text": "recoyendo recursos"}
+{"name": "aoe2mc.replay.task_stone", "text": "recoyendo piedra"}
+{"name": "aoe2mc.replay.task_walking", "text": "caminando"}
+{"name": "aoe2mc.replay.task_wood", "text": "recoyendo madera"}
+{"name": "aoe2mc.replay.team", "text": "Equipu %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Arcu %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armadura d'arcos %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Tresporte %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armadura de caballería %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Granxa %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Oru %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armadura d'infantería %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Telar %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Cuerpu a cuerpu %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Piedra %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Madera %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castiellu"}
+{"name": "aoe2mc.replay.tl_king", "text": "Rei morto"}
+{"name": "aoe2mc.replay.tl_military", "text": "1.ª militar: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Reliquia"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Ríndese"}
+{"name": "aoe2mc.replay.town_fell", "text": ": el centru de la villa cayó en %s. Muerte súbita: el xugador quede fuera."}
+{"name": "aoe2mc.replay.town_lost", "text": "Centru de la villa perdíu en %s"}
+{"name": "aoe2mc.replay.training", "text": "Entrenando: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universidá:"}
+{"name": "aoe2mc.replay.up_counts", "text": "economía %s · Universidá %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " construyó una maravía en %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Combate: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s unidaes"}
+{"name": "aoe2mc.replay_input.fights", "text": "Combates grandes:"}
+{"name": "aoe2mc.replay_input.help", "text": "Repetición: fai clic derechu nos oxetos de la barra rápida, o fai clic: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Tomar el control: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s unidaes)"}
+{"name": "aoe2mc.replay_input.vs", "text": " contra "}
+{"name": "aoe2mc.resource.food", "text": "comida"}
+{"name": "aoe2mc.resource.gold", "text": "oru"}
+{"name": "aoe2mc.resource.stone", "text": "piedra"}
+{"name": "aoe2mc.resource.wood", "text": "madera"}
+{"name": "aoe2mc.run.back", "text": "%s yá tá de vuelta"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Campaña completada"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat: una llinia normal va a tolos, /tm TEXTU a los tos aliaos, /msg NOME TEXTU a una sola persona."}
+{"name": "aoe2mc.run.left_bot", "text": "%s salió: un bot xuga como el xugador %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "L'escenariu %s comienza. Entra otra vez."}
+{"name": "aoe2mc.run.starts_in", "text": "El xuegu comienza en %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Abre \"Escoyi el to xugador\" y fai clic en \"Llistu\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Tolos controles: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Primer pasu: caltién el pal de mandu y fai clic derechu nun de los tos aldeanos."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Primer pasu: caltién el pal de mandu y fai clic izquierdu nun de los tos aldeanos."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Oxetivu: ganar el xuegu. Axuste de la victoria: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Xuegu guardáu: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "Salieron %s unidaes"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Esploración automática"}
+{"name": "aoe2mc.stance.formation", "text": "Formación: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Dengún unidá puede atacar el suelu"}
+{"name": "aoe2mc.stance.unpack", "text": "Esplegar primeru el Trabuquete"}
+{"name": "aoe2mc.train.active", "text": "%s ta activu."}
+{"name": "aoe2mc.train.rally", "text": "Fai clic derechu nel suelu pal puntu de reunión."}
+{"name": "aoe2mc.train.researched", "text": "%s ta investigáu."}
+{"name": "aoe2mc.transport.out", "text": "Salieron %s unidaes"}
+{"name": "aoe2mc.treaty.ended", "text": "El tratáu acabó: los xugadores yá se puen atacar."}
+{"name": "aoe2mc.treaty.refuse", "text": "Tratáu: nun puedes atacar enantes de %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Tratáu: nun puedes atacar nesti xuegu."}
+{"name": "aoe2mc.treaty.start", "text": "Tratáu: dengún xugador nun puede atacar a otru xugador enantes de %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Tratáu: dengún xugador nun puede atacar a otru xugador nesti xuegu."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Construye un cuartel: fai clic derechu nun aldeanu seleicionáu, escueye el cuartel y ponlo. La barra d'aiciones enriba de la barra rápida dibízate onde ponelo."}
+{"name": "aoe2mc.tutorial.camera", "text": "Muévete rápido pel mapa: fai clic derechu col oxetu \"Cámara\", camina y dempués fai clic derechu otra vez con él."}
+{"name": "aoe2mc.tutorial.camp", "text": "Destruye el campamentu enemigu nel mediu del mapa: seleiciona la to Milicia y fai clic derechu nun edificiu. La barra del xefe arriba amuesa el pasu."}
+{"name": "aoe2mc.tutorial.camps", "text": "Construye un campamentu de madera cerca de los árboles y un molín cerca de les moras. La barra llateral de la derecha amuesa la madera que cuesten."}
+{"name": "aoe2mc.tutorial.complete", "text": "El tutorial ta completu. Siguiente: xuga contra el bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutorial completu"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Avanza a la Edá Feudal: fai clic derechu nel to centru de la villa y escueye la Edá Feudal. La barra llateral de la derecha amuesa la to comida."}
+{"name": "aoe2mc.tutorial.food", "text": "Recoyi 100 comida: unvía un aldeanu a les moras. La barra llateral de la derecha amuesa la to comida."}
+{"name": "aoe2mc.tutorial.house", "text": "Construye una casa: fai clic derechu nun aldeanu seleicionáu, escueye la casa y ponla. La barra d'aiciones enriba de la barra rápida dibízate onde ponela."}
+{"name": "aoe2mc.tutorial.militia", "text": "Entrena 3 milicianos: fai clic derechu nel to cuartel y escueye el miliciano. La barra llateral de la derecha amuesa la to comida y el to oru."}
+{"name": "aoe2mc.tutorial.raid", "text": "¡El enemigu ataca a los tos aldeanos! Fai clic na llinia d'alerta colorada del chat pa ir allá, dempués seleiciona los tos milicianos y fai clic derechu nos enemigos. La barra del xefe arriba amuesa la vida de la unidá seleicionada."}
+{"name": "aoe2mc.tutorial.select", "text": "Seleiciona un aldeanu: fai clic izquierdu nun de los tos aldeanos col pal de mandu. La barra del xefe arriba amuesa la unidá seleicionada, la barra d'aiciones enriba de la barra rápida amuesa la siguiente aición."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Pasu fechu"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Pasu %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "CONSEYU: el cuartel entrena infantería. La infantería ye barata y bona contra los edificios."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "CONSEYU: ataca con toles unidaes xuntes. Un grupu pequeñu muerre enantes de faer dañu."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "CONSEYU: construye los edificios de descarga cerca de los recursos, pa que los aldeanos caminen poco."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "CONSEYU: la siguiente edá desbloquea edificios, unidaes y tecnoloxíes nuevos. Caltién los aldeanos trabayando mientres avances d'edá."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "CONSEYU: les moras cerca d'un molín son un bon comienzu de comida. Más tarde, les granxes dan comida que nun s'acaba."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "CONSEYU: una casa da sitiu pa 5 habitantes más. Mira la población na barra llateral y construye casas enantes de que se llene."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "CONSEYU: pues poner hasta 15 unidaes en cola nun edificiu cuando tienes los recursos."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "CONSEYU: en AoE2 la campana de la villa unvía los aldeanos al centru de la villa. Tócala cuando el enemigu asalte la villa."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "CONSEYU: la llinia Ociosu de la barra llateral de la derecha cuenta los aldeanos sin trabayu. Da-yos trabayu."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "CONSEYU: entrena aldeanos too el tiempu nes primeres edaes. Más aldeanos dan más recursos."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "CONSEYU: los aldeanos recoyen más de presa cerca d'un edificiu de descarga. Construye un campamentu de madera al llau de los árboles."}
+{"name": "aoe2mc.tutorial.villager", "text": "Entrena un aldeanu: fai clic derechu nel to centru de la villa y escueye el aldeanu. La barra llateral de la derecha amuesa la comida que cuesta."}
+{"name": "aoe2mc.tutorial.wood", "text": "Recoyi 50 madera: seleiciona un aldeanu y fai clic derechu nun árbol. La barra llateral de la derecha amuesa la to madera."}
+{"name": "aoe2mc.victory", "text": "Victoria"}
+{"name": "aoe2mc.wonder.built", "text": "El xugador %s construyó una maravía."}
+{"name": "aoe2mc.wonder.destroyed", "text": "La maravía del xugador %s ta destruida."}

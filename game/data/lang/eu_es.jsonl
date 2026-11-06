@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "%s jokalariak %s aroan aurrera egiten du."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Ustelkeriak mapa ertzetik erdira hartzen du %s-n. Bertako unitate eta eraikin guztiak suntsitzen ditu."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ezin dut orain han %s bat eraiki."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ezin dut unitate hori entrenatu: ez dut hura egiteko eraikinik."}
+{"name": "aoe2mc.bot.flare_two", "text": "Jarri bi seinale horman."}
+{"name": "aoe2mc.bot.no_flare", "text": "Ez dut seinalerik ikusten."}
+{"name": "aoe2mc.bot.no_market", "text": "Ez daukat merkaturik: ezin dut zerga bidali."}
+{"name": "aoe2mc.bot.no_onager", "text": "Ez daukat onagrorik."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Ez daukat baliabide nahikorik horma baterako."}
+{"name": "aoe2mc.bot.no_water", "text": "Ez daukat urik nire herriaren ondoan: ezin dut flota eraiki."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Nire onagroek ezin dituzte zuhaitzak moztu."}
+{"name": "aoe2mc.build.cost", "text": "Baliabide nahikorik ez: %s bat %s balio du."}
+{"name": "aoe2mc.build.flat", "text": "%s lur lauan egon behar du."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s bat nire horma baten 4 laukitan jarri behar da, lerro zuzenean, edo 3 diagonal laukitan."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Eraiki: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s bat uretan egon behar du, kostaldearen ondoan."}
+{"name": "aoe2mc.build.space", "text": "Ez dago %s jartzeko lekurik hemen."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Baliabide nahikorik ez: %s %s laukik %s balio dute."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: egin klik eskuinarekin horman."}
+{"name": "aoe2mc.build.water", "text": "%s bat uretan egon behar du."}
+{"name": "aoe2mc.camera.fov", "text": "Kamera azkarrak eskuan daramazun objektua astintzen du. Geldi egoteko, jarri Aukerak > Irisgarritasun-ezarpenak > Ikuspegiaren astintzea OFF aukeran. Kamerak ikuspegia zabalagoa egiten du ere, eta mapatik gehiago erakusten du. Ohiko ikuspegia mantentzeko, jarri Aukerak > Irisgarritasun-ezarpenak > FOV efektuak 0 %-ra."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: itzalita"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: piztuta, abiadura x%s. Shift + eskuineko klika: hurrengo abiadura."}
+{"name": "aoe2mc.camera.speed", "text": "Kameraren abiadura: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Garaitu etsaiaren unitate guztiak eta galdu gutxi"}
+{"name": "aoe2mc.challenge.booming", "text": "Entrenatu 100 herritar eta igo Aro Inperialera"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Igo Gazteluaren Aroa eta bizi iraun etsaiaren erasoei"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Suntsitu etsaiaren gaztelua"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Bildu 200 janari, 200 egur, 100 urre eta 200 harri, entrenatu 21 herritar, eraiki egur-kanpalekua eta errota bat, eta igo Aro Feudalera"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Entrenatu 27 herritar, eraiki 5 etxe eta igo Gazteluaren Aroa"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Garaitu etsaiaren sei olatuak"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s unitate galdu, brontzezko dominaren arte %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s unitate galdu, urrezko dominaren arte %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s unitate galdu, dominarik ez"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s unitate galdu, zilarrezko dominaren arte %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Brontzezko domina"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Urrezko domina"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Zilarrezko domina"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Suntsitu etsaiaren gerra-ontzi guztiak"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Dominarik ez"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Hil 5 etsaiaren herritar"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Brontzezko domina %s-n"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Urrezko domina %s-n"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Zilarrezko domina %s-n"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Babesa itzalita"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Babesa piztuta"}
+{"name": "aoe2mc.cheat.beyond", "text": "Teknologiak: 256 ikerketa arte"}
+{"name": "aoe2mc.cheat.cpu", "text": "Biztanleriaren muga: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Gerraren laiñoa: itzalita"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Gerraren laiñoa: piztuta"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Teknologiak doan dira"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Partekatzea maitatzea da: zure sarrerak zure aliatuenak dira"}
+{"name": "aoe2mc.cheat.wonders", "text": "Naturaren jabe zara: %s animalia"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Aliatuak baino ez dira geratzen: aliantzak amaitzen dira. Irabazten du bizirik dagoen azken jokalariak."}
+{"name": "aoe2mc.conquest.defeated", "text": "%s jokalaria garaitua izan da."}
+{"name": "aoe2mc.controls.attack", "text": "Eraso: hautatu unitate militarrak eta egin eskuineko klik etsai batean."}
+{"name": "aoe2mc.controls.build", "text": "Eraiki: hautatu herritarrak, egin eskuineko klik eraikuntza-menua irekitzeko, hautatu eraikin bat eta egin ezkerreko klik lurrean. Shift + ezkerreko klika: gehiago jarri. Eskuineko klika: utzi."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: egin eskuineko klik Kamera begiko-ikuspegiarekin (bizkor-barran 2. tekla): mapa gainetik azkar ibiltzen zara. Shift + eskuineko klika: hurrengo abiadura. Beste eskuineko klik bat: jaisten zara."}
+{"name": "aoe2mc.controls.garrison", "text": "Guarnizioa: hautatu unitateak, eta egin eskuineko klik zure eraikinean. Haren menuak irtetzen utzi die. Herriko gunearen menua: Jo herriko kanpaia."}
+{"name": "aoe2mc.controls.gather", "text": "Bildu: hautatu herritarrak, eta egin eskuineko klik zuhaitz, fruta-zuhaixka, mina edo nekazaritza-lursail batean."}
+{"name": "aoe2mc.controls.goto", "text": "Joan: egin eskuineko klik Joan konpasarekin (bizkor-barran 3. tekla): zure herriko guneen, kontrol-taldeen eta hurrengo ociosoen herritarraren menua."}
+{"name": "aoe2mc.controls.groups", "text": "Kontrol-taldeak: hautatu unitateak, hartu taldeko objektu bat (bizkor-barran 5etik 9ra tekla) eta egin Shift + eskuineko klika hautapena gordetzeko. Eskuineko klika: taldea hautatu."}
+{"name": "aoe2mc.controls.head", "text": "Kontrolak (eduki azenarioa makila batean; ekintza-barrak hurrengo urratsa erakusten du):"}
+{"name": "aoe2mc.controls.menu", "text": "Jokoaren menua: egin eskuineko klik Jokoaren menua liburuarekin (bizkor-barran 4. tekla): diplomazia eta zerga, seinalea, gorde, pausa eta teknologien zuhaitza."}
+{"name": "aoe2mc.controls.move", "text": "Mugitu: hautapen batekin, egin eskuineko klik lurrean."}
+{"name": "aoe2mc.controls.research", "text": "Ikertu eta igo aroa: egin eskuineko klik zure eraikinean, eta egin klik teknologia batean edo hurrengo aroan haren menuan."}
+{"name": "aoe2mc.controls.select", "text": "Hautatu: egin ezkerreko klik unitate batean. Eduki ezkerreko klika eta begiratu lurrean zehar: hautapen-kutxa. Eskuineko klika: agindu."}
+{"name": "aoe2mc.controls.train", "text": "Entrenatu: egin eskuineko klik zure eraikinean (herriko gunea, kuartela...) eta egin klik unitate batean haren menuan."}
+{"name": "aoe2mc.defeat", "text": "Porrota"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Aliatua"}
+{"name": "aoe2mc.diplomacy.changed", "text": "%s jokalariak bere jarrera aldatu du zuregatik: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Etsaia"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutrala"}
+{"name": "aoe2mc.diplomacy.speed", "text": "%s jokalariak jokoaren abiadura %s-ra ezarri du."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "%s jokalariak %s %s bidali dio %s jokalariari."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Seinalea %s %s-n"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Jarraitu: egin klik zure unitate batean"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Zaindu: egin klik zure unitate edo eraikin batean"}
+{"name": "aoe2mc.gaia.joins", "text": "%s bat zurekin batzen da."}
+{"name": "aoe2mc.garrison.all_back", "text": "Denak lanera berriro"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Herriko kanpaia jotzen du: %s herritarrek babesleku bila dabiltza"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Ez dago herritarrik hautatuta."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Ez daukazu herritarrik."}
+{"name": "aoe2mc.garrison.out", "text": "%s unitate atera dira"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s herritarrek babesleku bila dabiltza"}
+{"name": "aoe2mc.gather.act_attack", "text": "eraso"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "eraikuntza-menua"}
+{"name": "aoe2mc.gather.act_garrison", "text": "guarnizioa"}
+{"name": "aoe2mc.gather.act_gather", "text": "bildu"}
+{"name": "aoe2mc.gather.act_hunt", "text": "ehiza"}
+{"name": "aoe2mc.gather.act_move", "text": "mugitu"}
+{"name": "aoe2mc.gather.act_select", "text": "hautatu"}
+{"name": "aoe2mc.gather.act_select_type", "text": "hautatu mota bereko guztiak"}
+{"name": "aoe2mc.gather.act_trade", "text": "merkataritza"}
+{"name": "aoe2mc.gather.act_train", "text": "entrenatu"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Erasoa: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Hautapen-kutxa: bertan behera"}
+{"name": "aoe2mc.gather.bush", "text": "Mertxika-zuhaixka"}
+{"name": "aoe2mc.gather.carcass", "text": "Gorpua"}
+{"name": "aoe2mc.gather.corner", "text": "Hautapen-kutxa: egin klik bestelako izkinan"}
+{"name": "aoe2mc.gather.enemy", "text": "Etsaiaren %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Etsaiaren eraikina"}
+{"name": "aoe2mc.gather.farm", "text": "Nekazaritza-lursaila"}
+{"name": "aoe2mc.gather.ground", "text": "Lurra"}
+{"name": "aoe2mc.gather.group", "text": "%s taldea: %s unitate"}
+{"name": "aoe2mc.gather.group_saved", "text": "%s taldea: %s unitate gordeta"}
+{"name": "aoe2mc.gather.mine", "text": "%s meatzea"}
+{"name": "aoe2mc.gather.paused", "text": "Jokoa pausatuta dago."}
+{"name": "aoe2mc.gather.point", "text": "%s · Eskuineko klika: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Berriz ereiteak ilaran: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Hautatuta: %s unitate"}
+{"name": "aoe2mc.gather.tree", "text": "Zuhaitza"}
+{"name": "aoe2mc.hill.holds", "text": "%s jokalariak monumentua dauka."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Lurra erasotu: egin eskuineko klik lurrean"}
+{"name": "aoe2mc.hints.attack_move", "text": "Mugimenduan erasotu: egin eskuineko klik lurrean"}
+{"name": "aoe2mc.hints.building", "text": "Jarri %s: egin eskuineko klik lurrean · Shift + eskuineko klika: gehiago jarri · Utzi: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: egin ezkerreko klik jartzeko · Shift: gehiago jarri · Eskuineko klika: utzi"}
+{"name": "aoe2mc.hints.corner", "text": "Hautapen-kutxa: egin eskuineko klik bestelako izkinan"}
+{"name": "aoe2mc.hints.count_military", "text": "%s unitate militar"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s unitate militar"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s herritar"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s herritar"}
+{"name": "aoe2mc.hints.deselect", "text": "Kutxa hutsa: desautatu"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Ezkerreko klika: desautatu"}
+{"name": "aoe2mc.hints.follow", "text": "Jarraitu: egin eskuineko klik zure edo aliatuaren unitate batean"}
+{"name": "aoe2mc.hints.guard", "text": "Zaindu: egin eskuineko klik zure edo aliatuaren unitate edo eraikin batean"}
+{"name": "aoe2mc.hints.military", "text": "%s · Eskuineko klika: etsai bati eraso, jarrera-menua · %s"}
+{"name": "aoe2mc.hints.none", "text": "Ezkerreko klika: unitate bat hautatu · Eduki ezkerreko klika: hautapen-kutxa"}
+{"name": "aoe2mc.hints.none_wand", "text": "Eskuineko klika: unitate bat hautatu · Makila: hautapen-kutxa"}
+{"name": "aoe2mc.hints.patrol", "text": "Patruilatu: egin eskuineko klik lurrean"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Eskuineko klika: bildu, eraiki, eraikuntza-menua · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s prest"}
+{"name": "aoe2mc.lobby.you_play", "text": "%s jokatzen duzu."}
+{"name": "aoe2mc.monk.converts", "text": "Fraide batek %s bihurtzen du."}
+{"name": "aoe2mc.monk.dies", "text": "%s hiltzen da (Herejia)."}
+{"name": "aoe2mc.pause.continued", "text": "%s jokalariak jokoa jarraitu du."}
+{"name": "aoe2mc.pause.paused", "text": "%s jokalariak jokoa pausatu du."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "%s taldea (batez besteko balorazioa %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Partida amaitu da. Egin eskuineko klik eskuan daukazun Laburpen liburuarekin emaitzak ikusteko. Gelditu jokoaren programa Ctrl-C-rekin haren kontsolan."}
+{"name": "aoe2mc.relic_victory.all", "text": "%s jokalariak erlikia guztiak ditu."}
+{"name": "aoe2mc.relic_victory.lost", "text": "%s jokalariak erlikia bat galdu du."}
+{"name": "aoe2mc.repair.no_resources", "text": "Baliabide nahikorik ez %s konpontzeko."}
+{"name": "aoe2mc.replay.army", "text": "Armada: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", amaieran armada: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", galduak: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Eraikuntza-agindua:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · guarnizioa %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | %s %s darama"}
+{"name": "aoe2mc.replay.eco_build", "text": "eraiki %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "janaria %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "urrea %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "ociosoa %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "harria %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "egurra %s"}
+{"name": "aoe2mc.replay.flare", "text": "Seinalea"}
+{"name": "aoe2mc.replay.game_ends", "text": "Partida amaitzen da"}
+{"name": "aoe2mc.replay.game_time", "text": "Jokoaren denbora %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · guarnizioa %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Bizt %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Bal %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Her %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s jokalariak monumentua zeukan: Gainaren Erregea garaipena %s-n."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s eraso %s/%s babesa%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Sakatu Shift bi aldiz: ikuslearen ikuspegia (blokeen artean hegan). Egin eskuineko klika bizkor-barrako objektuetan: erreprodukzioaren kontrola."}
+{"name": "aoe2mc.replay.king_died", "text": ": Erregea %s-n hil zen. Erregicidioa: jokalaria kanpora atera da."}
+{"name": "aoe2mc.replay.king_killed", "text": "Erregea hilda %s-n"}
+{"name": "aoe2mc.replay.live_jump", "text": "Zuzeneko erreprodukzioa: saltoa jokoaren atzerapenean geratzen da."}
+{"name": "aoe2mc.replay.lost", "text": "Galduta: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " monumentua dauka %s-n."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monumentua, %s urte geratzen da"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monumentua, %s urte geratzen dira"}
+{"name": "aoe2mc.replay.no_camera", "text": "Grabazio honek ez dauka bere jokalariaren kamerarik."}
+{"name": "aoe2mc.replay.now", "text": " orain"}
+{"name": "aoe2mc.replay.out", "text": "%s kanpoan dago"}
+{"name": "aoe2mc.replay.players", "text": "Jokalariak"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " erlikia monasterio batera eramaten du eta irabazten du."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Erreprodukzioa amaitu da"}
+{"name": "aoe2mc.replay.research", "text": " %s ikertzen du"}
+{"name": "aoe2mc.replay.resigns", "text": "%s errenditzen da"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Zerbitzaria berrabiarazten da atzera saltatzeko: sartu berriro."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Eraikinak %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekonomia %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Militarra %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Teknologiak %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Guztira %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "gazteluak %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "erosi %s, saldu %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "erlikiak %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "miraria %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Gastatua:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Eraik. %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eko. %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil. %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tekn. %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": entrenatutako herritarrak %s, bildutakoak %s, herritarren ociosoen denbora %s, herriko guneren ociosoen denbora %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": monumentua dauka (Gainaren Erregea)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monumentua irabazi du %s (Gainaren Erregea)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": entrenatutako unitate militarrak %s, galdutako unitateak %s, galdutako eraikinak %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Erregea hil da %s aldiz (Erregicidioa)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": irabazi du, erlikia monasterio batean %s (Erlikia harrapatu)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %szerga bidalia %s, jasoa %s, herritar gehienez %s (kalk.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": herriko gunea galdua %s (Heriotza bat-bateko)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, teknologiak %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": miraria-tenporizadorea %s-tik, amaitzen da %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Laburpena (kalk.)"}
+{"name": "aoe2mc.replay.task_building", "text": "eraikitzen"}
+{"name": "aoe2mc.replay.task_following", "text": "jarraitzen"}
+{"name": "aoe2mc.replay.task_food", "text": "janaria biltzen"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "guarnizioan"}
+{"name": "aoe2mc.replay.task_gold", "text": "urrea biltzen"}
+{"name": "aoe2mc.replay.task_guarding", "text": "zaintzen"}
+{"name": "aoe2mc.replay.task_idle", "text": "ociosoa"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patruilatzen"}
+{"name": "aoe2mc.replay.task_resources", "text": "baliabideak biltzen"}
+{"name": "aoe2mc.replay.task_stone", "text": "harria biltzen"}
+{"name": "aoe2mc.replay.task_walking", "text": "ibiltzen"}
+{"name": "aoe2mc.replay.task_wood", "text": "egurra biltzen"}
+{"name": "aoe2mc.replay.team", "text": "%s taldea · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Arku-jaurtitzailea %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Arku-jaurtitzaileen babesa %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Garraioa %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Zaldunen babesa %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Nekazaritza-lursaila %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Urrea %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Infanteriaren babesa %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Ehuntegia %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Eskuz-eskuko borroka %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Harria %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Egurra %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Gaztelua"}
+{"name": "aoe2mc.replay.tl_king", "text": "Erregea hilda"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. armada: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Erlikia"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Errenditzen da"}
+{"name": "aoe2mc.replay.town_fell", "text": ": herriko gunea %s-n erori zen. Heriotza bat-bateko: jokalaria kanpora atera da."}
+{"name": "aoe2mc.replay.town_lost", "text": "Herriko gunea galdua %s-n"}
+{"name": "aoe2mc.replay.training", "text": "Entrenatzen: %s"}
+{"name": "aoe2mc.replay.university", "text": "Unibertsitatea:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekonomia %s · Unibertsitatea %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " miraria bat eraiki du %s-n."}
+{"name": "aoe2mc.replay_input.fight", "text": "Borroka: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s unitate"}
+{"name": "aoe2mc.replay_input.fights", "text": "Borroka handiak:"}
+{"name": "aoe2mc.replay_input.help", "text": "Erreprodukzioa: egin eskuineko klik bizkor-barrako objektuetan, edo egin klik: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Hartu kontrola: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s unitate)"}
+{"name": "aoe2mc.replay_input.vs", "text": " aurka "}
+{"name": "aoe2mc.resource.food", "text": "janaria"}
+{"name": "aoe2mc.resource.gold", "text": "urrea"}
+{"name": "aoe2mc.resource.stone", "text": "harria"}
+{"name": "aoe2mc.resource.wood", "text": "egurra"}
+{"name": "aoe2mc.run.back", "text": "%s berriro hemen da"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kanpaina osatuta"}
+{"name": "aoe2mc.run.chat_hint", "text": "Txata: lerro arrunt bat denei doa, /tm TESTUA zure aliatuei, /msg IZENA TESTUA pertsona bati."}
+{"name": "aoe2mc.run.left_bot", "text": "%s irten da: bot batek %s jokalaria jokatzen du"}
+{"name": "aoe2mc.run.scenario_starts", "text": "%s agertokia hasten da. Sartu berriro."}
+{"name": "aoe2mc.run.starts_in", "text": "Partida %s-n hasiko da"}
+{"name": "aoe2mc.run.wait_ready", "text": "Ireki \"Aukeratu zure jokalaria\" eta egin klik \"Prest\"-en"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Kontrol guztiak: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Lehen urratsa: eduki komandoko makila eta egin eskuineko klik zure herritarretako batean."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Lehen urratsa: eduki komandoko makila eta egin ezkerreko klik zure herritarretako batean."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Helburua: partida irabaztea. Garaipen-ezarpena: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Partida gordeta: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s unitate atera dira"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Automatikoki esploratu"}
+{"name": "aoe2mc.stance.formation", "text": "Formazioa: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Unitate batek ere ezin du lurra erasotu"}
+{"name": "aoe2mc.stance.unpack", "text": "Lehenengo desmuntatu Trebuchet-a"}
+{"name": "aoe2mc.train.active", "text": "%s aktibo dago."}
+{"name": "aoe2mc.train.rally", "text": "Egin eskuineko klik lurrean bilketa-puntua ezartzeko."}
+{"name": "aoe2mc.train.researched", "text": "%s ikertuta dago."}
+{"name": "aoe2mc.transport.out", "text": "%s unitate atera dira"}
+{"name": "aoe2mc.treaty.ended", "text": "Ituna amaitu da: jokalariek orain eraso diezaiokete elkarri."}
+{"name": "aoe2mc.treaty.refuse", "text": "Ituna: ezin duzu erasorik egin %s baino lehen."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Ituna: ezin duzu erasorik egin partida honetan."}
+{"name": "aoe2mc.treaty.start", "text": "Ituna: jokalari batek ere ezin dio beste jokalari bati eraso %s baino lehen."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Ituna: jokalari batek ere ezin dio beste jokalari bati eraso partida honetan."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Eraiki kuartel bat: egin eskuineko klik hautatutako herritar batean, aukeratu kuartela eta jarri. Bizkor-barraren gainean dagoen ekintza-barrak esaten dizu non jarri."}
+{"name": "aoe2mc.tutorial.camera", "text": "Mugitu azkar mapan: egin eskuineko klik \"Kamera\" objektuarekin, ibili, eta egin berriro eskuineko klik harekin."}
+{"name": "aoe2mc.tutorial.camp", "text": "Suntsitu mapako erdiko etsaiaren kanpalekua: hautatu zure Milizia eta egin eskuineko klik eraikin batean. Goiko jefe-barrak urratsa erakusten du."}
+{"name": "aoe2mc.tutorial.camps", "text": "Eraiki egur-kanpalekua zuhaitzen ondoan eta errota mertxiken ondoan. Eskuineko alboko barrak egurraren kostua erakusten du."}
+{"name": "aoe2mc.tutorial.complete", "text": "Tutoriala osatu da. Hurrengoa: jokatu botaren aurka: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutoriala osatuta"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Igo Aro Feudalera: egin eskuineko klik zure herriko gunean eta aukeratu Aro Feudala. Eskuineko alboko barrak zure janaria erakusten du."}
+{"name": "aoe2mc.tutorial.food", "text": "Bildu 100 janari: bidali herritar bat mertxikeetara. Eskuineko alboko barrak zure janaria erakusten du."}
+{"name": "aoe2mc.tutorial.house", "text": "Eraiki etxe bat: egin eskuineko klik hautatutako herritar batean, aukeratu etxea eta jarri. Bizkor-barraren gainean dagoen ekintza-barrak esaten dizu non jarri."}
+{"name": "aoe2mc.tutorial.militia", "text": "Entrenatu 3 milizia: egin eskuineko klik zure kuartelean eta aukeratu milizia. Eskuineko alboko barrak zure janaria eta urrea erakusten du."}
+{"name": "aoe2mc.tutorial.raid", "text": "Etsaiak zure herritarrak erasotzen ditu! Egin klik txatean dagoen alerta-lerro gorrian hara joateko, hautatu zure milizia eta egin eskuineko klik etsaietan. Goiko jefe-barrak hautatutako unitatearen osasuna erakusten du."}
+{"name": "aoe2mc.tutorial.select", "text": "Hautatu herritar bat: egin ezkerreko klik zure herritarretako batean komandoko makilarekin. Goiko jefe-barrak hautatutako unitatea erakusten du, bizkor-barraren gainean dagoen ekintza-barrak hurrengo ekintza."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Urratsa eginda"}
+{"name": "aoe2mc.tutorial.step_of", "text": "%s/%s urratsa: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "AHOLKUA: kuarteleak infanteria entrenatzen du. Infanteria merea da eta eraikinen aurka ona da."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "AHOLKUA: erasotu unitate guztiekin batera. Talde txiki bat kalterik egin baino lehen hiltzen da."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "AHOLKUA: eraiki baliabideen ondoan utzi-eraikinak, herritarrek bide laburra egin dezaten."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "AHOLKUA: hurrengo aroak eraikin, unitate eta teknologia berriak desblokeatzen ditu. Mantendu herritarrak lanean aroa igotzen duzun bitartean."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "AHOLKUA: errotaren ondoko mertxikak janari hasiera seguru bat dira. Gero, nekazaritza-lursailek janaria ematen dute, amaitzen ez dena."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "AHOLKUA: etxe batek 5 biztanle gehiagorako tokia ematen du. Begiratu biztanleria alboko barran eta eraiki etxeak bete baino lehen."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "AHOLKUA: eraikin batean 15 unitate arte ilaratu ditzakezu baliabideak dituzunean."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "AHOLKUA: AoE2-n herriko kanpaiak herritarrak herriko gunera bidaltzen ditu. Jo ezazu etsaiak herria erasotzen duenean."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "AHOLKUA: eskuineko alboko barraren Ociosoa lerroak lanik gabeko herritarrak zenbatzen ditu. Eman lana."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "AHOLKUA: entrenatu herritarrak etengabe lehen aroetan. Herritar gehiagok baliabide gehiago ematen dute."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "AHOLKUA: herritarrek azkarrago biltzen dute utzi-eraikin baten ondoan. Eraiki egur-kanpalekua zuhaitzen ondoan."}
+{"name": "aoe2mc.tutorial.villager", "text": "Entrenatu herritar bat: egin eskuineko klik zure herriko gunean eta aukeratu herritarra. Eskuineko alboko barrak herritarrak zenbat janari balio duen erakusten du."}
+{"name": "aoe2mc.tutorial.wood", "text": "Bildu 50 egur: hautatu herritar bat eta egin eskuineko klik zuhaitz batean. Eskuineko alboko barrak zure egurra erakusten du."}
+{"name": "aoe2mc.victory", "text": "Garaipena"}
+{"name": "aoe2mc.wonder.built", "text": "%s jokalariak miraria bat eraiki du."}
+{"name": "aoe2mc.wonder.destroyed", "text": "%s jokalariaren miraria suntsitu da."}
