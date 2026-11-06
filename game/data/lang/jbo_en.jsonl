@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "pilno %s pu kakne le %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: le korupcio cliva le mapa lo'i se kabri ba le sanmi bi'o cmima ba %s. ri mabla ro le jinvi ja ro le zdani lo ka'e ri."}
+{"name": "aoe2mc.bot.cannot_build", "text": "mi na kakne zdani lo %s ca'o ti."}
+{"name": "aoe2mc.bot.cannot_train", "text": "mi na kakne lo jinvi ca'o vi.: mi na ci'o zdani le ka ri."}
+{"name": "aoe2mc.bot.flare_two", "text": "ba'o sa'e lo nu ko ciksi lo ce'u vanbi."}
+{"name": "aoe2mc.bot.no_flare", "text": "mi na viska ciksi."}
+{"name": "aoe2mc.bot.no_market", "text": "mi na ci'o zarci: mi na kakne sendi tributo."}
+{"name": "aoe2mc.bot.no_onager", "text": "mi na ci'o onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "mi na ci'o su'o rinka lo nu vanbi."}
+{"name": "aoe2mc.bot.no_water", "text": "mi na ci'o djacu cnano le mi tcadu: mi na kakne tcati flota."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "mi'e onager na kakne tcati lo tricu."}
+{"name": "aoe2mc.build.cost", "text": "na ka'e rinka: %s cusku %s."}
+{"name": "aoe2mc.build.flat", "text": "le %s bilga stali sus le plise lo ci'e."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s bilga stali sus 4 lo ci'e lo vanbi pe do lo pilno cu lo sanmi jbena, ja sus 3 lo ci'e lo diagonal."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Zdani: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s bilga stali sus cnano cnano lo cmima."}
+{"name": "aoe2mc.build.space", "text": "na ci'o vacki lo nu ka'e stali le %s ca'o ti."}
+{"name": "aoe2mc.build.tiles_cost", "text": "na ka'e rinka: %s ci'e lo %s cusku %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: ko djuno lo mi'e dekstro klika lo tcadu le vanbi."}
+{"name": "aoe2mc.build.water", "text": "%s bilga stali sus le djacu."}
+{"name": "aoe2mc.camera.fov", "text": "le sajgau kamera cu nu ta'o le ctuca penmi zunle. ki'u lo nu ta'o ctuca cu ca'o mi'e balci, co'a Opcije > Accessibility Settings > View Bobbing nu OFF. le kamera zukte se sisti larcu le vidnu, ri cu javni lo nu viska le mapa. ki'u lo nu ta'o vidnu normal, co'a Opcije > Accessibility Settings > FOV Effects nu 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: na'e"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: ja'o, sajgau x%s. Shift dekstro klika: sanmi sajgau."}
+{"name": "aoe2mc.camera.speed", "text": "Sajgau le kamera: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "mabla ro lo jinvi le ta'e nai lo ci'e lo ja'o nai zdani le jinvi"}
+{"name": "aoe2mc.challenge.booming", "text": "ka'e trina 100 le lo'e xamgu ja ca'o le ka plise le Imperial Age"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "ca'o le ka plise le Castle Age ja ca'o pluka le vrusi le jinvi"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "mabla le kastelo pe le jinvi"}
+{"name": "aoe2mc.challenge.early-economy", "text": "ka'e ciska 200 cidja, 200 tricu, 100 gerku ja 200 cmana, trina 21 xamgu, zdani le tricu-ranli ja le pilno, ja ca'o le ka plise le Feudal Age"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "trina 27 xamgu, zdani 5 zdani ja ca'o le ka plise le Castle Age"}
+{"name": "aoe2mc.challenge.land-battle", "text": "mabla ro le ci'e lo vrusi"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s jinvi nasni, bronzo medalo de'i %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s jinvi nasni, gerku medalo de'i %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s jinvi nasni, na ci'o medalo"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s jinvi nasni, arzento medalo de'i %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronzo medalo"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Gerku medalo"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Arzento medalo"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "mabla ro le ci'e lo vrusi lo djacu"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Na ci'o medalo"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "mortyli 5 lo vrusi xamgu"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronzo medalo lo'i %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Gerku medalo lo'i %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Arzento medalo lo'i %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Ponse na'e"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Ponse ja'o"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tekno: de'i 256 lo ci'e lo nu sisti"}
+{"name": "aoe2mc.cheat.cpu", "text": "Limit lo xamgu: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Fog of war: na'e"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Fog of war: ja'o"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Tekno cu nai cusku"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Sharing is caring: do rinka cu ca'o le se tcadu"}
+{"name": "aoe2mc.cheat.wonders", "text": "do kontrolyli le tcadu: %s dasni"}
+{"name": "aoe2mc.conquest.allies_end", "text": "ro se tcadu cu ca'o: le ka se zukte cu pagre. le lo ca'o ca'o viska cu ka'e bajra."}
+{"name": "aoe2mc.conquest.defeated", "text": "Xamgu %s cu mabla."}
+{"name": "aoe2mc.controls.attack", "text": "Vrusi: tcita le jinvi ka'e vrusi, ba dekstro klika lo vrusi."}
+{"name": "aoe2mc.controls.build", "text": "Zdani: tcita lo xamgu, dekstro klika ri ka'e viska le zdani-menu, tcita zdani, ba maplo klika le plise. Shift + maplo klika: zdani le ka'e. Dekstro klika: vajni."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: dekstro klika le kamera-speglu (klavi 2 le lo ci'e): mi cliva sajgau alte ri'a le mapa. Shift dekstro klika: sanmi sajgau. Dekstro klika denove: mi fasnu fanva."}
+{"name": "aoe2mc.controls.garrison", "text": "Garnizo: tcita jinvi, ba dekstro klika lo ka'e zdani. Lo menu cu ca'o le ka jinvi bilga ba'o lo'i jinvi. Menu lo urbocentro: ko cipra le sonorilo."}
+{"name": "aoe2mc.controls.gather", "text": "Ciska: tcita xamgu, ba dekstro klika tricu, sadjvi berpo, minda pe farma."}
+{"name": "aoe2mc.controls.goto", "text": "Zvati: dekstro klika lo kompas Zvati (klavi 3 le lo ci'e): menu lo urbocentro, kontrol-grupo ja le sanmi xamgu."}
+{"name": "aoe2mc.controls.groups", "text": "Kontrol-grupo: tcita jinvi, tcita grupo-objekto (klavi 5 de'i 9 le lo ci'e) ja Shift + dekstro klika ka'e konservi le tcita. Dekstro klika: tcita le grupo."}
+{"name": "aoe2mc.controls.head", "text": "Kontrol (kacna le karoto lo ba stick; le bar pe le ka'e montra le sanmi ka'e):"}
+{"name": "aoe2mc.controls.menu", "text": "Menu le ludo: dekstro klika lo cukta Menu le ludo (klavi 4 le lo ci'e): diplomasi ja tributo, ciksi, konservi, pauzi ja le tekno-tricu."}
+{"name": "aoe2mc.controls.move", "text": "Zvati: ca'o tcita, dekstro klika le plise."}
+{"name": "aoe2mc.controls.research", "text": "Esplori ja epoki: dekstro klika lo ka'e zdani ja klika tekno pe le sanmi epoko lo ka'e menu."}
+{"name": "aoe2mc.controls.select", "text": "Tcita: maplo klika jinvi. Kacna maplo klika ja viska le plise: tcita-fasnu. Dekstro klika: sorcu ordi."}
+{"name": "aoe2mc.controls.train", "text": "Trina: dekstro klika lo ka'e zdani (urbocentro, kazerno ...) ja klika jinvi lo ka'e menu."}
+{"name": "aoe2mc.defeat", "text": "Mabla"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Tcadu"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Xamgu %s cangu le ka se stance lo ti: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Vrusi"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutral"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Xamgu %s tcita le sajgau le ludo de'i %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Xamgu %s sendi %s %s le xamgu %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Ciksi lo %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Dasni: klika ro jinvi le ka'e"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Gardi: klika ro jinvi pe zdani le ka'e"}
+{"name": "aoe2mc.gaia.joins", "text": "%s ba'o lo ka'e tcadu."}
+{"name": "aoe2mc.garrison.all_back", "text": "Ro ca'o back lo ka'e ciska"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Lo sonorilo cipra: %s xamgu cerni lo nu jmive"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Na ci'o xamgu cu tcita."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "mi na ci'o xamgu."}
+{"name": "aoe2mc.garrison.out", "text": "%s jinvi bilga go'i"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s xamgu cerni lo nu jmive"}
+{"name": "aoe2mc.gather.act_attack", "text": "vrusi"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "zdani-menu"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garnizo"}
+{"name": "aoe2mc.gather.act_gather", "text": "ciska"}
+{"name": "aoe2mc.gather.act_hunt", "text": "casna"}
+{"name": "aoe2mc.gather.act_move", "text": "zvati"}
+{"name": "aoe2mc.gather.act_select", "text": "tcita"}
+{"name": "aoe2mc.gather.act_select_type", "text": "tcita ro lo ka'e xatra"}
+{"name": "aoe2mc.gather.act_trade", "text": "vecnu"}
+{"name": "aoe2mc.gather.act_train", "text": "trina"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Vrusi: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Tcita-fasnu: vajni"}
+{"name": "aoe2mc.gather.bush", "text": "Berpo-sadjvi"}
+{"name": "aoe2mc.gather.carcass", "text": "Kadavro"}
+{"name": "aoe2mc.gather.corner", "text": "Tcita-fasnu: klika le ce'u cmima"}
+{"name": "aoe2mc.gather.enemy", "text": "Vrusi %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Vrusi zdani"}
+{"name": "aoe2mc.gather.farm", "text": "Farma"}
+{"name": "aoe2mc.gather.ground", "text": "Plise"}
+{"name": "aoe2mc.gather.group", "text": "Grupo %s: %s jinvi"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grupo %s: %s jinvi konservi"}
+{"name": "aoe2mc.gather.mine", "text": "Minda %s"}
+{"name": "aoe2mc.gather.paused", "text": "Le ludo cu pauzi."}
+{"name": "aoe2mc.gather.point", "text": "%s · Dekstro klika: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Plantu ca'o lo nu sitna: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Tcita: %s jinvi"}
+{"name": "aoe2mc.gather.tree", "text": "Tricu"}
+{"name": "aoe2mc.hill.holds", "text": "Xamgu %s ponse le monumento."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Vrusi le plise: dekstro klika le plise"}
+{"name": "aoe2mc.hints.attack_move", "text": "Zvati ja vrusi: dekstro klika le plise"}
+{"name": "aoe2mc.hints.building", "text": "Stali le %s: dekstro klika le plise · Shift + dekstro klika: stali le ka'e · Vajni: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: maplo klika ka'e stali · Shift: stali le ka'e · Dekstro klika: vajni"}
+{"name": "aoe2mc.hints.corner", "text": "Tcita-fasnu: dekstro klika le ce'u cmima"}
+{"name": "aoe2mc.hints.count_military", "text": "%s milita jinvi"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s milita jinvi"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s xamgu"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s xamgu"}
+{"name": "aoe2mc.hints.deselect", "text": "Vacki fasnu: na tcita"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Maplo klika: na tcita"}
+{"name": "aoe2mc.hints.follow", "text": "Dasni: dekstro klika ro tcadu jinvi"}
+{"name": "aoe2mc.hints.guard", "text": "Gardi: dekstro klika ro tcadu jinvi pe zdani"}
+{"name": "aoe2mc.hints.military", "text": "%s · Dekstro klika: vrusi le vrusi, stance-menu · %s"}
+{"name": "aoe2mc.hints.none", "text": "Maplo klika: tcita jinvi · Kacna maplo klika: tcita-fasnu"}
+{"name": "aoe2mc.hints.none_wand", "text": "Dekstro klika: tcita jinvi · Bastoneto: tcita-fasnu"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrol: dekstro klika le plise"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Dekstro klika: ciska, zdani, zdani-menu · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s ca'o rinka"}
+{"name": "aoe2mc.lobby.you_play", "text": "do ludo %s."}
+{"name": "aoe2mc.monk.converts", "text": "Monaco konverti le %s."}
+{"name": "aoe2mc.monk.dies", "text": "Le %s mabla (Herezo)."}
+{"name": "aoe2mc.pause.continued", "text": "Xamgu %s cu ba'o ludo."}
+{"name": "aoe2mc.pause.paused", "text": "Xamgu %s pauzi le ludo."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Teamo %s (meziimi rating %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Le ludo cu pagre. Dekstro klika le cukta Recap lo do lamji lo ka viska le vajvi. Haltu le ludo-programo per Ctrl-C lo ka'e konsolo."}
+{"name": "aoe2mc.relic_victory.all", "text": "Xamgu %s ponse ro le relikvo."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Xamgu %s nasni relikvo."}
+{"name": "aoe2mc.repair.no_resources", "text": "na ka'e rinka lo nu fixi le %s."}
+{"name": "aoe2mc.replay.army", "text": "Armeo: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", armeo ca'o le fasnu: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", nasni: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Zdani-ordo:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garnizo %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | cadzu %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "zdani %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "cidja %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "gerku %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "na ciska %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "cmana %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "tricu %s"}
+{"name": "aoe2mc.replay.flare", "text": "Ciksi"}
+{"name": "aoe2mc.replay.game_ends", "text": "Le ludo pagre"}
+{"name": "aoe2mc.replay.game_time", "text": "Tempo le ludo %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · garnizo %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Xam %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s ponse le monumento: le Re lo monte vinci de'i %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s vrusi %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Dubli tap Shift: spektakl vidnu (fasnu tu'a le blogu). Dekstro klika le erdi lo cukta: kontrol lo ripeti."}
+{"name": "aoe2mc.replay.king_died", "text": ": le Re mabla de'i %s. Kraljobojstvo: le xamgu cu bilga."}
+{"name": "aoe2mc.replay.king_killed", "text": "Re mabla de'i %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Vivo ripeti: le jump cu pagre lo delay pe le ludo."}
+{"name": "aoe2mc.replay.lost", "text": "Nasni: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " ponse le monumento de'i %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monumento, %s jaro cu ca'o"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monumento, %s jaro cu ca'o"}
+{"name": "aoe2mc.replay.no_camera", "text": "Ca'o ripeti na ci'o kamera de le xamgu."}
+{"name": "aoe2mc.replay.now", "text": " ca'o"}
+{"name": "aoe2mc.replay.out", "text": "%s bilga"}
+{"name": "aoe2mc.replay.players", "text": "Xamgu"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " cadzu le relikvo lo monastero ja vinci."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Ripeti pagre"}
+{"name": "aoe2mc.replay.research", "text": " esplori %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s dacti"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Le servilo restarti por le jump back: ba'o lo ka'e tcadu."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Zdani %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ciska %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Milita %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tekno %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Ro %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "kastelo %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "cusku %s, vecnu %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relikvo %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "mirvi %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Spenti:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Zdani %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Ciska %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tekno %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": xamgu trina %s, ciska %s, tempo na ciska xamgu %s, tempo na ciska urbocentro %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": ponse le monumento (Re lo monte)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monumento vinci %s (Re lo monte)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": milita jinvi trina %s, jinvi nasni %s, zdani nasni %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Re mabla %s (Kraljobojstvo)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": vinci, relikvo lo monastero %s (Relikvo-tcita)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stributo sendi %s, cadzu %s, xamgu le melbi %s (tci.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": urbocentro nasni %s (Sudden Death)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tekno %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": mirvi-tempo de'i %s, pagre %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Zbasu (tci.)"}
+{"name": "aoe2mc.replay.task_building", "text": "zdani"}
+{"name": "aoe2mc.replay.task_following", "text": "dasni"}
+{"name": "aoe2mc.replay.task_food", "text": "ciska cidja"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "garnizo"}
+{"name": "aoe2mc.replay.task_gold", "text": "ciska gerku"}
+{"name": "aoe2mc.replay.task_guarding", "text": "gardi"}
+{"name": "aoe2mc.replay.task_idle", "text": "na ciska"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrol"}
+{"name": "aoe2mc.replay.task_resources", "text": "ciska rinka"}
+{"name": "aoe2mc.replay.task_stone", "text": "ciska cmana"}
+{"name": "aoe2mc.replay.task_walking", "text": "fasnu"}
+{"name": "aoe2mc.replay.task_wood", "text": "ciska tricu"}
+{"name": "aoe2mc.replay.team", "text": "Teamo %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Xatra-jinvi %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armo xatra-jinvi %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Cadzu %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armo cavalry %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Farma %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Gerku %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armo infantry %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Tcan %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Melee %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Cmana %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Tricu %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Kastelo"}
+{"name": "aoe2mc.replay.tl_king", "text": "Re mabla"}
+{"name": "aoe2mc.replay.tl_military", "text": "1mo milita: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relikvo"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Dacti"}
+{"name": "aoe2mc.replay.town_fell", "text": ": le urbocentro falis de'i %s. Sudden Death: le xamgu cu bilga."}
+{"name": "aoe2mc.replay.town_lost", "text": "Urbocentro nasni de'i %s"}
+{"name": "aoe2mc.replay.training", "text": "Trina: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitato:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ciska %s · Universitato %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " zdani mirvi de'i %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Fight: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s jinvi"}
+{"name": "aoe2mc.replay_input.fights", "text": "Bramo fight:"}
+{"name": "aoe2mc.replay_input.help", "text": "Ripeti: dekstro klika le erdi lo cukta, pe klika: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Tcadu: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s jinvi)"}
+{"name": "aoe2mc.replay_input.vs", "text": " vs "}
+{"name": "aoe2mc.resource.food", "text": "cidja"}
+{"name": "aoe2mc.resource.gold", "text": "gerku"}
+{"name": "aoe2mc.resource.stone", "text": "cmana"}
+{"name": "aoe2mc.resource.wood", "text": "tricu"}
+{"name": "aoe2mc.run.back", "text": "%s pu back"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampanio pagre"}
+{"name": "aoe2mc.run.chat_hint", "text": "Cat: normal lo linji cu zvati ro, /tm TEKST lo tcadu, /msg NOMO TEKST lo xamgu."}
+{"name": "aoe2mc.run.left_bot", "text": "%s bilga: bot ludo lo xamgu %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenario %s komencis. Dasni denove."}
+{"name": "aoe2mc.run.starts_in", "text": "Le ludo komencis de'i %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Opene \"Tcita vi xamgu\" ja klika \"Ready\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Ro kontrol: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Fasti xatra: kacna le karoto lo ba stick ja dekstro klika lo xamgu."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Fasti xatra: kacna le karoto lo ba stick ja maplo klika lo xamgu."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Cilmi: vinci le ludo. Vinci-setting: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Ludo konservi: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s jinvi bilga"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Auto Scout"}
+{"name": "aoe2mc.stance.formation", "text": "Formacio: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Na ci'o jinvi cu vrusi le plise"}
+{"name": "aoe2mc.stance.unpack", "text": "Unpack le Trebuchet fasti"}
+{"name": "aoe2mc.train.active", "text": "%s pu ca'o."}
+{"name": "aoe2mc.train.rally", "text": "Dekstro klika le plise lo ka'e rally point."}
+{"name": "aoe2mc.train.researched", "text": "%s pu esplori."}
+{"name": "aoe2mc.transport.out", "text": "%s jinvi bilga"}
+{"name": "aoe2mc.treaty.ended", "text": "Le traktat pagre: xamgu nu ca'o vrusi."}
+{"name": "aoe2mc.treaty.refuse", "text": "Traktat: do na kakne vrusi antecedent %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Traktat: do na kakne vrusi lo ludo ca'o."}
+{"name": "aoe2mc.treaty.start", "text": "Traktat: na ci'o xamgu kakne vrusi xamgu antecedent %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Traktat: na ci'o xamgu kakne vrusi xamgu lo ludo ca'o."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Zdani kazerno: dekstro klika lo tcita xamgu, tcita le kazerno ja stali ri. Le bar sanmi ca'o le hotbar cu tcidu le ka'e stali."}
+{"name": "aoe2mc.tutorial.camera", "text": "Sajgau ca'o le mapa: dekstro klika lo \"Kamera\", fasnu, ba dekstro klika denove."}
+{"name": "aoe2mc.tutorial.camp", "text": "Mabla le vrusi kampo lo mezo le mapa: tcita le Milicia ja dekstro klika lo zdani. Le boss-bar ca'o montra le ka'e."}
+{"name": "aoe2mc.tutorial.camps", "text": "Zdani tricu-ranli lo tricu ja pilno lo sadjvi berpo. Le flanka bar cu montra le tricu ri cusku."}
+{"name": "aoe2mc.tutorial.complete", "text": "Le ce'u ciksi pagre. Sanmi: ludo kontra le bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Ce'u ciksi pagre"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Ca'o le Feudal Age: dekstro klika lo urbocentro ja tcita le Feudal Age. Le flanka bar cu montra le cidja do."}
+{"name": "aoe2mc.tutorial.food", "text": "Ciska 100 cidja: sendi xamgu lo sadjvi berpo. Le flanka bar cu montra le cidja do."}
+{"name": "aoe2mc.tutorial.house", "text": "Zdani zdani: dekstro klika lo tcita xamgu, tcita le zdani ja stali ri. Le bar sanmi ca'o le hotbar cu tcidu le ka'e stali."}
+{"name": "aoe2mc.tutorial.militia", "text": "Trina 3 Milicia: dekstro klika lo kazerno ja tcita le milicia. Le flanka bar cu montra le cidja ja gerku do."}
+{"name": "aoe2mc.tutorial.raid", "text": "Le vrusi vrusi lo xamgu do! Klika le lerfu alarmo lo cat ka'e vi go'i, ba tcita le Milicia do ja dekstro klika le vrusi. Le boss-bar sanmi montra le vi'a le tcita jinvi."}
+{"name": "aoe2mc.tutorial.select", "text": "Tcita xamgu: maplo klika lo xamgu lo stick. Le boss-bar ca'o montra le tcita jinvi, le bar sanmi ca'o le hotbar montra le sanmi ka'e."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Ka'e pagre"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Ka'e %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIP: le kazerno trina infantry. Infantry cu melbi ja melbi lo zdani."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIP: vrusi ro le jinvi do lo ka'e. Ro cmima grupo mabla antecedent ka'e damba."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIP: zdani le dropoff lo sadjvi ka'e rinka, ki'u lo xamgu fasnu ro cmima."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIP: le sanmi epoko malvi zdani, jinvi ja tekno. Tcadu le xamgu lo ciska ca'o le ka plise."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIP: sadjvi berpo lo mill cu melbi cidja. Pu'o farma cidja ro ka'e na pagre."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIP: zdani zdani cu ka'e 5 xamgu zukte. Viska le populo lo flanka bar ja zdani zdani antecedent le ka'e plena."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIP: do kakne cu vecnu 15 jinvi lo zdani ca'o rinka."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIP: lo AoE2 le sonorilo cu sendi xamgu lo urbocentro. Cipra ri ca'o le vrusi raid do urbo."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIP: le Idle linji lo flanka bar cu cenba xamgu na ciska. Dasni ri."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIP: trina xamgu ro lo ka'e epoko pu. Pu xamgu cu pu rinka."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIP: xamgu ciska sanmi lo dropoff zdani. Zdani tricu-ranli proxim le tricu."}
+{"name": "aoe2mc.tutorial.villager", "text": "Trina xamgu: dekstro klika lo urbocentro ja tcita le xamgu. Le flanka bar cu montra le cidja ri cusku."}
+{"name": "aoe2mc.tutorial.wood", "text": "Ciska 50 tricu: tcita xamgu ja dekstro klika tricu. Le flanka bar cu montra tricu do."}
+{"name": "aoe2mc.victory", "text": "Vinci"}
+{"name": "aoe2mc.wonder.built", "text": "Xamgu %s zdani mirvi."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Le mirvi lo xamgu %s cu mabla."}

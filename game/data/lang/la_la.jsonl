@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Lusor %s ad %s pervenit."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Corruptio mappam ab margine usque ad medium in %s occupat. Omnes unitates et aedificia in ea delet."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ibi nunc %s aedificare non possum."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Eam unitatem exercere non possum: aedificium pro ea non habeo."}
+{"name": "aoe2mc.bot.flare_two", "text": "Duo loca pro muro signa."}
+{"name": "aoe2mc.bot.no_flare", "text": "Nullum signum video."}
+{"name": "aoe2mc.bot.no_market", "text": "Forum non habeo: tributum mittere non possum."}
+{"name": "aoe2mc.bot.no_onager", "text": "Onagrum non habeo."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Opes pro muro non satis habeo."}
+{"name": "aoe2mc.bot.no_water", "text": "Aquam prope oppidum meum non habeo: classem aedificare non possum."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Onagri mei arbores caedere non possunt."}
+{"name": "aoe2mc.build.cost", "text": "Opes non satis: %s %s constat."}
+{"name": "aoe2mc.build.flat", "text": "%s in solo plano stare debet."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s in 4 tabulis muri tui in linea recta, aut in 3 tabulis diagonalibus stare debet."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Aedifica: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s in aqua prope litus stare debet."}
+{"name": "aoe2mc.build.space", "text": "Hic nullus locus pro %s est."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Opes non satis: %s tabulae %s constant %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: fini muri dextro clic."}
+{"name": "aoe2mc.build.water", "text": "%s in aqua stare debet."}
+{"name": "aoe2mc.camera.fov", "text": "Camera celer faciet ut res in manu oscillet. Ut immota maneat, Optiones > Accessibilitas > View Bobbing ad OFF pone. Camera etiam visum latiorem facit, qui plus mappae ostendit. Ut visus normalis maneat, Optiones > Accessibilitas > FOV Effects ad 0 % pone."}
+{"name": "aoe2mc.camera.off", "text": "Camera: non"}
+{"name": "aoe2mc.camera.on", "text": "Camera: ita, celeritas x%s. Shift dextro clic: celeritas sequens."}
+{"name": "aoe2mc.camera.speed", "text": "Celeritas cameae: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Omnes hostium unitates supera et paucas unitates amitte"}
+{"name": "aoe2mc.challenge.booming", "text": "Centum agricolas exerce et ad aetatem imperialem pervenī"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Ad aetatem castelli pervenī et hostium impetus supera"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Hostium castellum dele"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Cibum 200, lignum 200, aurum 100 et lapidem 200 collige, agricolas 21 exerce, castra lignaria et molam aedifica, et ad aetatem feudalem pervenī"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Agricolas 27 exerce, domos 5 aedifica et ad aetatem castelli pervenī"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Omnes sex hostium undas supera"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s unitates amissae, numisma aeneum usque ad %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s unitates amissae, numisma aureum usque ad %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s unitates amissae, nullum numisma"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s unitates amissae, numisma argenteum usque ad %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Numisma aeneum"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Numisma aureum"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Numisma argenteum"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Omnes hostium naves bellicas dele"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Nullum numisma"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Quinque agricolas hostium interfice"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Numisma aeneum in %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Numisma aureum in %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Numisma argenteum in %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis non"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis ita"}
+{"name": "aoe2mc.cheat.beyond", "text": "Technologiae: usque ad 256 investigationes"}
+{"name": "aoe2mc.cheat.cpu", "text": "Limes multitudinis: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Nebula belli: non"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Nebula belli: ita"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Technologiae gratuitae sunt"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Communicare est curare: reditus tui ad socios tuos ibunt"}
+{"name": "aoe2mc.cheat.wonders", "text": "Naturam regis: %s animalia"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Soli socii supersunt: foedera finiuntur. Ultimus superstes vincit."}
+{"name": "aoe2mc.conquest.defeated", "text": "Lusor %s victus est."}
+{"name": "aoe2mc.controls.attack", "text": "Oppugna: unitates bellicas elige, deinde hostem dextro clic."}
+{"name": "aoe2mc.controls.build", "text": "Aedifica: agricolas elige, dextro clic eos ad elenchum aedificiorum, aedificium elige, deinde terram sinistro clic. Shift + sinistro clic: plura pone. Dextro clic: relinque."}
+{"name": "aoe2mc.controls.camera", "text": "Camera: dextro clic cum speculo Camera (clavis 2 in barra): alte super mappam celeriter ambulas. Shift dextro clic: celeritas sequens. Iterum dextro clic: descendis."}
+{"name": "aoe2mc.controls.garrison", "text": "Praesidium: unitates elige, deinde dextro clic tuum aedificium. Eius elenchus eas exire sinit. Elenchus centri oppidi: Campanam urbis pulsa."}
+{"name": "aoe2mc.controls.gather", "text": "Collige: agricolas elige, deinde dextro clic arborem, fruticetum baccarum, fodinam vel agrum."}
+{"name": "aoe2mc.controls.goto", "text": "Adi: dextro clic cum acu Adi (clavis 3 in barra): elenchus centrorum oppidi tuorum, coetuum imperii et proximi agricolae otiosi."}
+{"name": "aoe2mc.controls.groups", "text": "Coetus imperii: unitates elige, rem coetus (claves 5 ad 9 in barra) cape et Shift + dextro clic ad electionem servandam. Dextro clic: coetum elige."}
+{"name": "aoe2mc.controls.head", "text": "Imperia (carotam in baculo tene; barra actionum proximum gradum ostendit):"}
+{"name": "aoe2mc.controls.menu", "text": "Elenchus ludi: dextro clic cum libro Elenchus ludi (clavis 4 in barra): diplomatia et tributum, signum, servare, pausare et arbor technologiarum."}
+{"name": "aoe2mc.controls.move", "text": "Move: cum electione, dextro clic terram."}
+{"name": "aoe2mc.controls.research", "text": "Investiga et aetatem muta: dextro clic tuum aedificium et in elenco eius technologiam vel aetatem sequentem preme."}
+{"name": "aoe2mc.controls.select", "text": "Elige: sinistro clic unitatem. Sinistrum clic tene et per terram respice: area electionis. Dextro clic: imperia da."}
+{"name": "aoe2mc.controls.train", "text": "Exerce: dextro clic tuum aedificium (centrum oppidi, castra ...) et in elenco eius unitatem preme."}
+{"name": "aoe2mc.defeat", "text": "Clades"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Socius"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Lusor %s statum erga te mutavit: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Hostis"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutralis"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Lusor %s celeritatem ludi ad %s posuit."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Lusor %s %s %s lusori %s misit."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Signum ad %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Sequere: unitatem tuam clic"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Custodi: unitatem aut aedificium tuum clic"}
+{"name": "aoe2mc.gaia.joins", "text": "%s tibi se adiungit."}
+{"name": "aoe2mc.garrison.all_back", "text": "Omnes ad opus redeunt"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Campana urbis sonat: %s agricolae tutelam quaerunt"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Nullus agricola electus est."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Agricolas non habes."}
+{"name": "aoe2mc.garrison.out", "text": "%s unitates exierunt"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s agricolae tutelam quaerunt"}
+{"name": "aoe2mc.gather.act_attack", "text": "oppugna"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "elenchus aedificiorum"}
+{"name": "aoe2mc.gather.act_garrison", "text": "praesidium"}
+{"name": "aoe2mc.gather.act_gather", "text": "collige"}
+{"name": "aoe2mc.gather.act_hunt", "text": "venare"}
+{"name": "aoe2mc.gather.act_move", "text": "move"}
+{"name": "aoe2mc.gather.act_select", "text": "elige"}
+{"name": "aoe2mc.gather.act_select_type", "text": "omnes eiusdem generis elige"}
+{"name": "aoe2mc.gather.act_trade", "text": "negotiare"}
+{"name": "aoe2mc.gather.act_train", "text": "exerce"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Oppugnatio: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Area electionis: relicta"}
+{"name": "aoe2mc.gather.bush", "text": "Fruticetum baccarum"}
+{"name": "aoe2mc.gather.carcass", "text": "Cadaver"}
+{"name": "aoe2mc.gather.corner", "text": "Area electionis: alterum angulum clic"}
+{"name": "aoe2mc.gather.enemy", "text": "Hostis %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Aedificium hostium"}
+{"name": "aoe2mc.gather.farm", "text": "Ager"}
+{"name": "aoe2mc.gather.ground", "text": "Terra"}
+{"name": "aoe2mc.gather.group", "text": "Coetus %s: %s unitates"}
+{"name": "aoe2mc.gather.group_saved", "text": "Coetus %s: %s unitates servatae"}
+{"name": "aoe2mc.gather.mine", "text": "Fodina %s"}
+{"name": "aoe2mc.gather.paused", "text": "Ludus pausatus est."}
+{"name": "aoe2mc.gather.point", "text": "%s · Dextro clic: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Iterum sationes in ordine: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Electae: %s unitates"}
+{"name": "aoe2mc.gather.tree", "text": "Arbor"}
+{"name": "aoe2mc.hill.holds", "text": "Lusor %s monumentum tenet."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Terram oppugna: terram dextro clic"}
+{"name": "aoe2mc.hints.attack_move", "text": "Move et oppugna: terram dextro clic"}
+{"name": "aoe2mc.hints.building", "text": "Pone %s: terram dextro clic · Shift + dextro clic: plura pone · Relinque: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: sinistro clic ad ponendum · Shift: plura pone · Dextro clic: relinque"}
+{"name": "aoe2mc.hints.corner", "text": "Area electionis: dextro clic alterum angulum"}
+{"name": "aoe2mc.hints.count_military", "text": "%s unitas bellica"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s unitates bellicae"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s agricola"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s agricolae"}
+{"name": "aoe2mc.hints.deselect", "text": "Area vacua: electionem tolle"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Sinistro clic: electionem tolle"}
+{"name": "aoe2mc.hints.follow", "text": "Sequere: dextro clic unitatem tuam aut socii"}
+{"name": "aoe2mc.hints.guard", "text": "Custodi: dextro clic unitatem aut aedificium tuum aut socii"}
+{"name": "aoe2mc.hints.military", "text": "%s · Dextro clic: hostem oppugna, elenchus habitus · %s"}
+{"name": "aoe2mc.hints.none", "text": "Sinistro clic: unitatem elige · Sinistrum clic tene: area electionis"}
+{"name": "aoe2mc.hints.none_wand", "text": "Dextro clic: unitatem elige · Virga: area electionis"}
+{"name": "aoe2mc.hints.patrol", "text": "Circumi: dextro clic terram"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Dextro clic: collige, aedifica, elenchus aedificiorum · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s parati"}
+{"name": "aoe2mc.lobby.you_play", "text": "Tu %s ludis."}
+{"name": "aoe2mc.monk.converts", "text": "Monachus %s convertit."}
+{"name": "aoe2mc.monk.dies", "text": "%s moritur (Haeresis)."}
+{"name": "aoe2mc.pause.continued", "text": "Lusor %s ludum continuavit."}
+{"name": "aoe2mc.pause.paused", "text": "Lusor %s ludum pausavit."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Manipulus %s (aestimatio media %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Ludus finitus est. Dextro clic libellum Recapitulatio in manu tua ad eventus videndos. Programma ludi Ctrl-C in consolamine suo siste."}
+{"name": "aoe2mc.relic_victory.all", "text": "Lusor %s omnes reliquias tenet."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Lusor %s reliquiam amisit."}
+{"name": "aoe2mc.repair.no_resources", "text": "Opes non satis ad %s reficiendum."}
+{"name": "aoe2mc.replay.army", "text": "Exercitus: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", exercitus in fine: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", amissi: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Ordo aedificandi:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · praesidium %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | portat %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "aedificat %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "cibus %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "aurum %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "otiosus %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "lapis %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "lignum %s"}
+{"name": "aoe2mc.replay.flare", "text": "Signum"}
+{"name": "aoe2mc.replay.game_ends", "text": "Ludus finitur"}
+{"name": "aoe2mc.replay.game_time", "text": "Tempus ludi %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · praesidium %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Agr %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s monumentum tenuit: victoria Regis Collis in %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s oppugnatio %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Shift bis tange: spectatoris visus (per blocos volare). Dextro clic in erementa: imperium repetitionis."}
+{"name": "aoe2mc.replay.king_died", "text": ": Rex in %s mortuus est. Regicidium: lusor exit."}
+{"name": "aoe2mc.replay.king_killed", "text": "Rex in %s occisus"}
+{"name": "aoe2mc.replay.live_jump", "text": "Repetitio viva: saltus ad moram post ludum sistitur."}
+{"name": "aoe2mc.replay.lost", "text": "Amissi: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " monumentum in %s tenet."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monumentum, %s annus restat"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monumentum, %s anni restant"}
+{"name": "aoe2mc.replay.no_camera", "text": "Haec repetitio cameram sui lusoris non habet."}
+{"name": "aoe2mc.replay.now", "text": " nunc"}
+{"name": "aoe2mc.replay.out", "text": "%s exit"}
+{"name": "aoe2mc.replay.players", "text": "Lusores"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " reliquiam ad monasterium fert et vincit."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Repetitio finita"}
+{"name": "aoe2mc.replay.research", "text": " %s investigat"}
+{"name": "aoe2mc.replay.resigns", "text": "%s se dedit"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Servitor ad saltum retro reincipit: iterum adi."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Aedificia %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Oeconomia %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Res bellica %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Technologiae %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Summa %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "castella %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "emit %s, vendit %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "reliquiae %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "miracula %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Impensa:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Aedificia %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Oeco %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tech %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": agricolae exerciti %s, collecti %s, tempus otiosi agricolarum %s, tempus otiosi centri oppidi %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": monumentum tenet (Rex Collis)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monumentum vicit %s (Rex Collis)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": unitates bellicae exercitae %s, unitates amissae %s, aedificia amissa %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Rex occisus %s (Regicidium)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": victoriae, reliquia in monasterio %s (Reliquiam Cape)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stributum missum %s, acceptum %s, maximus agricolarum %s (aest.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": centrum oppidi amissum %s (Mors Subita)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, technologiae %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": tempus miraculi a %s, finitur %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Summarium (aest.)"}
+{"name": "aoe2mc.replay.task_building", "text": "aedificat"}
+{"name": "aoe2mc.replay.task_following", "text": "sequitur"}
+{"name": "aoe2mc.replay.task_food", "text": "cibum colligit"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "in praesidio"}
+{"name": "aoe2mc.replay.task_gold", "text": "aurum colligit"}
+{"name": "aoe2mc.replay.task_guarding", "text": "custodit"}
+{"name": "aoe2mc.replay.task_idle", "text": "otiosus"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "circumit"}
+{"name": "aoe2mc.replay.task_resources", "text": "opes colligit"}
+{"name": "aoe2mc.replay.task_stone", "text": "lapidem colligit"}
+{"name": "aoe2mc.replay.task_walking", "text": "ambulat"}
+{"name": "aoe2mc.replay.task_wood", "text": "lignum colligit"}
+{"name": "aoe2mc.replay.team", "text": "Manipulus %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Sagittarius %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armatura sagittariorum %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Portatio %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armatura equitum %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Ager %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Aurum %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armatura peditum %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Textrinum %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Pugna cominus %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Lapis %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Lignum %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castellum"}
+{"name": "aoe2mc.replay.tl_king", "text": "Rex occisus"}
+{"name": "aoe2mc.replay.tl_military", "text": "Primus exercitus: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Reliquia"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Se dedit"}
+{"name": "aoe2mc.replay.town_fell", "text": ": centrum oppidi in %s cecidit. Mors Subita: lusor exit."}
+{"name": "aoe2mc.replay.town_lost", "text": "Centrum oppidi amissum in %s"}
+{"name": "aoe2mc.replay.training", "text": "Exercitatio: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitas:"}
+{"name": "aoe2mc.replay.up_counts", "text": "oeconomia %s · Universitas %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " miraculum in %s aedificavit."}
+{"name": "aoe2mc.replay_input.fight", "text": "Pugna: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s unitates"}
+{"name": "aoe2mc.replay_input.fights", "text": "Magnae pugnae:"}
+{"name": "aoe2mc.replay_input.help", "text": "Repetitio: dextro clic in erementa in manu tua, aut clic: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Occupa: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s unitates)"}
+{"name": "aoe2mc.replay_input.vs", "text": " contra "}
+{"name": "aoe2mc.resource.food", "text": "cibus"}
+{"name": "aoe2mc.resource.gold", "text": "aurum"}
+{"name": "aoe2mc.resource.stone", "text": "lapis"}
+{"name": "aoe2mc.resource.wood", "text": "lignum"}
+{"name": "aoe2mc.run.back", "text": "%s rediit"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Expeditio confecta"}
+{"name": "aoe2mc.run.chat_hint", "text": "Colloquium: linea normalis ad omnes it, /tm TEXTUS ad socios, /msg NOMEN TEXTUS ad unum lusorem."}
+{"name": "aoe2mc.run.left_bot", "text": "%s discessit: robotus lusorem %s agit"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenario %s incipit. Iterum adi."}
+{"name": "aoe2mc.run.starts_in", "text": "Ludus incipit in %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Aperi \"Elige lusorem tuum\" et \"Paratus\" clic"}
+{"name": "aoe2mc.run.welcome_controls", "text": "Omnia imperia: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Primus gradus: baculum imperii tene et dextro clic unum agricolarum tuorum."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Primus gradus: baculum imperii tene et sinistro clic unum agricolarum tuorum."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Finis: ludum vince. Condicio victoriae: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Ludus servatus: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s unitates exierunt"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Explorator automaticus"}
+{"name": "aoe2mc.stance.formation", "text": "Acies: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Nulla unitas terram oppugnare potest"}
+{"name": "aoe2mc.stance.unpack", "text": "Trebuchetum primum explica"}
+{"name": "aoe2mc.train.active", "text": "%s activa est."}
+{"name": "aoe2mc.train.rally", "text": "Dextro clic terram pro puncto congregationis."}
+{"name": "aoe2mc.train.researched", "text": "%s investigata est."}
+{"name": "aoe2mc.transport.out", "text": "%s unitates exierunt"}
+{"name": "aoe2mc.treaty.ended", "text": "Foedus finitum est: lusores nunc oppugnare possunt."}
+{"name": "aoe2mc.treaty.refuse", "text": "Foedus: ante %s oppugnare non potes."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Foedus: in hoc ludo oppugnare non potes."}
+{"name": "aoe2mc.treaty.start", "text": "Foedus: nullus lusor alium lusorem ante %s oppugnare potest."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Foedus: nullus lusor alium lusorem in hoc ludo oppugnare potest."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Castra aedifica: dextro clic in agricolam electum, castra elige et ea pone. Barra actionum supra erementa dicit ubi ponere."}
+{"name": "aoe2mc.tutorial.camera", "text": "Celeriter per mappam ambula: dextro clic cum re \"Camera\", ambula, deinde iterum dextro clic cum ea."}
+{"name": "aoe2mc.tutorial.camp", "text": "Castra hostium in medio mappae dele: Milites tuos elige et dextro clic in aedificium. Barra ducis in summo gradum ostendit."}
+{"name": "aoe2mc.tutorial.camps", "text": "Castra lignaria prope arbores et molam prope baccas aedifica. Barra lateralis dextra lignum quod constant ostendit."}
+{"name": "aoe2mc.tutorial.complete", "text": "Disciplina confecta est. Deinde: contra robotum lude: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Disciplina confecta"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Ad aetatem feudalem pervenī: dextro clic in centrum oppidi et aetatem feudalem elige. Barra lateralis dextra cibum tuum ostendit."}
+{"name": "aoe2mc.tutorial.food", "text": "Cibum 100 collige: agricolam ad baccas mitte. Barra lateralis dextra cibum tuum ostendit."}
+{"name": "aoe2mc.tutorial.house", "text": "Domum aedifica: dextro clic in agricolam electum, domum elige et ea pone. Barra actionum supra erementa dicit ubi ponere."}
+{"name": "aoe2mc.tutorial.militia", "text": "Milites 3 exerce: dextro clic in castra tua et militem elige. Barra lateralis dextra cibum et aurum tuum ostendit."}
+{"name": "aoe2mc.tutorial.raid", "text": "Hostes agricolas tuos oppugnant! Lineam signi rubri in colloquio clic ut eo eas, deinde Milites tuos elige et dextro clic in hostes. Barra ducis in summo salutem unitatis electae ostendit."}
+{"name": "aoe2mc.tutorial.select", "text": "Agricolam elige: sinistro clic unum agricolarum tuorum cum baculo imperii. Barra ducis in summo unitatem electam ostendit, barra actionum supra erementa proximam actionem."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Gradus confectus"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Gradus %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "CONSILIUM: castra peditem exercent. Pedites vilis sunt et contra aedificia boni."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "CONSILIUM: cum omnibus unitatibus tuis simul oppugna. Parvus coetus moritur antequam damnum facere potest."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "CONSILIUM: aedificia depositionis prope opes aedifica, ut agricolae breve iter ambulent."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "CONSILIUM: aetas sequens nova aedificia, unitates et technologias aperit. Agricolas in opere tene dum aetatem mutas."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "CONSILIUM: bacae prope molam tutum initium cibi sunt. Postea agri cibum dant qui non finitur."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "CONSILIUM: domus locum pro 5 hominibus plus dat. Multitudinem in barra laterali respice et domos aedifica antequam plena est."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "CONSILIUM: cum opes habes, usque ad 15 unitates in aedificio in ordinem ponere potes."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "CONSILIUM: in AoE2 campana urbis agricolas in centrum oppidi mittit. Pulsa cum hostis oppidum tuum invadit."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "CONSILIUM: linea Otiosus in barra laterali dextra agricolas sine opere numerat. Eis opus da."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "CONSILIUM: in primis aetatibus semper agricolas exerce. Plures agricolae plures opes dant."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "CONSILIUM: agricolae celerius prope aedificium depositionis colligunt. Castra lignaria prope arbores aedifica."}
+{"name": "aoe2mc.tutorial.villager", "text": "Agricolam exerce: dextro clic in centrum oppidi tuum et agricolam elige. Barra lateralis dextra cibum quem constat ostendit."}
+{"name": "aoe2mc.tutorial.wood", "text": "Lignum 50 collige: agricolam elige et dextro clic in arborem. Barra lateralis dextra lignum tuum ostendit."}
+{"name": "aoe2mc.victory", "text": "Victoria"}
+{"name": "aoe2mc.wonder.built", "text": "Lusor %s miraculum aedificavit."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Miraculum lusoris %s deletum est."}
