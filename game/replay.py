@@ -1437,16 +1437,22 @@ class Replay:
             self.heights[name, player] = max(ys) - cols.surface(*o["footprint"][:2]) if ys and "footprint" in o else TALL
         return self.heights[name, player]
 
-    def draw(self, name, player, x, y, along_z=False):
+    def draw(self, name, player, x, y, along_z=False, kind="B"):
         """(Columns, Edits, object) of one building at tile (x, y) of a flat map whose corner is tile
-        (x - FLAT // 2, y - FLAT // 2), rounded down. along_z: a gate along z (no walls next to it tell it, #1324)."""
+        (x - FLAT // 2, y - FLAT // 2), rounded down. along_z: a gate along z (no walls next to it tell it, #1324).
+        kind "O": another object (a mine of the editor, #6013), as the converter draws it (place_objects)."""
         T, info = self.T, self.data["players"].get(str(player), {})
         ox, oy = int(x) - FLAT // 2, int(y) - FLAT // 2            # whole tiles: the same rounding as in place_building
         cols = aoe2mc.Columns(FLAT, np.zeros((FLAT, FLAT), np.int16), np.zeros((FLAT, FLAT), np.float32),
                               {0: "GRASS_1"}, T, self.data["level_height"], np.random.default_rng(1))
         E = aoe2mc.Edits(cols)
         players = {player: {"arch": info.get("arch", "western"), "color": info.get("color", "light_gray")}}
-        o = dict(kind="B", name=name, player=player, x=x - ox, y=y - oy, rotation=0.0, hero=False, garrisoned=False)
+        o = dict(kind=kind, name=name, player=player, x=x - ox, y=y - oy, rotation=0.0, hero=False, garrisoned=False)
+        if kind == "O":
+            E, _ = aoe2mc.place_objects([o], players, cols, np.random.default_rng(1))
+            x0, x1, z0, z1 = aoe2mc.object_footprint(o, T)
+            o["footprint"] = (x0, z0, x1, z1)
+            return cols, E, o
         walls, gates = buildings.plan_walls([o])
         gates[id(o)] = gates.get(id(o)) or along_z
         turn, buildings.TURN = buildings.TURN, self.data.get("turn", 0)     # the map turn of --orientation (#3035)
@@ -1506,13 +1512,13 @@ class Replay:
         self.moving.pop(i, None)
         return out
 
-    def building(self, name, player, x, y, along_z=False, water=None):
+    def building(self, name, player, x, y, along_z=False, water=None, kind="B"):
         """The commands that draw one building at tile (x, y): its design on a flat map (like render.py), moved to
         the ground of the world. The footprint is cleared first; a foundation fills the air under the floor.
         water: the ground y of a building on the open water (a fish trap, #1438), else the land next to it counts."""
         T, arch = self.T, self.data["players"].get(str(player), {}).get("arch", "western")
         ox, oy = int(x) - FLAT // 2, int(y) - FLAT // 2
-        cols, E, o = self.draw(name, player, x, y, along_z)
+        cols, E, o = self.draw(name, player, x, y, along_z, kind)
         if not E.parts or "footprint" not in o:
             return []
         fx0, fz0, fx1, fz1 = o["footprint"]
