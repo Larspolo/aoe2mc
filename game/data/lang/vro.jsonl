@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Mängija %s jõuab %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Rikkumine võtab kaardi servast keskmesse %s aja jooksul. See hävitab kõik üksused ja hoonõd seal."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ma ei saa sinna nüüd %s ehitada."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ma ei saa seda üksust koolitada: mul ei ole selle jaoks hoonõt."}
+{"name": "aoe2mc.bot.flare_two", "text": "Pane müüri jaoks kaks signaali."}
+{"name": "aoe2mc.bot.no_flare", "text": "Ma ei näe signaali."}
+{"name": "aoe2mc.bot.no_market", "text": "Mul ei ole turgu: ma ei saa andamit saata."}
+{"name": "aoe2mc.bot.no_onager", "text": "Mul ei ole onagerit."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Mul ei ole müüri jaoks piisavalt ressursse."}
+{"name": "aoe2mc.bot.no_water", "text": "Mu linna lähedal ei ole vett: ma ei saa laevastikku ehitada."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Mu onagerid ei saa puid raiuda."}
+{"name": "aoe2mc.build.cost", "text": "Ressursse on vähe: %s maksab %s."}
+{"name": "aoe2mc.build.flat", "text": "%s peab seisma tasasel maal."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s peab seisma 4 oma müüri ruudul sirgel real või 3 diagonaalsel ruudul."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Ehita: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s peab seisma vees kalda ääres."}
+{"name": "aoe2mc.build.space", "text": "Siia ei mahu %s."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Ressursse on vähe: %s ruutu %s maksab %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: klõpsa paremaga müüri lõpul."}
+{"name": "aoe2mc.build.water", "text": "%s peab seisma vees."}
+{"name": "aoe2mc.camera.fov", "text": "Kiire kaamera teeb käes oleva eseme kõikuma. Et see paigal oleks, pane Options > Accessibility Settings > View Bobbing väärtusele OFF. Kaamera teeb ka vaate laiemaks, mis näitab kaardist rohkem. Et tavaline vaade jääks, pane Options > Accessibility Settings > FOV Effects väärtusele 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kaamera: väljas"}
+{"name": "aoe2mc.camera.on", "text": "Kaamera: sees, kiirus x%s. Shift + parem klõps: järgmine kiirus."}
+{"name": "aoe2mc.camera.speed", "text": "Kaamera kiirus: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Hävita kõik vaenlase üksused ja kaota vähe üksusi"}
+{"name": "aoe2mc.challenge.booming", "text": "Koolita 100 talupoega ja jõua impeeriumi ajastusse"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Jõua linnuse ajastusse ja ela üle vaenlase rünnakud"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Hävita vaenlase linnus"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Kogu 200 toitu, 200 puitu, 100 kulda ja 200 kivi, koolita 21 talupoega, ehita puiduleer ja veski ning jõua feodaalajastusse"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Koolita 27 talupoega, ehita 5 maja ja jõua linnuse ajastusse"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Võida kõik kuus vaenlase lainet"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s üksust kaotatud, pronksmedal kuni %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s üksust kaotatud, kuldmedal kuni %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s üksust kaotatud, medalit ei ole"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s üksust kaotatud, hõbemedal kuni %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Pronksmedal"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Kuldmedal"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Hõbemedal"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Hävita kõik vaenlase sõjalaevad"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Medalit ei ole"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Tapa 5 vaenlase talupoega"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Pronksmedal ajaga %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Kuldmedal ajaga %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Hõbemedal ajaga %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Kaitse väljas"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Kaitse sees"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tehnoloogiad: kuni 256 uurimist"}
+{"name": "aoe2mc.cheat.cpu", "text": "Rahvastiku piir: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Sõjasebe: väljas"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Sõjasebe: sees"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Tehnoloogiad on tasuta"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Jagamine on hoolimine: su sissetulek läheb su liitlastele"}
+{"name": "aoe2mc.cheat.wonders", "text": "Sa juhid loodust: %s looma"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Alles on ainult liitlased: liidud lõppevad. Viimane elus mängija võidab."}
+{"name": "aoe2mc.conquest.defeated", "text": "Mängija %s on lüüa saanud."}
+{"name": "aoe2mc.controls.attack", "text": "Rünnak: vali sõjaväeüksused, siis klõpsa paremaga vaenlasel."}
+{"name": "aoe2mc.controls.build", "text": "Ehita: vali talupojad, klõpsa neid paremaga ehitusmenüü jaoks, vali hoone, siis klõpsa vasakuga maad. Shift + vasak klõps: pane rohkem. Parem klõps: tühista."}
+{"name": "aoe2mc.controls.camera", "text": "Kaamera: klõpsa paremaga kaameraga spioonklaasi (kiirklahv 2): lendad kiiresti kõrgel kaardi kohal. Shift + parem klõps: järgmine kiirus. Parem klõps uuesti: laskud alla."}
+{"name": "aoe2mc.controls.garrison", "text": "Varjupaik: vali üksused, siis klõpsa paremaga oma hoonet. Selle menüü laseb need välja. Linnuse menüü: Helista kellukest."}
+{"name": "aoe2mc.controls.gather", "text": "Korja: vali talupojad, siis klõpsa paremaga puud, marjapõõsast, kaevandust või põldu."}
+{"name": "aoe2mc.controls.goto", "text": "Mine: klõpsa paremaga kompassiga Mine (kiirklahv 3): menüü su linnustest, su gruppidest ja järgmisest tööta talupojast."}
+{"name": "aoe2mc.controls.groups", "text": "Juhtrühmad: vali üksused, võta rühmaese (kiirklahvid 5 kuni 9) ja Shift + parem klõps, et valik salvestada. Parem klõps: vali rühm."}
+{"name": "aoe2mc.controls.head", "text": "Juhtimine (hoia porgandit kepil; tegevusriba näitab järgmist sammu):"}
+{"name": "aoe2mc.controls.menu", "text": "Mängumenüü: klõpsa paremaga raamatuga Mängumenüü (kiirklahv 4): diplomaatia ja andam, signaal, salvestus, paus ja tehnoloogiapuu."}
+{"name": "aoe2mc.controls.move", "text": "Liigu: valikuga klõpsa paremaga maad."}
+{"name": "aoe2mc.controls.research", "text": "Uuri ja tõuse ajastusse: klõpsa paremaga oma hoonet ja klõpsa selle menüüs tehnoloogiat või järgmist ajastut."}
+{"name": "aoe2mc.controls.select", "text": "Vali: klõpsa vasakuga üksusel. Hoia vasak klõps all ja vaata maad üle: valikukast. Parem klõps: anna käske."}
+{"name": "aoe2mc.controls.train", "text": "Koolita: klõpsa paremaga oma hoonet (linnus, kasarm ...) ja klõpsa selle menüüs üksusel."}
+{"name": "aoe2mc.defeat", "text": "Kaotus"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Liitlane"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Mängija %s muutis sinu suhtes oma seisukohta: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Vaenlane"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutraalne"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Mängija %s seadis mängu kiiruseks %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Mängija %s saatis mängijale %s %s %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Signaal kohas %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Järgi: klõpsa oma üksusel"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Valva: klõpsa oma üksusel või hoonel"}
+{"name": "aoe2mc.gaia.joins", "text": "%s liitub sinuga."}
+{"name": "aoe2mc.garrison.all_back", "text": "Kõik tagasi tööle"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Linnukell helises: %s talupoega otsib varju"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Ühtegi talupoega ei ole valitud."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Sul ei ole talupoegi."}
+{"name": "aoe2mc.garrison.out", "text": "%s üksust tuli välja"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s talupoega otsib varju"}
+{"name": "aoe2mc.gather.act_attack", "text": "rünnak"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "ehitusmenüü"}
+{"name": "aoe2mc.gather.act_garrison", "text": "varjupaik"}
+{"name": "aoe2mc.gather.act_gather", "text": "korja"}
+{"name": "aoe2mc.gather.act_hunt", "text": "jaht"}
+{"name": "aoe2mc.gather.act_move", "text": "liigu"}
+{"name": "aoe2mc.gather.act_select", "text": "vali"}
+{"name": "aoe2mc.gather.act_select_type", "text": "vali kõik sama liiki"}
+{"name": "aoe2mc.gather.act_trade", "text": "kauplemine"}
+{"name": "aoe2mc.gather.act_train", "text": "koolita"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Rünnak: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Valikukast: tühistatud"}
+{"name": "aoe2mc.gather.bush", "text": "Marjapõõsas"}
+{"name": "aoe2mc.gather.carcass", "text": "Korjus"}
+{"name": "aoe2mc.gather.corner", "text": "Valikukast: klõpsa teist nurka"}
+{"name": "aoe2mc.gather.enemy", "text": "Vaenlase %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Vaenlase hoone"}
+{"name": "aoe2mc.gather.farm", "text": "Põld"}
+{"name": "aoe2mc.gather.ground", "text": "Maa"}
+{"name": "aoe2mc.gather.group", "text": "Rühm %s: %s üksust"}
+{"name": "aoe2mc.gather.group_saved", "text": "Rühm %s: %s üksust salvestatud"}
+{"name": "aoe2mc.gather.mine", "text": "%s kaevandus"}
+{"name": "aoe2mc.gather.paused", "text": "Mäng on pausil."}
+{"name": "aoe2mc.gather.point", "text": "%s · Parem klõps: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Külvid järjekorras: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Valitud: %s üksust"}
+{"name": "aoe2mc.gather.tree", "text": "Puu"}
+{"name": "aoe2mc.hill.holds", "text": "Mängija %s hoiab mälestusmärki."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Rünnak maale: klõpsa paremaga maad"}
+{"name": "aoe2mc.hints.attack_move", "text": "Rünnak liikumisel: klõpsa paremaga maad"}
+{"name": "aoe2mc.hints.building", "text": "Pane %s: klõpsa paremaga maad · Shift + parem klõps: pane rohkem · Tühista: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: klõpsa vasakuga, et panna · Shift: pane rohkem · Parem klõps: tühista"}
+{"name": "aoe2mc.hints.corner", "text": "Valikukast: klõpsa paremaga teist nurka"}
+{"name": "aoe2mc.hints.count_military", "text": "%s sõjaväeüksus"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s sõjaväeüksust"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s talupoeg"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s talupoega"}
+{"name": "aoe2mc.hints.deselect", "text": "Tühi kast: tühista valik"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Vasak klõps: tühista valik"}
+{"name": "aoe2mc.hints.follow", "text": "Järgi: klõpsa paremaga oma või liitlase üksusel"}
+{"name": "aoe2mc.hints.guard", "text": "Valva: klõpsa paremaga oma või liitlase üksusel või hoonel"}
+{"name": "aoe2mc.hints.military", "text": "%s · Parem klõps: ründa vaenlast, seisukohamenüü · %s"}
+{"name": "aoe2mc.hints.none", "text": "Vasak klõps: vali üksus · Hoia vasak klõps all: valikukast"}
+{"name": "aoe2mc.hints.none_wand", "text": "Parem klõps: vali üksus · Kepp: valikukast"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrull: klõpsa paremaga maad"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Parem klõps: korja, ehita, ehitusmenüü · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s valmis"}
+{"name": "aoe2mc.lobby.you_play", "text": "Sa mängid %s."}
+{"name": "aoe2mc.monk.converts", "text": "Munk kääritab %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s sureb (Ketserlus)."}
+{"name": "aoe2mc.pause.continued", "text": "Mängija %s jätkas mängu."}
+{"name": "aoe2mc.pause.paused", "text": "Mängija %s pani mängu pausile."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Meeskond %s (keskmine reiting %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Mäng on läbi. Klõpsa paremaga käes olevat Kokkuvõtte raamatut, et tulemusi näha. Peata mängu programm konsoolis Ctrl-C-ga."}
+{"name": "aoe2mc.relic_victory.all", "text": "Mängija %s hoiab kõiki reliikvia."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Mängija %s kaotas reliikvia."}
+{"name": "aoe2mc.repair.no_resources", "text": "Ressursse on vähe, et %s parandada."}
+{"name": "aoe2mc.replay.army", "text": "Armee: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", armee lõpus: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", kaotatud: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Ehitusjärjekord:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · varjupaik %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | kannab %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "ehitus %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "toit %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "kuld %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "tööta %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "kivi %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "puit %s"}
+{"name": "aoe2mc.replay.flare", "text": "Signaal"}
+{"name": "aoe2mc.replay.game_ends", "text": "Mäng lõpeb"}
+{"name": "aoe2mc.replay.game_time", "text": "Mänguaeg %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · varjupaik %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Sõj %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Rahv %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Ress %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Tal %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s hoidis mälestusmärki: Mäe kuninga võit kohas %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s rünnak %s/%s soomus%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Topeltklõps Shift: vaatajavaade (lenda plokkide läbi). Klõpsa paremaga kiirvaliku esemeid: korduse juhtimine."}
+{"name": "aoe2mc.replay.king_died", "text": ": kuningas suri kohas %s. Kuningasmõrv: mängija on väljas."}
+{"name": "aoe2mc.replay.king_killed", "text": "Kuningas tapeti kohas %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Elav kordus: hüpe peatub viivitusel mängu taga."}
+{"name": "aoe2mc.replay.lost", "text": "Kaotatud: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " hoiab mälestusmärki kohas %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: mälestusmärk, jäänud %s aasta"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: mälestusmärk, jäänud %s aastat"}
+{"name": "aoe2mc.replay.no_camera", "text": "Sellel salvestisel ei ole oma mängija kaamerat."}
+{"name": "aoe2mc.replay.now", "text": " nüüd"}
+{"name": "aoe2mc.replay.out", "text": "%s on väljas"}
+{"name": "aoe2mc.replay.players", "text": "Mängijad"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " viib reliikvia kloostrisse ja võidab."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Kordus lõppes"}
+{"name": "aoe2mc.replay.research", "text": " uurib %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s loobub"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Server käivitub uuesti tagasihüppeks: ühine uuesti."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Hooned %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Majandus %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Armee %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tehnoloogiad %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Kokku %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "linnused %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "ostis %s, müüs %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "reliikviad %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "imed %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Kulutatud:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Ehitus %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Maj %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Armee %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tehn %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": talupoegi koolitatud %s, korjatud %s, talupoegade tööaeg %s, linnuse tööaeg %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": hoiab mälestusmärki (Mäe kuningas)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": mälestusmärk võidetud %s (Mäe kuningas)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": sõjaväeüksusi koolitatud %s, üksusi kaotatud %s, hooneid kaotatud %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": kuningas tapetud %s (Kuningasmõrv)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": võidud, reliikvia kloostris %s (Reliikviavõit)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sandam saadetud %s, saadud %s, talupoegade tipp %s (hinnanguline)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": linnus kaotatud %s (Äkksurm)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tehnoloogiad %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": imede taimer algas %s, lõpeb %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Kokkuvõte (hinnanguline)"}
+{"name": "aoe2mc.replay.task_building", "text": "ehitab"}
+{"name": "aoe2mc.replay.task_following", "text": "järgib"}
+{"name": "aoe2mc.replay.task_food", "text": "korjab toitu"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "varjupaigas"}
+{"name": "aoe2mc.replay.task_gold", "text": "korjab kulda"}
+{"name": "aoe2mc.replay.task_guarding", "text": "valvab"}
+{"name": "aoe2mc.replay.task_idle", "text": "tööta"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrullib"}
+{"name": "aoe2mc.replay.task_resources", "text": "korjab ressursse"}
+{"name": "aoe2mc.replay.task_stone", "text": "korjab kivi"}
+{"name": "aoe2mc.replay.task_walking", "text": "kõnnib"}
+{"name": "aoe2mc.replay.task_wood", "text": "korjab puitu"}
+{"name": "aoe2mc.replay.team", "text": "Meeskond %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Vibulaskja %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Vibulaskja soomus %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Kandja %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Ratsaväe soomus %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Põld %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Kuld %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Jalaväe soomus %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Kangastald %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Lähivõitlus %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Kivi %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Puit %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Linnus"}
+{"name": "aoe2mc.replay.tl_king", "text": "Kuningas tapetud"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. armee: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Reliikvia"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Loobus"}
+{"name": "aoe2mc.replay.town_fell", "text": ": linnus langes kohas %s. Äkksurm: mängija on väljas."}
+{"name": "aoe2mc.replay.town_lost", "text": "Linnus kaotatud kohas %s"}
+{"name": "aoe2mc.replay.training", "text": "Koolitus: %s"}
+{"name": "aoe2mc.replay.university", "text": "Ülikool:"}
+{"name": "aoe2mc.replay.up_counts", "text": "majandus %s · Ülikool %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " ehitas imeme kohas %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Lahing: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s üksust"}
+{"name": "aoe2mc.replay_input.fights", "text": "Suured lahingud:"}
+{"name": "aoe2mc.replay_input.help", "text": "Kordus: klõpsa paremaga kiirvaliku esemeid või klõpsa: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Ülevõtt: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s üksust)"}
+{"name": "aoe2mc.replay_input.vs", "text": " vastu "}
+{"name": "aoe2mc.resource.food", "text": "toit"}
+{"name": "aoe2mc.resource.gold", "text": "kuld"}
+{"name": "aoe2mc.resource.stone", "text": "kivi"}
+{"name": "aoe2mc.resource.wood", "text": "puit"}
+{"name": "aoe2mc.run.back", "text": "%s on tagasi"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampaania lõppenud"}
+{"name": "aoe2mc.run.chat_hint", "text": "Vestlus: tavaline rida läheb kõigile, /tm TEKST liitlastele, /msg NIMI TEKST ühele inimesele."}
+{"name": "aoe2mc.run.left_bot", "text": "%s lahkus: bot mängib mängijat %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Stsenaarium %s algab. Ühine uuesti."}
+{"name": "aoe2mc.run.starts_in", "text": "Mäng algab %s pärast"}
+{"name": "aoe2mc.run.wait_ready", "text": "Ava \"Vali oma mängija\" ja klõpsa \"Valmis\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Kõik juhtimised: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Esimene samm: hoia juhtkeppi ja klõpsa paremaga ühel oma talupojal."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Esimene samm: hoia juhtkeppi ja klõpsa vasakuga ühel oma talupojal."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Eesmärk: võida mäng. Võidu seade: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Mäng salvestatud: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s üksust tuli välja"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Automaatne luure"}
+{"name": "aoe2mc.stance.formation", "text": "Formatsioon: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ükski üksus ei saa maad rünnata"}
+{"name": "aoe2mc.stance.unpack", "text": "Lahti paki kõigepealt Trebuchet"}
+{"name": "aoe2mc.train.active", "text": "%s on aktiivne."}
+{"name": "aoe2mc.train.rally", "text": "Klõpsa paremaga maad kogunemiskoha jaoks."}
+{"name": "aoe2mc.train.researched", "text": "%s on uuritud."}
+{"name": "aoe2mc.transport.out", "text": "%s üksust tuli välja"}
+{"name": "aoe2mc.treaty.ended", "text": "Leping lõppes: mängijad võivad nüüd rünnata."}
+{"name": "aoe2mc.treaty.refuse", "text": "Leping: sa ei saa rünnata enne %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Leping: sa ei saa selles mängus rünnata."}
+{"name": "aoe2mc.treaty.start", "text": "Leping: ükski mängija ei saa teist mängijat rünnata enne %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Leping: ükski mängija ei saa selles mängus teist mängijat rünnata."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Ehita kasarm: klõpsa paremaga valitud talupojal, vali kasarm ja pane see. Tegevusriba kohal kiirvaliku kohal näitab, kuhu see panna."}
+{"name": "aoe2mc.tutorial.camera", "text": "Liigu kiiresti üle kaardi: klõpsa paremaga esemega \"Kaamera\", kõnni, siis klõpsa sellega uuesti paremaga."}
+{"name": "aoe2mc.tutorial.camp", "text": "Hävita vaenlase laager kaardi keskel: vali oma Miilits ja klõpsa paremaga hoonel. Ülal olev boss-riba näitab sammu."}
+{"name": "aoe2mc.tutorial.camps", "text": "Ehita puiduleer metsa lähedale ja veski marjade lähedale. Paremal olev külgriba näitab, mis puit maksab."}
+{"name": "aoe2mc.tutorial.complete", "text": "Õpetus on läbi. Järgmiseks: mängi bot'i vastu: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Õpetus läbi"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Tõuse feodaalajastusse: klõpsa paremaga oma linnusel ja vali feodaalajastu. Paremal olev külgriba näitab su toitu."}
+{"name": "aoe2mc.tutorial.food", "text": "Kogu 100 toitu: saada talupoeg marjade juurde. Paremal olev külgriba näitab su toitu."}
+{"name": "aoe2mc.tutorial.house", "text": "Ehita maja: klõpsa paremaga valitud talupojal, vali maja ja pane see. Tegevusriba kohal kiirvaliku kohal näitab, kuhu see panna."}
+{"name": "aoe2mc.tutorial.militia", "text": "Koolita 3 Miilitsat: klõpsa paremaga oma kasarmul ja vali miilits. Paremal olev külgriba näitab su toitu ja kulda."}
+{"name": "aoe2mc.tutorial.raid", "text": "Vaenlane ründab su talupoegi! Klõpsa vestluses punast häiresõnumi, et sinna minna, siis vali oma Miilits ja klõpsa paremaga vaenlastel. Ülal olev boss-riba näitab valitud üksuse tervist."}
+{"name": "aoe2mc.tutorial.select", "text": "Vali talupoeg: klõpsa vasakuga ühel oma talupojal juhtkepiga. Ülal olev boss-riba näitab valitud üksust, kiirvaliku kohal olev tegevusriba näitab järgmist tegevust."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Samm tehtud"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Samm %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "NÕUANNE: kasarm koolitab jalaväge. Jalavägi on odav ja hea hoonete vastu."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "NÕUANNE: ründa kõigi üksustega koos. Väike rühm sureb enne, kui suudab kahju teha."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "NÕUANNE: ehita toimetuskohad ressursside lähedale, et talupojad käiksid lühikest teed."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "NÕUANNE: järgmine ajastu avab uusi hooneid, üksusi ja tehnoloogiaid. Hoia talupojad tööl, kui edeneb."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "NÕUANNE: marjad veski lähedal on turvaline toidu algus. Hiljem annavad põllud toitu, mis ei lõpe."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "NÕUANNE: maja annab ruumi 5 rahvastiku jaoks. Vaata külgribal rahvastikku ja ehita maju enne, kui see täis saab."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "NÕUANNE: kui sul on ressursse, võid hoones järjekorda panna kuni 15 üksust."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "NÕUANNE: AoE2-s saadab linnukell talupojad linnusesse. Helista, kui vaenlane tungib su linna."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "NÕUANNE: külgriba rida Tööta loeb talupojad, kellel ei ole tööd. Anna neile töö."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "NÕUANNE: koolita talupoegi kogu aeg esimestes ajastutes. Rohkem talupoegi annab rohkem ressursse."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "NÕUANNE: talupojad korjavad kiiremini toimetuskoha lähedal. Ehita puiduleer puude kõrvale."}
+{"name": "aoe2mc.tutorial.villager", "text": "Koolita talupoeg: klõpsa paremaga oma linnusel ja vali talupoeg. Paremal olev külgriba näitab, mis toitu see maksab."}
+{"name": "aoe2mc.tutorial.wood", "text": "Kogu 50 puitu: vali talupoeg ja klõpsa paremaga puul. Paremal olev külgriba näitab su puitu."}
+{"name": "aoe2mc.victory", "text": "Võit"}
+{"name": "aoe2mc.wonder.built", "text": "Mängija %s ehitas imeme."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Mängija %s ime on hävitatud."}
