@@ -159,12 +159,15 @@ tutorial (section 3) teaches the same controls. Type /controls in the game to se
 
 The sidebar shows your wood, food, gold and stone.
 
+Language: the texts of aoe2mc (the action bar, the menus, the hints, the tutorial) use the language of your Minecraft client (Options > Language). The names of units, buildings and technologies stay English.
+
 ## 5. Report a bug
 
 Make an issue in [Larspolo/aoe2mc](https://github.com/Larspolo/aoe2mc/issues/new) with:
 
 - the steps that cause the bug, and what you expected,
 - the game time (the minutes since the start of the game),
+- the language of your Minecraft client (Options > Language), when a text is wrong or not clear,
 - a screenshot (F2 in Minecraft),
 - the server log: attach the file `last-game.log` that the game program writes when it stops (its path is printed
   as "Server log: ..."; the game program keeps it also after a crash or Ctrl-C), and the text of the console.
