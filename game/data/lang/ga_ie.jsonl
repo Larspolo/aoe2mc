@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Ardaíonn an t-imreoir %s go dtí an %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: glacann an Truaillíocht an léarscáil ó a imeall go dtí a lár i %s. Scriosann sí gach aonad agus foirgneamh ann."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ní féidir liom %s a thógáil ansin anois."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ní féidir liom an t-aonad sin a oiliúint: níl foirgneamh agam dó."}
+{"name": "aoe2mc.bot.flare_two", "text": "Cuir dhá sholas ar an mballa."}
+{"name": "aoe2mc.bot.no_flare", "text": "Ní fheicim aon solas."}
+{"name": "aoe2mc.bot.no_market", "text": "Níl margadh agam: ní féidir liom cáin a sheoladh."}
+{"name": "aoe2mc.bot.no_onager", "text": "Níl onager agam."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Níl acmhainní leordhóthanacha agam le haghaidh balla."}
+{"name": "aoe2mc.bot.no_water", "text": "Níl uisce in aice le mo bhaile agam: ní féidir liom cabhlach a thógáil."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Ní féidir le mo onagers crainn a ghearradh."}
+{"name": "aoe2mc.build.cost", "text": "Níl acmhainní leordhóthanacha ann: costaíonn %s %s."}
+{"name": "aoe2mc.build.flat", "text": "Caithfidh an %s seasamh ar thalamh réidh."}
+{"name": "aoe2mc.build.gate_spot", "text": "Caithfidh %s seasamh ar 4 théamh de bhalla de do chuid féin i líne dhíreach, nó ar 3 théamh trasnánacha."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Tóg: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Caithfidh %s seasamh ar uisce in aice leis an gcladach."}
+{"name": "aoe2mc.build.space", "text": "Níl spás don %s anseo."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Níl acmhainní leordhóthanacha ann: costaíonn %s théamh de %s %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: cliceáil ar dheis ar cheann an bhalla."}
+{"name": "aoe2mc.build.water", "text": "Caithfidh %s seasamh ar an uisce."}
+{"name": "aoe2mc.camera.fov", "text": "Déanann an ceamara tapa an mhír sa lámh a chroitheadh. Chun é a choinneáil socair, socraigh Roghanna > Socruithe Inrochtaineachta > View Bobbing go OFF. Déanann an ceamara an radharc níos leithne freisin, rud a thaispeánann níos mó den léarscáil. Chun an radharc gnáthach a choinneáil, socraigh Roghanna > Socruithe Inrochtaineachta > FOV Effects go 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Ceamara: as"}
+{"name": "aoe2mc.camera.on", "text": "Ceamara: ar siúl, luas x%s. Shift cliceáil ar dheis: an chéad luas eile."}
+{"name": "aoe2mc.camera.speed", "text": "Luas an cheamara: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Ruaigh gach aonad de na naimhde agus caill cúpla aonad"}
+{"name": "aoe2mc.challenge.booming", "text": "Oiliúin 100 soitheach agus éirigh go dtí an Aois Impiriúil"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Éirigh go dtí an Aois Caisleáin agus maireachtáil ionsaithe na naimhde"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Scrios caisleán an naimhde"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Bailigh 200 bia, 200 adhmad, 100 ór agus 200 cloch, oiliúin 21 soitheach, tóg campa adhmaid agus muileann, agus éirigh go dtí an Aois Feodach"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Oiliúin 27 soitheach, tóg 5 theach agus éirigh go dtí an Aois Caisleáin"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Ruaigh sé thonn den naimhde ar fad"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s aonad caillte, bonn cré suas go %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s aonad caillte, bonn óir suas go %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s aonad caillte, gan bonn"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s aonad caillte, bonn airgid suas go %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bonn cré"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Bonn óir"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Bonn airgid"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Scrios gach long cogaidh de na naimhde"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Gan bonn"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Maraigh 5 shoitheach de na naimhde"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bonn cré i %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Bonn óir i %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Bonn airgid i %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis as"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis ar siúl"}
+{"name": "aoe2mc.cheat.beyond", "text": "Teicneolaíochtaí: suas go 256 taighde"}
+{"name": "aoe2mc.cheat.cpu", "text": "Teorainn daonra: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Ceo an chogaidh: as"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Ceo an chogaidh: ar siúl"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Tá teicneolaíochtaí saor in aisce"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Is maith an rud é roinnt: téann do thuilleamh chuig do chomhghuaillithe"}
+{"name": "aoe2mc.cheat.wonders", "text": "Rialaíonn tú an dúlra: %s ainmhí"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Níl ach comhghuaillithe fágtha: críochnaíonn na comhghuaillíochtaí. Buann an t-imreoir deiridh beo."}
+{"name": "aoe2mc.conquest.defeated", "text": "Tá an t-imreoir %s ruaigthe."}
+{"name": "aoe2mc.controls.attack", "text": "Ionsaí: roghnaigh aonaid mhíleata, ansin cliceáil ar dheis ar naimhde."}
+{"name": "aoe2mc.controls.build", "text": "Tóg: roghnaigh soitheach, cliceáil orthu ar dheis don roghchlár tógála, roghnaigh foirgneamh, ansin cliceáil ar chlé ar an talamh. Shift + cliceáil ar chlé: cuir níos mó. Cliceáil ar dheis: cealaigh."}
+{"name": "aoe2mc.controls.camera", "text": "Ceamara: cliceáil ar dheis leis an spéirbhíseán Ceamara (eochair bharra 2): siúlann tú go tapa ard os cionn na léarscáile. Shift cliceáil ar dheis: an luas eile. Cliceáil ar dheis arís: eitlíonn tú síos."}
+{"name": "aoe2mc.controls.garrison", "text": "Garastún: roghnaigh aonaid, ansin cliceáil ar dheis ar do fhoirgneamh féin. A roghchlár scaoileann amach iad. Roghchlár an tséadchomhartha: Buail Cloch an Bhaile."}
+{"name": "aoe2mc.controls.gather", "text": "Bailigh: roghnaigh soitheach, ansin cliceáil ar dheis ar chrann, toradh-tom, mianach nó feirm."}
+{"name": "aoe2mc.controls.goto", "text": "Téigh go: cliceáil ar dheis leis an gcompás Téigh go (eochair bharra 3): roghchlár de do shéadchomharthaí, do ghrúpaí rialaithe agus an soitheach neamhghnóthach is gaire."}
+{"name": "aoe2mc.controls.groups", "text": "Grúpaí rialaithe: roghnaigh aonaid, glac mír grúpa (eochracha bharra 5 go 9) agus Shift + cliceáil ar dheis chun an roghnú a shábháil. Cliceáil ar dheis: roghnaigh an grúpa."}
+{"name": "aoe2mc.controls.head", "text": "Rialuithe (coinnigh an chairéad ar bhata; taispeánann an bharra gníomhaíochta an chéad chéim eile):"}
+{"name": "aoe2mc.controls.menu", "text": "Roghchlár an chluiche: cliceáil ar dheis leis an leabhar Roghchlár an chluiche (eochair bharra 4): taidhleoireacht agus tribiúid, solas, sábháil, sos agus crann na dteicneolaíochtaí."}
+{"name": "aoe2mc.controls.move", "text": "Bog: le roghnú, cliceáil ar dheis ar an talamh."}
+{"name": "aoe2mc.controls.research", "text": "Taighde agus éirigh go dtí an aois eile: cliceáil ar dheis ar do fhoirgneamh féin agus cliceáil ar theicneolaíocht nó ar an aois eile ina roghchlár."}
+{"name": "aoe2mc.controls.select", "text": "Roghnaigh: cliceáil ar chlé ar aonad. Coinnigh an cliceáil ar chlé agus breathnaigh trasna an talaimh: bosca roghnúcháin. Cliceáil ar dheis: tabhair orduithe."}
+{"name": "aoe2mc.controls.train", "text": "Oiliúin: cliceáil ar dheis ar do fhoirgneamh féin (séadchomhartha baile, barrac ...) agus cliceáil ar aonad ina roghchlár."}
+{"name": "aoe2mc.defeat", "text": "Ruaigeadh"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Comhghuaillí"}
+{"name": "aoe2mc.diplomacy.changed", "text": "D'athraigh an t-imreoir %s a seasamh i do leith: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Naimhde"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neodrach"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Shocraigh an t-imreoir %s luas an chluiche go %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Sheol an t-imreoir %s %s %s chuig an t-imreoir %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Solas ag %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Lean: cliceáil aonad de do chuid féin"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Garda: cliceáil aonad nó foirgneamh de do chuid féin"}
+{"name": "aoe2mc.gaia.joins", "text": "Tagann %s chugat."}
+{"name": "aoe2mc.garrison.all_back", "text": "Ar ais ag obair, gach duine"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Buaileann cloch an bhaile: lorgaíonn %s soitheach foscadh"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Níl soitheach roghnaithe."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Níl soithigh agat."}
+{"name": "aoe2mc.garrison.out", "text": "Tháinig %s aonad amach"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "Lorgaíonn %s soitheach foscadh"}
+{"name": "aoe2mc.gather.act_attack", "text": "ionsaí"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "roghchlár tógála"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garastún"}
+{"name": "aoe2mc.gather.act_gather", "text": "bailigh"}
+{"name": "aoe2mc.gather.act_hunt", "text": "seilg"}
+{"name": "aoe2mc.gather.act_move", "text": "bog"}
+{"name": "aoe2mc.gather.act_select", "text": "roghnaigh"}
+{"name": "aoe2mc.gather.act_select_type", "text": "roghnaigh gach ceann den chineál"}
+{"name": "aoe2mc.gather.act_trade", "text": "trádáil"}
+{"name": "aoe2mc.gather.act_train", "text": "oiliúin"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Ionsaí: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Bosca roghnúcháin: cealaithe"}
+{"name": "aoe2mc.gather.bush", "text": "Toradh-tom"}
+{"name": "aoe2mc.gather.carcass", "text": "Carcas"}
+{"name": "aoe2mc.gather.corner", "text": "Bosca roghnúcháin: cliceáil ar an gcúinne eile"}
+{"name": "aoe2mc.gather.enemy", "text": "Naimhde %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Foirgneamh naimhde"}
+{"name": "aoe2mc.gather.farm", "text": "Feirm"}
+{"name": "aoe2mc.gather.ground", "text": "Talamh"}
+{"name": "aoe2mc.gather.group", "text": "Grúpa %s: %s aonad"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grúpa %s: %s aonad sábháilte"}
+{"name": "aoe2mc.gather.mine", "text": "Mianach %s"}
+{"name": "aoe2mc.gather.paused", "text": "Tá an cluiche curtha ar sos."}
+{"name": "aoe2mc.gather.point", "text": "%s · Cliceáil ar dheis: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Síolta sa scuaine: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Roghnaithe: %s aonad"}
+{"name": "aoe2mc.gather.tree", "text": "Crann"}
+{"name": "aoe2mc.hill.holds", "text": "Coinníonn an t-imreoir %s an séadchomhartha."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Ionsaí ar an Talamh: cliceáil ar dheis ar an talamh"}
+{"name": "aoe2mc.hints.attack_move", "text": "Bog agus Ionsaí: cliceáil ar dheis ar an talamh"}
+{"name": "aoe2mc.hints.building", "text": "Cuir an %s: cliceáil ar dheis ar an talamh · Shift + cliceáil ar dheis: cuir níos mó · Cealaigh: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: cliceáil ar chlé chun cur · Shift: cuir níos mó · Cliceáil ar dheis: cealaigh"}
+{"name": "aoe2mc.hints.corner", "text": "Bosca roghnúcháin: cliceáil ar dheis ar an gcúinne eile"}
+{"name": "aoe2mc.hints.count_military", "text": "%s aonad míleata"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s aonad míleata"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s soitheach"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s soitheach"}
+{"name": "aoe2mc.hints.deselect", "text": "Bosca folamh: díroghnaigh"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Cliceáil ar chlé: díroghnaigh"}
+{"name": "aoe2mc.hints.follow", "text": "Lean: cliceáil ar dheis ar aonad de do chuid féin nó de chomhghuaillí"}
+{"name": "aoe2mc.hints.guard", "text": "Garda: cliceáil ar dheis ar aonad nó foirgneamh de do chuid féin nó de chomhghuaillí"}
+{"name": "aoe2mc.hints.military", "text": "%s · Cliceáil ar dheis: ionsaigh naimhde, roghchlár seasaimh · %s"}
+{"name": "aoe2mc.hints.none", "text": "Cliceáil ar chlé: roghnaigh aonad · Coinnigh an cliceáil ar chlé: bosca roghnúcháin"}
+{"name": "aoe2mc.hints.none_wand", "text": "Cliceáil ar dheis: roghnaigh aonad · Slat draíochta: bosca roghnúcháin"}
+{"name": "aoe2mc.hints.patrol", "text": "Faire: cliceáil ar dheis ar an talamh"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Cliceáil ar dheis: bailigh, tóg, roghchlár tógála · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s réidh"}
+{"name": "aoe2mc.lobby.you_play", "text": "Imríonn tú %s."}
+{"name": "aoe2mc.monk.converts", "text": "Tiontaíonn manach an %s."}
+{"name": "aoe2mc.monk.dies", "text": "Faigheann an %s bás (Eiretheacht)."}
+{"name": "aoe2mc.pause.continued", "text": "Lean an t-imreoir %s an cluiche ar aghaidh."}
+{"name": "aoe2mc.pause.paused", "text": "Chuir an t-imreoir %s an cluiche ar sos."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Foireann %s (meánrátáil %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Tá an cluiche thart. Cliceáil ar dheis ar an leabhar Achoimre ina lámh chun na torthaí a fheiceáil. Stop clár an chluiche le Ctrl-C ina chonsól."}
+{"name": "aoe2mc.relic_victory.all", "text": "Coinníonn an t-imreoir %s na seanódaí go léir."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Chaill an t-imreoir %s seanódach."}
+{"name": "aoe2mc.repair.no_resources", "text": "Níl acmhainní leordhóthanacha chun an %s a dheisiú."}
+{"name": "aoe2mc.replay.army", "text": "Arm: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", arm ag an deireadh: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", caillte: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Ord tógála:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garastún %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | iompraíonn %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "tóg %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "bia %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "ór %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "neamhghnóthach %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "cloch %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "adhmad %s"}
+{"name": "aoe2mc.replay.flare", "text": "Solas"}
+{"name": "aoe2mc.replay.game_ends", "text": "Críochnaíonn an cluiche"}
+{"name": "aoe2mc.replay.game_time", "text": "Am an chluiche %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · garastún %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Míl. %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Daonra %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Acmhainní %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Soithigh %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "Choinnigh %s an séadchomhartha: bua Rí an Chnoic ag %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s ionsaí %s/%s armúr%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Brúigh Shift faoi dhó: radharc breathnóra (eitil trí bhlocanna). Cliceáil ar dheis ar mhíreanna na bara: rialú athsheinm."}
+{"name": "aoe2mc.replay.king_died", "text": ": fuair an Rí bás ag %s. Rígmharbhadh: tá an t-imreoir amuigh."}
+{"name": "aoe2mc.replay.king_killed", "text": "Maraíodh an Rí ag %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Athsheinm bheo: stopann an léim ag an moill taobh thiar den chluiche."}
+{"name": "aoe2mc.replay.lost", "text": "Caillte: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " coinníonn an séadchomhartha ag %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: séadchomhartha, %s bliain fágtha"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: séadchomhartha, %s bliain fágtha"}
+{"name": "aoe2mc.replay.no_camera", "text": "Níl ceamara ag an taifead seo ar a imreoir."}
+{"name": "aoe2mc.replay.now", "text": " anois"}
+{"name": "aoe2mc.replay.out", "text": "Tá %s amuigh"}
+{"name": "aoe2mc.replay.players", "text": "Imreoirí"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " tugann an seanódach chuig mainistir agus buann."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Athsheinm críochnaithe"}
+{"name": "aoe2mc.replay.research", "text": " taighdeoir %s"}
+{"name": "aoe2mc.replay.resigns", "text": "Éiríonn %s as"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Atosaíonn an freastalaí don léim ar ais: téigh isteach arís."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Foirgnimh %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Geilleagar %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Míleata %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Teicneolaíochtaí %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Iomlán %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "caisleáin %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "ceannaithe %s, díolta %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "seanódaí %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "iontais %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Caite:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Tóg %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Geilleagar %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Míl. %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Teic. %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": oilte %s soitheach, bailíodh %s, am neamhghnóthach soithigh %s, am neamhghnóthach séadchomhartha baile %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": coinníonn an séadchomhartha (Rí an Chnoic)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": buaineadh an séadchomhartha %s (Rí an Chnoic)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": aonaid mhíleata oilte %s, aonaid caillte %s, foirgnimh caillte %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": maraíodh an Rí %s (Rígmharbhadh)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": buann, seanódach i mainistir %s (Glac an tSeanódach)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stribiúid seolta %s, faighte %s, ard-soithigh %s (meas)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": séadchomhartha baile caillte %s (Bás Tobann)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, teicneolaíochtaí %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": amadóir iontais ó %s, críochnaíonn %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Achoimre (meas)"}
+{"name": "aoe2mc.replay.task_building", "text": "ag tógáil"}
+{"name": "aoe2mc.replay.task_following", "text": "ag leanúint"}
+{"name": "aoe2mc.replay.task_food", "text": "ag bailiú bia"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "garastúnaithe"}
+{"name": "aoe2mc.replay.task_gold", "text": "ag bailiú óir"}
+{"name": "aoe2mc.replay.task_guarding", "text": "ag gardáil"}
+{"name": "aoe2mc.replay.task_idle", "text": "neamhghnóthach"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "ag faire"}
+{"name": "aoe2mc.replay.task_resources", "text": "ag bailiú acmhainní"}
+{"name": "aoe2mc.replay.task_stone", "text": "ag bailiú cloch"}
+{"name": "aoe2mc.replay.task_walking", "text": "ag siúl"}
+{"name": "aoe2mc.replay.task_wood", "text": "ag bailiú adhmaid"}
+{"name": "aoe2mc.replay.team", "text": "Foireann %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Saighdeoir %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armúr saighdiúra %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Iompar %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armúr marcra %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Feirm %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Ór %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armúr coisithe %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Fíodóireacht %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Troid ghar %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Cloch %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Adhmad %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Caisleán"}
+{"name": "aoe2mc.replay.tl_king", "text": "Maraíodh an Rí"}
+{"name": "aoe2mc.replay.tl_military", "text": "1ú míleata: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Seanódach"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Éiríonn as"}
+{"name": "aoe2mc.replay.town_fell", "text": ": thit séadchomhartha an bhaile ag %s. Bás Tobann: tá an t-imreoir amuigh."}
+{"name": "aoe2mc.replay.town_lost", "text": "Séadchomhartha baile caillte ag %s"}
+{"name": "aoe2mc.replay.training", "text": "Oiliúint: %s"}
+{"name": "aoe2mc.replay.university", "text": "Ollscoil:"}
+{"name": "aoe2mc.replay.up_counts", "text": "geilleagar %s · Ollscoil %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " thóg iontas ag %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Troid: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s aonad"}
+{"name": "aoe2mc.replay_input.fights", "text": "Troid mhór:"}
+{"name": "aoe2mc.replay_input.help", "text": "Athsheinm: cliceáil ar dheis ar mhíreanna do bharra, nó cliceáil: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Glac thar: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s aonad)"}
+{"name": "aoe2mc.replay_input.vs", "text": " i gcoinne "}
+{"name": "aoe2mc.resource.food", "text": "bia"}
+{"name": "aoe2mc.resource.gold", "text": "ór"}
+{"name": "aoe2mc.resource.stone", "text": "cloch"}
+{"name": "aoe2mc.resource.wood", "text": "adhmad"}
+{"name": "aoe2mc.run.back", "text": "Tá %s ar ais"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Feachtas críochnaithe"}
+{"name": "aoe2mc.run.chat_hint", "text": "Comhrá: téann líne normálta chuig gach duine, /tm TEXT chuig do chomhghuaillí, /msg AINM TEXT chuig duine amháin."}
+{"name": "aoe2mc.run.left_bot", "text": "D'fhág %s: imríonn bota an t-imreoir %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Tosaíonn an radharc %s. Téigh isteach arís."}
+{"name": "aoe2mc.run.starts_in", "text": "Tosaíonn an cluiche i %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Oscail \"Roghnaigh do imreoir\" agus cliceáil \"Réidh\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Gach rialú: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "An chéad chéim: coinnigh an bata orduithe agus cliceáil ar dheis ar cheann de do shoithigh."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "An chéad chéim: coinnigh an bata orduithe agus cliceáil ar chlé ar cheann de do shoithigh."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Cuspóir: an cluiche a bhuachan. Socrú buaite: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Sábháladh an cluiche: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "Tháinig %s aonad amach"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Spiaire Uathoibríoch"}
+{"name": "aoe2mc.stance.formation", "text": "Foirmiú: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ní féidir le haon aonad an talamh a ionsaí"}
+{"name": "aoe2mc.stance.unpack", "text": "Díphacáil an Trebuchet ar dtús"}
+{"name": "aoe2mc.train.active", "text": "Tá %s gníomhach."}
+{"name": "aoe2mc.train.rally", "text": "Cliceáil ar dheis ar an talamh don phointe bailithe."}
+{"name": "aoe2mc.train.researched", "text": "Tá %s taighdeoite."}
+{"name": "aoe2mc.transport.out", "text": "Tháinig %s aonad amach"}
+{"name": "aoe2mc.treaty.ended", "text": "Chríochnaigh an conradh: is féidir le himreoirí ionsaí anois."}
+{"name": "aoe2mc.treaty.refuse", "text": "Conradh: ní féidir leat ionsaí roimh %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Conradh: ní féidir leat ionsaí sa chluiche seo."}
+{"name": "aoe2mc.treaty.start", "text": "Conradh: ní féidir le haon imreoir ionsaí a dhéanamh ar imreoir eile roimh %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Conradh: ní féidir le haon imreoir ionsaí a dhéanamh ar imreoir eile sa chluiche seo."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Tóg barrac: cliceáil ar dheis ar shoitheach roghnaithe, roghnaigh an barrac agus cuir é. Insíonn an bharra gníomhaíochta os cionn an bhara bhrúcháin duit cá háit le é a chur."}
+{"name": "aoe2mc.tutorial.camera", "text": "Bog go tapa thar an léarscáil: cliceáil ar dheis leis an mír \"Ceamara\", siúil, ansin cliceáil ar dheis leis arís."}
+{"name": "aoe2mc.tutorial.camp", "text": "Scrios campa an naimhde i lár na léarscáile: roghnaigh do Mhílíseach agus cliceáil ar dheis ar fhoirgneamh. Taispeánann an bharra boss ag barr an scáileáin an chéim."}
+{"name": "aoe2mc.tutorial.camps", "text": "Tóg campa adhmaid in aice leis na crainn agus muileann in aice leis na toradh-toim. Taispeánann an barra ar thaobh na láimhe deise an adhmad a chosnaíonn siad."}
+{"name": "aoe2mc.tutorial.complete", "text": "Tá an teagasc críochnaithe. Ansin: imir cluiche in aghaidh an bhota: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Teagasc críochnaithe"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Éirigh go dtí an Aois Feodach: cliceáil ar dheis ar do shéadchomhartha baile agus roghnaigh an Aois Feodach. Taispeánann an barra ar thaobh na láimhe deise do bhia."}
+{"name": "aoe2mc.tutorial.food", "text": "Bailigh 100 bia: seol soitheach chuig na toradh-toim. Taispeánann an barra ar thaobh na láimhe deise do bhia."}
+{"name": "aoe2mc.tutorial.house", "text": "Tóg teach: cliceáil ar dheis ar shoitheach roghnaithe, roghnaigh an teach agus cuir é. Insíonn an bharra gníomhaíochta os cionn an bhara bhrúcháin duit cá háit le é a chur."}
+{"name": "aoe2mc.tutorial.militia", "text": "Oiliúin 3 Míleata: cliceáil ar dheis ar do bharrac agus roghnaigh an míleata. Taispeánann an barra ar thaobh na láimhe deise do bhia agus ór."}
+{"name": "aoe2mc.tutorial.raid", "text": "Ionsaíonn an naimhde do shoithigh! Cliceáil ar líne an fhóraithe dhearg sa comhrá chun dul ann, ansin roghnaigh do Mhílíseach agus cliceáil ar dheis ar na naimhde. Taispeánann an barra boss ag barr an scáileáin sláinte an aonaid roghnaithe."}
+{"name": "aoe2mc.tutorial.select", "text": "Roghnaigh soitheach: cliceáil ar chlé ar cheann de do shoithigh leis an mbata orduithe. Taispeánann an barra boss ag barr an scáileáin an t-aonad roghnaithe, taispeánann an barra gníomhaíochta os cionn an bhara bhrúcháin an chéad ghníomh eile."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Céim críochnaithe"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Céim %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "LEID: traenálann an barrac coisithe. Tá coisithe saor agus maith in aghaidh foirgneamh."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "LEID: ionsaigh le do chuid aonad go léir le chéile. Gheobhaidh grúpa beag bás sula ndéanann sé damáiste."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "LEID: tóg na foirgnimh ghabhála in aice leis na hacmhainní, ionas go siúlann na soithigh cian gearr."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "LEID: díghlasálann an chéad aois eile foirgnimh, aonaid agus teicneolaíochtaí nua. Coinnigh na soithigh ag obair agus tú ag dul ar aghaidh."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "LEID: is tús sábháilte bia iad toradh-tomanna in aice le muileann. Níos déanaí, tugann feirmeacha bia nach stopann."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "LEID: tugann teach spás do 5 duine eile sa daonra. Féach ar an daonra sa bharra ar thaobh na láimhe deise agus tóg tithe sula mbíonn sé lán."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "LEID: is féidir leat suas le 15 aonad a chur sa scuaine i bhfoirgneamh nuair a bhíonn na hacmhainní agat."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "LEID: in AoE2 seolann cloch an bhaile na soithigh isteach i séadchomhartha an bhaile. Buail í nuair a ionsaíonn an naimhde do bhaile."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "LEID: comhaireamhaíonn líne Neamhghnóthach an bhara ar thaobh na láimhe deise do shoithí gan obair. Tabhair obair dóibh."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "LEID: oiliúin soithí i gcónaí sna chéad aoiseanna. Tugann níos mó soithí níos mó acmhainní."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "LEID: bailíonn soithigh níos tapa in aice le foirgneamh ghabhála. Tóg campa adhmaid in aice leis na crainn."}
+{"name": "aoe2mc.tutorial.villager", "text": "Oiliúin soitheach: cliceáil ar dheis ar do shéadchomhartha baile agus roghnaigh an soitheach. Taispeánann an barra ar thaobh na láimhe deise an bia a chosnaíonn sé."}
+{"name": "aoe2mc.tutorial.wood", "text": "Bailigh 50 adhmad: roghnaigh soitheach agus cliceáil ar dheis ar chrann. Taispeánann an barra ar thaobh na láimhe deise do adhmad."}
+{"name": "aoe2mc.victory", "text": "Bua"}
+{"name": "aoe2mc.wonder.built", "text": "Thóg an t-imreoir %s iontas."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Scriosadh iontas an imreoira %s."}

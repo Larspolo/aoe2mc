@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Mae chwaraewr %s yn symud i'r %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: mae'r Llygredd yn cymryd y map o'i ymyl i'w ganol mewn %s. Mae'n dinistrio pob uned ac adeilad ynddo."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Ni allaf adeiladu %s yno nawr."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Ni allaf hyfforddi'r uned honno: nid oes gen i adeilad ar ei chyfer."}
+{"name": "aoe2mc.bot.flare_two", "text": "Gosodwch ddau fflêr ar gyfer y wal."}
+{"name": "aoe2mc.bot.no_flare", "text": "Nid wyf yn gweld fflêr."}
+{"name": "aoe2mc.bot.no_market", "text": "Nid oes gen i farchnad: ni allaf anfon teyrnged."}
+{"name": "aoe2mc.bot.no_onager", "text": "Nid oes gen i onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Nid oes gen i ddigon o adnoddau ar gyfer wal."}
+{"name": "aoe2mc.bot.no_water", "text": "Nid oes gen i ddŵr ger fy nhref: ni allaf adeiladu llynges."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Ni all fy onagers dorri coed."}
+{"name": "aoe2mc.build.cost", "text": "Nid oes digon o adnoddau: mae %s yn costio %s."}
+{"name": "aoe2mc.build.flat", "text": "Rhaid i'r %s sefyll ar dir gwastad."}
+{"name": "aoe2mc.build.gate_spot", "text": "Rhaid i %s fynd ar 4 teilsen o'ch wal eich hun mewn llinell syth, neu ar 3 teilsen letraws."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Adeiladu: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Rhaid i %s sefyll ar ddŵr wrth ymyl yr arfordir."}
+{"name": "aoe2mc.build.space", "text": "Dim lle i'r %s yma."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Nid oes digon o adnoddau: mae %s teilsen o %s yn costio %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: cliciwch y dde ar ben y wal."}
+{"name": "aoe2mc.build.water", "text": "Rhaid i %s sefyll ar y dŵr."}
+{"name": "aoe2mc.camera.fov", "text": "Mae'r camera cyflym yn gwneud i'r eitem yn yr llaw siglo. I'w gadw'n llonydd, gosodwch Opsiynau > Gosodiadau Hygyrchedd > View Bobbing i OFF. Mae'r camera hefyd yn gwneud y golwg yn lletach, sy'n dangos mwy o'r map. I gadw'r golwg arferol, gosodwch Opsiynau > Gosodiadau Hygyrchedd > FOV Effects i 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Camera: i ffwrdd"}
+{"name": "aoe2mc.camera.on", "text": "Camera: ymlaen, cyflymder x%s. Shift clic dde: cyflymder nesaf."}
+{"name": "aoe2mc.camera.speed", "text": "Cyflymder y camera: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Trechwch bob uned o'r gelyn a cholli ychydig o unedau"}
+{"name": "aoe2mc.challenge.booming", "text": "Hyfforddwch 100 o werinwyr a symudwch i'r Oes Ymerodrol"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Symudwch i'r Oes Castell a goroesi ymosodiadau'r gelyn"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Dinistriwch gastell y gelyn"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Casglwch 200 o fwyd, 200 o bren, 100 o aur a 200 o gerrig, hyfforddwch 21 o werinwyr, adeiladwch wersyll coed a melin, a symudwch i'r Oes Ffiwdal"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Hyfforddwch 27 o werinwyr, adeiladwch 5 tŷ a symudwch i'r Oes Castell"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Trechwch bob un o chwe ton y gelyn"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s o unedau wedi'u colli, medal efydd hyd at %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s o unedau wedi'u colli, medal aur hyd at %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s o unedau wedi'u colli, dim medal"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s o unedau wedi'u colli, medal arian hyd at %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Medal efydd"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Medal aur"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Medal arian"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Dinistriwch bob llong ryfel y gelyn"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Dim medal"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Lladdwch 5 o werinwyr y gelyn"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Medal efydd mewn %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Medal aur mewn %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Medal arian mewn %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis i ffwrdd"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis ymlaen"}
+{"name": "aoe2mc.cheat.beyond", "text": "Technolegau: hyd at 256 o ymchwiliadau"}
+{"name": "aoe2mc.cheat.cpu", "text": "Terfyn poblogaeth: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Niwl y rhyfel: i ffwrdd"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Niwl y rhyfel: ymlaen"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Mae technolegau am ddim"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Rhannu yw gofalu: mae eich incwm yn mynd i'ch cynghreiriaid"}
+{"name": "aoe2mc.cheat.wonders", "text": "Rydych yn rheoli natur: %s o anifeiliaid"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Dim ond cynghreiriaid sydd ar ôl: mae'r cynghreiriau yn dod i ben. Y chwaraewr olaf yn fyw sy'n ennill."}
+{"name": "aoe2mc.conquest.defeated", "text": "Mae chwaraewr %s wedi'i drechu."}
+{"name": "aoe2mc.controls.attack", "text": "Ymosod: dewiswch unedau milwrol, yna cliciwch y dde ar elyn."}
+{"name": "aoe2mc.controls.build", "text": "Adeiladu: dewiswch werinwyr, cliciwch y dde arnynt am y ddewislen adeiladu, dewiswch adeilad, yna cliciwch y chwith ar y ddaear. Shift + clic chwith: gosod mwy. Clic dde: canslo."}
+{"name": "aoe2mc.controls.camera", "text": "Camera: cliciwch y dde gyda'r sbienddrych Camera (allwedd bar 2): rydych yn cerdded yn gyflym uchel uwchben y map. Shift clic dde: y cyflymder nesaf. Clic dde eto: rydych yn hedfan i lawr."}
+{"name": "aoe2mc.controls.garrison", "text": "Gwarchodlu: dewiswch unedau, yna cliciwch y dde ar eich adeilad eich hun. Mae ei ddewislen yn eu gadael allan. Dewislen canolfan y dref: Canu Cloch y Dref."}
+{"name": "aoe2mc.controls.gather", "text": "Casglu: dewiswch werinwyr, yna cliciwch y dde ar goeden, llwyn aeron, mwynglawdd neu fferm."}
+{"name": "aoe2mc.controls.goto", "text": "Ewch i: cliciwch y dde gyda'r cwmpawd Ewch i (allwedd bar 3): dewislen o'ch canolfannau tref, eich grwpiau rheoli a'r gwerinwr segur nesaf."}
+{"name": "aoe2mc.controls.groups", "text": "Grwpiau rheoli: dewiswch unedau, cymerwch eitem grŵp (allweddi bar 5 i 9) a Shift + clic dde i gadw'r dewis. Clic dde: dewis y grŵp."}
+{"name": "aoe2mc.controls.head", "text": "Rheolyddion (daliwch y foronen ar ffon; mae'r bar gweithredu yn dangos y cam nesaf):"}
+{"name": "aoe2mc.controls.menu", "text": "Dewislen y gêm: cliciwch y dde gyda'r llyfr Dewislen y gêm (allwedd bar 4): diplomyddiaeth a theyrnged, fflêr, cadw, oedi a'r goeden dechnolegau."}
+{"name": "aoe2mc.controls.move", "text": "Symud: gyda dewis, cliciwch y dde ar y ddaear."}
+{"name": "aoe2mc.controls.research", "text": "Ymchwilio a symud i'r oes nesaf: cliciwch y dde ar eich adeilad eich hun a chliciwch ar dechnoleg neu'r oes nesaf yn ei ddewislen."}
+{"name": "aoe2mc.controls.select", "text": "Dewis: cliciwch y chwith ar uned. Daliwch y clic chwith a edrychwch dros y ddaear: blwch dewis. Clic dde: rhoi gorchmynion."}
+{"name": "aoe2mc.controls.train", "text": "Hyfforddi: cliciwch y dde ar eich adeilad eich hun (canolfan y dref, barics ...) a chliciwch ar uned yn ei ddewislen."}
+{"name": "aoe2mc.defeat", "text": "Trechu"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Cynghreiriad"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Mae chwaraewr %s wedi newid ei safiad tuag atoch: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Gelyn"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Niwtral"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Mae chwaraewr %s wedi gosod cyflymder y gêm i %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Mae chwaraewr %s wedi anfon %s %s i chwaraewr %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Fflêr yn %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Dilyn: cliciwch uned eich hun"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Gwarchod: cliciwch uned neu adeilad eich hun"}
+{"name": "aoe2mc.gaia.joins", "text": "Mae %s yn ymuno â chi."}
+{"name": "aoe2mc.garrison.all_back", "text": "Pawb yn ôl at y gwaith"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Mae cloch y dref yn canu: mae %s o werinwyr yn chwilio am loches"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Nid oes gwerinwr wedi'i ddewis."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Nid oes gennych werinwyr."}
+{"name": "aoe2mc.garrison.out", "text": "Daeth %s o unedau allan"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "Mae %s o werinwyr yn chwilio am loches"}
+{"name": "aoe2mc.gather.act_attack", "text": "ymosod"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "dewislen adeiladu"}
+{"name": "aoe2mc.gather.act_garrison", "text": "gwarchod"}
+{"name": "aoe2mc.gather.act_gather", "text": "casglu"}
+{"name": "aoe2mc.gather.act_hunt", "text": "hela"}
+{"name": "aoe2mc.gather.act_move", "text": "symud"}
+{"name": "aoe2mc.gather.act_select", "text": "dewis"}
+{"name": "aoe2mc.gather.act_select_type", "text": "dewis pob un o'r math"}
+{"name": "aoe2mc.gather.act_trade", "text": "masnachu"}
+{"name": "aoe2mc.gather.act_train", "text": "hyfforddi"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Ymosod: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Blwch dewis: wedi'i ganslo"}
+{"name": "aoe2mc.gather.bush", "text": "Llwyn aeron"}
+{"name": "aoe2mc.gather.carcass", "text": "Carcas"}
+{"name": "aoe2mc.gather.corner", "text": "Blwch dewis: cliciwch ar y gornel arall"}
+{"name": "aoe2mc.gather.enemy", "text": "Gelyn %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Adeilad y gelyn"}
+{"name": "aoe2mc.gather.farm", "text": "Fferm"}
+{"name": "aoe2mc.gather.ground", "text": "Y ddaear"}
+{"name": "aoe2mc.gather.group", "text": "Grŵp %s: %s o unedau"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grŵp %s: %s o unedau wedi'u cadw"}
+{"name": "aoe2mc.gather.mine", "text": "Mwynglawdd %s"}
+{"name": "aoe2mc.gather.paused", "text": "Mae'r gêm wedi'i hoedi."}
+{"name": "aoe2mc.gather.point", "text": "%s · Clic dde: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Hadau wedi'u rhoi yn y ciw: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Wedi'i ddewis: %s o unedau"}
+{"name": "aoe2mc.gather.tree", "text": "Coeden"}
+{"name": "aoe2mc.hill.holds", "text": "Mae chwaraewr %s yn dal y heneb."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Ymosod ar y Ddaear: cliciwch y dde ar y ddaear"}
+{"name": "aoe2mc.hints.attack_move", "text": "Symud ac Ymosod: cliciwch y dde ar y ddaear"}
+{"name": "aoe2mc.hints.building", "text": "Gosodwch y %s: cliciwch y dde ar y ddaear · Shift + clic dde: gosod mwy · Canslo: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: cliciwch y chwith i osod · Shift: gosod mwy · Clic dde: canslo"}
+{"name": "aoe2mc.hints.corner", "text": "Blwch dewis: cliciwch y dde ar y gornel arall"}
+{"name": "aoe2mc.hints.count_military", "text": "%s uned filwrol"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s o unedau milwrol"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s gwerinwr"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s o werinwyr"}
+{"name": "aoe2mc.hints.deselect", "text": "Blwch gwag: dad-ddewis"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Clic chwith: dad-ddewis"}
+{"name": "aoe2mc.hints.follow", "text": "Dilyn: cliciwch y dde ar uned eich hun neu un gynghreiriol"}
+{"name": "aoe2mc.hints.guard", "text": "Gwarchod: cliciwch y dde ar uned neu adeilad eich hun neu un gynghreiriol"}
+{"name": "aoe2mc.hints.military", "text": "%s · Clic dde: ymosod ar elyn, dewislen safiad · %s"}
+{"name": "aoe2mc.hints.none", "text": "Clic chwith: dewis uned · Daliwch y clic chwith: blwch dewis"}
+{"name": "aoe2mc.hints.none_wand", "text": "Clic dde: dewis uned · Ffon hud: blwch dewis"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrôl: cliciwch y dde ar y ddaear"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Clic dde: casglu, adeiladu, dewislen adeiladu · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s yn barod"}
+{"name": "aoe2mc.lobby.you_play", "text": "Rydych yn chwarae %s."}
+{"name": "aoe2mc.monk.converts", "text": "Mae mynach yn trosi'r %s."}
+{"name": "aoe2mc.monk.dies", "text": "Mae'r %s yn marw (Heresi)."}
+{"name": "aoe2mc.pause.continued", "text": "Mae chwaraewr %s wedi parhau'r gêm."}
+{"name": "aoe2mc.pause.paused", "text": "Mae chwaraewr %s wedi oedi'r gêm."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Tîm %s (sgôr cyfartalog %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Mae'r gêm drosodd. Cliciwch y dde ar y llyfr Crynodeb yn eich llaw i weld y canlyniadau. Stopiwch raglen y gêm gyda Ctrl-C yn ei chonsol."}
+{"name": "aoe2mc.relic_victory.all", "text": "Mae chwaraewr %s yn dal yr holl greiriau."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Mae chwaraewr %s wedi colli crair."}
+{"name": "aoe2mc.repair.no_resources", "text": "Nid oes digon o adnoddau i atgyweirio'r %s."}
+{"name": "aoe2mc.replay.army", "text": "Byddin: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", byddin ar y diwedd: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", wedi'u colli: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Trefn adeiladu:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · gwarchod %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | yn cludo %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "adeiladu %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "bwyd %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "aur %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "segur %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "cerrig %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "pren %s"}
+{"name": "aoe2mc.replay.flare", "text": "Fflêr"}
+{"name": "aoe2mc.replay.game_ends", "text": "Mae'r gêm yn dod i ben"}
+{"name": "aoe2mc.replay.game_time", "text": "Amser y gêm %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · gwarchod %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Milwrol %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Poblogaeth %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Adnoddau %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Gwerinwyr %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "Daliodd %s y heneb: buddugoliaeth Brenin y Bryn am %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s ymosod %s/%s arfog%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Tapiwch Shift ddwywaith: golwg gwyliwr (hedfan drwy flociau). Cliciwch y dde ar eitemau'r bar: rheolaeth ail-chwarae."}
+{"name": "aoe2mc.replay.king_died", "text": ": bu farw'r Brenin am %s. Brenhinladdiad: mae'r chwaraewr allan."}
+{"name": "aoe2mc.replay.king_killed", "text": "Lladdwyd y Brenin am %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Ail-chwarae byw: mae'r naid yn stopio ar yr oedi y tu ôl i'r gêm."}
+{"name": "aoe2mc.replay.lost", "text": "Colledig: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " yn dal y heneb am %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: heneb, %s flwyddyn ar ôl"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: heneb, %s o flynyddoedd ar ôl"}
+{"name": "aoe2mc.replay.no_camera", "text": "Nid oes gan y cofnod hwn gamera o'i chwaraewr."}
+{"name": "aoe2mc.replay.now", "text": " nawr"}
+{"name": "aoe2mc.replay.out", "text": "Mae %s allan"}
+{"name": "aoe2mc.replay.players", "text": "Chwaraewyr"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " yn mynd â'r crair i fynachlog ac yn ennill."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Ail-chwarae wedi dod i ben"}
+{"name": "aoe2mc.replay.research", "text": " yn ymchwilio %s"}
+{"name": "aoe2mc.replay.resigns", "text": "Mae %s yn ildio"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Mae'r gweinydd yn ailgychwyn ar gyfer y naid yn ôl: ymunwch eto."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Adeiladau %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Economi %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Milwrol %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Technolegau %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Cyfanswm %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "cestyll %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "prynwyd %s, gwerthwyd %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "creiriau %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "rhyfeddodau %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Wedi'i wario:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Adeiladu %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Economi %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Milwrol %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Technoleg %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": hyfforddwyd %s o werinwyr, casglwyd %s, amser gwerinwyr segur %s, amser canolfan y dref segur %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": yn dal y heneb (Brenin y Bryn)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": enillwyd heneb %s (Brenin y Bryn)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": hyfforddwyd %s o unedau milwrol, colledwyd %s o unedau, colledwyd %s o adeiladau, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": lladdwyd y Brenin %s (Brenhinladdiad)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": enillion, crair mewn mynachlog %s (Cipio'r Crair)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %steyrnged a anfonwyd %s, a dderbyniwyd %s, uchafbwynt gwerinwyr %s (amc.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": collwyd canolfan y dref %s (Marwolaeth Sydyn)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, technolegau %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": amserydd rhyfeddod o %s, yn gorffen %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Crynodeb (amc.)"}
+{"name": "aoe2mc.replay.task_building", "text": "adeiladu"}
+{"name": "aoe2mc.replay.task_following", "text": "yn dilyn"}
+{"name": "aoe2mc.replay.task_food", "text": "casglu bwyd"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "wedi'i warchod"}
+{"name": "aoe2mc.replay.task_gold", "text": "casglu aur"}
+{"name": "aoe2mc.replay.task_guarding", "text": "yn gwarchod"}
+{"name": "aoe2mc.replay.task_idle", "text": "segur"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "yn patrolio"}
+{"name": "aoe2mc.replay.task_resources", "text": "casglu adnoddau"}
+{"name": "aoe2mc.replay.task_stone", "text": "casglu cerrig"}
+{"name": "aoe2mc.replay.task_walking", "text": "yn cerdded"}
+{"name": "aoe2mc.replay.task_wood", "text": "casglu pren"}
+{"name": "aoe2mc.replay.team", "text": "Tîm %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Saethwr %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Arfog saethwr %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Cludo %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Arfog marchogion %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Fferm %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Aur %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Arfog traed %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Gwŷdd %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Ymladd agos %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Cerrig %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Pren %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castell"}
+{"name": "aoe2mc.replay.tl_king", "text": "Lladdwyd y Brenin"}
+{"name": "aoe2mc.replay.tl_military", "text": "Milwrol cyntaf: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Crair"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Ildio"}
+{"name": "aoe2mc.replay.town_fell", "text": ": cwympodd canolfan y dref am %s. Marwolaeth Sydyn: mae'r chwaraewr allan."}
+{"name": "aoe2mc.replay.town_lost", "text": "Collwyd canolfan y dref am %s"}
+{"name": "aoe2mc.replay.training", "text": "Hyfforddi: %s"}
+{"name": "aoe2mc.replay.university", "text": "Prifysgol:"}
+{"name": "aoe2mc.replay.up_counts", "text": "economi %s · Prifysgol %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " adeiladodd ryfeddod am %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Ymladd: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s o unedau"}
+{"name": "aoe2mc.replay_input.fights", "text": "Ymladdfeydd mawr:"}
+{"name": "aoe2mc.replay_input.help", "text": "Ail-chwarae: cliciwch y dde ar eitemau eich bar, neu cliciwch: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Cymryd drosodd: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s o unedau)"}
+{"name": "aoe2mc.replay_input.vs", "text": " yn erbyn "}
+{"name": "aoe2mc.resource.food", "text": "bwyd"}
+{"name": "aoe2mc.resource.gold", "text": "aur"}
+{"name": "aoe2mc.resource.stone", "text": "cerrig"}
+{"name": "aoe2mc.resource.wood", "text": "pren"}
+{"name": "aoe2mc.run.back", "text": "Mae %s yn ôl"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Ymgyrch wedi'i chwblhau"}
+{"name": "aoe2mc.run.chat_hint", "text": "Sgwrs: mae llinell arferol yn mynd at bawb, /tm TESTUN at eich cynghreiriaid, /msg ENW TESTUN at un person."}
+{"name": "aoe2mc.run.left_bot", "text": "Mae %s wedi gadael: mae bot yn chwarae chwaraewr %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Mae'r senario %s yn dechrau. Ymunwch eto."}
+{"name": "aoe2mc.run.starts_in", "text": "Mae'r gêm yn dechrau mewn %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Agorwch \"Dewiswch eich chwaraewr\" a chliciwch \"Parod\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Pob rheolydd: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Cam cyntaf: daliwch y ffon orchymyn a chliciwch y dde ar un o'ch gwerinwyr."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Cam cyntaf: daliwch y ffon orchymyn a chliciwch y chwith ar un o'ch gwerinwyr."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Nod: ennill y gêm. Gosodiad buddugoliaeth: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Cadwyd y gêm: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "Daeth %s o unedau allan"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Sgowtio Awtomatig"}
+{"name": "aoe2mc.stance.formation", "text": "Ffurfiant: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Ni all unrhyw uned ymosod ar y ddaear"}
+{"name": "aoe2mc.stance.unpack", "text": "Dadbaciwch y Trebuchet yn gyntaf"}
+{"name": "aoe2mc.train.active", "text": "Mae %s yn weithredol."}
+{"name": "aoe2mc.train.rally", "text": "Cliciwch y dde ar y ddaear ar gyfer y man casglu."}
+{"name": "aoe2mc.train.researched", "text": "Mae %s wedi'i ymchwilio."}
+{"name": "aoe2mc.transport.out", "text": "Daeth %s o unedau allan"}
+{"name": "aoe2mc.treaty.ended", "text": "Daeth y cytundeb i ben: gall chwaraewyr ymosod nawr."}
+{"name": "aoe2mc.treaty.refuse", "text": "Cytundeb: ni allwch ymosod cyn %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Cytundeb: ni allwch ymosod yn y gêm hon."}
+{"name": "aoe2mc.treaty.start", "text": "Cytundeb: ni all unrhyw chwaraewr ymosod ar chwaraewr arall cyn %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Cytundeb: ni all unrhyw chwaraewr ymosod ar chwaraewr arall yn y gêm hon."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Adeiladwch farics: cliciwch y dde ar werinwr a ddewiswyd, dewiswch y barics a'i osod. Mae'r bar gweithredu uwchben y bar bwyd yn dweud wrthych ble i'w osod."}
+{"name": "aoe2mc.tutorial.camera", "text": "Symudwch yn gyflym dros y map: cliciwch y dde gyda'r eitem \"Camera\", cerddwch, yna cliciwch y dde gyda hi eto."}
+{"name": "aoe2mc.tutorial.camp", "text": "Dinistriwch wersyll y gelyn yng nghanol y map: dewiswch eich Milwyr Arfog a chliciwch y dde ar adeilad. Mae'r bar bos ar y brig yn dangos y cam."}
+{"name": "aoe2mc.tutorial.camps", "text": "Adeiladwch wersyll coed ger y coed a melin ger yr aeron. Mae'r bar ar y dde yn dangos y pren y maent yn ei gostio."}
+{"name": "aoe2mc.tutorial.complete", "text": "Mae'r tiwtorial wedi'i gwblhau. Nesaf: chwaraewch gêm yn erbyn y bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tiwtorial wedi'i gwblhau"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Symudwch i'r Oes Ffiwdal: cliciwch y dde ar eich canolfan tref a dewiswch yr Oes Ffiwdal. Mae'r bar ar y dde yn dangos eich bwyd."}
+{"name": "aoe2mc.tutorial.food", "text": "Casglwch 100 o fwyd: anfonwch werinwr i'r aeron. Mae'r bar ar y dde yn dangos eich bwyd."}
+{"name": "aoe2mc.tutorial.house", "text": "Adeiladwch dŷ: cliciwch y dde ar werinwr a ddewiswyd, dewiswch y tŷ a'i osod. Mae'r bar gweithredu uwchben y bar bwyd yn dweud wrthych ble i'w osod."}
+{"name": "aoe2mc.tutorial.militia", "text": "Hyfforddwch 3 Milisia: cliciwch y dde ar eich barics a dewiswch y milisia. Mae'r bar ar y dde yn dangos eich bwyd ac aur."}
+{"name": "aoe2mc.tutorial.raid", "text": "Mae'r gelyn yn ymosod ar eich gwerinwyr! Cliciwch y llinell rybudd goch yn y sgwrs i fynd yno, yna dewiswch eich Milisia a chliciwch y dde ar y gelynion. Mae'r bar bos ar y brig yn dangos iechyd yr uned a ddewiswyd."}
+{"name": "aoe2mc.tutorial.select", "text": "Dewiswch werinwr: cliciwch y chwith ar un o'ch gwerinwyr gyda'r ffon orchymyn. Mae'r bar bos ar y brig yn dangos yr uned a ddewiswyd, mae'r bar gweithredu uwchben y bar bwyd yn dangos y cam nesaf."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Cam wedi'i wneud"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Cam %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "AWGRYM: mae'r barics yn hyfforddi milwyr traed. Mae milwyr traed yn rhad ac yn dda yn erbyn adeiladau."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "AWGRYM: ymosodwch gyda'ch holl unedau gyda'i gilydd. Mae grŵp bach yn marw cyn y gall wneud niwed."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "AWGRYM: adeiladwch yr adeiladau gollwng ger yr adnoddau, fel bod y gwerinwyr yn cerdded pellter byr."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "AWGRYM: mae'r oes nesaf yn datgloi adeiladau, unedau a thechnolegau newydd. Cadwch y gwerinwyr wrth y gwaith wrth i chi symud ymlaen."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "AWGRYM: mae aeron ger melin yn ddechrau diogel i fwyd. Yn ddiweddarach, mae ffermydd yn rhoi bwyd nad yw'n dod i ben."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "AWGRYM: mae tŷ yn rhoi lle i 5 poblogaeth arall. Edrychwch ar y boblogaeth yn y bar ar y dde ac adeiladwch dai cyn iddo fod yn llawn."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "AWGRYM: gallwch roi hyd at 15 uned yn y ciw mewn adeilad pan fydd gennych yr adnoddau."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "AWGRYM: yn AoE2 mae cloch y dref yn anfon y gwerinwyr i ganolfan y dref. Canwch hi pan fydd y gelyn yn ymosod ar eich tref."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "AWGRYM: mae'r llinell Segur yn y bar ar y dde yn cyfrif eich gwerinwyr heb waith. Rhowch waith iddynt."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "AWGRYM: hyfforddwch werinwyr drwy'r amser yn yr oesoedd cyntaf. Mae mwy o werinwyr yn rhoi mwy o adnoddau."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "AWGRYM: mae gwerinwyr yn casglu'n gyflymach ger adeilad gollwng. Adeiladwch wersyll coed wrth ymyl y coed."}
+{"name": "aoe2mc.tutorial.villager", "text": "Hyfforddwch werinwr: cliciwch y dde ar eich canolfan tref a dewiswch y gwerinwr. Mae'r bar ar y dde yn dangos y bwyd y mae'n ei gostio."}
+{"name": "aoe2mc.tutorial.wood", "text": "Casglwch 50 o bren: dewiswch werinwr a chliciwch y dde ar goeden. Mae'r bar ar y dde yn dangos eich pren."}
+{"name": "aoe2mc.victory", "text": "Buddugoliaeth"}
+{"name": "aoe2mc.wonder.built", "text": "Mae chwaraewr %s wedi adeiladu rhyfeddod."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Mae rhyfeddod chwaraewr %s wedi'i ddinistrio."}
