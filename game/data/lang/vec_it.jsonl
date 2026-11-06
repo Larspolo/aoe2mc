@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "El zogador %s el va a la %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: la Corusion la ciapa la mapa dal orlo al centro in %s. La destrùe tute le unità e i edifici che ghe xe drento."}
+{"name": "aoe2mc.bot.cannot_build", "text": "No posso far un %s qua adesso."}
+{"name": "aoe2mc.bot.cannot_train", "text": "No posso adestrar quela unità: no go l'edifício par ela."}
+{"name": "aoe2mc.bot.flare_two", "text": "Met do segni par el muro."}
+{"name": "aoe2mc.bot.no_flare", "text": "No vedo segni."}
+{"name": "aoe2mc.bot.no_market", "text": "No go mercà: no posso mandar tributo."}
+{"name": "aoe2mc.bot.no_onager", "text": "No go onagri."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "No go risorse abastanza par un muro."}
+{"name": "aoe2mc.bot.no_water", "text": "No go aqua visin a la mia çità: no posso far una flota."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "I me onagri no pol tagiar i alberi."}
+{"name": "aoe2mc.build.cost", "text": "Risorse no basta: un %s el costa %s."}
+{"name": "aoe2mc.build.flat", "text": "El %s el ga da star so tera piana."}
+{"name": "aoe2mc.build.gate_spot", "text": "Un %s el ga da star so 4 caeleti de un muro suo in linea drita, o so 3 caeleti in diagonal."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Costrusion: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Un %s el ga da star so l'aqua visin a la riva."}
+{"name": "aoe2mc.build.space", "text": "Nisun spasio par el %s qua."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Risorse no basta: %s caeleti de %s i costa %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: sgnoca drito so la fin del muro."}
+{"name": "aoe2mc.build.water", "text": "Un %s el ga da star so l'aqua."}
+{"name": "aoe2mc.camera.fov", "text": "La camera veloce la fa bałar l'ogeto in man. Par tignarlo fermo, mete Opsion > Inpostasion de acessibilità > View Bobbing su OFF. La camera slarga anca la vista, e se vede più mapa. Par tignar la vista normal, mete Opsion > Inpostasion de acessibilità > FOV Effects a 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Camera: no ghe n'è"}
+{"name": "aoe2mc.camera.on", "text": "Camera: ativa, velocità x%s. Shift + sgnoca drito: velocità sucesiva."}
+{"name": "aoe2mc.camera.speed", "text": "Velocità de la camera: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Vinse tuti i nemici e perde poche unità"}
+{"name": "aoe2mc.challenge.booming", "text": "Adestra 100 contadini e va a l'Età Imperial"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Va a l'Età del Castelo e sorvive ai atachi nemici"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Distruji el castelo nemigo"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Cogi 200 cibo, 200 legno, 100 oro e 200 piera, adestra 21 contadini, costruisi un campo de legno e un molin, e va a l'Età Feudal"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Adestra 27 contadini, costruisi 5 case e va a l'Età del Castelo"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Vinse tute e sie le ondae nemiche"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s unità perse, medaglia de bronso fin a %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s unità perse, medaglia d'oro fin a %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s unità perse, nissuna medaglia"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s unità perse, medaglia d'argento fin a %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Medaglia de bronso"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Medaglia d'oro"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Medaglia d'argento"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Distruji tute le nave da guera nemiche"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Nissuna medaglia"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Copa 5 contadini nemici"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Medaglia de bronso in %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Medaglia d'oro in %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Medaglia d'argento in %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Egide via"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Egide ativa"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tecnologie: fin a 256 riçerche"}
+{"name": "aoe2mc.cheat.cpu", "text": "Limite de popolasion: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Nebia: via"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Nebia: ativa"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Le tecnologie le xe gratis"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Condividar xe bel: i tuoi ingressi i va ai toi alèadi"}
+{"name": "aoe2mc.cheat.wonders", "text": "Te comandi la natura: %s animai"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Ghe restà solo i alèadi: le alianse le finisse. Vinse l'ultimo zogador vivo."}
+{"name": "aoe2mc.conquest.defeated", "text": "El zogador %s el xe sconfito."}
+{"name": "aoe2mc.controls.attack", "text": "Atacar: selesiona le unità militari, po sgnoca drito so un nemigo."}
+{"name": "aoe2mc.controls.build", "text": "Costruir: selesiona i contadini, sgnoca drito so de lori par el menù de le costruzion, selesiona un edifício, po sgnoca sinistro so tera. Shift + sgnoca sinistro: meti altri. Sgnoca drito: anula."}
+{"name": "aoe2mc.controls.camera", "text": "Camera: sgnoca drito col canocial Camera (tasto 2 de la barra): te camini svelto sora la mapa. Shift + sgnoca drito: la velocità sucesiva. Sgnoca drito ancora: te vien zo co la camera."}
+{"name": "aoe2mc.controls.garrison", "text": "Guarnision: selesiona le unità, po sgnoca drito so el to edifício. El so menù le fa vegnar fora. Menù del castelo: Sona la campana de la çità."}
+{"name": "aoe2mc.controls.gather", "text": "Racolta: selesiona i contadini, po sgnoca drito so un albero, un çespujo de bache, na miniera o un campo."}
+{"name": "aoe2mc.controls.goto", "text": "Va a: sgnoca drito col compasso Va a (tasto 3 de la barra): un menù dei toi castei, dei toi gruplèti de controło e del prossimo contadino sensa lavoro."}
+{"name": "aoe2mc.controls.groups", "text": "Gruplèti de controło: selesiona le unità, toi un oggeto de grupo (tasti da 5 a 9 de la barra) e Shift + sgnoca drito par salvar la selesion. Sgnoca drito: selesiona el grupo."}
+{"name": "aoe2mc.controls.head", "text": "Controlo (tien la carota su un baston; la barra de l'azion la mostra el pasao sucesivo):"}
+{"name": "aoe2mc.controls.menu", "text": "Menù de zogo: sgnoca drito col libro Menù de zogo (tasto 4 de la barra): diplomazia e tributo, segnal, salva, pausa e l'albero de le tecnologie."}
+{"name": "aoe2mc.controls.move", "text": "Movimento: con na selesion, sgnoca drito so tera."}
+{"name": "aoe2mc.controls.research", "text": "Riçerca e età sucesiva: sgnoca drito so el to edificio e sgnoca so na tecnologia o so l'età sucesiva nel so menù."}
+{"name": "aoe2mc.controls.select", "text": "Selesion: sgnoca sinistro so na unità. Tien sgnoca sinistro e varda so tera: un riquadro de selesion. Sgnoca drito: dà órdini."}
+{"name": "aoe2mc.controls.train", "text": "Adestramento: sgnoca drito so el to edificio (castelo, caserma ...) e sgnoca so na unità nel so menù."}
+{"name": "aoe2mc.defeat", "text": "Sconfita"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Alèado"}
+{"name": "aoe2mc.diplomacy.changed", "text": "El zogador %s el ga cambià la so posizion verso de ti: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Nemigo"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutrale"}
+{"name": "aoe2mc.diplomacy.speed", "text": "El zogador %s el ga metù la velocità del zogo su %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "El zogador %s el ga mandà %s %s al zogador %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Segnal a %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Va drio: sgnoca so una to unità"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Guardia: sgnoca so una to unità o costruzion"}
+{"name": "aoe2mc.gaia.joins", "text": "Un %s se unisse a ti."}
+{"name": "aoe2mc.garrison.all_back", "text": "Tuti al lavoro"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "La campana de la çità la sona: %s contadini çerca rifugio"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Nissun contadino xe selesionà."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "No ti ghe n'ai de contadini."}
+{"name": "aoe2mc.garrison.out", "text": "%s unità xe vegnù fora"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s contadini çerca rifugio"}
+{"name": "aoe2mc.gather.act_attack", "text": "atacar"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menù de costruzion"}
+{"name": "aoe2mc.gather.act_garrison", "text": "guarnision"}
+{"name": "aoe2mc.gather.act_gather", "text": "racolta"}
+{"name": "aoe2mc.gather.act_hunt", "text": "caza"}
+{"name": "aoe2mc.gather.act_move", "text": "movi"}
+{"name": "aoe2mc.gather.act_select", "text": "selesiona"}
+{"name": "aoe2mc.gather.act_select_type", "text": "selesiona tuti de sto tipo"}
+{"name": "aoe2mc.gather.act_trade", "text": "scambia"}
+{"name": "aoe2mc.gather.act_train", "text": "adestra"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Atacar: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Riquadro de selesion: anula"}
+{"name": "aoe2mc.gather.bush", "text": "Çespujo de bache"}
+{"name": "aoe2mc.gather.carcass", "text": "Carogna"}
+{"name": "aoe2mc.gather.corner", "text": "Riquadro de selesion: sgnoca so l'altro canton"}
+{"name": "aoe2mc.gather.enemy", "text": "Nemigo %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Edificio nemigo"}
+{"name": "aoe2mc.gather.farm", "text": "Campo"}
+{"name": "aoe2mc.gather.ground", "text": "Tera"}
+{"name": "aoe2mc.gather.group", "text": "Grupo %s: %s unità"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grupo %s: %s unità salvà"}
+{"name": "aoe2mc.gather.mine", "text": "Miniera %s"}
+{"name": "aoe2mc.gather.paused", "text": "El zogo xe in pausa."}
+{"name": "aoe2mc.gather.point", "text": "%s · Sgnoca drito: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Semenà in coa: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Selesionà: %s unità"}
+{"name": "aoe2mc.gather.tree", "text": "Albero"}
+{"name": "aoe2mc.hill.holds", "text": "El zogador %s el tien el monumento."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Atacar tera: sgnoca drito so tera"}
+{"name": "aoe2mc.hints.attack_move", "text": "Movimento con atacar: sgnoca drito so tera"}
+{"name": "aoe2mc.hints.building", "text": "Meti el %s: sgnoca drito so tera · Shift + sgnoca drito: meti altri · Anula: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: sgnoca sinistro par meterlo · Shift: meti altri · Sgnoca drito: anula"}
+{"name": "aoe2mc.hints.corner", "text": "Riquadro de selesion: sgnoca drito so l'altro canton"}
+{"name": "aoe2mc.hints.count_military", "text": "%s unità militar"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s unità militari"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s contadino"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s contadini"}
+{"name": "aoe2mc.hints.deselect", "text": "Riquadro vodo: desselesiona"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Sgnoca sinistro: desselesiona"}
+{"name": "aoe2mc.hints.follow", "text": "Va drio: sgnoca drito so una to unità o alèada"}
+{"name": "aoe2mc.hints.guard", "text": "Guardia: sgnoca drito so una to unità o costruzion o alèada"}
+{"name": "aoe2mc.hints.military", "text": "%s · Sgnoca drito: ataca un nemigo, menù de posizion · %s"}
+{"name": "aoe2mc.hints.none", "text": "Sgnoca sinistro: selesiona una unità · Tien sgnoca sinistro: riquadro de selesion"}
+{"name": "aoe2mc.hints.none_wand", "text": "Sgnoca drito: selesiona una unità · Bachéta: riquadro de selesion"}
+{"name": "aoe2mc.hints.patrol", "text": "Pattuglia: sgnoca drito so tera"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Sgnoca drito: racolta, costruir, menù de costruzion · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s pronti"}
+{"name": "aoe2mc.lobby.you_play", "text": "Ti zoghi %s."}
+{"name": "aoe2mc.monk.converts", "text": "Un monaco converte el %s."}
+{"name": "aoe2mc.monk.dies", "text": "El %s el mori (Eresia)."}
+{"name": "aoe2mc.pause.continued", "text": "El zogador %s el ga continuà el zogo."}
+{"name": "aoe2mc.pause.paused", "text": "El zogador %s el ga metù in pausa el zogo."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Squadra %s (valutasion media %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "El zogo xe finì. Sgnoca drito so el libro Recap in man par vedar i rixultà. Fèrma el programa del zogo con Ctrl-C nela so consola."}
+{"name": "aoe2mc.relic_victory.all", "text": "El zogador %s el tien tuti i relichi."}
+{"name": "aoe2mc.relic_victory.lost", "text": "El zogador %s el ga perso un relico."}
+{"name": "aoe2mc.repair.no_resources", "text": "Risorse no basta par riparar el %s."}
+{"name": "aoe2mc.replay.army", "text": "Armata: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", armata a la fin: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", perse: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Órdine de costruzion:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · guarnision %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | porta %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "costruisi %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "cibo %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "oro %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "vodo %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "piera %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "leno %s"}
+{"name": "aoe2mc.replay.flare", "text": "Segnal"}
+{"name": "aoe2mc.replay.game_ends", "text": "El zogo el finisse"}
+{"name": "aoe2mc.replay.game_time", "text": "Tempo de zogo %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · guarnision %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Ris %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Con %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s el tegnea el monumento: vitoria Re de la Colina a %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atacar %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Toca do volte Shift: vista de spetatore (volar tra i blochi). Sgnoca drito so i oggeti de la barra: controlo del replay."}
+{"name": "aoe2mc.replay.king_died", "text": ": el Re el xe morto a %s. Regicidio: el zogador el xe fora."}
+{"name": "aoe2mc.replay.king_killed", "text": "Re copà a %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Replay in diretta: el salto el se ferma al ritardo del zogo."}
+{"name": "aoe2mc.replay.lost", "text": "Perso: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " el tegneva el monumento a %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monumento, %s ano restante"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monumento, %s ani restanti"}
+{"name": "aoe2mc.replay.no_camera", "text": "Sto replay no el gà camera del so zogador."}
+{"name": "aoe2mc.replay.now", "text": " adesso"}
+{"name": "aoe2mc.replay.out", "text": "%s xe fora"}
+{"name": "aoe2mc.replay.players", "text": "Zogadori"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " el porta el relico in un monastero e el vinse."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Replay finì"}
+{"name": "aoe2mc.replay.research", "text": " el riçerca %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s el se rende"}
+{"name": "aoe2mc.replay.restart_jump", "text": "El server el se riavia par el salto indrio: entra de novo."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Edifici %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Economia %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Militar %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tecnologie %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Total %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "casteli %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "comprà %s, vendù %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relichi %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "meravegie %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Spendesto:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Costruir %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eco %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tec %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": contadini adestrà %s, racolto %s, tempo vodo dei contadini %s, tempo vodo del castelo %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": el tegneva el monumento (Re de la Colina)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monumento vinto %s (Re de la Colina)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": unità militari adestrà %s, unità perse %s, edifici persi %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Re copà %s (Regicidio)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": vitorie, relico in un monastero %s (Ciapa el relico)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stributo mandà %s, ricevù %s, picco de contadini %s (stim.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": castelo perso %s (Morte sùbita)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tecnologie %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": timer de la meravegia da %s, finisse %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Riassunto (stim.)"}
+{"name": "aoe2mc.replay.task_building", "text": "costruisse"}
+{"name": "aoe2mc.replay.task_following", "text": "va drio"}
+{"name": "aoe2mc.replay.task_food", "text": "racolta cibo"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "in guarnision"}
+{"name": "aoe2mc.replay.task_gold", "text": "racolta oro"}
+{"name": "aoe2mc.replay.task_guarding", "text": "in guardia"}
+{"name": "aoe2mc.replay.task_idle", "text": "vodo"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "in pattuglia"}
+{"name": "aoe2mc.replay.task_resources", "text": "racolta risorse"}
+{"name": "aoe2mc.replay.task_stone", "text": "racolta piera"}
+{"name": "aoe2mc.replay.task_walking", "text": "a pie"}
+{"name": "aoe2mc.replay.task_wood", "text": "racolta leno"}
+{"name": "aoe2mc.replay.team", "text": "Squadra %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Arcier %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armadura de arcier %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Portada %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armadura de cavaliero %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Campo %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Oro %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armadura de fante %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Telaro %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Corpo a corpo %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Piera %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Leno %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castelo"}
+{"name": "aoe2mc.replay.tl_king", "text": "Re copà"}
+{"name": "aoe2mc.replay.tl_military", "text": "1° militar: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relico"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Se rende"}
+{"name": "aoe2mc.replay.town_fell", "text": ": el castelo de la çità xe cascà a %s. Morte sùbita: el zogador el xe fora."}
+{"name": "aoe2mc.replay.town_lost", "text": "Castelo de la çità perso a %s"}
+{"name": "aoe2mc.replay.training", "text": "Adestramento: %s"}
+{"name": "aoe2mc.replay.university", "text": "Università:"}
+{"name": "aoe2mc.replay.up_counts", "text": "economia %s · Università %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " el ga costruìo una meravegia a %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Batagia: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s unità"}
+{"name": "aoe2mc.replay_input.fights", "text": "Grandi batagie:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: sgnoca drito so i oggeti de la barra, o sgnoca so: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Tol el controlo: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s unità)"}
+{"name": "aoe2mc.replay_input.vs", "text": " contro "}
+{"name": "aoe2mc.resource.food", "text": "cibo"}
+{"name": "aoe2mc.resource.gold", "text": "oro"}
+{"name": "aoe2mc.resource.stone", "text": "piera"}
+{"name": "aoe2mc.resource.wood", "text": "leno"}
+{"name": "aoe2mc.run.back", "text": "%s xe tornà"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Canpagna completada"}
+{"name": "aoe2mc.run.chat_hint", "text": "Ciacola: 'na riga normal la va a tuti, /tm TESTO ai toi alèadi, /msg NOME TESTO a 'na sola persona."}
+{"name": "aoe2mc.run.left_bot", "text": "%s xe 'ndà fora: un bot el zoga el zogador %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "El scenario %s el scomenza. Entra de novo."}
+{"name": "aoe2mc.run.starts_in", "text": "El zogo el scomenza in %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Vèrzi \"Sèlta el to zogador\" e sgnoca so \"Pronto\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Tuti i controli: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Primo passo: tien el baston de comando e sgnoca drito so un dei toi contadini."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Primo passo: tien el baston de comando e sgnoca sinistro so un dei toi contadini."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Obietivo: vinsi el zogo. Inpostasion de la vitoria: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Zogo salvà: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s unità xe vegnù fora"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Esplorasion automatica"}
+{"name": "aoe2mc.stance.formation", "text": "Formasion: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Nissuna unità pol atacar la tera"}
+{"name": "aoe2mc.stance.unpack", "text": "Desfa prima el Trabucco"}
+{"name": "aoe2mc.train.active", "text": "%s xe ativo."}
+{"name": "aoe2mc.train.rally", "text": "Sgnoca drito so tera par el punto de reunion."}
+{"name": "aoe2mc.train.researched", "text": "%s xe riçercà."}
+{"name": "aoe2mc.transport.out", "text": "%s unità xe vegnù fora"}
+{"name": "aoe2mc.treaty.ended", "text": "El tratato xe finì: i zogadori i pol atacar adesso."}
+{"name": "aoe2mc.treaty.refuse", "text": "Tratato: no te pol atacar prima de %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Tratato: no te pol atacar in sto zogo."}
+{"name": "aoe2mc.treaty.start", "text": "Tratato: nissun zogador el pol atacar un altro zogador prima de %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Tratato: nissun zogador el pol atacar un altro zogador in sto zogo."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Costruisi na caserma: sgnoca drito so un contadino selesionà, sèrni la caserma e metila. La barra de l'azion sora la barra dei tasti la dise dove metila."}
+{"name": "aoe2mc.tutorial.camera", "text": "Va svelto sora la mapa: sgnoca drito col oggeto \"Camera\", camina, po sgnoca drito ancora con quel."}
+{"name": "aoe2mc.tutorial.camp", "text": "Distruji el campo nemigo in mezo a la mapa: selesiona i to Miliziani e sgnoca drito so un edificio. La barra del boss in alto mostra el passo."}
+{"name": "aoe2mc.tutorial.camps", "text": "Costruisi un campo de leno visin ai alberi e un molin visin ai bache. La barra a drita mostra el leno che i costa."}
+{"name": "aoe2mc.tutorial.complete", "text": "El tutorial xe completà. Dopo: zoga contro el bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutorial completà"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Va a l'Età Feudal: sgnoca drito so el to castelo e sèrni l'Età Feudal. La barra a drita mostra el to cibo."}
+{"name": "aoe2mc.tutorial.food", "text": "Cogi 100 cibo: manda un contadino ai bache. La barra a drita mostra el to cibo."}
+{"name": "aoe2mc.tutorial.house", "text": "Costruisi na casa: sgnoca drito so un contadino selesionà, sèrni la casa e metila. La barra de l'azion sora la barra dei tasti la dise dove metila."}
+{"name": "aoe2mc.tutorial.militia", "text": "Adestra 3 Miliziani: sgnoca drito so la to caserma e sèrni la milisia. La barra a drita mostra el to cibo e el to oro."}
+{"name": "aoe2mc.tutorial.raid", "text": "El nemigo el ataca i toi contadini! Sgnoca so la riga rossa de alarme in ciacola par andar là, po selesiona i to Miliziani e sgnoca drito so i nemighi. La barra del boss in alto mostra la vita de l'unità selesionada."}
+{"name": "aoe2mc.tutorial.select", "text": "Selesiona un contadino: sgnoca sinistro so un dei toi contadini col baston de comando. La barra del boss in alto mostra l'unità selesionada, la barra de l'azion sora la barra dei tasti mostra la prossima azion."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Passo fato"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Passo %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "SUGERIMENTO: la caserma adestra fanti. La fanteria xe economica e xe bona contro i edifici."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "SUGERIMENTO: ataca con tute le to unità insieme. Un gruzeto mor prima de far danno."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "SUGERIMENTO: costruisi i edifici de consegna visin a le risorse, cussì i contadini fa na strada curta."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "SUGERIMENTO: l'età sucesiva sblocca novi edifici, unità e tecnologie. Tien i contadini al lavoro mentre te và avanti."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "SUGERIMENTO: i bache visin a un molin xe un bon inizio sicuro par el cibo. Dopo, i campi dà cibo che no finisse."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "SUGERIMENTO: na casa dà posto par 5 abitanti in più. Varda la popolasion nela barra a drita e costruisi case prima che la sia piena."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "SUGERIMENTO: te pol meter in coa fin a 15 unità in un edificio, quando te ghe xe le risorse."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "SUGERIMENTO: in AoE2 la campana de la çità la manda i contadini nel castelo de la çità. Sonala quando el nemigo ataca la to çità."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "SUGERIMENTO: la riga Vodo de la barra a drita conta i toi contadini sensa lavoro. DagHe lavoro."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "SUGERIMENTO: adestra contadini sempre nei primi età. Più contadini dà più risorse."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "SUGERIMENTO: i contadini racoje più in fretta visin a un edificio de consegna. Costruisi un campo de leno visin ai alberi."}
+{"name": "aoe2mc.tutorial.villager", "text": "Adestra un contadino: sgnoca drito so el to castelo e sèrni el contadino. La barra a drita mostra el cibo che el costa."}
+{"name": "aoe2mc.tutorial.wood", "text": "Cogi 50 leno: selesiona un contadino e sgnoca drito so un albero. La barra a drita mostra el to leno."}
+{"name": "aoe2mc.victory", "text": "Vitoria"}
+{"name": "aoe2mc.wonder.built", "text": "El zogador %s el ga costruìo una meravegia."}
+{"name": "aoe2mc.wonder.destroyed", "text": "La meravegia del zogador %s xe distruta."}

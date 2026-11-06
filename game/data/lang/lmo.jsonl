@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "El giügadùr %s el va a l'%s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: la Corusiù la ciapa la mapa dal bordo al mèz in %s. La distrüs tüć i unità e i edifizi che ghe son dent."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Chi adèss a no pòsi fà un %s."}
+{"name": "aoe2mc.bot.cannot_train", "text": "A no pòsi adestrà chela unità: a no g'ho l'edifizi par chela."}
+{"name": "aoe2mc.bot.flare_two", "text": "Met dü segni par el mür."}
+{"name": "aoe2mc.bot.no_flare", "text": "A no vedi segni."}
+{"name": "aoe2mc.bot.no_market", "text": "A no g'ho mercà: a no pòsi mandà tribüt."}
+{"name": "aoe2mc.bot.no_onager", "text": "A no g'ho onager."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "A g'ho pòche risorse par el mür."}
+{"name": "aoe2mc.bot.no_water", "text": "A g'ho nisüna aqua visìna a la mia sità: a no pòsi fà na flota."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "I mee onager a no pòden tajà i àlber."}
+{"name": "aoe2mc.build.cost", "text": "Risorse no basta: un %s el costa %s."}
+{"name": "aoe2mc.build.flat", "text": "El %s el g'ha de stà in terén piàn."}
+{"name": "aoe2mc.build.gate_spot", "text": "Un %s el g'ha de stà sü 4 cèle d'un mür sò in linea dritta, o sü 3 cèle in diagonal."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Costrüzion: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Un %s el g'ha de stà sü l'aqua visìna a la riva."}
+{"name": "aoe2mc.build.space", "text": "Nisün spazi par el %s chi."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Risorse no basta: %s cèle de %s i costa %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: fèm clic drèt sü la fin del mür."}
+{"name": "aoe2mc.build.water", "text": "Un %s el g'ha de stà sü l'aqua."}
+{"name": "aoe2mc.camera.fov", "text": "La camera lesta la fa balà l'ogèt in man. Par tègnel fermo, met Opsiù > Inpostasiù de acessibilità > View Bobbing a OFF. La camera la slarga anca la vista, e se vedi püssee mapa. Par tègnen la vista normal, met Opsiù > Inpostasiù de acessibilità > FOV Effects a 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Camera: no la ghe n'è"}
+{"name": "aoe2mc.camera.on", "text": "Camera: ativa, velocità x%s. Shift + clic drèt: velocità sücesiva."}
+{"name": "aoe2mc.camera.speed", "text": "Velocità de la camera: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Vinsi tüć i nemis e pèrd pòche unità"}
+{"name": "aoe2mc.challenge.booming", "text": "Adestra 100 paesàn e va a l'Età Imperiàl"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Va a l'Età del Castèl e sorvìvi a i atach dei nemis"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Distrüs el castèl nemis"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Tö 200 cibo, 200 legn, 100 oro e 200 piera, adestra 21 paesàn, costrüis un taj de legn e un mulìn, e va a l'Età Feudàl"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Adestra 27 paesàn, costrüis 5 cà e va a l'Età del Castèl"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Vinsi tüte e sie i ondàde nemighe"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s unità pèrse, medàia de bronz fin a %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s unità pèrse, medàia d'oro fin a %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s unità pèrse, nisüna medàia"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s unità pèrse, medàia d'arzént fin a %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Medàia de bronz"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Medàia d'oro"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Medàia d'arzént"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Distrüs tüte i navi de guera nemighe"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Nisüna medàia"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Copa 5 paesàn nemis"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Medàia de bronz in %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Medàia d'oro in %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Medàia d'arzént in %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Egide via"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Egide ativa"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tecnologie: fin a 256 ricerche"}
+{"name": "aoe2mc.cheat.cpu", "text": "Limit de popolasiù: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Nebia: via"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Nebia: ativa"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Le tecnologie i è gratüite"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Condividi l'é bèl: i tò ingressi i va ai tò alèàt"}
+{"name": "aoe2mc.cheat.wonders", "text": "Te comandet la natüra: %s animai"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Gh'é restàa demò i alèàt: i aliànse i finìs. Vinsi l'ültum giügadùr vìv."}
+{"name": "aoe2mc.conquest.defeated", "text": "El giügadùr %s el è sconfìt."}
+{"name": "aoe2mc.controls.attack", "text": "Atach: selesiona i unità militàr, pö fèm clic drèt sü on nemis."}
+{"name": "aoe2mc.controls.build", "text": "Costrüsi: selesiona i paesàn, fèm clic drèt sü de lur pèr el menü di edifizi, selesiona on edifizi, pö fèm clic sinistro sül terén. Shift + clic sinistro: meti püssee. Clic drèt: anüla."}
+{"name": "aoe2mc.controls.camera", "text": "Camera: fèm clic drèt cul canochiàl Camera (tast 2 de bara): te girèt svelt sura la mapa. Shift + clic drèt: la velocità sücesiva. Clic drèt amò: te vè zo cola camera."}
+{"name": "aoe2mc.controls.garrison", "text": "Guarnisiù: selesiona i unità, pö fèm clic drèt sül tò edifizi. El sò menü i fa fò. Menü del castèl: Sona la campana de la sità."}
+{"name": "aoe2mc.controls.gather", "text": "Racòlta: selesiona i paesàn, pö fèm clic drèt sü d'on àlber, d'on cespüi de bacàsse, d'üna mina o d'on càmp."}
+{"name": "aoe2mc.controls.goto", "text": "Và a: fèm clic drèt col compàs Và a (tast 3 de bara): on menü di tò castèi, di tò gruplàch de contròl e del prossem paesàn senza lavór."}
+{"name": "aoe2mc.controls.groups", "text": "Gruplàch de contròl: selesiona i unità, töi on ogèt de grüp (tast da 5 a 9 de bara) e Shift + clic drèt par sarvà la selesiù. Clic drèt: selesiona el grüp."}
+{"name": "aoe2mc.controls.head", "text": "Contròi (tegn la carota sü on baston; la bara de le asiù la mostra el pass sücesìf):"}
+{"name": "aoe2mc.controls.menu", "text": "Menü de zöc: fèm clic drèt col libér Menü de zöc (tast 4 de bara): diplomasia e tribüt, segnàl, sarva, pausa e l'àlber de le tecnologie."}
+{"name": "aoe2mc.controls.move", "text": "Movimènt: con na selesiù, fèm clic drèt sül terén."}
+{"name": "aoe2mc.controls.research", "text": "Ricerca e età sücesiva: fèm clic drèt sül tò edifizi e fèm clic sü na tecnologia o sül'età sücesiva inte sò menü."}
+{"name": "aoe2mc.controls.select", "text": "Selesiù: fèm clic sinistro sü na unità. Tegn sü clic sinistro e varda sül terén: na scàtola de selesiù. Clic drèt: dà ordin."}
+{"name": "aoe2mc.controls.train", "text": "Adestrament: fèm clic drèt sül tò edifizi (castèl, caserma ...) e fèm clic sü na unità inte sò menü."}
+{"name": "aoe2mc.defeat", "text": "Sconfìta"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Alèàt"}
+{"name": "aoe2mc.diplomacy.changed", "text": "El giügadùr %s el ha cambià la sò pusisiù vèrs de té: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Nemis"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neütrài"}
+{"name": "aoe2mc.diplomacy.speed", "text": "El giügadùr %s el ha metü la velocità del zöc a %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "El giügadùr %s el ha mandà %s %s al giügadùr %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Segnàl a %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Vé daré: fèm clic sü na tò unità"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Guardia: fèm clic sü na tò unità o edifizi"}
+{"name": "aoe2mc.gaia.joins", "text": "Ön %s el se unìs a té."}
+{"name": "aoe2mc.garrison.all_back", "text": "Tücc a lavorà"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "La campana de la sità la sona: %s paesàn i cérca rifügi"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Nisün paesàn l'è selesiùnat."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "A g'hét nisün paesàn."}
+{"name": "aoe2mc.garrison.out", "text": "%s unità i é nàda fò"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s paesàn i cérca rifügi"}
+{"name": "aoe2mc.gather.act_attack", "text": "atach"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menü de costrüsiù"}
+{"name": "aoe2mc.gather.act_garrison", "text": "guarnisiù"}
+{"name": "aoe2mc.gather.act_gather", "text": "racòlta"}
+{"name": "aoe2mc.gather.act_hunt", "text": "caca"}
+{"name": "aoe2mc.gather.act_move", "text": "movi"}
+{"name": "aoe2mc.gather.act_select", "text": "selesiona"}
+{"name": "aoe2mc.gather.act_select_type", "text": "selesiona tüte de sto tipo"}
+{"name": "aoe2mc.gather.act_trade", "text": "scambia"}
+{"name": "aoe2mc.gather.act_train", "text": "adestra"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Atach: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Scàtola de selesiù: anüla"}
+{"name": "aoe2mc.gather.bush", "text": "Cespüi de bacàsse"}
+{"name": "aoe2mc.gather.carcass", "text": "Carògna"}
+{"name": "aoe2mc.gather.corner", "text": "Scàtola de selesiù: fèm clic sü de l'altra canton"}
+{"name": "aoe2mc.gather.enemy", "text": "Nemis %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Edifizi nemis"}
+{"name": "aoe2mc.gather.farm", "text": "Càmp"}
+{"name": "aoe2mc.gather.ground", "text": "Terén"}
+{"name": "aoe2mc.gather.group", "text": "Grüp %s: %s unità"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grüp %s: %s unità sarvàde"}
+{"name": "aoe2mc.gather.mine", "text": "Mina %s"}
+{"name": "aoe2mc.gather.paused", "text": "El zöc l'è in pausa."}
+{"name": "aoe2mc.gather.point", "text": "%s · Clic drèt: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Semenàde in coda: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Selesionàde: %s unità"}
+{"name": "aoe2mc.gather.tree", "text": "Àlber"}
+{"name": "aoe2mc.hill.holds", "text": "El giügadùr %s el tegn el monümént."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Atach sül terén: fèm clic drèt sül terén"}
+{"name": "aoe2mc.hints.attack_move", "text": "Movimènt cun atach: fèm clic drèt sül terén"}
+{"name": "aoe2mc.hints.building", "text": "Met el %s: fèm clic drèt sül terén · Shift + clic drèt: met püssee · Anüla: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: fèm clic sinistro par metel · Shift: met püssee · Clic drèt: anüla"}
+{"name": "aoe2mc.hints.corner", "text": "Scàtola de selesiù: fèm clic drèt sü de l'altra canton"}
+{"name": "aoe2mc.hints.count_military", "text": "%s unità militàr"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s unità militàr"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s paesàn"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s paesàn"}
+{"name": "aoe2mc.hints.deselect", "text": "Scàtola vöda: desselesiona"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Clic sinistro: desselesiona"}
+{"name": "aoe2mc.hints.follow", "text": "Vé daré: fèm clic drèt sü na tò unità o d'un alèàt"}
+{"name": "aoe2mc.hints.guard", "text": "Guardia: fèm clic drèt sü na tò unità o edifizi o d'un alèàt"}
+{"name": "aoe2mc.hints.military", "text": "%s · Clic drèt: atach on nemis, menü de posisiù · %s"}
+{"name": "aoe2mc.hints.none", "text": "Clic sinistro: selesiona na unità · Tegn sü clic sinistro: scàtola de selesiù"}
+{"name": "aoe2mc.hints.none_wand", "text": "Clic drèt: selesiona na unità · Bachèta: scàtola de selesiù"}
+{"name": "aoe2mc.hints.patrol", "text": "Pattuglia: fèm clic drèt sül terén"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Clic drèt: racòlta, costrüsi, menü de costrüsiù · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s pront"}
+{"name": "aoe2mc.lobby.you_play", "text": "Te giüghet %s."}
+{"name": "aoe2mc.monk.converts", "text": "Ön monech el converte el %s."}
+{"name": "aoe2mc.monk.dies", "text": "El %s el mör (Eresia)."}
+{"name": "aoe2mc.pause.continued", "text": "El giügadùr %s el ha cuntinuà el zöc."}
+{"name": "aoe2mc.pause.paused", "text": "El giügadùr %s el ha metü in pausa el zöc."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Squadra %s (valutasiù media %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "El zöc l'è finìt. Fèm clic drèt sül libér Recap in mà par vidè i resultàcc. Fèrma el program del zöc con Ctrl-C inte la sò consola."}
+{"name": "aoe2mc.relic_victory.all", "text": "El giügadùr %s el tegn tüte i relìcc."}
+{"name": "aoe2mc.relic_victory.lost", "text": "El giügadùr %s el ha pèrs ön relìcc."}
+{"name": "aoe2mc.repair.no_resources", "text": "Risorse no basta par riparà el %s."}
+{"name": "aoe2mc.replay.army", "text": "Armàda: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", armàda a la fin: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", pèrse: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Órdin de costrüsiù:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · guarnisiù %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | porta %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "costrüis %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "cibo %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "oro %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "vöt %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "piera %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "legn %s"}
+{"name": "aoe2mc.replay.flare", "text": "Segnàl"}
+{"name": "aoe2mc.replay.game_ends", "text": "El zöc el finìs"}
+{"name": "aoe2mc.replay.game_time", "text": "Tempo de zöc %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · guarnisiù %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Ris %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Pae %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s el tegniva el monümént: vitòria Re de la Colina a %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atach %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Töca dü votlete Shift: vista de spetatùr (vulà fò di i bloc). Clic drèt sü i ogèc de bara: contròl del replay."}
+{"name": "aoe2mc.replay.king_died", "text": ": el Re l'è mort a %s. Regicidio: el giügadùr l'è fò."}
+{"name": "aoe2mc.replay.king_killed", "text": "Re copàt a %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Replay in diretta: el salt el se ferma al ritàrd del zöc."}
+{"name": "aoe2mc.replay.lost", "text": "Pèrs: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " el tegniva el monümént a %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monümént, %s an de resta"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monümént, %s agn de resta"}
+{"name": "aoe2mc.replay.no_camera", "text": "Chèst replay el g'ha nisüna camera del sò giügadùr."}
+{"name": "aoe2mc.replay.now", "text": " adèss"}
+{"name": "aoe2mc.replay.out", "text": "%s l'è fò"}
+{"name": "aoe2mc.replay.players", "text": "Giügadùr"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " el porta el relìcc in d'ön monestéer e el vinc."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Replay finìt"}
+{"name": "aoe2mc.replay.research", "text": " el ricerca %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s el se rènd"}
+{"name": "aoe2mc.replay.restart_jump", "text": "El server el se torna a tacà par el salt indré: entra de nöf."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Edifizi %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Economia %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Militàr %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tecnologie %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Totàl %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "castèi %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "comprà %s, vendü %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relìcc %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "meravèjie %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Spendü:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Costrüsi %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eco %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tec %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": paesàn adestràcc %s, racolcc %s, tempo vöt di paesàn %s, tempo vöt del castèl %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": el tegniva el monümént (Re de la Colina)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monümént vinciüt %s (Re de la Colina)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": unità militàr adestràde %s, unità pèrse %s, edifizi pèrs %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Re copàt %s (Regicidio)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": vitòrie, relìcc in d'ön monestéer %s (Ciapa el relìcc)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stribüt mandàt %s, ricevü %s, pìcco de paesàn %s (stim.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": castèl pèrs %s (Mòrt subìta)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tecnologie %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": timer de la meravèjia da %s, finìs %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Rias (stim.)"}
+{"name": "aoe2mc.replay.task_building", "text": "costrüis"}
+{"name": "aoe2mc.replay.task_following", "text": "vé daré"}
+{"name": "aoe2mc.replay.task_food", "text": "racòlta cibo"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "in guarnisiù"}
+{"name": "aoe2mc.replay.task_gold", "text": "racòlta oro"}
+{"name": "aoe2mc.replay.task_guarding", "text": "in guardia"}
+{"name": "aoe2mc.replay.task_idle", "text": "vöt"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "in pattuglia"}
+{"name": "aoe2mc.replay.task_resources", "text": "racòlta risorse"}
+{"name": "aoe2mc.replay.task_stone", "text": "racòlta piera"}
+{"name": "aoe2mc.replay.task_walking", "text": "a pè"}
+{"name": "aoe2mc.replay.task_wood", "text": "racòlta legn"}
+{"name": "aoe2mc.replay.team", "text": "Squadra %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Arcér %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armadüra de arcér %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Portada %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armadüra de cavalér %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Càmp %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Oro %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armadüra de fànt %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Telàr %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Corp a corp %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Piera %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Legn %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castèl"}
+{"name": "aoe2mc.replay.tl_king", "text": "Re copàt"}
+{"name": "aoe2mc.replay.tl_military", "text": "1° militàr: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relìcc"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Se rènd"}
+{"name": "aoe2mc.replay.town_fell", "text": ": el castèl de la sità l'è cascàt a %s. Mòrt subìta: el giügadùr l'è fò."}
+{"name": "aoe2mc.replay.town_lost", "text": "Castèl de la sità pèrs a %s"}
+{"name": "aoe2mc.replay.training", "text": "Adestrament: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitàt:"}
+{"name": "aoe2mc.replay.up_counts", "text": "economia %s · Universitàt %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " el ga costrüìt na meravèjia a %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Batàja: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s unità"}
+{"name": "aoe2mc.replay_input.fights", "text": "Grande batàje:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: fèm clic drèt sü i ogèc de bara, o fèm clic sü: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Tö el contròl: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s unità)"}
+{"name": "aoe2mc.replay_input.vs", "text": " contra "}
+{"name": "aoe2mc.resource.food", "text": "cibo"}
+{"name": "aoe2mc.resource.gold", "text": "oro"}
+{"name": "aoe2mc.resource.stone", "text": "piera"}
+{"name": "aoe2mc.resource.wood", "text": "legn"}
+{"name": "aoe2mc.run.back", "text": "%s l'è tornàt"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Campagna completada"}
+{"name": "aoe2mc.run.chat_hint", "text": "Ciacàra: 'na riga normàl la va a tücc, /tm TESTO ai tò alèàt, /msg NOM TESTO a 'na sola persona."}
+{"name": "aoe2mc.run.left_bot", "text": "%s l'è 'ndàt fò: 'n bot el giöga el giügadùr %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "El scenàrio %s el scoménsa. Entra de nöf."}
+{"name": "aoe2mc.run.starts_in", "text": "El zöc el scoménsa in %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Vérs \"Sèlta el tò giügadùr\" e fèm clic sü \"Pront\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Töcc i contròi: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Prim pass: tegn el baston de comando e fèm clic drèt sü 'n dei tò paesàn."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Prim pass: tegn el baston de comando e fèm clic sinistro sü 'n dei tò paesàn."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Obietìv: vinc el zöc. Impostasiù de la vitòria: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Zöc salvàt: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s unità i é nàda fò"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Esplorasiù automàtica"}
+{"name": "aoe2mc.stance.formation", "text": "Formasiù: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Nisüna unità la pöl atacà el terén"}
+{"name": "aoe2mc.stance.unpack", "text": "Desfa prima el Trabüch"}
+{"name": "aoe2mc.train.active", "text": "%s l'è atiu."}
+{"name": "aoe2mc.train.rally", "text": "Clic drèt sül terén par el pönt de radünu."}
+{"name": "aoe2mc.train.researched", "text": "%s l'è ricercàt."}
+{"name": "aoe2mc.transport.out", "text": "%s unità i é nàda fò"}
+{"name": "aoe2mc.treaty.ended", "text": "El tratàt l'è finìt: i giügadùr i pöl atacà adèss."}
+{"name": "aoe2mc.treaty.refuse", "text": "Tratàt: no te pòl atacà prima de %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Tratàt: no te pòl atacà in chèsto zöc."}
+{"name": "aoe2mc.treaty.start", "text": "Tratàt: nisün giügadùr el pöl atacà 'n àltro giügadùr prima de %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Tratàt: nisün giügadùr el pöl atacà 'n àltro giügadùr in chèsto zöc."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Costrüis 'na caserma: fèm clic drèt sü 'n paesàn selesiunàt, sèrnat la caserma e metla. La bara de le asiù sóra la bara di tasc la dis dóve metla."}
+{"name": "aoe2mc.tutorial.camera", "text": "Và svelt sura la mapa: fèm clic drèt col ogèt \"Camera\", camina, pö fèm clic drèt amò con quel."}
+{"name": "aoe2mc.tutorial.camp", "text": "Distrüs el càmp nemis in mès a la mapa: selesiona i tò Milizie e fèm clic drèt sü 'n edifizi. La bara del boss in sö la mostra el pass."}
+{"name": "aoe2mc.tutorial.camps", "text": "Costrüis 'n taj de legn visìn a j'àlber e 'n mulìn visìn a le bacàsse. La bara a drita la mostra el legn che i costa."}
+{"name": "aoe2mc.tutorial.complete", "text": "El tutorial l'è completàt. Dòpo: zöga contra el bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutorial completàt"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Va a l'Età Feudàl: fèm clic drèt sül tò castèl e sèrnat l'Età Feudàl. La bara a drita la mostra el tò cibo."}
+{"name": "aoe2mc.tutorial.food", "text": "Töi 100 cibo: manda 'n paesàn a le bacàsse. La bara a drita la mostra el tò cibo."}
+{"name": "aoe2mc.tutorial.house", "text": "Costrüis 'na cà: fèm clic drèt sü 'n paesàn selesiunàt, sèrnat la cà e metla. La bara de le asiù sóra la bara di tasc la dis dóve metla."}
+{"name": "aoe2mc.tutorial.militia", "text": "Adestra 3 Milizie: fèm clic drèt sü la tò caserma e sèrnat la milìzia. La bara a drita la mostra el tò cibo e el tò oro."}
+{"name": "aoe2mc.tutorial.raid", "text": "El nemis el ataca i tò paesàn! Fèm clic sü la riga rossa d'alarm in ciacàra par andà lì, pö selesiona i tò Milizie e fèm clic drèt sü i nemis. La bara del boss in sö la mostra la vita de l'unità selesiunada."}
+{"name": "aoe2mc.tutorial.select", "text": "Selesiona 'n paesàn: fèm clic sinistro sü 'n dei tò paesàn col baston de comando. La bara del boss in sö la mostra l'unità selesiunada, la bara de le asiù sóra la bara di tasc la mostra la prossima asiù."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Pass fat"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Pass %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "CONSÈIL: la caserma la adestra fanterìa. La fanterìa l'è econòmica e la è bùna contra i edifizi."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "CONSÈIL: ataca con tüte le tò unità insema. Un gruplìt el mör prima de fà dann."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "CONSÈIL: costrüis i edifizi de consegna visìn a le risorse, cussì i paesàn i fa 'na strada cürta."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "CONSÈIL: l'età sücesiva la sbloca növ edifizi, unità e tecnologie. Tègn i paesàn al lavór mentre te vè inànz."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "CONSÈIL: le bacàsse visìn a 'n mulìn le è 'n bèl principio sigür par el cibo. Dòpo, i càmp i dà cibo che no finìs."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "CONSÈIL: 'na cà la dà pòst par 5 abitant in pü. Varda la popolasiù nela bara a drita e costrüis le càse prima che la sia piena."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "CONSÈIL: te pöt méter in cöa fin a 15 unità in d'un edifizi, quand te ghe n'hè le risorse."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "CONSÈIL: inte AoE2 la campana de la sità la manda i paesàn in del castèl de la sità. Sónala quand el nemis el assàlta la tò sità."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "CONSÈIL: la riga Vöt de la bara a drita la conta i tò paesàn sensa lavór. Dàghel."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "CONSÈIL: adestra paesàn semper inte i prim età. Pü paesàn i dà pü risorse."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "CONSÈIL: i paesàn i racòlt pü in prèssa visìn a un edifizi de consegna. Costrüis 'n taj de legn visìn a j'àlber."}
+{"name": "aoe2mc.tutorial.villager", "text": "Adestra 'n paesàn: fèm clic drèt sü el tò castèl e sèrnat el paesàn. La bara a drita la mostra el cibo che el costa."}
+{"name": "aoe2mc.tutorial.wood", "text": "Töi 50 legn: selesiona 'n paesàn e fèm clic drèt sü 'n àlber. La bara a drita la mostra el tò legn."}
+{"name": "aoe2mc.victory", "text": "Vitòria"}
+{"name": "aoe2mc.wonder.built", "text": "El giügadùr %s el ga costrüìt na meravèjia."}
+{"name": "aoe2mc.wonder.destroyed", "text": "La meravèjia del giügadùr %s l'è distrütta."}
