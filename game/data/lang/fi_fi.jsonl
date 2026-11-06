@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Pelaaja %s etenee %s-aikakauteen."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Turmelus valtaa kartan reunasta keskustaan ajassa %s. Se tuhoaa kaikki siinä olevat yksiköt ja rakennukset."}
+{"name": "aoe2mc.bot.cannot_build", "text": "En voi rakentaa tänne %s juuri nyt."}
+{"name": "aoe2mc.bot.cannot_train", "text": "En voi kouluttaa tätä yksikköä: minulla ei ole siihen rakennusta."}
+{"name": "aoe2mc.bot.flare_two", "text": "Aseta kaksi merkkiä muurille."}
+{"name": "aoe2mc.bot.no_flare", "text": "En näe merkkiä."}
+{"name": "aoe2mc.bot.no_market", "text": "Minulla ei ole markkinoita: en voi lähettää kunnianosoitusta."}
+{"name": "aoe2mc.bot.no_onager", "text": "Minulla ei ole onageria."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Minulla ei ole tarpeeksi resursseja muuriin."}
+{"name": "aoe2mc.bot.no_water", "text": "Kaupunkini lähellä ei ole vettä: en voi rakentaa laivastoa."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Onagerini eivät voi kaataa puita."}
+{"name": "aoe2mc.build.cost", "text": "Ei tarpeeksi resursseja: %s maksaa %s."}
+{"name": "aoe2mc.build.flat", "text": "%s on seisottava tasaisella maalla."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s on sijoitettava 4 ruudun päähän omasta muurista suoralla linjalla tai 3 vinoon ruutuun."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Rakenna: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s on seisottava veden päällä rannan vieressä."}
+{"name": "aoe2mc.build.space", "text": "Tässä ei ole tilaa kohteelle %s."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Ei tarpeeksi resursseja: %s ruutua kohteesta %s maksaa %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: napsauta muurin päätä hiiren oikealla."}
+{"name": "aoe2mc.build.water", "text": "%s on seisottava vedessä."}
+{"name": "aoe2mc.camera.fov", "text": "Nopea kamera saa pidettävän esineen heilumaan. Pitääksesi sen paikallaan aseta Asetukset > Saavutettavuusasetukset > Näkymän heilunta POIS. Kamera myös laajentaa näkymää, joten näet enemmän kartasta. Normaalin näkymän saat asettamalla Asetukset > Saavutettavuusasetukset > FOV-efektit arvoon 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Kamera: pois"}
+{"name": "aoe2mc.camera.on", "text": "Kamera: päällä, nopeus x%s. Shift + oikea klikkaus: seuraava nopeus."}
+{"name": "aoe2mc.camera.speed", "text": "Kameran nopeus: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Voita kaikki vihollisyksiköt ja menetä vähän yksiköitä"}
+{"name": "aoe2mc.challenge.booming", "text": "Kouluta 100 kyläläistä ja etene keisarikaudelle"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Etene linnakaudelle ja selviydy vihollisen hyökkäyksistä"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Tuhoa vihollisen linna"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Kerää 200 ruokaa, 200 puuta, 100 kultaa ja 200 kiveä, kouluta 21 kyläläistä, rakenna hakkuuleiri ja mylly ja etene feodaalikaudelle"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Kouluta 27 kyläläistä, rakenna 5 taloa ja etene linnakaudelle"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Voita kaikki kuusi vihollisaaltoa"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s yksikköä menetetty, pronssimitali enintään %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s yksikköä menetetty, kultamitali enintään %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s yksikköä menetetty, ei mitalia"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s yksikköä menetetty, hopeamitali enintään %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Pronssimitali"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Kultamitali"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Hopeamitali"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Tuhoa kaikki vihollisen sotalaivat"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Ei mitalia"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Tapa 5 vihollisen kyläläistä"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Pronssimitali ajassa %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Kultamitali ajassa %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Hopeamitali ajassa %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Suojelus pois"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Suojelus päällä"}
+{"name": "aoe2mc.cheat.beyond", "text": "Teknologiat: jopa 256 tutkimusta"}
+{"name": "aoe2mc.cheat.cpu", "text": "Väestörajoitus: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Sumu: pois"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Sumu: päällä"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Teknologiat ovat ilmaisia"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Jakaminen on hyväntekeväisyyttä: tulosi menee liittolaisillesi"}
+{"name": "aoe2mc.cheat.wonders", "text": "Hallitset luontoa: %s eläintä"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Jäljellä on vain liittolaisia: liitot päättyvät. Viimeinen elossa oleva pelaaja voittaa."}
+{"name": "aoe2mc.conquest.defeated", "text": "Pelaaja %s on voitettu."}
+{"name": "aoe2mc.controls.attack", "text": "Hyökkäys: valitse sotayksiköt ja napsauta vihollista hiiren oikealla."}
+{"name": "aoe2mc.controls.build", "text": "Rakenna: valitse kyläläiset, napsauta niitä hiiren oikealla rakennusvalikon avaamiseksi, valitse rakennus ja napsauta maata hiiren vasemmalla. Shift + vasen klikkaus: rakenna lisää. Oikea klikkaus: peruuta."}
+{"name": "aoe2mc.controls.camera", "text": "Kamera: napsauta hiiren oikealla kaukoputkella Kamera (pikanäppäin 2): kuljet nopeasti korkealla kartan yllä. Shift + oikea klikkaus: seuraava nopeus. Oikea klikkaus uudelleen: laskeudut."}
+{"name": "aoe2mc.controls.garrison", "text": "Sijoita: valitse yksiköt ja napsauta omaa rakennustasi hiiren oikealla. Sen valikko päästää ne ulos. Kaupungintalon valikko: Soita kaupungin kelloa."}
+{"name": "aoe2mc.controls.gather", "text": "Kerää: valitse kyläläiset ja napsauta puuta, marjapensasta, kaivosta tai viljelmää hiiren oikealla."}
+{"name": "aoe2mc.controls.goto", "text": "Mene: napsauta kompassilla hiiren oikealla Mene (pikanäppäin 3): valikko kaupunkisi kaupungintaloista, ohjausryhmistäsi ja seuraavasta vapaasta kyläläisestä."}
+{"name": "aoe2mc.controls.groups", "text": "Ohjausryhmät: valitse yksiköt, ota ryhmäkohde (pikanäppäimet 5 - 9) ja tallenna valinta Shift + oikea klikkaus. Oikea klikkaus: valitse ryhmä."}
+{"name": "aoe2mc.controls.head", "text": "Ohjaimet (pidä porkkanaa kepissä; toimintopalkki näyttää seuraavan vaiheen):"}
+{"name": "aoe2mc.controls.menu", "text": "Pelivalikko: napsauta kirjalla hiiren oikealla Pelivalikko (pikanäppäin 4): diplomatia ja kunnianosoitus, merkki, tallennus, tauko ja teknologiapuu."}
+{"name": "aoe2mc.controls.move", "text": "Liiku: kun olet valinnut yksiköt, napsauta maata hiiren oikealla."}
+{"name": "aoe2mc.controls.research", "text": "Tutki ja siirry aikakaudelle: napsauta omaa rakennustasi hiiren oikealla ja valitse teknologia tai seuraava aikakausi sen valikosta."}
+{"name": "aoe2mc.controls.select", "text": "Valitse: napsauta yksikköä hiiren vasemmalla. Pidä vasen painike pohjassa ja katso yli maan: valintalaatikko. Oikea klikkaus: anna käskyjä."}
+{"name": "aoe2mc.controls.train", "text": "Kouluta: napsauta omaa rakennustasi (kaupungintalo, kasarmi ...) hiiren oikealla ja valitse yksikkö sen valikosta."}
+{"name": "aoe2mc.defeat", "text": "Tappio"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Liittolainen"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Pelaaja %s muutti asennettaan sinua kohtaan: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Vihollinen"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Puolueeton"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Pelaaja %s asetti pelin nopeudeksi %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Pelaaja %s lähetti %s %s pelaajalle %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Merkki kohdassa %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Seuraa: napsauta omaa yksikköä"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Vartioi: napsauta omaa yksikköä tai rakennusta"}
+{"name": "aoe2mc.gaia.joins", "text": "%s liittyy joukkoosi."}
+{"name": "aoe2mc.garrison.all_back", "text": "Kaikki takaisin töihin"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Kaupungin kello soi: %s kyläläistä hakee suojaa"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Yhtään kyläläistä ei ole valittu."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Sinulla ei ole kyläläisiä."}
+{"name": "aoe2mc.garrison.out", "text": "%s yksikköä tuli ulos"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s kyläläistä hakee suojaa"}
+{"name": "aoe2mc.gather.act_attack", "text": "hyökkää"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "rakennusvalikko"}
+{"name": "aoe2mc.gather.act_garrison", "text": "sijoita"}
+{"name": "aoe2mc.gather.act_gather", "text": "kerää"}
+{"name": "aoe2mc.gather.act_hunt", "text": "metsästä"}
+{"name": "aoe2mc.gather.act_move", "text": "liiku"}
+{"name": "aoe2mc.gather.act_select", "text": "valitse"}
+{"name": "aoe2mc.gather.act_select_type", "text": "valitse kaikki tyyppiä"}
+{"name": "aoe2mc.gather.act_trade", "text": "kauppa"}
+{"name": "aoe2mc.gather.act_train", "text": "kouluta"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Hyökkäys: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Valintalaatikko: peruttu"}
+{"name": "aoe2mc.gather.bush", "text": "Marjapensas"}
+{"name": "aoe2mc.gather.carcass", "text": "Raato"}
+{"name": "aoe2mc.gather.corner", "text": "Valintalaatikko: napsauta toista kulmaa"}
+{"name": "aoe2mc.gather.enemy", "text": "Vihollinen %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Vihollisen rakennus"}
+{"name": "aoe2mc.gather.farm", "text": "Viljelmä"}
+{"name": "aoe2mc.gather.ground", "text": "Maa"}
+{"name": "aoe2mc.gather.group", "text": "Ryhmä %s: %s yksikköä"}
+{"name": "aoe2mc.gather.group_saved", "text": "Ryhmä %s: %s yksikköä tallennettu"}
+{"name": "aoe2mc.gather.mine", "text": "%s-kaivos"}
+{"name": "aoe2mc.gather.paused", "text": "Peli on pysäytetty."}
+{"name": "aoe2mc.gather.point", "text": "%s · Oikea klikkaus: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Jonossa olevat uudelleenkylvöt: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Valittu: %s yksikköä"}
+{"name": "aoe2mc.gather.tree", "text": "Puu"}
+{"name": "aoe2mc.hill.holds", "text": "Pelaaja %s pitää hallussaan muistomerkkiä."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Hyökkäys maahan: napsauta maata hiiren oikealla"}
+{"name": "aoe2mc.hints.attack_move", "text": "Hyökkäyskäveleminen: napsauta maata hiiren oikealla"}
+{"name": "aoe2mc.hints.building", "text": "Aseta %s: napsauta maata hiiren oikealla · Shift + oikea klikkaus: aseta lisää · Peruuta: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: aseta vasemmalla klikkauksella · Shift: aseta lisää · Oikea klikkaus: peruuta"}
+{"name": "aoe2mc.hints.corner", "text": "Valintalaatikko: napsauta toista kulmaa hiiren oikealla"}
+{"name": "aoe2mc.hints.count_military", "text": "%s sotayksikkö"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s sotayksikköä"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s kyläläinen"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s kyläläistä"}
+{"name": "aoe2mc.hints.deselect", "text": "Tyhjä laatikko: poista valinta"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Vasen klikkaus: poista valinta"}
+{"name": "aoe2mc.hints.follow", "text": "Seuraa: napsauta omaa tai liittolaisen yksikköä hiiren oikealla"}
+{"name": "aoe2mc.hints.guard", "text": "Vartioi: napsauta omaa tai liittolaisen yksikköä tai rakennusta hiiren oikealla"}
+{"name": "aoe2mc.hints.military", "text": "%s · Oikea klikkaus: hyökkää vihollisen kimppuun, asennevalikko · %s"}
+{"name": "aoe2mc.hints.none", "text": "Vasen klikkaus: valitse yksikkö · Pidä vasen painike pohjassa: valintalaatikko"}
+{"name": "aoe2mc.hints.none_wand", "text": "Oikea klikkaus: valitse yksikkö · Sauva: valintalaatikko"}
+{"name": "aoe2mc.hints.patrol", "text": "Partio: napsauta maata hiiren oikealla"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Oikea klikkaus: kerää, rakenna, rakennusvalikko · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s valmiina"}
+{"name": "aoe2mc.lobby.you_play", "text": "Pelaat: %s."}
+{"name": "aoe2mc.monk.converts", "text": "Munkki kääntää kohteen %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s kuolee (kerettiläisyys)."}
+{"name": "aoe2mc.pause.continued", "text": "Pelaaja %s jatkoi peliä."}
+{"name": "aoe2mc.pause.paused", "text": "Pelaaja %s keskeytti pelin."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Joukkue %s (keskimääräinen luokitus %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Peli on päättynyt. Napsauta kädessäsi olevaa Yhteenveto-kirjaa hiiren oikealla nähdäksesi tulokset. Pysäytä pelin ohjelma painamalla Ctrl-C sen konsolissa."}
+{"name": "aoe2mc.relic_victory.all", "text": "Pelaaja %s pitää hallussaan kaikki reliikit."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Pelaaja %s menetti reliikin."}
+{"name": "aoe2mc.repair.no_resources", "text": "Ei tarpeeksi resursseja kohteen %s korjaamiseen."}
+{"name": "aoe2mc.replay.army", "text": "Armeija: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", armeija lopussa: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", menetetty: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Rakennusjärjestys:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · sijoitettu %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | kantaa %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "rakenna %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "ruoka %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "kulta %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "vapaana %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "kivi %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "puu %s"}
+{"name": "aoe2mc.replay.flare", "text": "Merkki"}
+{"name": "aoe2mc.replay.game_ends", "text": "Peli päättyy"}
+{"name": "aoe2mc.replay.game_time", "text": "Pelin aika %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · sijoitettu %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Sot %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Väk %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Kyl %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s piti muistomerkkiä: Kukkulan kuningas -voitto ajassa %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s hyök %s/%s panssari%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Napauta Shift-näppäintä kahdesti: katsojanäkymä (lennä seinien läpi). Napsauta pikavalikon kohteita hiiren oikealla: toiston ohjaus."}
+{"name": "aoe2mc.replay.king_died", "text": ": kuningas kuoli ajassa %s. Kuninkaanmurha: pelaaja on ulkona."}
+{"name": "aoe2mc.replay.king_killed", "text": "Kuningas tapettiin ajassa %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Suora toisto: hyppy pysähtyy viiveeseen pelin takana."}
+{"name": "aoe2mc.replay.lost", "text": "Menetetty: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " pitää muistomerkkiä ajassa %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: muistomerkki, %s vuosi jäljellä"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: muistomerkki, %s vuotta jäljellä"}
+{"name": "aoe2mc.replay.no_camera", "text": "Tässä tallenteessa ei ole sen pelaajan kameraa."}
+{"name": "aoe2mc.replay.now", "text": " nyt"}
+{"name": "aoe2mc.replay.out", "text": "%s on ulkona"}
+{"name": "aoe2mc.replay.players", "text": "Pelaajat"}
+{"name": "aoe2mc.replay.range", "text": " k%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " vie reliikin luostariin ja voittaa."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Toisto päättyi"}
+{"name": "aoe2mc.replay.research", "text": " tutkii %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s luovuttaa"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Palvelin käynnistyy uudelleen hyppyä varten: liity siihen uudelleen."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Rakennukset %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Talous %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Sotilaat %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Teknologiat %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Yhteensä %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "linnat %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "ostettu %s, myyty %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "reliikit %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "ihmeet %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Käytetty:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Rakennus %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Talous %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Sot %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tekn %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": kyläläisiä koulutettu %s, kerätty %s, kyläläisten vapaa-aika %s, kaupungintalon vapaa-aika %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": pitää muistomerkkiä (Kukkulan kuningas)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": muistomerkki voitettu %s (Kukkulan kuningas)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": sotayksiköitä koulutettu %s, yksiköitä menetetty %s, rakennuksia menetetty %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": kuningas tapettu %s kertaa (Kuninkaanmurha)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": voitot, reliikki luostarissa %s (Reliikin valtaus)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %skunnianosoitus lähetetty %s, vastaanotettu %s, kyläläisten huippu %s (arv.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": kaupungintalo menetetty %s (Äkkikuolema)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, teknologiat %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": ihmeen ajastin alkaen %s, päättyy %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Yhteenveto (arv.)"}
+{"name": "aoe2mc.replay.task_building", "text": "rakentaa"}
+{"name": "aoe2mc.replay.task_following", "text": "seuraa"}
+{"name": "aoe2mc.replay.task_food", "text": "kerää ruokaa"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "sijoitettuna"}
+{"name": "aoe2mc.replay.task_gold", "text": "kerää kultaa"}
+{"name": "aoe2mc.replay.task_guarding", "text": "vartioi"}
+{"name": "aoe2mc.replay.task_idle", "text": "vapaana"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "partioi"}
+{"name": "aoe2mc.replay.task_resources", "text": "kerää resursseja"}
+{"name": "aoe2mc.replay.task_stone", "text": "kerää kiveä"}
+{"name": "aoe2mc.replay.task_walking", "text": "kävelee"}
+{"name": "aoe2mc.replay.task_wood", "text": "kerää puuta"}
+{"name": "aoe2mc.replay.team", "text": "Joukkue %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Jousimies %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Jousimiesten panssari %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Kantaminen %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Ratsuväen panssari %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Viljelmä %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Kulta %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Jalkaväen panssari %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Kangaspuu %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Lähitaistelu %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Kivi %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Puu %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Linna"}
+{"name": "aoe2mc.replay.tl_king", "text": "Kuningas tapettu"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. sotilas: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Reliikki"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Luovuttaa"}
+{"name": "aoe2mc.replay.town_fell", "text": ": kaupungintalo kaatui ajassa %s. Äkkikuolema: pelaaja on ulkona."}
+{"name": "aoe2mc.replay.town_lost", "text": "Kaupungintalo menetetty ajassa %s"}
+{"name": "aoe2mc.replay.training", "text": "Koulutus: %s"}
+{"name": "aoe2mc.replay.university", "text": "Yliopisto:"}
+{"name": "aoe2mc.replay.up_counts", "text": "talous %s · Yliopisto %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " rakensi ihmeen ajassa %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Taistelu: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s yksikköä"}
+{"name": "aoe2mc.replay_input.fights", "text": "Suuret taistelut:"}
+{"name": "aoe2mc.replay_input.help", "text": "Toisto: napsauta pikavalikon kohteita hiiren oikealla tai napsauta: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Ota haltuun: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s yksikköä)"}
+{"name": "aoe2mc.replay_input.vs", "text": " vastaan "}
+{"name": "aoe2mc.resource.food", "text": "ruoka"}
+{"name": "aoe2mc.resource.gold", "text": "kulta"}
+{"name": "aoe2mc.resource.stone", "text": "kivi"}
+{"name": "aoe2mc.resource.wood", "text": "puu"}
+{"name": "aoe2mc.run.back", "text": "%s on takaisin"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampanja suoritettu"}
+{"name": "aoe2mc.run.chat_hint", "text": "Keskustelu: tavallinen rivi menee kaikille, /tm TEKSTI liittolaisille, /msg NIMI TEKSTI yhdelle henkilölle."}
+{"name": "aoe2mc.run.left_bot", "text": "%s lähti: botti pelaa pelaajaa %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Skenaario %s alkaa. Liity uudelleen."}
+{"name": "aoe2mc.run.starts_in", "text": "Peli alkaa ajassa %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Avaa \"Valitse pelaajasi\" ja napsauta \"Valmis\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Kaikki ohjaimet: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Ensimmäinen vaihe: pidä komentotikkua kädessä ja napsauta yhtä kyläläistäsi hiiren oikealla."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Ensimmäinen vaihe: pidä komentotikkua kädessä ja napsauta yhtä kyläläistäsi hiiren vasemmalla."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Tavoite: voita peli. Voittoasetus: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Peli tallennettu: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s yksikköä tuli ulos"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Automaattinen tiedustelu"}
+{"name": "aoe2mc.stance.formation", "text": "Muodostelma: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Mikään yksikkö ei voi hyökätä maahan"}
+{"name": "aoe2mc.stance.unpack", "text": "Pura ensin katapultti"}
+{"name": "aoe2mc.train.active", "text": "%s on aktiivinen."}
+{"name": "aoe2mc.train.rally", "text": "Napsauta maata hiiren oikealla kokoontumispisteen asettamiseksi."}
+{"name": "aoe2mc.train.researched", "text": "%s on tutkittu."}
+{"name": "aoe2mc.transport.out", "text": "%s yksikköä tuli ulos"}
+{"name": "aoe2mc.treaty.ended", "text": "Sopimus päättyi: pelaajat voivat nyt hyökätä."}
+{"name": "aoe2mc.treaty.refuse", "text": "Sopimus: et voi hyökätä ennen kuin %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Sopimus: et voi hyökätä tässä pelissä."}
+{"name": "aoe2mc.treaty.start", "text": "Sopimus: mikään pelaaja ei voi hyökätä toiseen pelaajaan ennen kuin %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Sopimus: mikään pelaaja ei voi hyökätä toiseen pelaajaan tässä pelissä."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Rakenna kasarmi: napsauta valittua kyläläistä hiiren oikealla, valitse kasarmi ja aseta se. Toimintopalkki yllä pikavalikon päällä kertoo, mihin se asetetaan."}
+{"name": "aoe2mc.tutorial.camera", "text": "Liiku nopeasti kartan yli: napsauta kohdetta \"Kamera\" hiiren oikealla, kävele ja napsauta sitä uudelleen hiiren oikealla."}
+{"name": "aoe2mc.tutorial.camp", "text": "Tuhoa vihollisleiri kartan keskellä: valitse keihäsmiehesi ja napsauta rakennusta hiiren oikealla. Yläreunan pomopalkki näyttää vaiheen."}
+{"name": "aoe2mc.tutorial.camps", "text": "Rakenna hakkuuleiri puiden lähelle ja mylly marjojen lähelle. Oikealla oleva sivupalkki näyttää, kuinka paljon puuta ne maksavat."}
+{"name": "aoe2mc.tutorial.complete", "text": "Opetusohjelma on valmis. Seuraavaksi pelaa peli bottia vastaan: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Opetusohjelma valmis"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Siirry feodaalikaudelle: napsauta kaupungintaloasi hiiren oikealla ja valitse feodaalikausi. Oikealla oleva sivupalkki näyttää ruokasi."}
+{"name": "aoe2mc.tutorial.food", "text": "Kerää 100 ruokaa: lähetä kyläläinen marjoille. Oikealla oleva sivupalkki näyttää ruokasi."}
+{"name": "aoe2mc.tutorial.house", "text": "Rakenna talo: napsauta valittua kyläläistä hiiren oikealla, valitse talo ja aseta se. Toimintopalkki pikavalikon yllä kertoo, mihin se asetetaan."}
+{"name": "aoe2mc.tutorial.militia", "text": "Kouluta 3 miliisiä: napsauta kasarmiasi hiiren oikealla ja valitse miliisi. Oikealla oleva sivupalkki näyttää ruokasi ja kultasi."}
+{"name": "aoe2mc.tutorial.raid", "text": "Vihollinen hyökkää kyläläistesi kimppuun! Napsauta chatin punaista hälytysriviä päästäksesi sinne, valitse sitten miliisisi ja napsauta vihollisia hiiren oikealla. Yläreunan pomopalkki näyttää valitun yksikön terveyden."}
+{"name": "aoe2mc.tutorial.select", "text": "Valitse kyläläinen: napsauta yhtä kyläläistäsi komentotikulla hiiren vasemmalla. Yläreunan pomopalkki näyttää valitun yksikön, ja pikavalikon yllä oleva toimintopalkki näyttää seuraavan toiminnon."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Vaihe tehty"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Vaihe %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "VINKKI: kasarmi kouluttaa jalkaväkeä. Jalkaväki on halpaa ja hyvää rakennuksia vastaan."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "VINKKI: hyökkää kaikilla yksiköilläsi yhdessä. Pieni ryhmä kuolee ennen kuin ehtii tehdä vahinkoa."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "VINKKI: rakenna tuotteiden toimituspaikat resurssien lähelle, jotta kyläläiset kulkevat lyhyen matkan."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "VINKKI: seuraava aikakausi avaa uusia rakennuksia, yksiköitä ja teknologioita. Pidä kyläläiset töissä, kun etenet."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "VINKKI: mylly lähellä olevat marjat ovat turvallinen ruoan alku. Myöhemmin viljelmät antavat ruokaa, joka ei lopu."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "VINKKI: talo antaa tilaa 5 asukkaalle lisää. Katso väkimäärää sivupalkista ja rakenna taloja ennen kuin paikat loppuvat."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "VINKKI: voit jonottaa rakennukseen jopa 15 yksikköä, kun sinulla on resursseja."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "VINKKI: AoE2:ssa kaupungin kello lähettää kyläläiset kaupungintaloon. Soita se, kun vihollinen hyökkää kaupunkiisi."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "VINKKI: sivupalkin Vapaana-rivi laskee kyläläiset, joilla ei ole työtä. Anna heille työtä."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "VINKKI: kouluta kyläläisiä koko ajan ensimmäisissä kausissa. Enemmän kyläläisiä tuottaa enemmän resursseja."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "VINKKI: kyläläiset keräävät nopeammin lähellä toimituspaikkaa. Rakenna hakkuuleiri puiden viereen."}
+{"name": "aoe2mc.tutorial.villager", "text": "Kouluta kyläläinen: napsauta kaupungintaloasi hiiren oikealla ja valitse kyläläinen. Oikealla oleva sivupalkki näyttää, paljonko siihen tarvitaan ruokaa."}
+{"name": "aoe2mc.tutorial.wood", "text": "Kerää 50 puuta: valitse kyläläinen ja napsauta puuta hiiren oikealla. Oikealla oleva sivupalkki näyttää puusi."}
+{"name": "aoe2mc.victory", "text": "Voitto"}
+{"name": "aoe2mc.wonder.built", "text": "Pelaaja %s rakensi ihmeen."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Pelaajan %s ihme tuhoutui."}
