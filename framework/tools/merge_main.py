@@ -129,6 +129,9 @@ def push(number, pr_branch=None):
         print(f"guard failed, no push: {(g.stdout + g.stderr).strip()}")
         return False
     branch = pr_branch or git("branch", "--show-current").stdout.strip()
+    if branch.startswith("claim/"):                     # a claim ref: Automerge never merges it, claim.py cannot release it
+        print(f"{branch} is a claim ref of claim.py, not a PR branch (#5942): push from the session branch")
+        return False
     for _ in range(2):
         r = git("push", "origin", f"HEAD:refs/heads/{branch}")
         if r.returncode == 0:
