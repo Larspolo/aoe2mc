@@ -96,7 +96,8 @@ The host:
    first start: click "Allow" for Java and for the game program (with Python: for Python).
 4. The console shows two lines. "Join the server localhost:PORT" is for you. "Join the server ADDRESS:PORT (other
    computers on the network)." is for your friends: send them ADDRESS:PORT.
-5. The program selects a free port at each start, also with `--load`. After each start, send the new address.
+5. The program selects a free port at each start, also with `--load` (not with `--port N`). After each start,
+   send the new address.
 6. Join on localhost:PORT as in section 3. The page "Choose your player" opens: select your AoE2 player and click
    "Ready".
 
@@ -116,15 +117,15 @@ can join with an invited name". Use `--offline` only on a network that you trust
 
 Over the internet, ADDRESS is an address of the local network only. Do one of these steps:
 
-- Forward the game port (TCP, the PORT of the line) in the router of the host to the ADDRESS of the line. The
-  friends type the public address of the router and the PORT. The port changes at each start: change the forward
-  each time.
-- Use a VPN for games: it puts the computers on one virtual network. The friends type the VPN address of the host
-  and the PORT. This project has no VPN tool.
+- Forward two fixed ports in the router of the host to the ADDRESS of the line: add `--port N` (the game port, TCP)
+  and forward N and N+1 (N+1 is the port of the resource pack). Add `--address` with the public address of the
+  router. The friends type that address and the port N.
+- Use a VPN for games: it puts the computers on one virtual network. Add `--address` with the VPN address of the
+  host. The friends type the VPN address and the PORT. This project has no VPN tool.
 
-Over the internet, use the installer and make the world with its `aoe2mc` command: then the friends download the
-resource pack from GitHub. With Python, the friends download the resource pack from the local ADDRESS of the host:
-that fails over the internet, and the server disconnects them.
+For example: `python3 game/run.py OUTWorld --play --host --invite Alex,Sam --address 203.0.113.7 --port 25600`.
+The resource pack URL uses the address of `--address`, so the friends can download the pack. With the installer, the
+friends download the resource pack from GitHub.
 
 ## 4. Controls
 
