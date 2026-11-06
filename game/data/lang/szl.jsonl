@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Zocek %s dochodzi do %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: Skażynie zajmuje mapa ôd kraju do strzodka w %s. Zniszczy wszyjstke jednostki i budynki w ôńij."}
+{"name": "aoe2mc.bot.cannot_build", "text": "Tyraz tam nie mogã zbudować %s."}
+{"name": "aoe2mc.bot.cannot_train", "text": "Tyj jednostki nie mogã wyszkolić: nie mam na ôno budynku."}
+{"name": "aoe2mc.bot.flare_two", "text": "Postaw dwa znaki na mur."}
+{"name": "aoe2mc.bot.no_flare", "text": "Nie widzã żodnego znaku."}
+{"name": "aoe2mc.bot.no_market", "text": "Nie mom targu: nie mogã posłać daniny."}
+{"name": "aoe2mc.bot.no_onager", "text": "Nie mom onagera."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "Nie mom dość surowców na mur."}
+{"name": "aoe2mc.bot.no_water", "text": "Nie mom wody kole mojigo miasta: nie mogã zbudować floty."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Moje onagery nie mogõ ścinać drzewa."}
+{"name": "aoe2mc.build.cost", "text": "Za mało surowców: %s kosztuje %s."}
+{"name": "aoe2mc.build.flat", "text": "%s musi stać na równym terynie."}
+{"name": "aoe2mc.build.gate_spot", "text": "%s musi stać na 4 polach swojego muru w prostej linii abo na 3 polach po skosie."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Budowa: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "%s musi stać na wodzie kole brzegu."}
+{"name": "aoe2mc.build.space", "text": "Tu nie ma miejsca na %s."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Za mało surowców: %s pól %s kosztuje %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: klikni prawym na kōniec muru."}
+{"name": "aoe2mc.build.water", "text": "%s musi stać na wodzie."}
+{"name": "aoe2mc.camera.fov", "text": "Szybki aparat sprawio, że trzymany przedmiot sie buja. Coby był spokojny, ustaw Opcje > Ustawienia dostępności > View Bobbing na OFF. Aparat tyż poszerzo widok, widać wiyncej mapy. Coby mieć normalny widok, ustaw Opcje > Ustawienia dostępności > FOV Effects na 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Aparat: wyłōnczōny"}
+{"name": "aoe2mc.camera.on", "text": "Aparat: zapnōny, prędkość x%s. Shift + prawy klik: nasztympna prędkość."}
+{"name": "aoe2mc.camera.speed", "text": "Prędkość aparatu: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Pokōnej wszyjstkich wrogów i strać mało jednostek"}
+{"name": "aoe2mc.challenge.booming", "text": "Wyszkol 100 wieśniokōw i wejdź do Epoki Imperialnyj"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Wejdź do Epoki Zamku i przetrwej ataki wrogów"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Zniszcz wrogi zamek"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Zbierz 200 jedzynia, 200 drewna, 100 złota i 200 kamiynia, wyszkol 21 wieśniokōw, zbuduj tartak i młyn i wejdź do Epoki Feudalnyj"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Wyszkol 27 wieśniokōw, zbuduj 5 chałup i wejdź do Epoki Zamku"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Pokōnej wszyjstkich sześć wrogich fal"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s straconych jednostek, brōnzowa medalja do %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s straconych jednostek, złota medalja do %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s straconych jednostek, żodnej medalje"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s straconych jednostek, srebrno medalja do %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Brōnzowo medalja"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Złoto medalja"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Srebrno medalja"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Zniszcz wszyjstke wrogie okrynty wojynne"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Żodnej medalje"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Zabij 5 wrogich wieśniokōw"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Brōnzowo medalja w %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Złoto medalja w %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Srebrno medalja w %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Egida wyłōnczōnō"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Egida zapnōnō"}
+{"name": "aoe2mc.cheat.beyond", "text": "Technologije: do 256 badań"}
+{"name": "aoe2mc.cheat.cpu", "text": "Limit ludności: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Mgła wojny: wyłōnczōno"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Mgła wojny: zapnōno"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Technologije sōm za darmo"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Dziel sie, a bydzie ci dane: twoje dochody idōm do twoich sojusznikōw"}
+{"name": "aoe2mc.cheat.wonders", "text": "Panujesz nad przyrodōm: %s zwierzōt"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Ostali sōm sōmyj sojusznicy: sojusze sie kōńczōm. Wygrywo ostatni żyjōcy zocek."}
+{"name": "aoe2mc.conquest.defeated", "text": "Zocek %s je pokōnany."}
+{"name": "aoe2mc.controls.attack", "text": "Atak: zaznacz jednostki wojskowe, potym prawy klik na wroga."}
+{"name": "aoe2mc.controls.build", "text": "Budowa: zaznacz wieśniokōw, prawy klik na nich coby otwrzeć menu budowy, wybier budynek, potym lewy klik na ziymia. Shift + lewy klik: postaw wiyncyj. Prawy klik: anuluj."}
+{"name": "aoe2mc.controls.camera", "text": "Aparat: prawy klik z lunetōm Aparat (klawisz 2 na pasku): chodzisz szybko wysoko nad mapōm. Shift + prawy klik: nasztympna prędkość. Prawy klik jeszcze roz: lecisz w dōł."}
+{"name": "aoe2mc.controls.garrison", "text": "Załōga: zaznacz jednostki, potym prawy klik na swōj budynek. Jego menu je wypuszcze. Menu ratusza: Zadzwoń w dzwōnek miasta."}
+{"name": "aoe2mc.controls.gather", "text": "Zbieranie: zaznacz wieśniokōw, potym prawy klik na drzewo, krzōk jagōd, kopalnia abo pole."}
+{"name": "aoe2mc.controls.goto", "text": "Idź do: prawy klik kompasym Idź do (klawisz 3 na pasku): menu twoich ratuszy, twoich grup sterowania i nastympnego bezczynnego wieśniaka."}
+{"name": "aoe2mc.controls.groups", "text": "Grupy sterowania: zaznacz jednostki, wez przedmiot grupy (klawisze 5 do 9 na pasku) i Shift + prawy klik coby zapisać zaznaczynie. Prawy klik: zaznacz grupa."}
+{"name": "aoe2mc.controls.head", "text": "Sterowanie (trzymej marchewka na kiju; pasek akcji pokazuje nastympny krok):"}
+{"name": "aoe2mc.controls.menu", "text": "Menu gry: prawy klik z książkōm Menu gry (klawisz 4 na pasku): dyplomacja i danina, znak, zapisz, pauza i drzewo technologij."}
+{"name": "aoe2mc.controls.move", "text": "Ruch: z zaznaczōnymi jednostkami prawy klik na ziymia."}
+{"name": "aoe2mc.controls.research", "text": "Badania i przejście do epoki: prawy klik na swōj budynek i klik na technologia abo nastympnō epoka w jego menu."}
+{"name": "aoe2mc.controls.select", "text": "Zaznaczanie: lewy klik na jednostka. Trzymej lewy klik i patrz po ziymi: ramka zaznaczynio. Prawy klik: wydowej rozkazy."}
+{"name": "aoe2mc.controls.train", "text": "Szkolynie: prawy klik na swōj budynek (ratusz, koszary ...) i klik na jednostka w jego menu."}
+{"name": "aoe2mc.defeat", "text": "Porażka"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Sojusznik"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Zocek %s zmiynił swojō postawa wobec ciebie: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Wróg"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutralny"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Zocek %s nastawił prędkość gry na %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Zocek %s posłoł %s %s do zocka %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Znak w %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Idź za: klik na swōj jednostka"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Strzeż: klik na swōj jednostka abo budynek"}
+{"name": "aoe2mc.gaia.joins", "text": "%s do ciebie dołōncza."}
+{"name": "aoe2mc.garrison.all_back", "text": "Wszyjscy do roboty"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Dzwōn miasta dzwoni: %s wieśniokōw szuko schrōnienia"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Żodyn wieśniak nie je zaznaczōny."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "Nie mosz wieśniokōw."}
+{"name": "aoe2mc.garrison.out", "text": "%s jednostek wyszło"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s wieśniokōw szuko schrōnienia"}
+{"name": "aoe2mc.gather.act_attack", "text": "atak"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menu budowy"}
+{"name": "aoe2mc.gather.act_garrison", "text": "załōga"}
+{"name": "aoe2mc.gather.act_gather", "text": "zbieraj"}
+{"name": "aoe2mc.gather.act_hunt", "text": "polowanie"}
+{"name": "aoe2mc.gather.act_move", "text": "ruch"}
+{"name": "aoe2mc.gather.act_select", "text": "zaznacz"}
+{"name": "aoe2mc.gather.act_select_type", "text": "zaznacz wszyjstkie tego typu"}
+{"name": "aoe2mc.gather.act_trade", "text": "handel"}
+{"name": "aoe2mc.gather.act_train", "text": "szkol"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Atak: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Ramka zaznaczynio: anulowano"}
+{"name": "aoe2mc.gather.bush", "text": "Krzōk jagōd"}
+{"name": "aoe2mc.gather.carcass", "text": "Padlina"}
+{"name": "aoe2mc.gather.corner", "text": "Ramka zaznaczynio: klik na drugi wegiel"}
+{"name": "aoe2mc.gather.enemy", "text": "Wróg %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Wrogi budynek"}
+{"name": "aoe2mc.gather.farm", "text": "Pole"}
+{"name": "aoe2mc.gather.ground", "text": "Ziymia"}
+{"name": "aoe2mc.gather.group", "text": "Grupa %s: %s jednostek"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grupa %s: %s jednostek zapisanych"}
+{"name": "aoe2mc.gather.mine", "text": "Kopalnia %s"}
+{"name": "aoe2mc.gather.paused", "text": "Gra je wstrzymano."}
+{"name": "aoe2mc.gather.point", "text": "%s · Prawy klik: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Siywanie w kolejce: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Zaznaczōno: %s jednostek"}
+{"name": "aoe2mc.gather.tree", "text": "Drzewo"}
+{"name": "aoe2mc.hill.holds", "text": "Zocek %s trzyma pōmnik."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Atak na ziymia: prawy klik na ziymia"}
+{"name": "aoe2mc.hints.attack_move", "text": "Ruch z atakiym: prawy klik na ziymia"}
+{"name": "aoe2mc.hints.building", "text": "Postaw %s: prawy klik na ziymia · Shift + prawy klik: postaw wiyncyj · Anuluj: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: lewy klik coby postawić · Shift: postaw wiyncyj · Prawy klik: anuluj"}
+{"name": "aoe2mc.hints.corner", "text": "Ramka zaznaczynio: prawy klik na drugi wegiel"}
+{"name": "aoe2mc.hints.count_military", "text": "%s jednostka wojskowa"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s jednostek wojskowych"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s wieśniak"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s wieśniokōw"}
+{"name": "aoe2mc.hints.deselect", "text": "Pusta ramka: odznacz"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Lewy klik: odznacz"}
+{"name": "aoe2mc.hints.follow", "text": "Idź za: prawy klik na swōj abo sojuszniczō jednostka"}
+{"name": "aoe2mc.hints.guard", "text": "Strzeż: prawy klik na swōj abo sojuszniczō jednostka abo budynek"}
+{"name": "aoe2mc.hints.military", "text": "%s · Prawy klik: atakuj wroga, menu postawy · %s"}
+{"name": "aoe2mc.hints.none", "text": "Lewy klik: zaznacz jednostka · Trzymej lewy klik: ramka zaznaczynio"}
+{"name": "aoe2mc.hints.none_wand", "text": "Prawy klik: zaznacz jednostka · Różdżka: ramka zaznaczynio"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrol: prawy klik na ziymia"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Prawy klik: zbieraj, buduj, menu budowy · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s gotowych"}
+{"name": "aoe2mc.lobby.you_play", "text": "Grosz za %s."}
+{"name": "aoe2mc.monk.converts", "text": "Mnich nawraca %s."}
+{"name": "aoe2mc.monk.dies", "text": "%s umiyro (Herezja)."}
+{"name": "aoe2mc.pause.continued", "text": "Zocek %s wznowił grã."}
+{"name": "aoe2mc.pause.paused", "text": "Zocek %s wstrzymał grã."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Drużyna %s (średnio ocena %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Gra sie skōńczyła. Prawy klik na książka Podsumowanie w rynce coby zobacyć wyniki. Zatrzymej program gry Ctrl-C w jego konsoli."}
+{"name": "aoe2mc.relic_victory.all", "text": "Zocek %s trzyma wszyjstke relikwije."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Zocek %s stracił relikwijã."}
+{"name": "aoe2mc.repair.no_resources", "text": "Za mało surowców coby naprawić %s."}
+{"name": "aoe2mc.replay.army", "text": "Wojsko: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", wojsko na kōńcu: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", straconych: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Kolejność budowy:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · załōga %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | nese %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "budowa %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "jedzynie %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "złoto %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "bezczynne %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "kamiyń %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "drewno %s"}
+{"name": "aoe2mc.replay.flare", "text": "Znak"}
+{"name": "aoe2mc.replay.game_ends", "text": "Gra sie kōńczy"}
+{"name": "aoe2mc.replay.game_time", "text": "Czas gry %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · załōga %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Woj %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Lud %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Sur %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Wie %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s trzymoł pōmnik: zwycięstwo Króla Wzgōrza w %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atak %s/%s pancyrz%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Dwa razy Shift: widok widza (latanie przez bloki). Prawy klik na przedmioty paska: sterowanie powtōrkōm."}
+{"name": "aoe2mc.replay.king_died", "text": ": Król umarł w %s. Regicydium: zocek je wyeliminowany."}
+{"name": "aoe2mc.replay.king_killed", "text": "Król zabity w %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Powtōrka na żywo: skok sie zatrzymuje na opōźnieniu za grōm."}
+{"name": "aoe2mc.replay.lost", "text": "Stracono: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " trzymoł pōmnik w %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: pōmnik, zostało %s rok"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: pōmnik, zostało %s lat"}
+{"name": "aoe2mc.replay.no_camera", "text": "Ta powtōrka nie ma aparatu jego zocka."}
+{"name": "aoe2mc.replay.now", "text": " teraz"}
+{"name": "aoe2mc.replay.out", "text": "%s je wyeliminowany"}
+{"name": "aoe2mc.replay.players", "text": "Zocki"}
+{"name": "aoe2mc.replay.range", "text": " z%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " niesie relikwijã do klasztoru i wygrywo."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Powtōrka skōńczōno"}
+{"name": "aoe2mc.replay.research", "text": " bada %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s sie poddowo"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Serwer sie restartuje coby skoczyć do tyłu: wejdź znowu."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Budynki %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Ekonomia %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Wojsko %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Technologije %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Razym %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "zamki %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "kupiōno %s, sprzedano %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relikwije %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "cudy %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Wydano:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Budowa %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eko %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Woj %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tech %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": wyszkolōno wieśniokōw %s, zebrano %s, czas bezczynności wieśniokōw %s, czas bezczynności ratusza %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": trzymoł pōmnik (Król Wzgōrza)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": pōmnik wygrany %s (Król Wzgōrza)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": wyszkolōno jednostek wojskowych %s, straconych jednostek %s, straconych budynkōw %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": zabito Króla %s (Regicydium)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": wygrane, relikwije w klasztorze %s (Zdobycie relikwije)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %sdanina wysłano %s, otrzymano %s, szczyt wieśniokōw %s (szac.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": stracono ratusz %s (Nagła śmierć)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, technologije %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": zegar cudu od %s, kōńczy sie %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Podsumowanie (szac.)"}
+{"name": "aoe2mc.replay.task_building", "text": "budowa"}
+{"name": "aoe2mc.replay.task_following", "text": "idzie za"}
+{"name": "aoe2mc.replay.task_food", "text": "zbiera jedzynie"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "w załodze"}
+{"name": "aoe2mc.replay.task_gold", "text": "zbiera złoto"}
+{"name": "aoe2mc.replay.task_guarding", "text": "strzeże"}
+{"name": "aoe2mc.replay.task_idle", "text": "bezczynny"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patroluje"}
+{"name": "aoe2mc.replay.task_resources", "text": "zbiera surowce"}
+{"name": "aoe2mc.replay.task_stone", "text": "zbiera kamiyń"}
+{"name": "aoe2mc.replay.task_walking", "text": "idzie"}
+{"name": "aoe2mc.replay.task_wood", "text": "zbiera drewno"}
+{"name": "aoe2mc.replay.team", "text": "Drużyna %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Łucznik %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Pancyrz łucznika %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Nosidło %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Pancyrz kawalerii %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Pole %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Złoto %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Pancyrz piechoty %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Krosno %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Walka wręcz %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Kamiyń %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Drewno %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Zamek"}
+{"name": "aoe2mc.replay.tl_king", "text": "Król zabity"}
+{"name": "aoe2mc.replay.tl_military", "text": "1. wojsko: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relikwije"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Poddanie"}
+{"name": "aoe2mc.replay.town_fell", "text": ": ratusz padł w %s. Nagła śmierć: zocek je wyeliminowany."}
+{"name": "aoe2mc.replay.town_lost", "text": "Ratusz stracōny w %s"}
+{"name": "aoe2mc.replay.training", "text": "Szkolynie: %s"}
+{"name": "aoe2mc.replay.university", "text": "Uniwersytet:"}
+{"name": "aoe2mc.replay.up_counts", "text": "ekonomia %s · Uniwersytet %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " wybudowoł cud w %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Bitka: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s jednostek"}
+{"name": "aoe2mc.replay_input.fights", "text": "Wielkie bitki:"}
+{"name": "aoe2mc.replay_input.help", "text": "Powtōrka: prawy klik na przedmioty paska abo klik na: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Przejmij: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s jednostek)"}
+{"name": "aoe2mc.replay_input.vs", "text": " kontra "}
+{"name": "aoe2mc.resource.food", "text": "jedzynie"}
+{"name": "aoe2mc.resource.gold", "text": "złoto"}
+{"name": "aoe2mc.resource.stone", "text": "kamiyń"}
+{"name": "aoe2mc.resource.wood", "text": "drewno"}
+{"name": "aoe2mc.run.back", "text": "%s wrōcył"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Kampaniya skōńczōno"}
+{"name": "aoe2mc.run.chat_hint", "text": "Czat: zwykła linijka idzie do wszyjstkich, /tm TEKST do sojusznikōw, /msg IMIĘ TEKST do jednej osoby."}
+{"name": "aoe2mc.run.left_bot", "text": "%s wyszed: bot gro zockiym %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenaryjusz %s sie zaczyno. Wejdź znowu."}
+{"name": "aoe2mc.run.starts_in", "text": "Gra sie zacznie za %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Otwōrz \"Wybierz swojego zocka\" i klik na \"Gotowy\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Wszyjstkie sterowania: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Pyrszy krok: trzymej kij rozkazōw i prawy klik na jednego z twoich wieśniokōw."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Pyrszy krok: trzymej kij rozkazōw i lewy klik na jednego z twoich wieśniokōw."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Cel: wygrej grã. Ustawienie zwycięstwa: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Zapisano grã: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s jednostek wyszło"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Automatyczne zwiady"}
+{"name": "aoe2mc.stance.formation", "text": "Szyk: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Żodno jednostka nie może atakować ziymi"}
+{"name": "aoe2mc.stance.unpack", "text": "Najpierw rozpakuj Trebusz"}
+{"name": "aoe2mc.train.active", "text": "%s je aktywny."}
+{"name": "aoe2mc.train.rally", "text": "Prawy klik na ziymia coby wyznaczyć punkt zbiōrki."}
+{"name": "aoe2mc.train.researched", "text": "%s je zbadany."}
+{"name": "aoe2mc.transport.out", "text": "%s jednostek wyszło"}
+{"name": "aoe2mc.treaty.ended", "text": "Traktat sie skōńczył: zocki mogōm już atakować."}
+{"name": "aoe2mc.treaty.refuse", "text": "Traktat: nie mosz atakować przed %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Traktat: nie mosz atakować w tyj grze."}
+{"name": "aoe2mc.treaty.start", "text": "Traktat: żodyn zocek nie może atakować innego zocka przed %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Traktat: żodyn zocek nie może atakować innego zocka w tyj grze."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Zbuduj koszary: prawy klik na zaznaczōnego wieśniaka, wybier koszary i postaw je. Pasek akcji nad paskiym przedmiotōw mōwi, gdzie je postawić."}
+{"name": "aoe2mc.tutorial.camera", "text": "Szybko sie przemieść po mapie: prawy klik przedmiotym \"Aparat\", idź, potym prawy klik nim znowu."}
+{"name": "aoe2mc.tutorial.camp", "text": "Zniszcz wrogi obóz w środku mapy: zaznacz swoich Milicjantów i prawy klik na budynek. Pasek bossa na górze pokazuje krok."}
+{"name": "aoe2mc.tutorial.camps", "text": "Zbuduj tartak kole drzew i młyn kole jagōd. Pasek boczny po prawyj pokazuje, ile drewna kosztujōm."}
+{"name": "aoe2mc.tutorial.complete", "text": "Samouczek skōńczōny. Nastympnie: zagraj z botym: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Samouczek skōńczōny"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Wejdź do Epoki Feudalnyj: prawy klik na swōj ratusz i wybier Epokę Feudalnōm. Pasek boczny po prawyj pokazuje twoje jedzynie."}
+{"name": "aoe2mc.tutorial.food", "text": "Zbierz 100 jedzynia: poślij wieśniaka po jagody. Pasek boczny po prawyj pokazuje twoje jedzynie."}
+{"name": "aoe2mc.tutorial.house", "text": "Zbuduj chałupa: prawy klik na zaznaczōnego wieśniaka, wybier chałupa i postaw jōm. Pasek akcji nad paskiym przedmiotōw mōwi, gdzie jōm postawić."}
+{"name": "aoe2mc.tutorial.militia", "text": "Wyszkol 3 Milicjantōw: prawy klik na swoje koszary i wybier milicjanta. Pasek boczny po prawyj pokazuje twoje jedzynie i złoto."}
+{"name": "aoe2mc.tutorial.raid", "text": "Wrōg atakuje twoich wieśniokōw! Klik na czerwōnō linijka alarmu na czacie coby tam iść, potym zaznacz swoich Milicjantōw i prawy klik na wrogōw. Pasek bossa na górze pokazuje zdrowie zaznaczōnej jednostki."}
+{"name": "aoe2mc.tutorial.select", "text": "Zaznacz wieśniaka: lewy klik na jednego z twoich wieśniokōw kijym rozkazōw. Pasek bossa na górze pokazuje zaznaczōnō jednostka, pasek akcji nad paskiym przedmiotōw pokazuje nastympnōm akcja."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Krok zrobiōny"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Krok %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "WSKAZŌWKA: koszary szkolōm piechota. Piechota je tanio i dobro na budynki."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "WSKAZŌWKA: atakuj wszyjstkimi jednostkami razem. Mała grupa zginie, zanim zado szkoda."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "WSKAZŌWKA: buduj budynki do zwożenia kole surowcōw, coby wieśniaki szli krōtko."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "WSKAZŌWKA: nastympno epoka odblokowuje nowe budynki, jednostki i technologije. Trzymej wieśniokōw w robocie, jak idziesz do przodu."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "WSKAZŌWKA: jagody kole młyna to bezpiecznie start jedzynia. Pōźni pola dajōm jedzynie, co sie nie kōńczy."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "WSKAZŌWKA: chałupa dowo miejsce na 5 mieszkańcōw wiyncyj. Patrz na ludność w pasku bocznym i buduj chałupy, zanim bydzie pełno."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "WSKAZŌWKA: możesz ustawić w kolejce do 15 jednostek w budynku, jak masz surowce."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "WSKAZŌWKA: w AoE2 dzwōn miasta posyła wieśniokōw do ratusza. Zadzwoń, jak wrōg napada na twoje miasto."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "WSKAZŌWKA: linijka Bezczynne w pasku bocznym po prawyj liczy twoich wieśniokōw bez roboty. Daj im robota."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "WSKAZŌWKA: szkol wieśniokōw cały czas w pierszych epokach. Wiyncyj wieśniokōw dajōm wiyncyj surowcōw."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "WSKAZŌWKA: wieśniaki zbiyrajōm szybciej kole budynku do zwożenia. Zbuduj tartak kole drzew."}
+{"name": "aoe2mc.tutorial.villager", "text": "Wyszkol wieśniaka: prawy klik na swōj ratusz i wybier wieśniaka. Pasek boczny po prawyj pokazuje jedzynie, co kosztuje."}
+{"name": "aoe2mc.tutorial.wood", "text": "Zbierz 50 drewna: zaznacz wieśniaka i prawy klik na drzewo. Pasek boczny po prawyj pokazuje twoje drewno."}
+{"name": "aoe2mc.victory", "text": "Zwycięstwo"}
+{"name": "aoe2mc.wonder.built", "text": "Zocek %s wybudowoł cud."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Cud zocka %s je zniszczony."}

@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "Il zugadôr %s al rive a la %s."}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: la Corussion e ocupe la mape de orle al centri in %s. E distrugje ducj i gjocs e i edificis che a son dentri."}
+{"name": "aoe2mc.bot.cannot_build", "text": "No pues fabricâ un %s culì cumò."}
+{"name": "aoe2mc.bot.cannot_train", "text": "No pues adestrâ cheste unitât: no ai un edifici par chel."}
+{"name": "aoe2mc.bot.flare_two", "text": "Met dôs segnais par il mûr."}
+{"name": "aoe2mc.bot.no_flare", "text": "No'i vedi segnais."}
+{"name": "aoe2mc.bot.no_market", "text": "No ai un marcjât: no pues mandâ tribût."}
+{"name": "aoe2mc.bot.no_onager", "text": "No ai un onagri."}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "No ai risorsis avonde par un mûr."}
+{"name": "aoe2mc.bot.no_water", "text": "No ai aghe dongje de mê citât: no pues fabricâ une flote."}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "Miei onagris no rivin a taiâ àlars."}
+{"name": "aoe2mc.build.cost", "text": "Risorsis no avonde: un %s al coste %s."}
+{"name": "aoe2mc.build.flat", "text": "Il %s al à di stâ sul teren plan."}
+{"name": "aoe2mc.build.gate_spot", "text": "Un %s al à di stâ sui 4 cuadrets di un mûr tôn in linie dritte, o sui 3 cuadrets in diagonâl."}
+{"name": "aoe2mc.build.locked", "text": "%s: %s."}
+{"name": "aoe2mc.build.menu_head", "text": "Fabriche: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "Un %s al à di stâ sus aghe dongje de rive."}
+{"name": "aoe2mc.build.space", "text": "No àn spazi par il %s culì."}
+{"name": "aoe2mc.build.tiles_cost", "text": "Risorsis no avonde: %s cuadrets di %s a costin %s."}
+{"name": "aoe2mc.build.wall_end", "text": "%s: fâs clic drete su la fin dal mûr."}
+{"name": "aoe2mc.build.water", "text": "Un %s al à di stâ sus aghe."}
+{"name": "aoe2mc.camera.fov", "text": "La cjamare svelte e fâs bregâ l'objet in man. Par tignîlu ferm, met Opzions > Impostazions di acessibilitât > View Bobbing su OFF. La cjamare e slargje ancje la viodude, e si viôt plui de mape. Par tignî la viodude normâl, met Opzions > Impostazions di acessibilitât > FOV Effects su 0 %."}
+{"name": "aoe2mc.camera.off", "text": "Cjamare: nol è ative"}
+{"name": "aoe2mc.camera.on", "text": "Cjamare: ative, velocitât x%s. Shift + clic drete: vuide velocitât."}
+{"name": "aoe2mc.camera.speed", "text": "Velocitât de cjamare: x%s"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Sconfone ducj i gjocs nemîs e piert pocjis unitâts"}
+{"name": "aoe2mc.challenge.booming", "text": "Adestre 100 paesans e va inte Etât Imperiâl"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Va inte Etât dal Cjastiel e sopravìf ai atacs nemîs"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Distrūç il cjastiel nemì"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Cjape 200 cibo, 200 len, 100 or e 200 piere, adestre 21 paesans, fabrichi un cjamp di len e un mulin, e va inte Etât Feudâl"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Adestre 27 paesans, fabrichi 5 cjasis e va inte Etât dal Cjastiel"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Sconfone ducj i sîs cjargs nemîs"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s unitâts pierdudis, medaie di bronç fin a %s"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s unitâts pierdudis, medaie d'aur fin a %s"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s unitâts pierdudis, nissune medaie"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s unitâts pierdudis, medaie d'arint fin a %s"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Medaie di bronç"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Medaie d'aur"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Medaie d'arint"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Distrūç ducj i navei de guerade nemîs"}
+{"name": "aoe2mc.challenge.no_medal", "text": "Nissune medaie"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Copâ 5 paesans nemîs"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Medaie di bronç in %s"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Medaie d'aur in %s"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Medaie d'arint in %s"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Egjide vie"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Egjide ative"}
+{"name": "aoe2mc.cheat.beyond", "text": "Tecnologjiis: fint a 256 ricercjis"}
+{"name": "aoe2mc.cheat.cpu", "text": "Limit de popolazion: %s"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Nebie: vie"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Nebie: ative"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Lis tecnologjiis a son gratuitis"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Condividi e tu vivarâs: la tô entrade e va ai tiei alîs"}
+{"name": "aoe2mc.cheat.wonders", "text": "Tu controlis la nature: %s animâi"}
+{"name": "aoe2mc.conquest.allies_end", "text": "A restin dome i alîs: lis alianzis a finissin. Vinç il ultin zugadôr vivi."}
+{"name": "aoe2mc.conquest.defeated", "text": "Il zugadôr %s al è sconfit."}
+{"name": "aoe2mc.controls.attack", "text": "Atac: selezione lis unitâts militârs, po fâs clic drete su un nemì."}
+{"name": "aoe2mc.controls.build", "text": "Fabriche: selezione i paesans, fâs clic drete su di lôr pal menù des fabrichis, selezione un edifici, po fâs clic çampe su il teren. Shift + clic çampe: met di plui. Clic drete: anule."}
+{"name": "aoe2mc.controls.camera", "text": "Cjamare: fâs clic drete cul spioncin Cjamare (tast 2 de barre): tu cjamini svelt sore de mape. Shift + clic drete: la velocitât sucessive. Clic drete une altre volte: tu bassis cu la cjamare."}
+{"name": "aoe2mc.controls.garrison", "text": "Guarnision: selezione lis unitâts, po fâs clic drete sul to edifici. Il so menù lis fâs saltâ fûr. Menù dal cjastiel: Sone la campane de citât."}
+{"name": "aoe2mc.controls.gather", "text": "Recuperâ: selezione i paesans, po fâs clic drete sun un àlar, un cjespùc di bacjis, une miniere o un cjamp."}
+{"name": "aoe2mc.controls.goto", "text": "Va a: fâs clic drete cul compàs Va a (tast 3 de barre): un menù dai tiei cjastiei, dai tiei grups di control e dal prossim paesan cence lavôr."}
+{"name": "aoe2mc.controls.groups", "text": "Grups di control: selezione lis unitâts, tôr un strument di grup (tast 5 fin 9 de barre) e Shift + clic drete par salvâ la selezion. Clic drete: selezione il grup."}
+{"name": "aoe2mc.controls.head", "text": "Controi (tegni la cjarote su un baston; la barre des azions e mostre il pas sucessîf):"}
+{"name": "aoe2mc.controls.menu", "text": "Menù di zuc: fâs clic drete cul libri Menù di zuc (tast 4 de barre): diplomazie e tribût, segnâl, salvâ, pause e l'alberi des tecnologjiis."}
+{"name": "aoe2mc.controls.move", "text": "Môf: cuntune selezion, fâs clic drete sul teren."}
+{"name": "aoe2mc.controls.research", "text": "Ricercje e va inte Etât sucessive: fâs clic drete sul to edifici e fâs clic su une tecnologjie o su la etât sucessive tal so menù."}
+{"name": "aoe2mc.controls.select", "text": "Selezion: fâs clic çampe su une unitât. Tegni clic çampe e cjale sul teren: un cjadri di selezion. Clic drete: dâ ordens."}
+{"name": "aoe2mc.controls.train", "text": "Adestrament: fâs clic drete sul to edifici (cjastiel, cjasierme ...) e fâs clic su une unitât tal so menù."}
+{"name": "aoe2mc.defeat", "text": "Sconfite"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Alît"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Il zugadôr %s al à cambiât la sô posizion viers di te: %s."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Nemì"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutrâl"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Il zugadôr %s al à metût la velocitât dal zuc su %s."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Il zugadôr %s al à mandât %s %s al zugadôr %s."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Segnâl in %s %s"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Va daûr: fâs clic su une unitât tô"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Vuarde: fâs clic su une unitât o un edifici tô"}
+{"name": "aoe2mc.gaia.joins", "text": "Un %s si unìs a di te."}
+{"name": "aoe2mc.garrison.all_back", "text": "Duc'a lavorâ"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Sune la campane de citât: %s paesans a cirin rifugjo"}
+{"name": "aoe2mc.garrison.no_villager", "text": "Nissun paesan al è selezionât."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "No tu âs paesans."}
+{"name": "aoe2mc.garrison.out", "text": "%s unitâts a son saltadis fûr"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s paesans a cirin rifugjo"}
+{"name": "aoe2mc.gather.act_attack", "text": "atac"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "menù des fabrichis"}
+{"name": "aoe2mc.gather.act_garrison", "text": "guarnision"}
+{"name": "aoe2mc.gather.act_gather", "text": "recupere"}
+{"name": "aoe2mc.gather.act_hunt", "text": "cacce"}
+{"name": "aoe2mc.gather.act_move", "text": "môf"}
+{"name": "aoe2mc.gather.act_select", "text": "selezion"}
+{"name": "aoe2mc.gather.act_select_type", "text": "selezione dut il gjenar"}
+{"name": "aoe2mc.gather.act_trade", "text": "scambie"}
+{"name": "aoe2mc.gather.act_train", "text": "adestre"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Atac: %s (%s/%s)"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Cjadri di selezion: anulât"}
+{"name": "aoe2mc.gather.bush", "text": "Cjespùc di bacjis"}
+{"name": "aoe2mc.gather.carcass", "text": "Cjadavar"}
+{"name": "aoe2mc.gather.corner", "text": "Cjadri di selezion: fâs clic su di chê altre cantonade"}
+{"name": "aoe2mc.gather.enemy", "text": "Nemì %s"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Edifici nemì"}
+{"name": "aoe2mc.gather.farm", "text": "Cjamp"}
+{"name": "aoe2mc.gather.ground", "text": "Teren"}
+{"name": "aoe2mc.gather.group", "text": "Grup %s: %s unitâts"}
+{"name": "aoe2mc.gather.group_saved", "text": "Grup %s: %s unitâts salvadis"}
+{"name": "aoe2mc.gather.mine", "text": "Miniere %s"}
+{"name": "aoe2mc.gather.paused", "text": "Il zuc al è in pause."}
+{"name": "aoe2mc.gather.point", "text": "%s · Clic drete: %s"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Semenis in code: %s"}
+{"name": "aoe2mc.gather.selected", "text": "Selezionadis: %s unitâts"}
+{"name": "aoe2mc.gather.tree", "text": "Àlar"}
+{"name": "aoe2mc.hill.holds", "text": "Il zugadôr %s al tituìs il monument."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Atac sul teren: fâs clic drete sul teren"}
+{"name": "aoe2mc.hints.attack_move", "text": "Môf cuntun atac: fâs clic drete sul teren"}
+{"name": "aoe2mc.hints.building", "text": "Met il %s: fâs clic drete sul teren · Shift + clic drete: met di plui · Anule: /trigger aoe_build set 0"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: fâs clic çampe par metilu · Shift: met di plui · Clic drete: anule"}
+{"name": "aoe2mc.hints.corner", "text": "Cjadri di selezion: fâs clic drete su di chê altre cantonade"}
+{"name": "aoe2mc.hints.count_military", "text": "%s unitât militâr"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s unitâts militârs"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s paesan"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s paesans"}
+{"name": "aoe2mc.hints.deselect", "text": "Cjadri vueit: a disselezione"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Clic çampe: a disselezione"}
+{"name": "aoe2mc.hints.follow", "text": "Va daûr: fâs clic drete su une unitât tô o alade"}
+{"name": "aoe2mc.hints.guard", "text": "Vuarde: fâs clic drete su une unitât o un edifici tô o alât"}
+{"name": "aoe2mc.hints.military", "text": "%s · Clic drete: ataca un nemì, menù de posizion · %s"}
+{"name": "aoe2mc.hints.none", "text": "Clic çampe: selezione une unitât · Tegni clic çampe: cjadri di selezion"}
+{"name": "aoe2mc.hints.none_wand", "text": "Clic drete: selezione une unitât · Bachete: cjadri di selezion"}
+{"name": "aoe2mc.hints.patrol", "text": "Poiche: fâs clic drete sul teren"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Clic drete: recupere, fabriche, menù des fabrichis · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s pronts"}
+{"name": "aoe2mc.lobby.you_play", "text": "Tu zuges %s."}
+{"name": "aoe2mc.monk.converts", "text": "Un monie al converte il %s."}
+{"name": "aoe2mc.monk.dies", "text": "Il %s al mûr (Eresie)."}
+{"name": "aoe2mc.pause.continued", "text": "Il zugadôr %s al à continuât il zuc."}
+{"name": "aoe2mc.pause.paused", "text": "Il zugadôr %s al à metût il zuc in pause."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s"}
+{"name": "aoe2mc.ratings.team", "text": "Scuadre %s (valutazion medie %s): %s"}
+{"name": "aoe2mc.recap.next", "text": "Il zuc al è finît. Fâs clic drete sul libri Recap tal to man par viodi i risultâts. Fermile il program dal zuc cuntun Ctrl-C tal so console."}
+{"name": "aoe2mc.relic_victory.all", "text": "Il zugadôr %s al tegnial ducj i relics."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Il zugadôr %s al à pierdût un relic."}
+{"name": "aoe2mc.repair.no_resources", "text": "Risorsis no avonde par ristabilî il %s."}
+{"name": "aoe2mc.replay.army", "text": "Armade: %s"}
+{"name": "aoe2mc.replay.army_end", "text": ", armade a la fin: %s"}
+{"name": "aoe2mc.replay.army_lost", "text": ", pierdudis: %s"}
+{"name": "aoe2mc.replay.build_order", "text": "Ordin des fabrichis:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · guarnision %s"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | puarte %s %s"}
+{"name": "aoe2mc.replay.eco_build", "text": "fabriche %s"}
+{"name": "aoe2mc.replay.eco_food", "text": "cibo %s"}
+{"name": "aoe2mc.replay.eco_gold", "text": "or %s"}
+{"name": "aoe2mc.replay.eco_idle", "text": "vueit %s"}
+{"name": "aoe2mc.replay.eco_stone", "text": "piere %s"}
+{"name": "aoe2mc.replay.eco_wood", "text": "len %s"}
+{"name": "aoe2mc.replay.flare", "text": "Segnâl"}
+{"name": "aoe2mc.replay.game_ends", "text": "Il zuc al finìs"}
+{"name": "aoe2mc.replay.game_time", "text": "Timp di zuc %s"}
+{"name": "aoe2mc.replay.garrison", "text": " · guarnision %s"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pop %s %s"}
+{"name": "aoe2mc.replay.graph_res", "text": "Ris %s %s"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Pae %s %s"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s al tignive il monument: vitorie Re de Coline a %s."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s atac %s/%s arm%s"}
+{"name": "aoe2mc.replay.join_help", "text": "Tocje doi bots Shift: viodude di spetatôr (svole tant tai blocs). Clic drete sui oggjets de barre: control dal replay."}
+{"name": "aoe2mc.replay.king_died", "text": ": il Re al è muart a %s. Regicidi: il zugadôr al è fûr."}
+{"name": "aoe2mc.replay.king_killed", "text": "Re copât a %s"}
+{"name": "aoe2mc.replay.live_jump", "text": "Replay in dirêt: il salt si ferme al ritart dal zuc."}
+{"name": "aoe2mc.replay.lost", "text": "Pierdût: %s"}
+{"name": "aoe2mc.replay.monument_holds", "text": " al tignive il monument a %s."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monument, %s an di resta"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monument, %s agns di resta"}
+{"name": "aoe2mc.replay.no_camera", "text": "Chest replay nol à cjamare dal so zugadôr."}
+{"name": "aoe2mc.replay.now", "text": " cumò"}
+{"name": "aoe2mc.replay.out", "text": "%s al è fûr"}
+{"name": "aoe2mc.replay.players", "text": "Zugadôrs"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " al puarte il relic a une abazie e al vinç."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Replay finît"}
+{"name": "aoe2mc.replay.research", "text": " al ricercje %s"}
+{"name": "aoe2mc.replay.resigns", "text": "%s si rint"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Il server al torne a fâ partence pal salt indaûr: jentre di gnûf."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Edificis %s (%s)"}
+{"name": "aoe2mc.replay.share_economy", "text": "Economie %s (%s)"}
+{"name": "aoe2mc.replay.share_military", "text": "Militâr %s (%s)"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Tecnologjiis %s (%s)"}
+{"name": "aoe2mc.replay.share_total", "text": "Totâl %s"}
+{"name": "aoe2mc.replay.soc_castle", "text": "cjastiei %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "cjomprâts %s, venduts %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relics %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "maraveis %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Spindût:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Fabriche %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Econ. %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tec %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": paesans adestrâts %s, recuperâts %s, timp vueit dai paesans %s, timp vueit dal cjastiel %s"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": al tignive il monument (Re de Coline)"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monument vinçût %s (Re de Coline)"}
+{"name": "aoe2mc.replay.sum_military", "text": ": unitâts militârs adestradis %s, unitâts pierdudis %s, edificis pierdûts %s, APM %s%s"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": Re copât %s (Regicidi)"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": vitoriis, relic in abazie %s (Cjapâ il relic)"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stribût mandât %s, ricevût %s, pic di paesans %s (stim.)"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": cjastiel pierdût %s (Muart subite)"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, tecnologjiis %s"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": timer de maravee di %s, finìs %s (%s)"}
+{"name": "aoe2mc.replay.summary", "text": "Rivuart (stim.)"}
+{"name": "aoe2mc.replay.task_building", "text": "fabrichi"}
+{"name": "aoe2mc.replay.task_following", "text": "daûr"}
+{"name": "aoe2mc.replay.task_food", "text": "recupere cibo"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "in guarnision"}
+{"name": "aoe2mc.replay.task_gold", "text": "recupere or"}
+{"name": "aoe2mc.replay.task_guarding", "text": "vuardant"}
+{"name": "aoe2mc.replay.task_idle", "text": "vueit"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "poiche"}
+{"name": "aoe2mc.replay.task_resources", "text": "recupere risorsis"}
+{"name": "aoe2mc.replay.task_stone", "text": "recupere piere"}
+{"name": "aoe2mc.replay.task_walking", "text": "al va"}
+{"name": "aoe2mc.replay.task_wood", "text": "recupere len"}
+{"name": "aoe2mc.replay.team", "text": "Scuadre %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Arcîr %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Armadure di arcîr %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Puarte %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Armadure di cavalîr %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Cjamp %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Or %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Armadure di fant %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Telâr %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Corp a corp %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Piere %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Len %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Cjastiel"}
+{"name": "aoe2mc.replay.tl_king", "text": "Re copât"}
+{"name": "aoe2mc.replay.tl_military", "text": "1A unitât militâr: %s"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relic"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Si rint"}
+{"name": "aoe2mc.replay.town_fell", "text": ": il cjastiel al è colât a %s. Muart subite: il zugadôr al è fûr."}
+{"name": "aoe2mc.replay.town_lost", "text": "Cjastiel pierdût a %s"}
+{"name": "aoe2mc.replay.training", "text": "Adestrament: %s"}
+{"name": "aoe2mc.replay.university", "text": "Universitât:"}
+{"name": "aoe2mc.replay.up_counts", "text": "economie %s · Universitât %s"}
+{"name": "aoe2mc.replay.wonder_built", "text": " al à fabrichît une maravee a %s."}
+{"name": "aoe2mc.replay_input.fight", "text": "Combat: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s unitâts"}
+{"name": "aoe2mc.replay_input.fights", "text": "Grancj combats:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay: fâs clic drete sui oggjets de barre, o fâs clic su: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Cjape il control: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s unitâts)"}
+{"name": "aoe2mc.replay_input.vs", "text": " cuintri "}
+{"name": "aoe2mc.resource.food", "text": "cibo"}
+{"name": "aoe2mc.resource.gold", "text": "or"}
+{"name": "aoe2mc.resource.stone", "text": "piere"}
+{"name": "aoe2mc.resource.wood", "text": "len"}
+{"name": "aoe2mc.run.back", "text": "%s al è tornât"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Campagne completade"}
+{"name": "aoe2mc.run.chat_hint", "text": "Cjacare: une righe normâl e va a duc, /tm TEST ai tiei alîs, /msg NON TEST a une sole persone."}
+{"name": "aoe2mc.run.left_bot", "text": "%s al è lât fûr: un bot al zuge il zugadôr %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Il scenari %s al scomence. Jentre di gnûf."}
+{"name": "aoe2mc.run.starts_in", "text": "Il zuc al scomence in %s"}
+{"name": "aoe2mc.run.wait_ready", "text": "Vierç \"Sielç il to zugadôr\" e fâs clic su \"Pront\""}
+{"name": "aoe2mc.run.welcome_controls", "text": "Ducj i controi: /controls"}
+{"name": "aoe2mc.run.welcome_first", "text": "Prin pas: tegni il baston di comant e fâs clic drete su un de tiôs paesans."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "Prin pas: tegni il baston di comant e fâs clic çampe su un de tiôs paesans."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Obietîf: vinçi il zuc. Impostazion de vitorie: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Zuc salvât: %s"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s unitâts a son saltadis fûr"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Esplorazion automatiche"}
+{"name": "aoe2mc.stance.formation", "text": "Formazion: %s"}
+{"name": "aoe2mc.stance.no_ground", "text": "Nissune unitât al pues atacâ il teren"}
+{"name": "aoe2mc.stance.unpack", "text": "Disimpache prime il Trabucon"}
+{"name": "aoe2mc.train.active", "text": "%s al è ative."}
+{"name": "aoe2mc.train.rally", "text": "Fâs clic drete sul teren pal pont di radun."}
+{"name": "aoe2mc.train.researched", "text": "%s al è ricercjât."}
+{"name": "aoe2mc.transport.out", "text": "%s unitâts a son saltadis fûr"}
+{"name": "aoe2mc.treaty.ended", "text": "Il tratât al è finît: i zugadôrs a puedin atacâ cumò."}
+{"name": "aoe2mc.treaty.refuse", "text": "Tratât: no tu pos atacâ prime di %s."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Tratât: no tu pos atacâ in chest zuc."}
+{"name": "aoe2mc.treaty.start", "text": "Tratât: nissun zugadôr al pues atacâ un altri zugadôr prime di %s."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Tratât: nissun zugadôr al pues atacâ un altri zugadôr in chest zuc."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Fabriche une cjasierme: fâs clic drete sun un paesan selezionât, sielç la cjasierme e metile. La barre des azions sore de barre dai tastis e dîs dulà metile."}
+{"name": "aoe2mc.tutorial.camera", "text": "Cjamini svelt sore de mape: fâs clic drete cul ogjet \"Cjamare\", cjamine, e po fâs clic drete une altre volte cun chel."}
+{"name": "aoe2mc.tutorial.camp", "text": "Distrūç il cjamp nemì tal mieç de mape: selezione tes tôs Milizie e fâs clic drete sun un edifici. La barre dal boss in alt e mostre il pas."}
+{"name": "aoe2mc.tutorial.camps", "text": "Fabriche un cjamp di len dongje dai àlars e un mulin dongje des bacjis. La barre a diestre e mostre il len che a costin."}
+{"name": "aoe2mc.tutorial.complete", "text": "Il tutorial al è completât. Dopo: zuie cuntri il bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutorial completât"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Va inte Etât Feudâl: fâs clic drete sul to cjastiel e sielç la Etât Feudâl. La barre a diestre e mostre il to cibo."}
+{"name": "aoe2mc.tutorial.food", "text": "Cjape 100 cibo: mande un paesan aes bacjis. La barre a diestre e mostre il to cibo."}
+{"name": "aoe2mc.tutorial.house", "text": "Fabriche une cjase: fâs clic drete sun un paesan selezionât, sielç la cjase e metile. La barre des azions sore de barre dai tastis e dîs dulà metile."}
+{"name": "aoe2mc.tutorial.militia", "text": "Adestre 3 Milizie: fâs clic drete sul to cuartîr e sielç la milizie. La barre a diestre e mostre il to cibo e il to or."}
+{"name": "aoe2mc.tutorial.raid", "text": "Il nemì al ataca i tiei paesans! Fâs clic su la riga rosse di alarme in chat par lâ culì, po selezione tes tôs Milizie e fâs clic drete sui nemîs. La barre dal boss in alt e mostre la vite de unitât selezionade."}
+{"name": "aoe2mc.tutorial.select", "text": "Selezione un paesan: fâs clic çampe sun un de tiôs paesans cul baston di comant. La barre dal boss in alt e mostre la unitât selezionade, la barre des azions sore de barre dai tastis e mostre la prossime azion."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Pas fat"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Pas %s/%s: %s"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "SUGJERiment: la cjasierme e adestre fant. Il fant al coste pocjis e al è bon cuintri edificis."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "SUGJERiment: ataca cun dutis tes tôs unitâts insieme. Un grup piçul al mûr prime di fâ dam."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "SUGJERiment: fabrichs i edificis di consegne dongje des risorsis, cussì che i paesans a van une strade curte."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "SUGJERiment: la etât sucessive e vierç nûfs edificis, unitâts e tecnologjiis. Tegni i paesans al lavôr chel tu vadis insù."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "SUGJERiment: lis bacjis dongje di un mulin a son un imprin sigûr pal cibo. Dopo, i cjamps a dan cibo che nol finìs."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "SUGJERiment: une cjase e da puest par 5 abitants in plui. Cjale la popolazion inte barre a diestre e fabrichi cjasis prime che e sedi plene."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "SUGJERiment: tu puedis metisi in code fin a 15 unitâts intun edifici, cuant che tu âs lis risorsis."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "SUGJERiment: in AoE2 la campane de citât e mande i paesans inte lôr citât. Sunile cuant che il nemì ti ataca la citât."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "SUGJERiment: la riga Vueit de barre a diestre e conte i tiei paesans cence lavôr. Dâi lavôr."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "SUGJERiment: adestre paesans simpri tai prins etâts. Plui paesans a dan plui risorsis."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "SUGJERiment: i paesans a recuperin plui in presse dai edificis di consegne. Fabriche un cjamp di len dongje dai àlars."}
+{"name": "aoe2mc.tutorial.villager", "text": "Adestre un paesan: fâs clic drete sul to cjastiel e sielç il paesan. La barre a diestre e mostre il cibo che al coste."}
+{"name": "aoe2mc.tutorial.wood", "text": "Cjape 50 len: selezione un paesan e fâs clic drete sun un àlar. La barre a diestre e mostre il to len."}
+{"name": "aoe2mc.victory", "text": "Vitorie"}
+{"name": "aoe2mc.wonder.built", "text": "Il zugadôr %s al à fabrichît une maravee."}
+{"name": "aoe2mc.wonder.destroyed", "text": "La maravee dal zugadôr %s e je distrute."}
