@@ -1,0 +1,316 @@
+{"name": "aoe2mc.age_up", "text": "PLAYAH %s GOEZ TO DA %s LOL"}
+{"name": "aoe2mc.battle_royale.start", "text": "Battle Royale: da Corruptshun takes da map from da border to da middle in %s. It kills all units and buildingz in it lol"}
+{"name": "aoe2mc.bot.cannot_build", "text": "I cannot build a %s dere now lol"}
+{"name": "aoe2mc.bot.cannot_train", "text": "I cannot train dat unit: I has no building 4 it lol"}
+{"name": "aoe2mc.bot.flare_two", "text": "Flare two plaecez 4 da wall lol"}
+{"name": "aoe2mc.bot.no_flare", "text": "I see no flare lol"}
+{"name": "aoe2mc.bot.no_market", "text": "I has no market: I cannot send tribute lol"}
+{"name": "aoe2mc.bot.no_onager", "text": "I has no onager lol"}
+{"name": "aoe2mc.bot.no_wall_resources", "text": "I has not enuff resources 4 a wall lol"}
+{"name": "aoe2mc.bot.no_water", "text": "I has no water near my town: I cannot build a navy lol"}
+{"name": "aoe2mc.bot.onager_no_trees", "text": "My onagerz cannot cut trees lol"}
+{"name": "aoe2mc.build.cost", "text": "Not enuff resources: a %s costs %s lol"}
+{"name": "aoe2mc.build.flat", "text": "Da %s must stand on flat ground lol"}
+{"name": "aoe2mc.build.gate_spot", "text": "A %s must go on 4 tiles of an own wall in a straight line, or on 3 diagonal tiles lol"}
+{"name": "aoe2mc.build.locked", "text": "%s: %s lol"}
+{"name": "aoe2mc.build.menu_head", "text": "Build: "}
+{"name": "aoe2mc.build.menu_line", "text": "/trigger aoe_build set %s: %s (%s)"}
+{"name": "aoe2mc.build.shore", "text": "A %s must stand on water next to da shore lol"}
+{"name": "aoe2mc.build.space", "text": "No space 4 da %s here lol"}
+{"name": "aoe2mc.build.tiles_cost", "text": "Not enuff resources: %s tiles of %s cost %s lol"}
+{"name": "aoe2mc.build.wall_end", "text": "%s: right click da end of da wall lol"}
+{"name": "aoe2mc.build.water", "text": "A %s must stand on da water lol"}
+{"name": "aoe2mc.camera.fov", "text": "Da fast camera makes da held item swing lol. To keep it still, set Options > Accessibility Settings > View Bobbing to OFF. Da camera also makes da view wider, which shows more of da map lol. To keep da normal view, set Options > Accessibility Settings > FOV Effects to 0 % lol"}
+{"name": "aoe2mc.camera.off", "text": "Camera: off lol"}
+{"name": "aoe2mc.camera.on", "text": "Camera: on, speed x%s lol. Shift right click: next speed."}
+{"name": "aoe2mc.camera.speed", "text": "Camera speed: x%s lol"}
+{"name": "aoe2mc.challenge.battle-formations", "text": "Kill all enemy units and lose few units lol"}
+{"name": "aoe2mc.challenge.booming", "text": "Train 100 villagerz and goez to da Imperial Age lol"}
+{"name": "aoe2mc.challenge.defending-against-a-rush", "text": "Goez to da Castle Age and survive da enemy attackz lol"}
+{"name": "aoe2mc.challenge.destroying-a-castle", "text": "Destroy da enemy castle lol"}
+{"name": "aoe2mc.challenge.early-economy", "text": "Gather 200 food, 200 wood, 100 gold and 200 stone, train 21 villagerz, build a lumber camp and a mill, and goez to da Feudal Age lol"}
+{"name": "aoe2mc.challenge.fast-castle-age", "text": "Train 27 villagerz, build 5 housez and goez to da Castle Age lol"}
+{"name": "aoe2mc.challenge.land-battle", "text": "Kill all six enemy wavez lol"}
+{"name": "aoe2mc.challenge.lost_bronze", "text": "%s units lost, bronze medal up to %s lol"}
+{"name": "aoe2mc.challenge.lost_gold", "text": "%s units lost, gold medal up to %s lol"}
+{"name": "aoe2mc.challenge.lost_none", "text": "%s units lost, no medal lol"}
+{"name": "aoe2mc.challenge.lost_silver", "text": "%s units lost, silver medal up to %s lol"}
+{"name": "aoe2mc.challenge.medal_bronze", "text": "Bronze medal lol"}
+{"name": "aoe2mc.challenge.medal_gold", "text": "Gold medal lol"}
+{"name": "aoe2mc.challenge.medal_silver", "text": "Silver medal lol"}
+{"name": "aoe2mc.challenge.naval-battle", "text": "Destroy all enemy warshipz lol"}
+{"name": "aoe2mc.challenge.no_medal", "text": "No medal lol"}
+{"name": "aoe2mc.challenge.rushing-the-enemy", "text": "Kill 5 enemy villagerz lol"}
+{"name": "aoe2mc.challenge.time_bronze", "text": "Bronze medal in %s lol"}
+{"name": "aoe2mc.challenge.time_gold", "text": "Gold medal in %s lol"}
+{"name": "aoe2mc.challenge.time_silver", "text": "Silver medal in %s lol"}
+{"name": "aoe2mc.cheat.aegis_off", "text": "Aegis off lol"}
+{"name": "aoe2mc.cheat.aegis_on", "text": "Aegis on lol"}
+{"name": "aoe2mc.cheat.beyond", "text": "Technologiez: up to 256 researchez lol"}
+{"name": "aoe2mc.cheat.cpu", "text": "Population limit: %s lol"}
+{"name": "aoe2mc.cheat.fog_off", "text": "Fog of war: off lol"}
+{"name": "aoe2mc.cheat.fog_on", "text": "Fog of war: on lol"}
+{"name": "aoe2mc.cheat.free_techs", "text": "Technologiez are free lol"}
+{"name": "aoe2mc.cheat.marco", "text": "polo"}
+{"name": "aoe2mc.cheat.sharing", "text": "Sharing is caring lol: your income goez to your allies"}
+{"name": "aoe2mc.cheat.wonders", "text": "U control nature lol: %s animals"}
+{"name": "aoe2mc.conquest.allies_end", "text": "Only allies are left lol: da alliancez end. Da last player alive winz lol"}
+{"name": "aoe2mc.conquest.defeated", "text": "Player %s iz defeated lol"}
+{"name": "aoe2mc.controls.attack", "text": "Attack: select military unitz, then right click an enemy lol"}
+{"name": "aoe2mc.controls.build", "text": "Build: select villagerz, right click dem 4 da build menu, select a building, then left click da ground lol. Shift + left click: place more. Right click: cancel."}
+{"name": "aoe2mc.controls.camera", "text": "Camera: right click with da spyglass Camera (hotbar key 2): u walk fast high above da map lol. Shift right click: da next speed. Right click again: u fly down lol."}
+{"name": "aoe2mc.controls.garrison", "text": "Garrison: select unitz, then right click your own building lol. Its menu lets dem out. Town center menu: Ring Town Bell lol."}
+{"name": "aoe2mc.controls.gather", "text": "Gather: select villagerz, then right click a tree, a fruit bush, a mine or a farm lol."}
+{"name": "aoe2mc.controls.goto", "text": "Go to: right click with da compass Go to (hotbar key 3) lol: a menu of your town centerz, your control groupz and da next idle villager."}
+{"name": "aoe2mc.controls.groups", "text": "Control groupz: select unitz, take a group item (hotbar keys 5 to 9) and Shift + right click to save da selection lol. Right click: select da group."}
+{"name": "aoe2mc.controls.head", "text": "Controlz (hold da carrot on a stick lol; da action bar shows da next step):"}
+{"name": "aoe2mc.controls.menu", "text": "Game menu: right click with da book Game menu (hotbar key 4) lol: diplomacy and tribute, flare, save, pause and da tech tree."}
+{"name": "aoe2mc.controls.move", "text": "Move: with a selection, right click da ground lol."}
+{"name": "aoe2mc.controls.research", "text": "Research and age up: right click your own building and click a technology or da next age in its menu lol."}
+{"name": "aoe2mc.controls.select", "text": "Select: left click a unit. Hold left click and look across da ground: a selection box lol. Right click: give orders."}
+{"name": "aoe2mc.controls.train", "text": "Train: right click your own building (town center, barracks ...) and click a unit in its menu lol."}
+{"name": "aoe2mc.defeat", "text": "Defeat lol"}
+{"name": "aoe2mc.diplomacy.ally", "text": "Ally lol"}
+{"name": "aoe2mc.diplomacy.changed", "text": "Player %s changed its stance to u: %s lol."}
+{"name": "aoe2mc.diplomacy.enemy", "text": "Enemy lol"}
+{"name": "aoe2mc.diplomacy.neutral", "text": "Neutral lol"}
+{"name": "aoe2mc.diplomacy.speed", "text": "Player %s set da game speed to %s lol."}
+{"name": "aoe2mc.diplomacy.tribute", "text": "Player %s sent %s %s to player %s lol."}
+{"name": "aoe2mc.flare.placed", "text": "%s: Flare at %s %s lol"}
+{"name": "aoe2mc.follow.refuse_follow", "text": "Follow: click an own unit lol"}
+{"name": "aoe2mc.follow.refuse_guard", "text": "Guard: click an own unit or building lol"}
+{"name": "aoe2mc.gaia.joins", "text": "A %s joinz u lol."}
+{"name": "aoe2mc.garrison.all_back", "text": "All back to work lol"}
+{"name": "aoe2mc.garrison.bell_seek", "text": "Da town bell rings lol: %s villagerz seek shelter"}
+{"name": "aoe2mc.garrison.no_villager", "text": "No villager iz selected lol."}
+{"name": "aoe2mc.garrison.no_villagers", "text": "U has no villagerz lol."}
+{"name": "aoe2mc.garrison.out", "text": "%s unitz came out lol"}
+{"name": "aoe2mc.garrison.seek_shelter", "text": "%s villagerz seek shelter lol"}
+{"name": "aoe2mc.gather.act_attack", "text": "attack lol"}
+{"name": "aoe2mc.gather.act_build_menu", "text": "build menu lol"}
+{"name": "aoe2mc.gather.act_garrison", "text": "garrison lol"}
+{"name": "aoe2mc.gather.act_gather", "text": "gather lol"}
+{"name": "aoe2mc.gather.act_hunt", "text": "hunt lol"}
+{"name": "aoe2mc.gather.act_move", "text": "move lol"}
+{"name": "aoe2mc.gather.act_select", "text": "select lol"}
+{"name": "aoe2mc.gather.act_select_type", "text": "select all of da type lol"}
+{"name": "aoe2mc.gather.act_trade", "text": "trade lol"}
+{"name": "aoe2mc.gather.act_train", "text": "train lol"}
+{"name": "aoe2mc.gather.attack_siege", "text": "Attack: %s (%s/%s) lol"}
+{"name": "aoe2mc.gather.box_cancelled", "text": "Selection box: cancelled lol"}
+{"name": "aoe2mc.gather.bush", "text": "Berry bush lol"}
+{"name": "aoe2mc.gather.carcass", "text": "Carcass lol"}
+{"name": "aoe2mc.gather.corner", "text": "Selection box: click da other corner lol"}
+{"name": "aoe2mc.gather.enemy", "text": "Enemy %s lol"}
+{"name": "aoe2mc.gather.enemy_building", "text": "Enemy building lol"}
+{"name": "aoe2mc.gather.farm", "text": "Farm lol"}
+{"name": "aoe2mc.gather.ground", "text": "Ground lol"}
+{"name": "aoe2mc.gather.group", "text": "Group %s: %s unitz lol"}
+{"name": "aoe2mc.gather.group_saved", "text": "Group %s: %s unitz saved lol"}
+{"name": "aoe2mc.gather.mine", "text": "%s mine lol"}
+{"name": "aoe2mc.gather.paused", "text": "Da game iz paused lol."}
+{"name": "aoe2mc.gather.point", "text": "%s · Right click: %s lol"}
+{"name": "aoe2mc.gather.point_name", "text": "%s"}
+{"name": "aoe2mc.gather.reseeds", "text": "Reseedz queued: %s lol"}
+{"name": "aoe2mc.gather.selected", "text": "Selected: %s unitz lol"}
+{"name": "aoe2mc.gather.tree", "text": "Tree lol"}
+{"name": "aoe2mc.hill.holds", "text": "Player %s holdz da monument lol."}
+{"name": "aoe2mc.hints.attack_ground", "text": "Attack Ground: right click da ground lol"}
+{"name": "aoe2mc.hints.attack_move", "text": "Attack Move: right click da ground lol"}
+{"name": "aoe2mc.hints.building", "text": "Place da %s: right click da ground · Shift + right click: place more · Cancel: /trigger aoe_build set 0 lol"}
+{"name": "aoe2mc.hints.building_paper", "text": "%s: left click to place · Shift: place more · Right click: cancel lol"}
+{"name": "aoe2mc.hints.corner", "text": "Selection box: right click da other corner lol"}
+{"name": "aoe2mc.hints.count_military", "text": "%s military unit lol"}
+{"name": "aoe2mc.hints.count_military_many", "text": "%s military unitz lol"}
+{"name": "aoe2mc.hints.count_villager", "text": "%s villager lol"}
+{"name": "aoe2mc.hints.count_villager_many", "text": "%s villagerz lol"}
+{"name": "aoe2mc.hints.deselect", "text": "Empty box: deselect lol"}
+{"name": "aoe2mc.hints.deselect_paper", "text": "Left click: deselect lol"}
+{"name": "aoe2mc.hints.follow", "text": "Follow: right click an own or allied unit lol"}
+{"name": "aoe2mc.hints.guard", "text": "Guard: right click an own or allied unit or building lol"}
+{"name": "aoe2mc.hints.military", "text": "%s · Right click: attack an enemy, stance menu · %s"}
+{"name": "aoe2mc.hints.none", "text": "Left click: select a unit · Hold left click: selection box lol"}
+{"name": "aoe2mc.hints.none_wand", "text": "Right click: select a unit · Wand: selection box lol"}
+{"name": "aoe2mc.hints.patrol", "text": "Patrol: right click da ground lol"}
+{"name": "aoe2mc.hints.pointing", "text": "%s · %s"}
+{"name": "aoe2mc.hints.villagers", "text": "%s · Right click: gather, build, build menu · %s"}
+{"name": "aoe2mc.lobby.ready", "text": "%s / %s ready lol"}
+{"name": "aoe2mc.lobby.you_play", "text": "U play %s lol."}
+{"name": "aoe2mc.monk.converts", "text": "A monk converts da %s lol."}
+{"name": "aoe2mc.monk.dies", "text": "Da %s dies (Heresy) lol."}
+{"name": "aoe2mc.pause.continued", "text": "Player %s continued da game lol."}
+{"name": "aoe2mc.pause.paused", "text": "Player %s paused da game lol."}
+{"name": "aoe2mc.ratings.change", "text": "%s %s → %s lol"}
+{"name": "aoe2mc.ratings.team", "text": "Team %s (mean rating %s): %s lol"}
+{"name": "aoe2mc.recap.next", "text": "Da game iz over lol. Right click da Recap book in ur hand to see da results. Stop da game program with Ctrl-C in its console lol."}
+{"name": "aoe2mc.relic_victory.all", "text": "Player %s holdz all da relicz lol."}
+{"name": "aoe2mc.relic_victory.lost", "text": "Player %s lost a relic lol."}
+{"name": "aoe2mc.repair.no_resources", "text": "Not enuff resources to repair da %s lol."}
+{"name": "aoe2mc.replay.army", "text": "Army: %s lol"}
+{"name": "aoe2mc.replay.army_end", "text": ", army at da end: %s lol"}
+{"name": "aoe2mc.replay.army_lost", "text": ", lost: %s lol"}
+{"name": "aoe2mc.replay.build_order", "text": "Build order lol:"}
+{"name": "aoe2mc.replay.building_garrison", "text": " · garrison %s lol"}
+{"name": "aoe2mc.replay.building_hp", "text": "%s (%s): %s/%s"}
+{"name": "aoe2mc.replay.carries", "text": " | carries %s %s lol"}
+{"name": "aoe2mc.replay.eco_build", "text": "build %s lol"}
+{"name": "aoe2mc.replay.eco_food", "text": "food %s lol"}
+{"name": "aoe2mc.replay.eco_gold", "text": "gold %s lol"}
+{"name": "aoe2mc.replay.eco_idle", "text": "idle %s lol"}
+{"name": "aoe2mc.replay.eco_stone", "text": "stone %s lol"}
+{"name": "aoe2mc.replay.eco_wood", "text": "wood %s lol"}
+{"name": "aoe2mc.replay.flare", "text": "Flare lol"}
+{"name": "aoe2mc.replay.game_ends", "text": "Da game ends lol"}
+{"name": "aoe2mc.replay.game_time", "text": "Game time %s lol"}
+{"name": "aoe2mc.replay.garrison", "text": " · garrison %s lol"}
+{"name": "aoe2mc.replay.graph_mil", "text": "Mil %s %s lol"}
+{"name": "aoe2mc.replay.graph_pop", "text": "Pop %s %s lol"}
+{"name": "aoe2mc.replay.graph_res", "text": "Res %s %s lol"}
+{"name": "aoe2mc.replay.graph_vil", "text": "Vil %s %s lol"}
+{"name": "aoe2mc.replay.hill_won", "text": "%s held da monument: King of da Hill victory at %s lol."}
+{"name": "aoe2mc.replay.inspect", "text": "%s (%s): %s/%s | %s%s | %s attack %s/%s armor%s lol"}
+{"name": "aoe2mc.replay.join_help", "text": "Double-tap Shift: spectator view (fly through blocks) lol. Right click da hotbar items: replay control."}
+{"name": "aoe2mc.replay.king_died", "text": ": da King died at %s lol. Regicide: da player is out."}
+{"name": "aoe2mc.replay.king_killed", "text": "King killed at %s lol"}
+{"name": "aoe2mc.replay.live_jump", "text": "Live replay lol: da jump stops at da delay behind da game."}
+{"name": "aoe2mc.replay.lost", "text": "Lost: %s lol"}
+{"name": "aoe2mc.replay.monument_holds", "text": " holdz da monument at %s lol."}
+{"name": "aoe2mc.replay.monument_year", "text": "%s: monument, %s year left lol"}
+{"name": "aoe2mc.replay.monument_years", "text": "%s: monument, %s years left lol"}
+{"name": "aoe2mc.replay.no_camera", "text": "Dis record has no camera of its player lol."}
+{"name": "aoe2mc.replay.now", "text": " now lol"}
+{"name": "aoe2mc.replay.out", "text": "%s iz out lol"}
+{"name": "aoe2mc.replay.players", "text": "Playerz"}
+{"name": "aoe2mc.replay.range", "text": " r%s"}
+{"name": "aoe2mc.replay.relic_won", "text": " takes da relic to a monastery and winz lol."}
+{"name": "aoe2mc.replay.replay_ended", "text": "Replay ended lol"}
+{"name": "aoe2mc.replay.research", "text": " researchez %s lol"}
+{"name": "aoe2mc.replay.resigns", "text": "%s resignz lol"}
+{"name": "aoe2mc.replay.restart_jump", "text": "Da server restartz for da jump back lol: join it again."}
+{"name": "aoe2mc.replay.share_buildings", "text": "Buildingz %s (%s) lol"}
+{"name": "aoe2mc.replay.share_economy", "text": "Economy %s (%s) lol"}
+{"name": "aoe2mc.replay.share_military", "text": "Military %s (%s) lol"}
+{"name": "aoe2mc.replay.share_technologies", "text": "Technologiez %s (%s) lol"}
+{"name": "aoe2mc.replay.share_total", "text": "Total %s lol"}
+{"name": "aoe2mc.replay.soc_castle", "text": "castlez %s, "}
+{"name": "aoe2mc.replay.soc_market", "text": "bought %s, sold %s, "}
+{"name": "aoe2mc.replay.soc_relics", "text": "relicz %s, "}
+{"name": "aoe2mc.replay.soc_wonder", "text": "wonderz %s, "}
+{"name": "aoe2mc.replay.spent", "text": "Spent lol:"}
+{"name": "aoe2mc.replay.spent_buildings", "text": "Build %s"}
+{"name": "aoe2mc.replay.spent_economy", "text": "Eco %s"}
+{"name": "aoe2mc.replay.spent_military", "text": "Mil %s"}
+{"name": "aoe2mc.replay.spent_technologies", "text": "Tech %s"}
+{"name": "aoe2mc.replay.sum_economy", "text": ": villagerz trained %s, gathered %s, idle villager time %s, idle town center time %s lol"}
+{"name": "aoe2mc.replay.sum_hill_holds", "text": ": holdz da monument (King of da Hill) lol"}
+{"name": "aoe2mc.replay.sum_hill_won", "text": ": monument won %s (King of da Hill) lol"}
+{"name": "aoe2mc.replay.sum_military", "text": ": military unitz trained %s, unitz lost %s, buildingz lost %s, APM %s%s lol"}
+{"name": "aoe2mc.replay.sum_regicide", "text": ": King killed %s (Regicide) lol"}
+{"name": "aoe2mc.replay.sum_relic", "text": ": winz, relic in a monastery %s (Capture da Relic) lol"}
+{"name": "aoe2mc.replay.sum_society", "text": ": %stribute sent %s, received %s, villager high %s (est.) lol"}
+{"name": "aoe2mc.replay.sum_sudden_death", "text": ": town center lost %s (Sudden Death) lol"}
+{"name": "aoe2mc.replay.sum_techs", "text": ": %s, technologiez %s lol"}
+{"name": "aoe2mc.replay.sum_wonder", "text": ": wonder timer from %s, ends %s (%s) lol"}
+{"name": "aoe2mc.replay.summary", "text": "Summary (est.) lol"}
+{"name": "aoe2mc.replay.task_building", "text": "building lol"}
+{"name": "aoe2mc.replay.task_following", "text": "following lol"}
+{"name": "aoe2mc.replay.task_food", "text": "gathering food lol"}
+{"name": "aoe2mc.replay.task_garrisoned", "text": "garrisoned lol"}
+{"name": "aoe2mc.replay.task_gold", "text": "gathering gold lol"}
+{"name": "aoe2mc.replay.task_guarding", "text": "guarding lol"}
+{"name": "aoe2mc.replay.task_idle", "text": "idle lol"}
+{"name": "aoe2mc.replay.task_patrolling", "text": "patrolling lol"}
+{"name": "aoe2mc.replay.task_resources", "text": "gathering resourcez lol"}
+{"name": "aoe2mc.replay.task_stone", "text": "gathering stone lol"}
+{"name": "aoe2mc.replay.task_walking", "text": "walking lol"}
+{"name": "aoe2mc.replay.task_wood", "text": "gathering wood lol"}
+{"name": "aoe2mc.replay.team", "text": "Team %s · "}
+{"name": "aoe2mc.replay.tier_archer", "text": "Archer %s/%s"}
+{"name": "aoe2mc.replay.tier_archer_armor", "text": "Archer armor %s/%s"}
+{"name": "aoe2mc.replay.tier_carry", "text": "Carry %s/%s"}
+{"name": "aoe2mc.replay.tier_cavalry_armor", "text": "Cavalry armor %s/%s"}
+{"name": "aoe2mc.replay.tier_farm", "text": "Farm %s/%s"}
+{"name": "aoe2mc.replay.tier_gold", "text": "Gold %s/%s"}
+{"name": "aoe2mc.replay.tier_infantry_armor", "text": "Infantry armor %s/%s"}
+{"name": "aoe2mc.replay.tier_loom", "text": "Loom %s/%s"}
+{"name": "aoe2mc.replay.tier_melee", "text": "Melee %s/%s"}
+{"name": "aoe2mc.replay.tier_stone", "text": "Stone %s/%s"}
+{"name": "aoe2mc.replay.tier_wood", "text": "Wood %s/%s"}
+{"name": "aoe2mc.replay.tl_castle", "text": "Castle lol"}
+{"name": "aoe2mc.replay.tl_king", "text": "King killed lol"}
+{"name": "aoe2mc.replay.tl_military", "text": "1st military: %s lol"}
+{"name": "aoe2mc.replay.tl_relic", "text": "Relic lol"}
+{"name": "aoe2mc.replay.tl_resigns", "text": "Resignz lol"}
+{"name": "aoe2mc.replay.town_fell", "text": ": da town center fell at %s lol. Sudden Death: da player is out."}
+{"name": "aoe2mc.replay.town_lost", "text": "Town center lost at %s lol"}
+{"name": "aoe2mc.replay.training", "text": "Training: %s lol"}
+{"name": "aoe2mc.replay.university", "text": "University lol:"}
+{"name": "aoe2mc.replay.up_counts", "text": "economy %s · University %s lol"}
+{"name": "aoe2mc.replay.wonder_built", "text": " built a wonder at %s lol."}
+{"name": "aoe2mc.replay_input.fight", "text": "Fight lol: "}
+{"name": "aoe2mc.replay_input.fight_units", "text": ", %s unitz lol"}
+{"name": "aoe2mc.replay_input.fights", "text": "Large fightz lol:"}
+{"name": "aoe2mc.replay_input.help", "text": "Replay lol: right click da items in ur hotbar, or click: "}
+{"name": "aoe2mc.replay_input.takeover", "text": "Take over lol: "}
+{"name": "aoe2mc.replay_input.units", "text": " (%s unitz) lol"}
+{"name": "aoe2mc.replay_input.vs", "text": " vs "}
+{"name": "aoe2mc.resource.food", "text": "food"}
+{"name": "aoe2mc.resource.gold", "text": "gold"}
+{"name": "aoe2mc.resource.stone", "text": "stone"}
+{"name": "aoe2mc.resource.wood", "text": "wood"}
+{"name": "aoe2mc.run.back", "text": "%s iz back lol"}
+{"name": "aoe2mc.run.campaign_complete", "text": "Campaign complete lol"}
+{"name": "aoe2mc.run.chat_hint", "text": "Chat lol: a normal line goez to all, /tm TEXT to ur allies, /msg NAME TEXT to one person."}
+{"name": "aoe2mc.run.left_bot", "text": "%s left lol: a bot plays player %s"}
+{"name": "aoe2mc.run.scenario_starts", "text": "Scenario %s starts lol. Join again."}
+{"name": "aoe2mc.run.starts_in", "text": "Da game starts in %s lol"}
+{"name": "aoe2mc.run.wait_ready", "text": "Open \"Choose ur player\" and click \"Ready\" lol"}
+{"name": "aoe2mc.run.welcome_controls", "text": "All controlz: /controls lol"}
+{"name": "aoe2mc.run.welcome_first", "text": "First step lol: hold da command stick and right click one of ur villagerz."}
+{"name": "aoe2mc.run.welcome_first_paper", "text": "First step lol: hold da command stick and left click one of ur villagerz."}
+{"name": "aoe2mc.run.welcome_goal", "text": "Goal lol: win da game. Victory setting: %s."}
+{"name": "aoe2mc.savegame.saved", "text": "Saved da game: %s lol"}
+{"name": "aoe2mc.siege_tower.out", "text": "%s unitz came out lol"}
+{"name": "aoe2mc.stance.auto_scout", "text": "Auto Scout lol"}
+{"name": "aoe2mc.stance.formation", "text": "Formation: %s lol"}
+{"name": "aoe2mc.stance.no_ground", "text": "No unit can attack da ground lol"}
+{"name": "aoe2mc.stance.unpack", "text": "Unpack da Trebuchet first lol"}
+{"name": "aoe2mc.train.active", "text": "%s iz active lol."}
+{"name": "aoe2mc.train.rally", "text": "Right click da ground 4 da rally point lol."}
+{"name": "aoe2mc.train.researched", "text": "%s iz researched lol."}
+{"name": "aoe2mc.transport.out", "text": "%s unitz came out lol"}
+{"name": "aoe2mc.treaty.ended", "text": "Da treaty ended lol: playerz can attack now."}
+{"name": "aoe2mc.treaty.refuse", "text": "Treaty: u cannot attack before %s lol."}
+{"name": "aoe2mc.treaty.refuse_endless", "text": "Treaty: u cannot attack in dis game lol."}
+{"name": "aoe2mc.treaty.start", "text": "Treaty: no player can attack another player before %s lol."}
+{"name": "aoe2mc.treaty.start_endless", "text": "Treaty: no player can attack another player in dis game lol."}
+{"name": "aoe2mc.tutorial.barracks", "text": "Build a barracks: right click on a selected villager, choose da barracks and place it. Da action bar above da hotbar tells u where to place it lol."}
+{"name": "aoe2mc.tutorial.camera", "text": "Move fast over da map: right click with da \"Camera\" item, walk, then right click with it again lol."}
+{"name": "aoe2mc.tutorial.camp", "text": "Destroy da enemy camp in da middle of da map: select ur Militia and right click on a building lol. Da boss bar at da top shows da step."}
+{"name": "aoe2mc.tutorial.camps", "text": "Build a lumber camp near da trees and a mill near da berriez lol. Da sidebar on da right shows da wood dey cost."}
+{"name": "aoe2mc.tutorial.complete", "text": "Da tutorial iz complete lol. Next: play a game against da bot: python3 game/run.py OUTWorld --play --bot"}
+{"name": "aoe2mc.tutorial.complete_title", "text": "Tutorial complete lol"}
+{"name": "aoe2mc.tutorial.feudal", "text": "Goez to da Feudal Age: right click on ur town center and choose da Feudal Age lol. Da sidebar on da right shows ur food."}
+{"name": "aoe2mc.tutorial.food", "text": "Gather 100 food: send a villager to da berriez lol. Da sidebar on da right shows ur food."}
+{"name": "aoe2mc.tutorial.house", "text": "Build a house: right click on a selected villager, choose da house and place it lol. Da action bar above da hotbar tells u where to place it."}
+{"name": "aoe2mc.tutorial.militia", "text": "Train 3 Militia: right click on ur barracks and choose da militia lol. Da sidebar on da right shows ur food and gold."}
+{"name": "aoe2mc.tutorial.raid", "text": "Da enemy attackz ur villagerz lol! Click da red alert line in da chat to go dere lol, then select ur Militia and right click on da enemiez. Da boss bar at da top shows da health of da selected unit."}
+{"name": "aoe2mc.tutorial.select", "text": "Select a villager: left click on one of ur villagerz with da command stick lol. Da boss bar at da top shows da selected unit, da action bar above da hotbar shows da next action."}
+{"name": "aoe2mc.tutorial.step_done", "text": "Step done lol"}
+{"name": "aoe2mc.tutorial.step_of", "text": "Step %s/%s: %s lol"}
+{"name": "aoe2mc.tutorial.tip_barracks", "text": "TIP lol: da barracks trainz infantry. Infantry iz cheap and good against buildingz."}
+{"name": "aoe2mc.tutorial.tip_camp", "text": "TIP lol: attack with all ur unitz together. A small group dies before it can do damage."}
+{"name": "aoe2mc.tutorial.tip_camps", "text": "TIP lol: build da drop-off buildingz near da resourcez, so dat da villagerz walk a short way."}
+{"name": "aoe2mc.tutorial.tip_feudal", "text": "TIP lol: da next age unlocks new buildingz, unitz and technologiez. Keep da villagerz at work while u goez on."}
+{"name": "aoe2mc.tutorial.tip_food", "text": "TIP lol: berriez near a mill are a safe start of food. Later, farmz give food dat does not end."}
+{"name": "aoe2mc.tutorial.tip_house", "text": "TIP lol: a house gives room for 5 more population. Look at da population in da sidebar and build housez before it iz full."}
+{"name": "aoe2mc.tutorial.tip_militia", "text": "TIP lol: u can queue up to 15 unitz in a building when u has resourcez."}
+{"name": "aoe2mc.tutorial.tip_raid", "text": "TIP lol: in AoE2 da town bell sends da villagerz into da town center. Ring it when da enemy raidz ur town."}
+{"name": "aoe2mc.tutorial.tip_select", "text": "TIP lol: da Idle line of da sidebar on da right counts ur villagerz with no work. Give dem work."}
+{"name": "aoe2mc.tutorial.tip_villager", "text": "TIP lol: train villagerz all da time in da first agez. More villagerz give more resourcez."}
+{"name": "aoe2mc.tutorial.tip_wood", "text": "TIP lol: villagerz gather faster near a drop-off building. Build a lumber camp next to da trees."}
+{"name": "aoe2mc.tutorial.villager", "text": "Train a villager: right click on ur town center and choose da villager lol. Da sidebar on da right shows da food it costs."}
+{"name": "aoe2mc.tutorial.wood", "text": "Gather 50 wood: select a villager and right click on a tree lol. Da sidebar on da right shows ur wood."}
+{"name": "aoe2mc.victory", "text": "Victory lol"}
+{"name": "aoe2mc.wonder.built", "text": "Player %s built a wonder lol."}
+{"name": "aoe2mc.wonder.destroyed", "text": "Da wonder of player %s iz destroyed lol."}
