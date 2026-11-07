@@ -109,6 +109,17 @@ def idle_queue(cycles, until):
     return max(stretches, default=0.0), sum(stretches), dry
 
 
+def outside_quota(cycles):
+    """The rise of the 5-hour window (a share) between two pacer cycles of one window when neither has a claim and the
+    first starts no run: the quota of other use of the account, which "Quota per merged PR" counts against the runs
+    (13 % to 31 % in 3 hours with no run on 2026-11-06, #6104)."""
+    rows = sorted(cycles, key=lambda c: c["at"])
+    free = lambda c: not c.get("claims") and not sum((c.get("started") or {}).values())   # noqa: E731
+    return sum(max(0.0, b["five_hour"][0] - a["five_hour"][0]) for a, b in zip(rows, rows[1:])
+               if free(a) and not b.get("claims") and a.get("five_hour") and b.get("five_hour")
+               and a["five_hour"][1] == b["five_hour"][1])
+
+
 def held(r):
     """GitHub held the run: it waits for an approval (#4645), or it is the pull_request run of a push of
     github-actions[bot] (Unconflict), which GitHub ends with 0 jobs (29 of 29 runs, #4988): no red CI."""
@@ -810,7 +821,8 @@ def report(since, runs, jobs, status_comments, comments, prs, files, files_of=No
         out.append(f"Pacer loop gaps (no live run, #4647): longest {loop[0]:.1f} h, sum {loop[1]:.1f} h of {loop[2]:.1f} h")
     if idle is not None:                        # the loop runs, but it starts nothing (#5199): (longest, sum, no work)
         out.append(f"Idle queue (target > 0, no claim, no start): longest {idle[0]:.1f} h, sum {idle[1]:.1f} h"
-                   f" (no work: {idle[2]:.1f} h, #854)")
+                   f" (no work: {idle[2]:.1f} h, #854)"
+                   + (f" · quota with no run: {idle[3]:.0%} of the 5-hour window (#6104)" if len(idle) > 3 else ""))
     held, again = held_runs(runs)
     out.append("Runs held by GitHub (#4645): " + (", ".join(f"{k} {v}" for k, v in sorted(held.items())) or "0")
                + " · started again by hand: " + (", ".join(f"{k} {v}" for k, v in sorted(again.items())) or "0"))
@@ -1030,7 +1042,7 @@ def pacer_idle(since, until):
             if since <= ts(c["at"]) <= until:
                 cycles.append(c)
         d += datetime.timedelta(days=1)
-    return idle_queue(cycles, until)
+    return (*idle_queue(cycles, until), outside_quota(cycles))
 
 
 def merge_times(n, until):
