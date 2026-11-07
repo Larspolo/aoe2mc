@@ -67,7 +67,7 @@ class State:
 
 HIGH = 40                                                              # blocks over the ground that remove clears
 PAGE = 45                                                              # items per page; the last row: the tabs
-TAB_ICONS = ("armor_stand", "bricks", "gold_ore", "tuff", "golden_helmet", "decorated_pot")   # Units, Buildings, Resources, Cliffs, Heroes, Gaia
+TAB_ICONS = ("armor_stand", "bricks", "gold_ore", "tuff", "golden_helmet", "flower_pot")      # Units, Buildings, Resources, Cliffs, Heroes, Gaia
 GAIA_MARKS = tuple(r["name"] for r in table.load("editor_gaia.jsonl"))   # name parts that place_objects draws (#6036)
 PLAYER = 1                                                             # the first current player
 
@@ -112,6 +112,61 @@ def gaia_names():
             "MINE", "TREE")) and (any(k in n for k in GAIA_MARKS) or n.startswith(shown + aoe2mc.MOUNTAINS))]
 
 
+VEHICLES = ("armor_stand", "boat", "minecart", "raft")                # entities with an item of the same name
+NO_ITEM = ("air", "barrier", "fire", "lava", "light", "water")         # blocks with no item: not an icon
+ITEM_OF = {"sweet_berry_bush": "sweet_berries"}                       # a block whose item has another name
+
+
+def icon(name, hero=False, unit=None):
+    """The item that shows palette object name (#6057), or None: a unit, a hero or an animal: the spawn egg of its mob
+    (of its rider on a mount), a boat, a minecart or an armor stand: its own item; another object: the most common
+    block that the converter draws for it (aoe2mc.place_objects). unit: kind(name) == "U", if known (it is slow)."""
+    import aoe2mc
+    import units
+    if mob := aoe2mc.object_mob(name):
+        return f"{mob}_spawn_egg"
+    if kind(name) == "U" if unit is None else unit:
+        e = units.make_entity(dict(name=name, player=PLAYER, rotation=0.0, hero=hero), {}, (0.0, 0.0, 0.0),
+                              np.random.default_rng(1))
+        if e is None:
+            return None
+        kind_id = str(e["id"]).removeprefix("minecraft:")
+        if kind_id.endswith(VEHICLES):
+            return kind_id
+        rider = next(iter(e.get("Passengers", ())), None)
+        if rider is not None and "item" in rider:                     # a display (a war wagon): its item
+            return str(rider["item"]["id"]).removeprefix("minecraft:")
+        return f"{str(rider['id']).removeprefix('minecraft:') if rider is not None else kind_id}_spawn_egg"
+    T = 4
+    cols = aoe2mc.Columns(16, np.zeros((16, 16), np.int16), np.zeros((16, 16), np.float32), {0: "GRASS_1"}, T, 1,
+                          np.random.default_rng(1))
+    E, _ = aoe2mc.place_objects([dict(kind="O", name=name, player=0, x=2.0, y=2.0, rotation=0.0, hero=False,
+                                      garrisoned=False)], {}, cols, np.random.default_rng(1))
+    ids = np.concatenate([p[3] for p in E.parts] or [np.zeros(0, np.uint16)])
+    blocks = [aoe2mc.B.states[i].removeprefix("minecraft:").partition("[")[0] for i in np.unique(ids)]
+    counts = {b: 0 for b in blocks}
+    for i, n in zip(*np.unique(ids, return_counts=True)):
+        counts[aoe2mc.B.states[i].removeprefix("minecraft:").partition("[")[0]] += int(n)
+    counts = {b.replace("wall_", ""): n for b, n in counts.items() if not b.endswith(NO_ITEM)}
+    return ITEM_OF.get(b := max(counts, key=counts.get), b) if counts else None
+
+
+_ICONS = {}
+
+
+def icons():
+    """{name: item} of all palette objects with an icon, computed one time (#6057)."""
+    import aoe2mc
+    if not _ICONS:
+        kinds = aoe2mc.object_kinds(old=False)                         # kind() of each name, one time
+        for t, names in tabs():
+            for n in names:
+                unit = kinds.get(export.unit_id(n), ("U",))[0][:1] in "UH"
+                if t != "buildings" and (i := icon(n, t == "heroes", unit)):
+                    _ICONS[n] = i
+    return _ICONS
+
+
 def open_menu(g, player, tab=0, page=0):
     """Show tab of the palette at page. A click on a tab opens it; a click on an object picks it (the next right click
     places it), a right click on an object places it at once where the person looks."""
@@ -131,7 +186,7 @@ def open_menu(g, player, tab=0, page=0):
             g.picked[p] = shown[slot]
             if right and (view := g.look(p)):
                 place(g, p, shown[slot], *view)
-    items = [(i, build.ICONS.get(n, TAB_ICONS[tab]), build.pretty(n), "") for i, n in enumerate(shown)]
+    items = [(i, build.ICONS.get(n) or icons().get(n, TAB_ICONS[tab]), build.pretty(n), "") for i, n in enumerate(shown)]
     items += [(PAGE + k, TAB_ICONS[k], t.title(), "")
               for k, (t, _) in enumerate(all_tabs)]
     if pages > 1:
