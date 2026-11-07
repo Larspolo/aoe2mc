@@ -1506,6 +1506,14 @@ def takeover_seats(players, people):
     return [(p, bot_foe(players, p)) for p in sorted(int(p) for p in players if int(p) > 0) if p not in people]
 
 
+def new_size(text):
+    """--new: the --map-size of aoe2mc.py (#6077)."""
+    import export  # noqa: F401  (it puts the root folder of aoe2mc.py on sys.path)
+
+    import aoe2mc
+    return aoe2mc.map_size(text)
+
+
 def main(argv=None, scenario=None):
     """scenario: the next scenario of a campaign, after the end of one (#3507)."""
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0].strip(),
@@ -1520,6 +1528,8 @@ def main(argv=None, scenario=None):
     ap.add_argument("--replay", action="store_true", help="replay the timeline of a recorded game (aoe2mc.json)")
     ap.add_argument("--editor", metavar="OUT", help="the map editor (#5999): no game time; the chat word palette opens the "
                     "palette of objects (#6013), the chat word save and the stop write the map to OUT (.aoe2scenario)")
+    ap.add_argument("--new", metavar="SIZE", type=new_size, help="--editor: start on a new empty map of this size "
+                    "(a lobby name of the map sizes or a number of tiles) when WORLD does not exist (#6077)")
     ap.add_argument("--speed", type=float, default=1.0, help="--replay, --play: times the game speed "
                     "(default 1; --play: the server ticks faster too)")
     ap.add_argument("--from", dest="start", default="0:00", metavar="MM:SS", help="--replay: start at this game time")
@@ -1663,6 +1673,13 @@ def main(argv=None, scenario=None):
         sys.exit("--takeover needs --replay, and not --play or --live (#5450)")
     if a.editor and (a.play or a.replay or a.load):
         ap.error("--editor starts the map with no game: not with --play, --replay or --load")
+    if a.new is not None:                            # a new empty map: no converted world first (#6077)
+        if not a.editor:
+            ap.error("--new makes a map for the editor: give --editor OUT too")
+        if os.path.exists(a.world):
+            ap.error(f"--new: {a.world} exists; give a new world folder (no overwrite)")
+        import editor
+        editor.new_world(a.world, a.new)
     if a.camera and a.follow is not None:
         ap.error("--camera and --follow N both move the spectators: give only one of them")
     if "mode" not in given(ap, argv):              # the --game-mode of a random map conversion (#4825)
