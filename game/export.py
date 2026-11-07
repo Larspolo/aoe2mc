@@ -317,7 +317,7 @@ def export(path, out, heights=False):
     elevation = np.rot90(elevation.T, back)
     for t in scn.map_manager.terrain:
         t.terrain_id, t.elevation = int(terrain[t.x, t.y]), int(elevation[t.x, t.y])
-    players = [int(p) for p in data["players"] if int(p)]
+    players = [int(p) for p, v in data["players"].items() if int(p) and v.get("active", True)]   # a new map of 3 (#6079)
     scn.player_manager.active_players = max(players, default=1)
     for p in players:
         civ = data["players"][str(p)].get("civ")
