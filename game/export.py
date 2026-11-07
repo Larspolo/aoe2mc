@@ -272,9 +272,10 @@ def raised(world, data, elevation):
 def unit_id(name):
     """The AoE2 ID of a unit, building or other object name of AoE2ScenarioParser, or None."""
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
+    from AoE2ScenarioParser.datasets.heroes import HeroInfo
     from AoE2ScenarioParser.datasets.other import OtherInfo
     from AoE2ScenarioParser.datasets.units import UnitInfo
-    for info in (UnitInfo, BuildingInfo, OtherInfo):
+    for info in (UnitInfo, BuildingInfo, OtherInfo, HeroInfo):   # heroes: the editor palette (#6035)
         if name in info.__members__:
             return info[name].ID
     return None
