@@ -184,7 +184,7 @@ def pending(started, lines, now, minutes=PENDING, refill_lane="deep"):
 
 
 def refill_need(ready, target, issues, due=lambda: [], reviews=lambda: [], free=lambda: [], now=None, closing=lambda e: False,
-                orphans=lambda: []):
+                orphans=lambda: [], milestones=None):
     """The reason of the refill runs, or "" when they have no work (#3547): an open epic with no open sub-issue and no
     open "Part of #E" ticket (the epic check; a release epic with an open ticket in its milestone has work), the tickets with
     `rank` after a release (release.yml gives it to the next release epic too: the `roadmap` skill, "Release cycle"),
@@ -196,9 +196,9 @@ def refill_need(ready, target, issues, due=lambda: [], reviews=lambda: [], free=
     itself (#328). now: Unix seconds (default: the time now). closing(E): True when close.yml closes the epic E by
     itself (`epic_autoclose.ready`, #835): its check run would only add the label `close`. orphans: the
     (number, reason) of the tickets that wait for nothing (`dashboard.orphans`): only a run fixes them (`start.md`),
-    and with no ready ticket no run started (#6049)."""
+    and with no ready ticket no run started (#6049). milestones: as in `epic_checks`."""
     import dashboard
-    epics = [n for n in epic_checks(issues, now) if not closing(n)]
+    epics = [n for n in epic_checks(issues, now, milestones) if not closing(n)]
     if epics:
         return "epic check " + ", ".join(f"#{n}" for n in epics)
     if lost := orphans():
@@ -212,9 +212,11 @@ def refill_need(ready, target, issues, due=lambda: [], reviews=lambda: [], free=
     return f"ready {ready} < target {target}: " + ", ".join(sources) if ready < target and (sources := free()) else ""
 
 
-def epic_checks(issues, now=None):
+def epic_checks(issues, now=None, milestones=None):
     """The open epics that wait for an epic check (`refill_need`): no open sub-issue, no open "Part of #E" ticket and
-    no release milestone ticket, no hold, older than NEW_EPIC_WAIT. now: Unix seconds (default: the time now)."""
+    no release milestone ticket, no hold, older than NEW_EPIC_WAIT, and no release epic with an empty milestone (#6069).
+    now: Unix seconds (default: the time now). milestones: a function that gives [{title, open_issues, closed_issues}]
+    (default: `milestones?state=all` of GitHub), called once and only for a release epic with no open milestone ticket."""
     import dashboard
     work = {int(n) for i in issues if "pull_request" not in i for n in re.findall(r"Part of #(\d+)", i.get("body") or "")}
     work |= {i["number"] for i in issues if dashboard.RELEASE in dashboard.labels(i)
@@ -226,7 +228,26 @@ def epic_checks(issues, now=None):
     epics = [i["number"] for i in issues if "epic" in dashboard.labels(i) and i["number"] not in work and not subs(i)
              and not {dashboard.MUTED, dashboard.AFTER, dashboard.RANK, dashboard.CLOSE, "needs-human"} & dashboard.labels(i)
              and now - made(i) >= NEW_EPIC_WAIT]
-    return epics
+    empty = empty_releases([i for i in issues if i["number"] in epics], milestones)
+    return [n for n in epics if n not in empty]
+
+
+def empty_releases(epics, milestones=None):
+    """The release epics of `epics` whose milestone has no issue (0 open, 0 closed; or no milestone of the version): their
+    scope comes from the roadmap review, so an epic check can do nothing, and as a refill source it held that review
+    back (#6069: a deadlock with no ready ticket). A milestone with closed issues only keeps its epic check: it closes
+    the epic (#6024). A read error: none (the epic checks stay, as before)."""
+    import dashboard
+    wait = [e for e in epics if dashboard.RELEASE in dashboard.labels(e) and dashboard.release_version(e)]
+    if not wait:
+        return set()
+    try:
+        counts = {m.get("title"): m.get("open_issues", 0) + m.get("closed_issues", 0)
+                  for m in (milestones or (lambda: dashboard.pages("milestones?state=all")))()}
+    except (Exception, SystemExit) as e:                    # dashboard.api exits on a GitHub error
+        print(f"milestones: {e}", file=sys.stderr)
+        return set()
+    return {e["number"] for e in wait if not counts.get(dashboard.release_version(e))}
 
 
 def autoclosing(epic):

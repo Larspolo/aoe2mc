@@ -38,4 +38,4 @@ def test_a_rank_ticket_waits_and_starts_a_refill_run():
 
 def test_a_release_epic_with_open_milestone_tickets_needs_no_epic_check():
     assert usage.refill_need(5, 1, [EPIC, issue(12, "P1", milestone=MS)]) == ""
-    assert usage.refill_need(5, 1, [EPIC]) == "epic check #10"
+    assert usage.refill_need(5, 1, [EPIC], milestones=lambda: [dict(MS, open_issues=0)]) == "epic check #10"   # #6069
