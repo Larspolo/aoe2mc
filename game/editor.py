@@ -39,6 +39,7 @@ PALETTE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> palette(?:\s+(.*
 MESSAGES = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> messages\s*$")   # the books of the texts (#6032)
 OPTIONS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> options\s*$")   # the options menu (#6085)
 PLAYERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> players\s*$")   # the players menu (#6003)
+TEST = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> test\s*$")   # save and convert to a test world (#6081)
 CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> save\s*$")   # the chat word, as the server logs it
 
 
@@ -467,6 +468,21 @@ def save(game, out, state=None):
     return path
 
 
+def test_world(game, out, state=None):
+    """Save the map to out, then convert it into a fresh world <world>-test (#6081). Returns the folder."""
+    import shutil
+
+    import aoe2mc
+    game.command("tellraw @a " + json.dumps(lang.text("aoe2mc.editor.converting", color="yellow")))   # it takes seconds (P9)
+    path = save(game, out, state)
+    world = os.path.abspath(game.world).rstrip(os.sep) + "-test"
+    shutil.rmtree(world, ignore_errors=True)                           # a fresh folder each time
+    aoe2mc.convert(path, world)
+    play = f"python3 game/run.py {world} --play --mode scenario"
+    game.command("tellraw @a " + json.dumps(lang.text("aoe2mc.editor.test", world, play, color="green")))
+    return world
+
+
 def words(game, seen):
     """(the new log length, the count of `save` chat lines in the log after seen)."""
     log = game.server.log
@@ -537,6 +553,8 @@ def run(game, out, alive, state=None):
                 books(state, m.group(1))
             if m := PLAYERS.search(line):
                 players_menu(state, m.group(1))
+            if TEST.search(line):
+                print(f"Test world: {test_world(game, out, state)}")
             if m := OPTIONS.search(line):
                 options_menu(state, m.group(1))
         seen, n = words(game, seen)
