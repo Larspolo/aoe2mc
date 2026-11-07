@@ -51,6 +51,8 @@
 {"name": "aoe2mc.editor.options.technologies", "en_us": "Technologies"}
 {"name": "aoe2mc.editor.options.title", "en_us": "Options"}
 {"name": "aoe2mc.editor.options.units", "en_us": "Units"}
+{"name": "aoe2mc.editor.look", "en_us": "Look at the object or tile and write here in the chat."}
+{"name": "aoe2mc.editor.look_corner", "en_us": "Look at the other corner of the area and write here in the chat."}
 {"name": "aoe2mc.flare.placed", "en_us": "%s: Flare at %s %s"}
 {"name": "aoe2mc.follow.refuse_follow", "en_us": "Follow: click an own unit"}
 {"name": "aoe2mc.follow.refuse_guard", "en_us": "Guard: click an own unit or building"}

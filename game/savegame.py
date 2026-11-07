@@ -231,6 +231,7 @@ NOT_SAVED = (                                                          # the fie
     "left_shown",                                                      # amounts.py: the shown numbers, a load shows them again
     "limit_at",                                                        # time_limit.py: the next check time
     "limit_shown",                                                     # time_limit.py: the shown text
+    "looking",                                                         # editor.here: the part that waits for a look; no game (#6091)
     "medal",                                                           # challenge.py: the medal at the end of the game
     "menu_opened",                                                     # train.open_menu: the time of the last open (spam clicks, #3267)
     "music",                                                           # music.py: a loaded game starts the tracks again

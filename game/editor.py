@@ -22,6 +22,8 @@ live in the AoE2ScenarioParser scenario of the world (State.scenario: the source
 as the source of the save folder, and export.triggers() copies it. In a trigger, "Add condition" and "Add effect" open the
 types of data/trigger_conditions.jsonl and data/trigger_effects.jsonl (#6089); a right click removes one; `triggers <word>`
 shows only the types with the word. A click on a condition or effect opens its fields (#6090, fields_menu).
+"Select by a look" of the fields closes the menu; the chat word `here` then sets the object, location or area (two
+looks) at the look, as a click on the map of the AoE2 editor (#6091, here).
 The chat word `options` opens the options menu (#6085): it disables technologies, buildings and units of the current
 player ("disabled" of its entry in aoe2mc.json, as read_scenario writes it).
 """
@@ -45,6 +47,7 @@ MESSAGES = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> messages\s*$") 
 OPTIONS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> options\s*$")   # the options menu (#6085)
 PLAYERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> players\s*$")   # the players menu (#6003)
 TRIGGERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> triggers(?:\s+(.*?))?\s*$")   # the trigger menu (#6088); a word: the types (#6089)
+HERE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> here\s*$")   # a look selects a trigger field (#6091)
 TEST = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> test\s*$")   # save and convert to a test world (#6081)
 CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> save\s*$")   # the chat word, as the server logs it
 
@@ -702,8 +705,15 @@ def fields_menu(g, player, at, index):
               a.replace("_", " ").title(), f"{getattr(part, a)}\n" + tip.get(f, "Click: next · Right click: before"))
              for i, (a, f) in enumerate(fs[:PAGE])]
     items += [(BACK, "arrow", "Back", "")]
+    if look_fields(part):
+        items += [(LOOK, "spyglass", "Select by a look", ", ".join(look_fields(part)))]
 
     def click(p, slot, shift, right=False):
+        if slot == LOOK and look_fields(part):                       # the next `here` selects them (#6091)
+            vars(g).setdefault("looking", {})[p] = (part, [])
+            menu.close(g, p)
+            g.command(f"title {p} actionbar " + json.dumps(lang.text("aoe2mc.editor.look", color="gray")))
+            return None
         if slot < len(fs[:PAGE]):
             a, f = fs[slot]
             if f == "text":
@@ -716,6 +726,66 @@ def fields_menu(g, player, at, index):
         if slot == BACK:
             return triggers_menu(g, p, at // PAGE, at)
     return menu.show(g, player, name.replace("_", " ").title(), items, click)
+
+
+LOOK = PAGE + 4                                                        # the slot of "Select by a look" (#6091)
+LOOKS = {"object": ("unit_object", "next_object", "selected_object_ids"),
+         "location": ("location_x", "location_y", "location_object_reference"),
+         "area": ("area_x1", "area_y1", "area_x2", "area_y2")}           # the fields that a look sets, as the AoE2 map click
+
+
+def look_fields(part):
+    """The attributes of LOOKS that part has (the attributes of its type in the parser)."""
+    from AoE2ScenarioParser.datasets import conditions, effects
+    ds, t = (conditions, part.condition_type) if hasattr(part, "condition_type") else (effects, part.effect_type)
+    have = ds.attributes.get(t, ())
+    return [a for k in LOOKS.values() for a in k if a in have]
+
+
+def source_tile(g, cell):
+    """The (x, y) tile of block cell in the orientation of the source scenario (the turn undone, as export.export)."""
+    import aoe2mc
+    T, n = g.map.T, g.data["map_size"]
+    x, y = aoe2mc.turn_tile(cell[0] // T + 0.5, cell[1] // T + 0.5, n, (4 - g.data.get("turn", 0)) % 4)
+    return int(x), int(y)
+
+
+def object_at(g, cell):
+    """The reference ID of the object at block cell (a placed one first, the newest; else a start object), or None."""
+    inside = lambda r: r[0] <= cell[0] < r[1] and r[2] <= cell[1] < r[3]   # noqa: E731
+    o = next((o for o in reversed(g.placed) if "rect" in o and inside(o["rect"])), None)
+    if o is not None:
+        return o.get("ref")
+    return next((o.get("ref") for i, o in enumerate(g.data["objects"])
+                 if i not in g.removed and "tile" in o and inside(rect_of(g, o)[0])), None)
+
+
+def here(g, player, eye, d):
+    """The chat word `here` after "Select by a look" (#6091): the look sets the object, location and area fields of the
+    part. An area takes two looks (the corners). Returns True when the fields are set."""
+    part, corners = vars(g).get("looking", {}).get(player, (None, None))
+    cell = g.map.pick_ground(eye, d) if part is not None else None
+    if cell is None:
+        return False
+    have, tile = look_fields(part), source_tile(g, cell)
+    if any(a.startswith("area_") for a in have) and not corners:
+        corners.append(tile)
+        g.command(f"title {player} actionbar " + json.dumps(lang.text("aoe2mc.editor.look_corner", color="gray")))
+        return False
+    ref = object_at(g, cell)
+    for a in have:
+        if a in ("unit_object", "next_object", "location_object_reference") and ref is not None:
+            setattr(part, a, ref)
+        elif a == "selected_object_ids" and ref is not None:
+            part.selected_object_ids = [ref]
+        elif a in ("location_x", "location_y"):
+            setattr(part, a, tile[a[-1] == "y"])
+    if corners:
+        (x1, y1), (x2, y2) = corners[0], tile
+        part.area_x1, part.area_y1, part.area_x2, part.area_y2 = min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)
+    g.looking.pop(player)
+    g.edited = True
+    return True
 
 
 def write_source(state, world):
@@ -853,6 +923,8 @@ def run(game, out, alive, state=None):
                 players_menu(state, m.group(1))
             if m := TRIGGERS.search(line):
                 triggers_menu(state, m.group(1), word=m.group(2))
+            if (m := HERE.search(line)) and (view := state.look(m.group(1))):
+                here(state, m.group(1), *view)
             if TEST.search(line):
                 print(f"Test world: {test_world(game, out, state)}")
             if m := OPTIONS.search(line):
