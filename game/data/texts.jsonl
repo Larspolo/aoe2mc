@@ -38,9 +38,11 @@
 {"name": "aoe2mc.controls.menu", "en_us": "Game menu: right click with the book Game menu (hotbar key 4): diplomacy and tribute, flare, save, pause and the tech tree."}
 {"name": "aoe2mc.controls.groups", "en_us": "Control groups: select units, take a group item (hotbar keys 5 to 9) and Shift + right click to save the selection. Right click: select the group."}
 {"name": "aoe2mc.defeat", "en_us": "Defeat"}
-{"name": "aoe2mc.editor.start", "en_us": "Map editor: write palette in the chat to place objects, players to set the players, remove to remove the object that you look at, save to save the map."}
+{"name": "aoe2mc.editor.start", "en_us": "Map editor: write palette in the chat to place objects, players to set the players, remove to remove the object that you look at, save to save the map, test to make a test world."}
 {"name": "aoe2mc.editor.no_match", "en_us": "No object of the palette has the word %s."}
+{"name": "aoe2mc.editor.converting", "en_us": "Converting the map to a test world ..."}
 {"name": "aoe2mc.editor.saved", "en_us": "Saved the map: %s"}
+{"name": "aoe2mc.editor.test", "en_us": "Test world: %s. Play it with: %s"}
 {"name": "aoe2mc.editor.options.buildings", "en_us": "Buildings"}
 {"name": "aoe2mc.editor.options.disabled", "en_us": "Disabled"}
 {"name": "aoe2mc.editor.options.enabled", "en_us": "Click: disable"}

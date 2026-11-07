@@ -43,6 +43,7 @@ MESSAGES = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> messages\s*$") 
 OPTIONS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> options\s*$")   # the options menu (#6085)
 PLAYERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> players\s*$")   # the players menu (#6003)
 TRIGGERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> triggers\s*$")   # the trigger menu (#6088)
+TEST = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> test\s*$")   # save and convert to a test world (#6081)
 CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> save\s*$")   # the chat word, as the server logs it
 
 
@@ -86,6 +87,29 @@ PAGE = 45                                                              # items p
 TAB_ICONS = ("armor_stand", "bricks", "gold_ore", "tuff", "golden_helmet", "flower_pot")      # Units, Buildings, Resources, Cliffs, Heroes, Gaia
 GAIA_MARKS = tuple(r["name"] for r in table.load("editor_gaia.jsonl"))   # name parts that place_objects draws (#6036)
 PLAYER = 1                                                             # the first current player
+
+
+def new_world(world, size, terrain="GRASS_1", players=2):
+    """A new empty map (#6077): all tiles of the terrain (default GRASS_1), players human players (1 to 8), converted
+    into world. An unknown terrain or a player count out of range raises ValueError (#6078)."""
+    import difflib
+
+    import scenarios
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
+
+    import aoe2mc
+    if terrain not in TerrainId.__members__:
+        close = ", ".join(difflib.get_close_matches(terrain, TerrainId.__members__, n=3))
+        raise ValueError(f"unknown terrain {terrain!r}" + (f": did you mean {close}?" if close else ""))
+    if not 1 <= players <= 8:
+        raise ValueError(f"--players {players}: give 1 to 8 players")
+    scn = scenarios.new_scenario(size)
+    scn.player_manager.active_players = players
+    for t in scn.map_manager.terrain:
+        t.terrain_id = TerrainId[terrain].value
+    src = scenarios.save(scn, os.path.abspath(world).rstrip(os.sep) + ".new.aoe2scenario")
+    aoe2mc.convert(src, world)
+    return world
 
 
 @functools.lru_cache(maxsize=None)                                   # the data does not change while the editor runs (#6056)
@@ -534,6 +558,21 @@ def save(game, out, state=None):
     return path
 
 
+def test_world(game, out, state=None):
+    """Save the map to out, then convert it into a fresh world <world>-test (#6081). Returns the folder."""
+    import shutil
+
+    import aoe2mc
+    game.command("tellraw @a " + json.dumps(lang.text("aoe2mc.editor.converting", color="yellow")))   # it takes seconds (P9)
+    path = save(game, out, state)
+    world = os.path.abspath(game.world).rstrip(os.sep) + "-test"
+    shutil.rmtree(world, ignore_errors=True)                           # a fresh folder each time
+    aoe2mc.convert(path, world)
+    play = f"python3 game/run.py {world} --play --mode scenario"
+    game.command("tellraw @a " + json.dumps(lang.text("aoe2mc.editor.test", world, play, color="green")))
+    return world
+
+
 def words(game, seen):
     """(the new log length, the count of `save` chat lines in the log after seen)."""
     log = game.server.log
@@ -606,6 +645,8 @@ def run(game, out, alive, state=None):
                 players_menu(state, m.group(1))
             if m := TRIGGERS.search(line):
                 triggers_menu(state, m.group(1))
+            if TEST.search(line):
+                print(f"Test world: {test_world(game, out, state)}")
             if m := OPTIONS.search(line):
                 options_menu(state, m.group(1))
         seen, n = words(game, seen)

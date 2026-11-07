@@ -47,7 +47,7 @@ def test_the_export_keeps_the_options_mood_and_cinematics(tmp_path):
 
     with open(os.path.join(tmp_path, "W", "aoe2mc.json")) as f:
         data = json.load(f)
-    os.remove(os.path.join(tmp_path, "W", data["source"]))            # no source: the defaults, as before
+    os.remove(os.path.join(tmp_path, "W", data["source"]))            # no source: the json gives the disabled objects (#6084)
     with contextlib.redirect_stdout(io.StringIO()):
         out = export.export(str(tmp_path / "W"), str(tmp_path / "plain.aoe2scenario"))
-    assert values(read(out))[:4] == ([], [], [], False)
+    assert values(read(out))[:4] == ([22, 101], [4], [12], False)

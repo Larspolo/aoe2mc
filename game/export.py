@@ -355,6 +355,7 @@ def export(path, out, heights=False):
     src = source(world, data)
     if src is not None:
         settings(scn, src, players)
+    options(scn, data, players)                                 # the editor's values win (#6084)
     keep = src is not None and bool(src.trigger_manager.triggers or src.trigger_manager.variables)
     top = max((o["ref"] for o in data["objects"] if o.get("ref") is not None), default=-1)
     refs = set()
@@ -415,6 +416,30 @@ def settings(scn, src, players):
         for k in (b.retriever_map if a is not None and b is not None else ()):
             if k in a.retriever_map:
                 copy(a, b, k)
+
+
+def options(scn, data, players):
+    """The disabled technologies, buildings and units of each player, and the color mood, of aoe2mc.json (#6084): the
+    editor sets them, so they win over the source. A name that no dataset knows gives one line and is skipped."""
+    from AoE2ScenarioParser.datasets.buildings import BuildingInfo
+    from AoE2ScenarioParser.datasets.trigger_lists import ColorMood
+    techs = {name: tid for tid, name in aoe2mc.tech_names().items()}
+    for p in players:
+        pl = scn.player_manager.players[p]
+        ids = ([], [], [])                                  # techs, buildings, units (the json sorts the names)
+        for name in data["players"][str(p)].get("disabled", ()):
+            if name in techs:
+                ids[0].append(techs[name])
+            elif name in BuildingInfo.__members__:
+                ids[1].append(BuildingInfo[name].ID)
+            elif (uid := unit_id(name)) is not None:
+                ids[2].append(uid)
+            else:
+                print(f"player {p}: the disabled object {name!r} is unknown: not exported")
+        pl.disabled_techs, pl.disabled_buildings, pl.disabled_units = (sorted(v) for v in ids)
+    mood = data.get("mood", "DEFAULT")
+    if mood != "DEFAULT" and mood in ColorMood.__members__:
+        scn.map_manager.map_color_mood = ColorMood[mood]
 
 
 def object_refs(trigger):
