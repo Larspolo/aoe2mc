@@ -143,8 +143,11 @@ friends download the resource pack from GitHub.
    where you look.
 4. Look at an object and type `remove` in the chat to remove it.
 5. Type `players` in the chat to open the players menu: select the current player (the owner of the next object), the
-   civilization, the start resources and the starting age.
-6. Type `save` in the chat. The editor writes `MyMap.aoe2scenario`. Stop the server (Ctrl-C) to save it one more time.
+   civilization, the start resources and the starting age. Click the team item (white wool) to give the current player
+   the next team (1 to 4, or none). Click the victory item (gold block) to select the next victory condition.
+6. Type `messages` in the chat to get a book and quill for each scenario text (instructions, hints, victory, loss,
+   history, scouts). Write the text in the book. Keep the books in your inventory until you save.
+7. Type `save` in the chat. The editor writes `MyMap.aoe2scenario`. Stop the server (Ctrl-C) to save it one more time.
    Convert the map as in step 2, or open it in AoE2 DE.
 
 ## 4. Controls
