@@ -272,9 +272,10 @@ def raised(world, data, elevation):
 def unit_id(name):
     """The AoE2 ID of a unit, building or other object name of AoE2ScenarioParser, or None."""
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
+    from AoE2ScenarioParser.datasets.heroes import HeroInfo
     from AoE2ScenarioParser.datasets.other import OtherInfo
     from AoE2ScenarioParser.datasets.units import UnitInfo
-    for info in (UnitInfo, BuildingInfo, OtherInfo):
+    for info in (UnitInfo, HeroInfo, BuildingInfo, OtherInfo):
         if name in info.__members__:
             return info[name].ID
     return None
@@ -331,6 +332,9 @@ def export(path, out, heights=False):
             if "age" in info:                               # "feudal" in aoe2mc.json, as the setup of the world
                 pl.starting_age = StartingAge[info["age"].upper().replace("-", "_") + "_AGE"]
     victory(scn, data.get("victory"))
+    for k, text in data.get("messages", {}).items():        # the texts of the book (#6028); objectives: no field
+        if hasattr(scn.message_manager, k):
+            setattr(scn.message_manager, k, text)
     from AoE2ScenarioParser.datasets.players import PlayerId
     with contextlib.redirect_stdout(io.StringIO()):
         for o in objects(data, state, positions(world)):
