@@ -62,7 +62,7 @@ class State:
 
 HIGH = 40                                                              # blocks over the ground that remove clears
 PAGE = 45                                                              # items per page; the last row: the tabs
-TAB_ICONS = ("armor_stand", "bricks", "gold_ore", "tuff", "decorated_pot")   # Units, Buildings, Resources, Cliffs, Gaia
+TAB_ICONS = ("armor_stand", "bricks", "gold_ore", "tuff", "golden_helmet", "decorated_pot")   # Units, Buildings, Resources, Cliffs, Heroes, Gaia
 GAIA_MARKS = tuple(r["name"] for r in table.load("editor_gaia.jsonl"))   # name parts that place_objects draws (#6036)
 PLAYER = 1                                                             # the first current player
 
@@ -70,17 +70,23 @@ PLAYER = 1                                                             # the fir
 def tabs():
     """The palette tabs (#6013): [(tab, [object names])], from the data files: the units of train, the buildings of
     the build menu, the mines, fish and hunts of gather, the forest trees and the bushes of
-    rmap (#6016). Only names with an AoE2 unit ID (export.unit_id)."""
+    rmap (#6016); at the end of the units the other units of AoE2ScenarioParser (the king, Gaia, ships), and the heroes
+    (#6035). Only names with an AoE2 unit ID (export.unit_id) that units.py can show (units.classify)."""
     import build
     import train
+    from AoE2ScenarioParser.datasets.heroes import HeroInfo
+    from AoE2ScenarioParser.datasets.units import UnitInfo
 
     import rmap
+    import units
     known = lambda names: [n for n in dict.fromkeys(names) if export.unit_id(n) is not None]   # noqa: E731
-    return [("units", known(r["name"] for r in train.UNIT_ROWS)), ("buildings", known(build.MENU)),
+    shown = lambda names, hero=False: [n for n in known(names) if units.classify(n, hero)]   # noqa: E731
+    return [("units", known([r["name"] for r in train.UNIT_ROWS] + shown(e.name for e in UnitInfo))),
+            ("buildings", known(build.MENU)),
             ("resources", known([t["name"] for t in gather.ROWS if {"mine", "fish", "hunt"} & set(t)] +
                                  sorted(set(rmap.FOREST_TREES.values())) +
                                  [n for n in sorted(rmap.OBJECTS) if "BUSH" in n])),
-            ("cliffs", cliffs()), ("gaia", known(gaia_names()))]
+            ("cliffs", cliffs()), ("heroes", shown((e.name for e in HeroInfo), True)), ("gaia", known(gaia_names()))]
 
 
 def cliffs():
@@ -133,7 +139,7 @@ def kind(name):
     """"B" (a building), "U" (a unit or an animal: an entity) or "O" (another object: its blocks), as the converter
     (aoe2mc.object_kinds)."""
     import aoe2mc
-    return aoe2mc.object_kinds(old=False).get(export.unit_id(name), ("U",))[0][:1]
+    return aoe2mc.object_kinds(old=False).get(export.unit_id(name), ("U",))[0][:1].replace("H", "U")   # a hero: an entity
 
 
 def place(g, player, name, eye, d):
@@ -189,7 +195,8 @@ def place_at(g, player, name, cell):
         x, z = (x0 + x1) // 2, (z0 + z1) // 2
         pos = (x + 0.5, float(g.map.y(x, z)), z + 0.5)
         players = {int(p): v for p, v in g.data.get("players", {}).items()}
-        nbt = units.make_entity(dict(name=name, player=owner, rotation=0.0), players, pos, np.random.default_rng())
+        hero = name in dict(tabs())["heroes"]
+        nbt = units.make_entity(dict(name=name, player=owner, rotation=0.0, hero=hero), players, pos, np.random.default_rng())
         if nbt is None:
             return None
         kind_id = str(nbt.pop("id"))

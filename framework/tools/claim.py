@@ -445,7 +445,7 @@ def refill_starved():
         ready = len(dashboard.candidates(issues, reserved=()))
         return target is not None and ready < target and \
             not usage.refill_need(ready, target, issues, usage.release_due, lambda: [], usage.free_sources,
-                                 closing=usage.autoclosing)
+                                 closing=usage.autoclosing, orphans=lambda: dashboard.orphans(issues))
     except Exception as e:                                         # a quota, GitHub or file error
         print(f"refill sources: {e}", file=sys.stderr)
         return False
