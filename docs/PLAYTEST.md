@@ -132,6 +132,21 @@ For example: `python3 game/run.py OUTWorld --play --host --invite Alex,Sam --add
 The resource pack URL uses the address of `--address`, so the friends can download the pack. With the installer, the
 friends download the resource pack from GitHub.
 
+### Make a map with the editor
+
+1. Make a world (step 2), then start the editor: `python3 game/run.py MyWorld --editor MyMap.aoe2scenario`.
+   The game time does not start. You are in creative mode.
+2. Paint the terrain with blocks of the creative inventory: the top block of a tile gives its AoE2 terrain. For water,
+   put sand (shallow) or gravel (deep) under the water. Add or remove 3 blocks of height to change the elevation of a
+   tile by one level.
+3. Type `palette` in the chat to open the palette: tabs Units, Buildings and Resources. Right-click an object to put it
+   where you look.
+4. Look at an object and type `remove` in the chat to remove it.
+5. Type `players` in the chat to open the players menu: select the current player (the owner of the next object), the
+   civilization, the start resources and the starting age.
+6. Type `save` in the chat. The editor writes `MyMap.aoe2scenario`. Stop the server (Ctrl-C) to save it one more time.
+   Convert the map as in step 2, or open it in AoE2 DE.
+
 ## 4. Controls
 
 Hold the carrot on a stick. The action bar at the bottom of the screen always shows the next possible step. The
