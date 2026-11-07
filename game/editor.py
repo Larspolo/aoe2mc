@@ -313,14 +313,18 @@ def chapters():
 
 
 def books(g, player):
-    """Give player a book and quill for each chapter (#6032), with the text of "messages" (pages of 1024 chars)."""
+    """Give player a book and quill for each chapter (#6032), with the text of "messages" (pages of 1024 chars). A
+    text longer than one RCON command (rcon.MAX) gets no book, so the save keeps it whole."""
+    import rcon
     g.writers.add(player)
     texts = g.data.get("messages", {})
     for k, title in chapters().items():
         t = texts.get(k, "")
         pages = ",".join("{raw:%s}" % json.dumps(t[i:i + 1024]) for i in range(0, len(t), 1024))
-        g.command(f"give {player} minecraft:writable_book[custom_name={json.dumps(title)},"
-                  f"custom_data={{aoe_msg:\"{k}\"}},writable_book_content={{pages:[{pages}]}}]")
+        cmd = (f"give {player} minecraft:writable_book[custom_name={json.dumps(title)},"
+               f"custom_data={{aoe_msg:\"{k}\"}},writable_book_content={{pages:[{pages}]}}]")
+        if len(cmd.encode()) <= rcon.MAX:
+            g.command(cmd)
 
 
 TEXT = re.compile(r"""raw:\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')""")

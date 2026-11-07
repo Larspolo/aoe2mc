@@ -50,10 +50,10 @@ def test_books_round_trip(tiny_world, tmp_path):
     world = str(tmp_path / "w")
     shutil.copytree(tiny_world[0], world)
     s = state_of(world)
-    s.data["messages"] = {"hints": "x" * 1500}
+    s.data["messages"] = {"hints": "x" * 1100, "loss": "x" * 5000}
     editor.books(s, "p")
     gives = [c for c in s.game.sent if c.startswith("give p minecraft:writable_book")]
-    assert len(gives) == len(editor.chapters())
+    assert len(gives) == len(editor.chapters()) - 1                 # the long loss text: no book
     assert any('aoe_msg:"hints"' in c and c.count("{raw:") == 2 for c in gives)
     answer = 'p has the following entity data: [{raw: "Mine \\"gold\\"."}, {raw: \'first\'}]'
     s.game.command = lambda c: answer if 'aoe_msg:"hints"' in c else "Found no elements matching"
