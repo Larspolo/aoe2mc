@@ -139,8 +139,9 @@ friends download the resource pack from GitHub.
 2. Paint the terrain with blocks of the creative inventory: the top block of a tile gives its AoE2 terrain. For water,
    put sand (shallow) or gravel (deep) under the water. Add or remove 3 blocks of height to change the elevation of a
    tile by one level.
-3. Type `palette` in the chat to open the palette: tabs Units, Buildings and Resources. Right-click an object to put it
-   where you look.
+3. Type `palette` in the chat to open the palette: tabs Units, Buildings, Resources, Cliffs, Heroes and Gaia (relics,
+   rocks, ruins and decor). Right-click an object to put it where you look. For a wall line, right-click a wall at the
+   start and again at the end: the editor puts a segment on each tile between them.
 4. Look at an object and type `remove` in the chat to remove it.
 5. Type `players` in the chat to open the players menu: select the current player (the owner of the next object), the
    civilization, the start resources and the starting age. Click the team item (white wool) to give the current player
