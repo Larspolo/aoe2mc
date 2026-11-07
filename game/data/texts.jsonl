@@ -43,6 +43,12 @@
 {"name": "aoe2mc.editor.converting", "en_us": "Converting the map to a test world ..."}
 {"name": "aoe2mc.editor.saved", "en_us": "Saved the map: %s"}
 {"name": "aoe2mc.editor.test", "en_us": "Test world: %s. Play it with: %s"}
+{"name": "aoe2mc.editor.options.buildings", "en_us": "Buildings"}
+{"name": "aoe2mc.editor.options.disabled", "en_us": "Disabled"}
+{"name": "aoe2mc.editor.options.enabled", "en_us": "Click: disable"}
+{"name": "aoe2mc.editor.options.technologies", "en_us": "Technologies"}
+{"name": "aoe2mc.editor.options.title", "en_us": "Options"}
+{"name": "aoe2mc.editor.options.units", "en_us": "Units"}
 {"name": "aoe2mc.flare.placed", "en_us": "%s: Flare at %s %s"}
 {"name": "aoe2mc.follow.refuse_follow", "en_us": "Follow: click an own unit"}
 {"name": "aoe2mc.follow.refuse_guard", "en_us": "Guard: click an own unit or building"}
