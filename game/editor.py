@@ -649,8 +649,9 @@ def field_values(kind):
 
 def fields(kind, part):
     """The (attribute, form) of the fields of a condition or effect, from the attributes of its type in the parser
-    (no list in code): form "number", "player", "bool", "text" or a dataset name. A reference to a unit, a variable or
-    a trigger, a list field and a field that shows another field get no item."""
+    (no list in code): form "number", "player", "bool", "text", "trigger" (trigger_id), "variable" (variable,
+    variable2, #6112) or a dataset name. A reference to a unit, a list field and a field that shows another field get
+    no item."""
     from AoE2ScenarioParser.datasets import conditions, effects
     ds = conditions if kind == "condition" else effects
     t = part.condition_type if kind == "condition" else part.effect_type
@@ -661,7 +662,9 @@ def fields(kind, part):
         get = getattr(getattr(type(part), a, None), "fget", None)       # item_id shows object_list_unit_id
         if a == kind + "_type" or not hasattr(part, a) or get and set(get.__code__.co_names) & (set(ds.attributes.get(t, ())) - {a}):
             continue
-        if f == "str":
+        if a in REFS:
+            out.append((a, REFS[a]))
+        elif f == "str":
             out.append((a, "text"))
         elif isinstance(v, list) or isinstance(v, str):
             continue
@@ -676,12 +679,31 @@ def fields(kind, part):
     return out
 
 
-def set_field(part, attr, form, shift=False, right=False):
+REFS = {"trigger_id": "trigger", "variable": "variable", "variable2": "variable"}   # parser attributes (#6112)
+VARIABLES = 256                                                        # AoE2 DE has the variables 0 to 255
+
+
+def ref_name(tm, form, v):
+    """The name of trigger or variable v of trigger manager tm ("Variable N" when the scenario has no name)."""
+    if form == "trigger":
+        t = next((t for t in tm.triggers if t.trigger_id == v), None)
+        return f"{v}: {t.name}" if t else f"{v}: -"
+    var = next((x for x in tm.variables if x.variable_id == v), None) if v is not None and v >= 0 else None
+    return f"{v}: {var.name}" if var else f"{v}: Variable {v}" if v is not None and v >= 0 else f"{v}: -"
+
+
+def set_field(part, attr, form, shift=False, right=False, tm=None):
     """One click on a field: a number +1 (shift +10, right click -1, not below -1), the next player (0 to 8), on/off,
-    or the next value of the dataset."""
+    the next trigger of tm or variable (right click: the one before), or the next value of the dataset."""
     v = getattr(part, attr)
     v = -1 if v is None else int(v)
-    if form == "number":
+    step = -1 if right else 1
+    if form == "trigger":
+        ids = [t.trigger_id for t in tm.triggers]
+        v = ids[(ids.index(v) + step) % len(ids)] if v in ids else ids[0 if step > 0 else -1] if ids else -1
+    elif form == "variable":
+        v = (v + step) % VARIABLES if v >= 0 else 0 if step > 0 else VARIABLES - 1
+    elif form == "number":
         v = max(-1, v + (-1 if right else 10 if shift else 1))
     elif form == "player":
         v = (max(v, 0) + 1) % 9
@@ -711,7 +733,8 @@ def fields_menu(g, player, at, index):
     tip = dict(number="Click: +1 · Shift click: +10 · Right click: -1", player="Click: next player",
                bool="Click: on/off", text="Click: get the book")
     items = [(i, "writable_book" if f == "text" else "player_head" if f == "player" else "comparator",
-              a.replace("_", " ").title(), f"{getattr(part, a)}\n" + tip.get(f, "Click: next · Right click: before"))
+              a.replace("_", " ").title(), (ref_name(g.scenario.trigger_manager, f, getattr(part, a)) if f in ("trigger", "variable")
+                                           else f"{getattr(part, a)}") + "\n" + tip.get(f, "Click: next · Right click: before"))
              for i, (a, f) in enumerate(fs[:PAGE])]
     items += [(BACK, "arrow", "Back", "")]
     if look_fields(part):
@@ -729,7 +752,7 @@ def fields_menu(g, player, at, index):
                 vars(g).setdefault("field_books", {})[f"{at}.{index}.{a}"] = (part, a)
                 field_book(g, p, f"{at}.{index}.{a}", f"{name.title()}: {a}", getattr(part, a) or "")
             else:
-                set_field(part, a, f, shift, right)
+                set_field(part, a, f, shift, right, g.scenario.trigger_manager)
                 g.edited = True
             return fields_menu(g, p, at, index)
         if slot == BACK:
