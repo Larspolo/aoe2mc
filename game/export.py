@@ -31,6 +31,7 @@ import build  # noqa: E402
 import savegame  # noqa: E402
 import scenarios  # noqa: E402
 from AoE2ScenarioParser.datasets.object_support import Civilization, StartingAge  # noqa: E402
+from AoE2ScenarioParser.datasets.trigger_lists import DiplomacyState  # noqa: E402
 
 import aoe2mc  # noqa: E402
 import units as unitlib  # noqa: E402
@@ -304,6 +305,18 @@ def export(path, out, heights=False):
         if civ in Civilization.__members__:
             scn.player_manager.players[p].civilization = Civilization[civ]
         pl, info = scn.player_manager.players[p], data["players"][str(p)]
+        pl.population_cap = int(info.get("pop_limit", 200))       # the tab "Players" of the editor (#6029)
+        pl.human = not info.get("computer", False)
+        pl.tribe_name = info.get("name", f"Player {p}")
+        pl.lock_civ = bool(info.get("lock_civ", False))
+        if info.get("ai"):
+            pl.ai_script = info["ai"]
+        for q in players:                       # the Diplomacy tab, as aoe2mc.scenario_teams reads it back
+            if q != p:
+                team = info.get("team")
+                ally = team is not None and team == data["players"][str(q)].get("team")
+                pl.set_player_diplomacy(q, DiplomacyState.ALLY if ally else DiplomacyState.NEUTRAL
+                                        if q in info.get("neutral", ()) else DiplomacyState.ENEMY)
         if state and str(p) in state.get("players", {}):           # the end of the game (#5673)
             s = state["players"][str(p)]
             for r in RESOURCES:
