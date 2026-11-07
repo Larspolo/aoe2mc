@@ -3099,8 +3099,24 @@ def write_region(path, chunks):
         f.write(header + body)
 
 
+SOURCE = "source.aoe2scenario"   # the copy of a DE source scenario in the world folder (#6031)
+
+
+def copy_source(src, out):
+    """Copy a DE scenario src into the world folder out (SOURCE): the export keeps its triggers (#6031). Returns the
+    file name, or None for another source (a record, a random map, an old format)."""
+    path = os.path.join(out, SOURCE)
+    if os.path.exists(path):
+        os.remove(path)                                 # of an earlier conversion into the same folder
+    if not str(src).lower().endswith(".aoe2scenario") or old_format(src):
+        return None
+    shutil.copyfile(src, path)
+    return SOURCE
+
+
 def write_objects(path, size, T, H, players, objects, cols, ground, timeline=None, mood="DEFAULT", map_ground=None,
-                  victory=None, messages=None, lists=None, yaw=SPAWN_YAW, views=None, lobby=None, terrain=None, elevation=None):
+                  victory=None, messages=None, lists=None, yaw=SPAWN_YAW, views=None, lobby=None, terrain=None, elevation=None,
+                  source=None):
     """aoe2mc.json: the data that a game program needs (docs/research/gameplay.md). Tiles are in the turned grid
     (--orientation): block x = tile x × T, block z = tile y × T. Units have the UUID of their entity, buildings
     their footprint [x0, z0, x1, z1) in blocks. Objects of a recorded game have their object ID ("ref").
@@ -3125,6 +3141,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
     "start" of a player: the block (x, y, z) where its person starts (its start view, #3344); "yaw": the spawn yaw.
     views (recorded games with view locks only, #4767): {"views": the view locks of the recorder (read_timeline, tiles
     in the turned grid), "recorder": its player number}: the keys "views" and "recorder", out of "timeline" (APM).
+    "source" (DE scenarios only): the file name of the copy of the source scenario in the world folder (SOURCE): the
+    export gives its triggers and variables back (game/export.py, #6031).
     "lobby" (recorded games of the mgz model only, #4832): the lobby settings {"type", "dataset", "starting_age",
     "population", "all_techs", "reveal"}; of a random map script (#4825): {"map_size": the lobby name (else the
     tiles), "mode": --game-mode, "script": the file name stem of the script}."""
@@ -3177,6 +3195,8 @@ def write_objects(path, size, T, H, players, objects, cols, ground, timeline=Non
         data["map_ground"] = [bytes(row).hex() for row in np.asarray(map_ground, np.uint8)]
     if buildings.TURN:                                  # the game program turns its buildings with the map (#3035)
         data["turn"] = buildings.TURN
+    if source:
+        data["source"] = source
     with open(path, "w") as f:
         json.dump(data, f, indent=1)
 
@@ -6674,7 +6694,7 @@ def _convert(src, out, T, H, name, seed, preview, arch, player_arch, with_units,
                   ({"ai_files": texts["ai_files"]} if texts.get("ai_files") else {}) |
                   ({"timers": timer_list(texts.get("triggers", []), T, ground, players)} if record else {}), yaw,
                   views and {"views": views, "recorder": record_state["recorder"]}, texts.get("lobby"),
-                  terrain, elevation)
+                  terrain, elevation, copy_source(src, out))
     triggers, tstats = texts.get("triggers", []), Counter()
     haze = FOG.get(texts.get("mood")) if mood == "on" and (fog or ambience == "full") else None
     n, amb = write_datapack(out, objects, ground, cols.biome_names, ambience, players, triggers, T, tstats, haze,
