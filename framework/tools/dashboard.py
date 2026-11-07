@@ -45,9 +45,10 @@ def labels(issue):
 
 
 def depends(issue):
-    """Numbers in the "Depends on: #a, #b" lines of the issue body (at the start of a line or of a list item, not in text, #5791)."""
+    """Numbers in the "Depends on: #a, #b" lines of the issue body (at the start of a line or of a list item, not in text, #5791).
+    A note in parentheses is no dependency: "(the epic #6001 closes ...)" made a ticket wait for its own epic (deadlock)."""
     lines = re.findall(r"^[ \t]*(?:[-*][ \t]+)?Depends on:([^\n]*)", issue.get("body") or "", re.M)
-    return [int(n) for line in lines for n in re.findall(r"#(\d+)", line)]
+    return [int(n) for line in lines for n in re.findall(r"#(\d+)", re.sub(r"\([^)]*\)?", "", line))]
 
 
 def start_after(issue):
