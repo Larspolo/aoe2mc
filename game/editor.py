@@ -484,7 +484,11 @@ def read_books(g):
                             f'{{aoe_field:"{key}"}}}}}}].components."minecraft:writable_book_content".pages') or ""
             if "has the following" in out:
                 text = "".join(unquote(q) for q in TEXT.findall(out))
-                if text or not hasattr(part, "trigger_id"):                  # an empty name keeps the old one (#6111)
+                if isinstance(attr, int):                                    # a variable: its name (#6115)
+                    if text:
+                        name_variable(part, attr, text)
+                        g.edited = True
+                elif text or not hasattr(part, "trigger_id"):                  # an empty name keeps the old one (#6111)
                     setattr(part, attr, text)
                     g.edited = True
 
@@ -726,6 +730,20 @@ def set_field(part, attr, form, shift=False, right=False, tm=None):
     return v
 
 
+def variable_name(tm, v):
+    """The name of variable v of trigger manager tm, or "" when the scenario has none (#6115)."""
+    return next((x.name for x in tm.variables if x.variable_id == v), "")
+
+
+def name_variable(tm, v, text):
+    """Set the name of variable v of tm; the variable is added when the scenario has none yet (#6115)."""
+    var = next((x for x in tm.variables if x.variable_id == v), None)
+    if var is not None:
+        var.name = text
+    else:
+        tm.add_variable(text, v)
+
+
 def field_book(g, player, key, title, text):
     """Give player a book and quill for a text field (as books()); read_books reads it into the field by key."""
     g.writers.add(player)
@@ -761,6 +779,10 @@ def fields_menu(g, player, at, index):
             if f == "text":
                 vars(g).setdefault("field_books", {})[f"{at}.{index}.{a}"] = (part, a)
                 field_book(g, p, f"{at}.{index}.{a}", f"{name.title()}: {a}", getattr(part, a) or "")
+            elif f == "variable" and shift and getattr(part, a) not in (None, -1):   # a book: its name (#6115)
+                tm, v = g.scenario.trigger_manager, getattr(part, a)
+                vars(g).setdefault("field_books", {})[f"{at}.{index}.{a}"] = (tm, v)
+                field_book(g, p, f"{at}.{index}.{a}", f"Variable {v}", variable_name(tm, v))
             else:
                 set_field(part, a, f, shift, right, g.scenario.trigger_manager)
                 g.edited = True
