@@ -122,7 +122,8 @@ def objects(data, state, pos):
         if (i := unit_id(s["name"])) is not None and not any(tuple(o.get("footprint", ())) == (x0, z0, x1, z1)
                                                              for o in data["objects"]):
             out.append({"id": i, "player": s["player"], "tile": ((x0 + x1) / 2 / T, (z0 + z1) / 2 / T), "rotation": 0.0})
-    out += [{"id": int(o["id"]), "player": int(o["player"]), "tile": tuple(o["tile"]), "rotation": 0.0} for o in placed]
+    out += [{"id": int(o["id"]), "player": int(o["player"]), "tile": tuple(o["tile"]), "rotation": 0.0, "ref": o.get("ref"), "placed": True}
+            for o in placed]                                               # the stable ref of the editor (#6107)
     import aoe2mc  # the tiles of the world are turned (#5674)
     back, turn = (4 - data.get("turn", 0)) % 4, data.get("turn", 0)
     for o in out:
