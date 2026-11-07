@@ -41,6 +41,12 @@
 {"name": "aoe2mc.editor.start", "en_us": "Map editor: write palette in the chat to place objects, players to set the players, remove to remove the object that you look at, save to save the map."}
 {"name": "aoe2mc.editor.no_match", "en_us": "No object of the palette has the word %s."}
 {"name": "aoe2mc.editor.saved", "en_us": "Saved the map: %s"}
+{"name": "aoe2mc.editor.options.buildings", "en_us": "Buildings"}
+{"name": "aoe2mc.editor.options.disabled", "en_us": "Disabled"}
+{"name": "aoe2mc.editor.options.enabled", "en_us": "Click: disable"}
+{"name": "aoe2mc.editor.options.technologies", "en_us": "Technologies"}
+{"name": "aoe2mc.editor.options.title", "en_us": "Options"}
+{"name": "aoe2mc.editor.options.units", "en_us": "Units"}
 {"name": "aoe2mc.flare.placed", "en_us": "%s: Flare at %s %s"}
 {"name": "aoe2mc.follow.refuse_follow", "en_us": "Follow: click an own unit"}
 {"name": "aoe2mc.follow.refuse_guard", "en_us": "Guard: click an own unit or building"}

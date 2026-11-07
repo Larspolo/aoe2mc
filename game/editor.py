@@ -20,6 +20,8 @@ the books back into "messages" of aoe2mc.json.
 The chat word `triggers` opens the trigger menu (#6088): add, turn on and off, loop and remove a trigger. The triggers
 live in the AoE2ScenarioParser scenario of the world (State.scenario: the source copy, else a new one); save writes it
 as the source of the save folder, and export.triggers() copies it.
+The chat word `options` opens the options menu (#6085): it disables technologies, buildings and units of the current
+player ("disabled" of its entry in aoe2mc.json, as read_scenario writes it).
 """
 import functools
 import json
@@ -38,6 +40,7 @@ import table
 REMOVE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> remove\s*$")    # the chat word of remove (#6002)
 PALETTE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> palette(?:\s+(.*?))?\s*$")   # the chat word of the palette (#6013); a word searches (#6058)
 MESSAGES = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> messages\s*$")   # the books of the texts (#6032)
+OPTIONS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> options\s*$")   # the options menu (#6085)
 PLAYERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> players\s*$")   # the players menu (#6003)
 TRIGGERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> triggers\s*$")   # the trigger menu (#6088)
 CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> save\s*$")   # the chat word, as the server logs it
@@ -542,6 +545,48 @@ def tick(state):
     return menu.clicks(state) if state.menus else []
 
 
+OPTION_TABS = ("technologies", "buildings", "units")                    # the tabs of the options menu (#6085)
+OPTION_ICONS = ("enchanted_book", "bricks", "armor_stand")
+
+
+def option_names(tab):
+    """The names of options tab: the technologies that a player can research (train.TECHS), or the palette objects."""
+    if OPTION_TABS[tab] == "technologies":
+        import train
+        return sorted(train.TECHS)
+    return dict(tabs())[OPTION_TABS[tab]]
+
+
+def options_menu(g, player, tab=0, page=0):
+    """The options menu (#6085), as the Options tab of the AoE2 editor: a click disables an item of the current
+    player, a second click enables it again ("disabled" of its entry in aoe2mc.json, sorted as read_scenario writes it)."""
+    import build
+    names = option_names(tab)
+    pages = max(1, -(-len(names) // PAGE))
+    shown = names[page * PAGE:(page + 1) * PAGE]
+    me = info(g, g.player)
+    word = lambda k: lang.text(f"aoe2mc.editor.options.{k}")["fallback"]   # noqa: E731  a menu takes plain text
+    off = set(me.get("disabled", ()))
+
+    def click(p, slot, shift, right=False):
+        if slot < len(shown):
+            off.symmetric_difference_update({shown[slot]})
+            me["disabled"] = sorted(off)
+            options_menu(g, p, tab, page)
+        elif PAGE <= slot < PAGE + len(OPTION_TABS):
+            options_menu(g, p, slot - PAGE)
+        elif slot in (PAGE + len(OPTION_TABS), PAGE + len(OPTION_TABS) + 1):
+            options_menu(g, p, tab, (page + (1 if slot == PAGE + len(OPTION_TABS) + 1 else -1)) % pages)
+    items = [(i, "barrier" if n in off else build.ICONS.get(n) or icons().get(n) or OPTION_ICONS[tab], build.pretty(n),
+              word("disabled" if n in off else "enabled"))
+             for i, n in enumerate(shown)]
+    items += [(PAGE + k, OPTION_ICONS[k], word(t), "") for k, t in enumerate(OPTION_TABS)]
+    if pages > 1:
+        items += [(PAGE + len(OPTION_TABS), "arrow", "<", f"{page + 1}/{pages}"),
+                  (PAGE + len(OPTION_TABS) + 1, "spectral_arrow", ">", f"{page + 1}/{pages}")]
+    return menu.show(g, player, word("title"), items, click)
+
+
 def run(game, out, alive, state=None):
     """Answer the chat word `save` and the menu clicks while alive() (the console thread of run.main is alive)."""
     state = state or State(game)
@@ -561,6 +606,8 @@ def run(game, out, alive, state=None):
                 players_menu(state, m.group(1))
             if m := TRIGGERS.search(line):
                 triggers_menu(state, m.group(1))
+            if m := OPTIONS.search(line):
+                options_menu(state, m.group(1))
         seen, n = words(game, seen)
         if n:
             print(f"Saved the map: {save(game, out, state)}")
