@@ -36,7 +36,8 @@ row), and these kinds of work (the owner moved them first, #4175):
 The ranking after v0.1.0 (#5582) put the held features of the other kinds into v0.2.0 (their rows are level `A`), and
 the ranking after v0.2.0 (#5889) put `play:network` into v0.3.0 (`convert:editor` waits), and the ranking after
 v0.4.0 (#5997) put `convert:editor` into v0.5.0 (epic #5998), and the ranking after v0.5.0 (#6024) put
-`convert:export-scenario` and `convert:editor-objects` into v0.6.0. A new
+`convert:export-scenario` and `convert:editor-objects` into v0.6.0, and the ranking after v0.6.0 (#6064) put
+`convert:editor-new`, `convert:editor-test`, `convert:editor-options` and `convert:editor-triggers` into v0.7.0. A new
 feature of these kinds that is not a sub-issue of a ranked epic still waits by the rules below.
 
 Work that started goes on: a ticket with `in-progress` or an open PR gets no `after-release`. Let it finish and merge,
@@ -135,6 +136,10 @@ decision follows it. The roadmap review checks that each held ticket fits a kind
 | `convert:editor` | A | 5 | | |
 | `convert:export-scenario` | A | 5 | | |
 | `convert:editor-objects` | A | 4 | | |
+| `convert:editor-new` | A | 3 | | |
+| `convert:editor-test` | A | 4 | | |
+| `convert:editor-options` | A | 4 | | |
+| `convert:editor-triggers` | A | 8 | | |
 | `convert:resource-pack` | C | | | |
 | `convert:trigger-gaps` | C | | | |
 | `convert-check-maps` | B | 5 | A test set of 20 real maps (the ranked map pool, 3 campaigns, 2 old .scx scenarios) converts with no error, no unit in a block and no load error on a server | #2274 |
