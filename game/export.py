@@ -285,6 +285,21 @@ def unit_id(name):
     return None
 
 
+def victory(scn, win):
+    """Set the tab "Global Victory" of scn from "victory" of aoe2mc.json: the inverse of read_scenario (#6030)."""
+    if not win:
+        return
+    from AoE2ScenarioParser.datasets.trigger_lists import SecondaryGameMode, VictoryCondition
+    om = scn.option_manager
+    om.victory_condition = VictoryCondition[win["condition"].upper().replace("-", "_")].value
+    if "score" in win:
+        om.victory_score = int(win["score"])
+    if "years" in win:
+        om.victory_years = int(win["years"])
+    if win.get("modes"):
+        om.secondary_game_modes = sum(SecondaryGameMode[m.upper().replace("-", "_")].value for m in win["modes"])
+
+
 def export(path, out, heights=False):
     """Write the scenario of the world or save folder path to out. Returns out. heights: a tile whose ground height
     the person changed gets the new elevation (the editor, #6000)."""
@@ -332,6 +347,7 @@ def export(path, out, heights=False):
                 setattr(pl, r, int(v))
             if "age" in info:                               # "feudal" in aoe2mc.json, as the setup of the world
                 pl.starting_age = StartingAge[info["age"].upper().replace("-", "_") + "_AGE"]
+    victory(scn, data.get("victory"))
     for k, text in data.get("messages", {}).items():        # the texts of the book (#6028); objectives: no field
         if hasattr(scn.message_manager, k):
             setattr(scn.message_manager, k, text)
