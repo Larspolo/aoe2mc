@@ -651,20 +651,25 @@ def fields(kind, part):
     """The (attribute, form) of the fields of a condition or effect, from the attributes of its type in the parser
     (no list in code): form "number", "player", "bool", "text", "trigger" (trigger_id), "variable" (variable,
     variable2, #6112) or a dataset name. A reference to a unit, a list field and a field that shows another field get
-    no item."""
+    no item. Quantity is the amount; an armor or attack effect has the amount and class in its place (#6113).
+    A text with no presentation (message_option1) is a text too."""
     from AoE2ScenarioParser.datasets import conditions, effects
     ds = conditions if kind == "condition" else effects
     t = part.condition_type if kind == "condition" else part.effect_type
     shown = {**ds.attribute_presentation.get(-1, {}), **ds.attribute_presentation.get(t, {})}
-    out = []
+    out, aa = [], getattr(part, "_armour_attack_source", None) == "quantity"
     for a in ds.attributes.get(t, ()):
+        if a in AMOUNTS:                                                # the parser merges them (_merge_aa_values)
+            if (a == "quantity") != aa:
+                out.append((a, AMOUNTS[a]))
+            continue
         f, v = shown.get(a, ""), getattr(part, a, None)
         get = getattr(getattr(type(part), a, None), "fget", None)       # item_id shows object_list_unit_id
         if a == kind + "_type" or not hasattr(part, a) or get and set(get.__code__.co_names) & (set(ds.attributes.get(t, ())) - {a}):
             continue
         if a in REFS:
             out.append((a, REFS[a]))
-        elif f == "str":
+        elif f == "str" or f == "" and isinstance(v, str):
             out.append((a, "text"))
         elif isinstance(v, list) or isinstance(v, str):
             continue
@@ -679,6 +684,8 @@ def fields(kind, part):
     return out
 
 
+AMOUNTS = {"armour_attack_class": "DamageClass", "armour_attack_quantity": "number", "quantity": "number"}  # #6113
+LABELS = {"armour_attack_class": "Class", "armour_attack_quantity": "Amount", "quantity": "Amount"}      # as AoE2 DE
 REFS = {"trigger_id": "trigger", "variable": "variable", "variable2": "variable"}   # parser attributes (#6112)
 VARIABLES = 256                                                        # AoE2 DE has the variables 0 to 255
 
@@ -696,7 +703,7 @@ def set_field(part, attr, form, shift=False, right=False, tm=None):
     """One click on a field: a number +1 (shift +10, right click -1, not below -1), the next player (0 to 8), on/off,
     the next trigger of tm or variable (right click: the one before), or the next value of the dataset."""
     v = getattr(part, attr)
-    v = -1 if v is None else int(v)
+    v = -1 if v is None or v == [] else int(v)                         # [] : no armor or attack value yet
     step = -1 if right else 1
     if form == "trigger":
         ids = [t.trigger_id for t in tm.triggers]
@@ -713,6 +720,9 @@ def set_field(part, attr, form, shift=False, right=False, tm=None):
         vals = field_values(form)
         v = vals[(vals.index(v) + (-1 if right else 1)) % len(vals)] if v in vals else vals[0]
     setattr(part, attr, v)
+    for a in ("armour_attack_class", "armour_attack_quantity"):     # the parser merges both: none may stay empty
+        if attr in AMOUNTS and attr != "quantity" and getattr(part, a) in (None, []):
+            setattr(part, a, 0)
     return v
 
 
@@ -733,7 +743,7 @@ def fields_menu(g, player, at, index):
     tip = dict(number="Click: +1 · Shift click: +10 · Right click: -1", player="Click: next player",
                bool="Click: on/off", text="Click: get the book")
     items = [(i, "writable_book" if f == "text" else "player_head" if f == "player" else "comparator",
-              a.replace("_", " ").title(), (ref_name(g.scenario.trigger_manager, f, getattr(part, a)) if f in ("trigger", "variable")
+              LABELS.get(a, a.replace("_", " ").title()), (ref_name(g.scenario.trigger_manager, f, getattr(part, a)) if f in ("trigger", "variable")
                                            else f"{getattr(part, a)}") + "\n" + tip.get(f, "Click: next · Right click: before"))
              for i, (a, f) in enumerate(fs[:PAGE])]
     items += [(BACK, "arrow", "Back", "")]
