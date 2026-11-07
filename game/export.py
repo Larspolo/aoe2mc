@@ -70,6 +70,7 @@ def objects(data, state, pos):
     editor has only "placed": the objects that the person placed (editor.State, #6012), no game state."""
     T, out = data["tile_size"], []
     placed = (state or {}).get("placed", [])
+    removed = set((state or {}).get("removed", []))                    # start objects removed in the editor (#6002)
     state = state if state and "players" in state else None
     live = alive(state) if state else None
     ruins, empty, done = set(), set(), []
@@ -85,7 +86,9 @@ def objects(data, state, pos):
                 left |= {tuple(t) for t, amount in tiles.items() if amount > 0}
         done += [s for s in savegame.unpack(x.get("sites", [])) if s.get("progress", 0) >= 1]
     empty |= seen - left                                               # a cut tree, an empty bush or fish
-    for o in data["objects"]:
+    for i, o in enumerate(data["objects"]):
+        if i in removed:
+            continue
         tile = tuple(o["tile"])
         if o["kind"] == "unit" and live is not None and o.get("uuid") and o["player"] and o["uuid"] not in live \
                 and (str(o["player"]) in state["players"] or o["uuid"] not in pos):

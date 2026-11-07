@@ -9,6 +9,8 @@ and export it to OUT (export.export): export.ground() gives each painted tile th
 Vanilla logs each chat line ("<name> text"), so the log of the server is enough: no plugin command.
 The chat word `palette` opens the palette of objects (#6013): tabs Units, Buildings and Resources; a right click on an
 object places it where the person looks (place), and the save keeps it.
+The chat word `remove` removes the object that the person looks at (#6002): its entities, the blocks of a building
+or resource down to the ground of its tiles, and its entry of the save (State.removed: start objects; State.placed).
 The chat word `players` opens the players menu (#6003): the current player of the palette, and the civilization, the
 start resources and the starting age of each player. They go into the players of aoe2mc.json (State.data), and save
 writes that file into the save folder: export.export reads them there, with no new code path.
@@ -25,6 +27,7 @@ import menu
 import numpy as np
 import savegame
 
+REMOVE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> remove\s*$")    # the chat word of remove (#6002)
 PALETTE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> palette\s*$")   # the chat word of the palette (#6013)
 PLAYERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> players\s*$")   # the players menu (#6003)
 CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> save\s*$")   # the chat word, as the server logs it
@@ -40,6 +43,7 @@ class State:
                 data = json.load(f)
         self.game, self.data, self.map = game, data, gather.Map(data)
         self.menus, self.placed, self.person, self.picked = {}, [], None, {}   # picked: player -> object name
+        self.removed = set()                                           # the indices of removed start objects (#6002)
         self.player = PLAYER                                          # the owner of the next object (#6003)
 
     def command(self, cmd):
@@ -52,9 +56,10 @@ class State:
         self.placed.append({"id": int(unit_id), "player": int(player), "tile": [float(v) for v in tile]})
 
     def dump(self):
-        return {"placed": list(self.placed)}
+        return {"placed": list(self.placed), "removed": sorted(self.removed)}
 
 
+HIGH = 40                                                              # blocks over the ground that remove clears
 PAGE = 45                                                              # items per page; the last row: the tabs
 TAB_ICONS = ("armor_stand", "bricks", "gold_ore")                      # Units, Buildings, Resources (lang keys)
 PLAYER = 1                                                             # the first current player
@@ -146,7 +151,55 @@ def place(g, player, name, eye, d):
             g.command(c)
         g.map.blocked |= {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
     g.place(export.unit_id(name), owner, tile)
+    g.placed[-1]["rect"] = list(rect)                                  # for remove; export reads only id, player, tile
+    if k == "U":
+        g.placed[-1]["unit"] = True
     return g.placed[-1]
+
+
+def rect_of(g, o):
+    """(the block footprint (x0, x1, z0, z1), True for an entity only) of start object o of aoe2mc.json."""
+    T = g.map.T
+    if o["kind"] == "building" and "footprint" in o:
+        x0, z0, x1, z1 = o["footprint"]
+        return (x0, x1, z0, z1), False
+    tile = int(o["tile"][0]), int(o["tile"][1])
+    if o["kind"] == "other" and tile in g.map.feet:                    # a mine or a tree: its footprint
+        return tuple(g.map.feet[tile]), False
+    return (tile[0] * T, tile[0] * T + T, tile[1] * T, tile[1] * T + T), o["kind"] == "unit"
+
+
+def remove(g, player, eye, d):
+    """Remove the object at the ground that the person looks at (#6002): a placed one first (the newest), else a start
+    object. Its entities go, the blocks of a building or resource go down to the ground, and its cells are free for a
+    new object. Returns the footprint (x0, x1, z0, z1) or None."""
+    cell = g.map.pick_ground(eye, d)
+    if cell is None:
+        return None
+    inside = lambda r: r[0] <= cell[0] < r[1] and r[2] <= cell[1] < r[3]   # noqa: E731
+    hit = next(((i, tuple(o["rect"]), o.get("unit", False)) for i, o in reversed(list(enumerate(g.placed)))
+                if "rect" in o and inside(o["rect"])), None)
+    if hit:
+        g.placed.pop(hit[0])
+    else:
+        hits = [(i, *rect_of(g, o)) for i, o in enumerate(g.data["objects"]) if i not in g.removed and "tile" in o]
+        hit = next((h for h in hits if inside(h[1])), None)
+        if hit is None:
+            return None
+        g.removed.add(hit[0])
+    rect, unit = hit[1], hit[2]
+    x0, x1, z0, z1 = rect
+    g.command(f"kill @e[type=!player,x={x0},y=-64,z={z0},dx={x1 - x0 - 1},dy=400,dz={z1 - z0 - 1}]")
+    if not unit:
+        ys = [y for x in range(x0, x1) for z in range(z0, z1) if (y := g.map.y(x, z)) is not None]
+        if ys:
+            g.command(f"fill {x0} {min(ys)} {z0} {x1 - 1} {min(ys) + HIGH} {z1 - 1} air")
+        cells = {(x, z) for x in range(x0, x1) for z in range(z0, z1)}
+        g.map.blocked -= cells
+        for at in (g.map.farm_at, g.map.mine_at):
+            for c in cells:
+                at.pop(c, None)
+    return rect
 
 
 STEP = 100                                                             # a click on a resource: +100, shift: -100
@@ -230,6 +283,8 @@ def run(game, out, alive, state=None):
         for line in game.server.log[seen:]:
             if m := PALETTE.search(line):
                 open_menu(state, m.group(1))
+            if (m := REMOVE.search(line)) and (view := state.look(m.group(1))):
+                remove(state, m.group(1), *view)
             if m := PLAYERS.search(line):
                 players_menu(state, m.group(1))
         seen, n = words(game, seen)
