@@ -21,7 +21,7 @@ The chat word `triggers` opens the trigger menu (#6088): add, turn on and off, l
 live in the AoE2ScenarioParser scenario of the world (State.scenario: the source copy, else a new one); save writes it
 as the source of the save folder, and export.triggers() copies it. In a trigger, "Add condition" and "Add effect" open the
 types of data/trigger_conditions.jsonl and data/trigger_effects.jsonl (#6089); a right click removes one; `triggers <word>`
-shows only the types with the word.
+shows only the types with the word. A click on a condition or effect opens its fields (#6090, fields_menu).
 The chat word `options` opens the options menu (#6085): it disables technologies, buildings and units of the current
 player ("disabled" of its entry in aoe2mc.json, as read_scenario writes it).
 """
@@ -473,6 +473,12 @@ def read_books(g):
                             f'{{aoe_msg:"{k}"}}}}}}].components."minecraft:writable_book_content".pages') or ""
             if "has the following" in out:
                 texts[k] = "".join(unquote(q) for q in TEXT.findall(out))
+        for key, (part, attr) in vars(g).get("field_books", {}).items():   # the text fields of triggers (#6090)
+            out = g.command(f'data get entity {player} Inventory[{{components:{{"minecraft:custom_data":'
+                            f'{{aoe_field:"{key}"}}}}}}].components."minecraft:writable_book_content".pages') or ""
+            if "has the following" in out:
+                setattr(part, attr, "".join(unquote(q) for q in TEXT.findall(out)))
+                g.edited = True
 
 
 TRIGGER, LOOP, DROP, BACK, ADD = 0, 1, 8, PAGE, PAGE          # the slots of the trigger menu; ADD: the list, BACK: a trigger
@@ -563,13 +569,15 @@ def triggers_menu(g, player, page=0, at=None, word=None):
                  (BACK, "arrow", "Back", "")]
         listed = parts(t)[:PAGE - PARTS]                             # the conditions, then the effects (#6089)
         items += [(PARTS + i, "comparator" if k == "condition" else "dispenser", n.replace("_", " ").title(),
-                   k.title() + "\nRight click: remove") for i, (k, _, n) in enumerate(listed)]
+                   k.title() + "\nClick: fields · Right click: remove") for i, (k, _, n) in enumerate(listed)]
 
         def click(p, slot, shift, right=False):
             if PARTS <= slot < PARTS + len(listed) and right:
                 k, o, _ = listed[slot - PARTS]
                 (t.remove_condition if k == "condition" else t.remove_effect)(**{k: o})
                 g.edited = True
+            elif PARTS <= slot < PARTS + len(listed):                  # the fields of the part (#6090)
+                return fields_menu(g, p, at, slot - PARTS)
             elif slot in (NEW_CONDITION, NEW_EFFECT):
                 return types_menu(g, p, at, ("condition",) if slot == NEW_CONDITION else ("effect",))
             elif slot in (TRIGGER, LOOP):
@@ -607,6 +615,104 @@ def triggers_menu(g, player, page=0, at=None, word=None):
             return triggers_menu(g, p, (page + (1 if slot == PAGE + 8 else -1)) % pages)
         triggers_menu(g, p, page)
     return menu.show(g, player, "Triggers", items, click)
+
+
+DATASETS = ("AoE2ScenarioParser.datasets.trigger_lists", "AoE2ScenarioParser.datasets.techs",
+            "AoE2ScenarioParser.datasets.units", "AoE2ScenarioParser.datasets.buildings",
+            "AoE2ScenarioParser.datasets.players")   # the modules of the enum fields of the parser (#6090)
+
+
+def field_values(kind):
+    """The sorted values of the dataset kind of the parser (an attribute presentation), or None: no dataset."""
+    import importlib
+    for m in DATASETS:
+        cls = getattr(importlib.import_module(m), kind, None)
+        if cls is not None:
+            return sorted({v.ID if hasattr(v, "ID") else int(v.value) for v in cls if isinstance(v.value, int) or hasattr(v, "ID")})
+    return None
+
+
+def fields(kind, part):
+    """The (attribute, form) of the fields of a condition or effect, from the attributes of its type in the parser
+    (no list in code): form "number", "player", "bool", "text" or a dataset name. A reference to a unit, a variable or
+    a trigger, a list field and a field that shows another field get no item."""
+    from AoE2ScenarioParser.datasets import conditions, effects
+    ds = conditions if kind == "condition" else effects
+    t = part.condition_type if kind == "condition" else part.effect_type
+    shown = {**ds.attribute_presentation.get(-1, {}), **ds.attribute_presentation.get(t, {})}
+    out = []
+    for a in ds.attributes.get(t, ()):
+        f, v = shown.get(a, ""), getattr(part, a, None)
+        get = getattr(getattr(type(part), a, None), "fget", None)       # item_id shows object_list_unit_id
+        if a == kind + "_type" or not hasattr(part, a) or get and set(get.__code__.co_names) & (set(ds.attributes.get(t, ())) - {a}):
+            continue
+        if f == "str":
+            out.append((a, "text"))
+        elif isinstance(v, list) or isinstance(v, str):
+            continue
+        elif f == "":
+            out.append((a, "number"))
+        elif f == "PlayerId":
+            out.append((a, "player"))
+        elif f == "bool":
+            out.append((a, "bool"))
+        elif field_values(f):
+            out.append((a, f))
+    return out
+
+
+def set_field(part, attr, form, shift=False, right=False):
+    """One click on a field: a number +1 (shift +10, right click -1, not below -1), the next player (0 to 8), on/off,
+    or the next value of the dataset."""
+    v = getattr(part, attr)
+    v = -1 if v is None else int(v)
+    if form == "number":
+        v = max(-1, v + (-1 if right else 10 if shift else 1))
+    elif form == "player":
+        v = (max(v, 0) + 1) % 9
+    elif form == "bool":
+        v = 0 if v == 1 else 1
+    else:
+        vals = field_values(form)
+        v = vals[(vals.index(v) + (-1 if right else 1)) % len(vals)] if v in vals else vals[0]
+    setattr(part, attr, v)
+    return v
+
+
+def field_book(g, player, key, title, text):
+    """Give player a book and quill for a text field (as books()); read_books reads it into the field by key."""
+    g.writers.add(player)
+    pages = ",".join("{raw:%s}" % json.dumps(text[i:i + 1024]) for i in range(0, len(text), 1024))
+    g.command(f"give {player} minecraft:writable_book[custom_name={json.dumps(title)},"
+              f"custom_data={{aoe_field:\"{key}\"}},writable_book_content={{pages:[{pages}]}}]")
+
+
+def fields_menu(g, player, at, index):
+    """The fields of part index of trigger at (#6090): a click on a number, player, on/off or list field changes it
+    (set_field); a click on a text field gives its book. BACK: the trigger."""
+    t = g.scenario.trigger_manager.triggers[at]
+    kind, part, name = parts(t)[index]
+    fs = fields(kind, part)
+    tip = dict(number="Click: +1 · Shift click: +10 · Right click: -1", player="Click: next player",
+               bool="Click: on/off", text="Click: get the book")
+    items = [(i, "writable_book" if f == "text" else "player_head" if f == "player" else "comparator",
+              a.replace("_", " ").title(), f"{getattr(part, a)}\n" + tip.get(f, "Click: next · Right click: before"))
+             for i, (a, f) in enumerate(fs[:PAGE])]
+    items += [(BACK, "arrow", "Back", "")]
+
+    def click(p, slot, shift, right=False):
+        if slot < len(fs[:PAGE]):
+            a, f = fs[slot]
+            if f == "text":
+                vars(g).setdefault("field_books", {})[f"{at}.{index}.{a}"] = (part, a)
+                field_book(g, p, f"{at}.{index}.{a}", f"{name.title()}: {a}", getattr(part, a) or "")
+            else:
+                set_field(part, a, f, shift, right)
+                g.edited = True
+            return fields_menu(g, p, at, index)
+        if slot == BACK:
+            return triggers_menu(g, p, at // PAGE, at)
+    return menu.show(g, player, name.replace("_", " ").title(), items, click)
 
 
 def write_source(state, world):
