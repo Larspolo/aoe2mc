@@ -135,7 +135,9 @@ friends download the resource pack from GitHub.
 ### Make a map with the editor
 
 1. Make a world (step 2), then start the editor: `python3 game/run.py MyWorld --editor MyMap.aoe2scenario`.
-   The game time does not start. You are in creative mode.
+   The game time does not start. You are in creative mode. Or start on a new empty map with `--new SIZE` (a new
+   world folder), with `--terrain NAME` (the base terrain, default GRASS_1) and `--players N` (1 to 8, default 2):
+   `python3 game/run.py NewWorld --editor MyMap.aoe2scenario --new 120 --terrain DESERT_SAND --players 4`.
 2. Paint the terrain with blocks of the creative inventory: the top block of a tile gives its AoE2 terrain. For water,
    put sand (shallow) or gravel (deep) under the water. Add or remove 3 blocks of height to change the elevation of a
    tile by one level.

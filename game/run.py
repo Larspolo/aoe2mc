@@ -1530,6 +1530,9 @@ def main(argv=None, scenario=None):
                     "palette of objects (#6013), the chat word save and the stop write the map to OUT (.aoe2scenario)")
     ap.add_argument("--new", metavar="SIZE", type=new_size, help="--editor: start on a new empty map of this size "
                     "(a lobby name of the map sizes or a number of tiles) when WORLD does not exist (#6077)")
+    ap.add_argument("--terrain", metavar="NAME", help="--new: the base terrain, a name of AoE2ScenarioParser TerrainId "
+                    "(default GRASS_1; #6078)")
+    ap.add_argument("--players", type=int, metavar="N", help="--new: the number of human players, 1 to 8 (default 2; #6078)")
     ap.add_argument("--speed", type=float, default=1.0, help="--replay, --play: times the game speed "
                     "(default 1; --play: the server ticks faster too)")
     ap.add_argument("--from", dest="start", default="0:00", metavar="MM:SS", help="--replay: start at this game time")
@@ -1673,13 +1676,18 @@ def main(argv=None, scenario=None):
         sys.exit("--takeover needs --replay, and not --play or --live (#5450)")
     if a.editor and (a.play or a.replay or a.load):
         ap.error("--editor starts the map with no game: not with --play, --replay or --load")
+    if a.new is None and (a.terrain is not None or a.players is not None):
+        ap.error("--terrain and --players need --new")
     if a.new is not None:                            # a new empty map: no converted world first (#6077)
         if not a.editor:
             ap.error("--new makes a map for the editor: give --editor OUT too")
         if os.path.exists(a.world):
             ap.error(f"--new: {a.world} exists; give a new world folder (no overwrite)")
         import editor
-        editor.new_world(a.world, a.new)
+        try:
+            editor.new_world(a.world, a.new, a.terrain or "GRASS_1", 2 if a.players is None else a.players)
+        except ValueError as e:
+            ap.error(str(e))
     if a.camera and a.follow is not None:
         ap.error("--camera and --follow N both move the spectators: give only one of them")
     if "mode" not in given(ap, argv):              # the --game-mode of a random map conversion (#4825)

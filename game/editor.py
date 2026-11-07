@@ -77,13 +77,24 @@ GAIA_MARKS = tuple(r["name"] for r in table.load("editor_gaia.jsonl"))   # name 
 PLAYER = 1                                                             # the first current player
 
 
-def new_world(world, size):
-    """A new empty map (#6077): all tiles GRASS_1 (the default terrain), two players, converted into world."""
+def new_world(world, size, terrain="GRASS_1", players=2):
+    """A new empty map (#6077): all tiles of the terrain (default GRASS_1), players human players (1 to 8), converted
+    into world. An unknown terrain or a player count out of range raises ValueError (#6078)."""
+    import difflib
+
     import scenarios
+    from AoE2ScenarioParser.datasets.terrains import TerrainId
 
     import aoe2mc
+    if terrain not in TerrainId.__members__:
+        close = ", ".join(difflib.get_close_matches(terrain, TerrainId.__members__, n=3))
+        raise ValueError(f"unknown terrain {terrain!r}" + (f": did you mean {close}?" if close else ""))
+    if not 1 <= players <= 8:
+        raise ValueError(f"--players {players}: give 1 to 8 players")
     scn = scenarios.new_scenario(size)
-    scn.player_manager.active_players = 2
+    scn.player_manager.active_players = players
+    for t in scn.map_manager.terrain:
+        t.terrain_id = TerrainId[terrain].value
     src = scenarios.save(scn, os.path.abspath(world).rstrip(os.sep) + ".new.aoe2scenario")
     aoe2mc.convert(src, world)
     return world
