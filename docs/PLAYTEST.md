@@ -151,7 +151,10 @@ friends download the resource pack from GitHub.
    the next team (1 to 4, or none). Click the victory item (gold block) to select the next victory condition.
 6. Type `messages` in the chat to get a book and quill for each scenario text (instructions, hints, victory, loss,
    history, scouts). Write the text in the book. Keep the books in your inventory until you save.
-7. Type `save` in the chat. The editor writes `MyMap.aoe2scenario`. Stop the server (Ctrl-C) to save it one more time.
+7. Type `options` in the chat to open the options menu: tabs Technologies, Buildings and Units. Click an item to
+   disable it for the current player, click it again to enable it. Click the last item to select the next color mood
+   of the map.
+8. Type `save` in the chat. The editor writes `MyMap.aoe2scenario`. Stop the server (Ctrl-C) to save it one more time.
    Convert the map as in step 2, or open it in AoE2 DE.
 
 ## 4. Controls
