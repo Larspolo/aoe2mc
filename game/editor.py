@@ -14,6 +14,9 @@ or resource down to the ground of its tiles, and its entry of the save (State.re
 The chat word `players` opens the players menu (#6003): the current player of the palette, and the civilization, the
 start resources and the starting age of each player. They go into the players of aoe2mc.json (State.data), and save
 writes that file into the save folder: export.export reads them there, with no new code path.
+The players menu also sets the team of the current player and the victory setting (#6032). The chat word `messages`
+gives the person a book and quill for each chapter of the scenario texts (a vanilla item); save reads the pages of
+the books back into "messages" of aoe2mc.json.
 """
 import json
 import os
@@ -29,6 +32,7 @@ import savegame
 
 REMOVE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> remove\s*$")    # the chat word of remove (#6002)
 PALETTE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> palette\s*$")   # the chat word of the palette (#6013)
+MESSAGES = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> messages\s*$")   # the books of the texts (#6032)
 PLAYERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> players\s*$")   # the players menu (#6003)
 CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> save\s*$")   # the chat word, as the server logs it
 
@@ -44,6 +48,7 @@ class State:
         self.game, self.data, self.map = game, data, gather.Map(data)
         self.menus, self.placed, self.person, self.picked = {}, [], None, {}   # picked: player -> object name
         self.removed = set()                                           # the indices of removed start objects (#6002)
+        self.writers = set()                                          # the persons with the books (#6032)
         self.player = PLAYER                                          # the owner of the next object (#6003)
 
     def command(self, cmd):
@@ -240,7 +245,7 @@ def remove(g, player, eye, d):
 
 
 STEP = 100                                                             # a click on a resource: +100, shift: -100
-CIV, RES, AGE = 9, 18, 27                                              # the first slot of each row of the menu
+CIV, RES, AGE, TEAM, WIN = 9, 18, 27, 36, 37                                              # the first slot of each row of the menu
 RES_ICONS = ("bread", "oak_log", "gold_ingot", "cobblestone")
 
 
@@ -263,8 +268,11 @@ def players_menu(g, player):
         items += [(CIV, "white_banner", (me.get("civ") or "-").title(), "Click: next · Shift click: before")]
         items += [(RES + k, RES_ICONS[k], f"{r.title()}: {int(me.get('resources', {}).get(r, 0))}", f"Click: +{STEP} · Shift click: -{STEP}")
                   for k, r in enumerate(export.RESOURCES)]
+        items += [(TEAM, "white_wool", f"Team: {me.get('team') or '-'}", "Click: next team (1 to 4, or none)")]
         items += [(AGE + k, "clock", a.name.replace("_", " ").title(), "current" if a.name == age.upper() + "_AGE" else "")
                   for k, a in enumerate(export.AGES)]
+    win = (g.data.get("victory") or {}).get("condition", "standard")
+    items += [(WIN, "gold_block", f"Victory: {win.replace('-', ' ').title()}", "Click: next condition")]
 
     def click(q, slot, shift, right=False):
         if slot < 9:
@@ -278,14 +286,69 @@ def players_menu(g, player):
             res[r] = max(0, int(res.get(r, 0)) + (-STEP if shift else STEP))
         elif p and AGE <= slot < AGE + len(export.AGES):
             me["age"] = export.AGES[slot - AGE].name[:-4].lower()
+        elif p and slot == TEAM:
+            me["team"] = (int(me.get("team") or 0) + 1) % (TEAMS + 1) or None
+        elif slot == WIN:
+            v = g.data.get("victory") or {}
+            v["condition"] = victories()[(victories().index(win) + 1) % len(victories()) if win in victories() else 0]
+            g.data["victory"] = v
         players_menu(g, q)
     return menu.show(g, player, "Players", items, click)
+
+
+TEAMS = 4                                                              # the teams of the AoE2 lobby
+
+
+def victories():
+    """The conditions of run.VICTORIES that the scenario file has (VictoryCondition): the others are lobby settings."""
+    import run
+    from AoE2ScenarioParser.datasets.trigger_lists import VictoryCondition
+    return [k for k in sorted(run.VICTORIES) if k.upper().replace("-", "_") in VictoryCondition.__members__]
+
+
+def chapters():
+    """The chapters of the scenario texts that the scenario file has (aoe2mc.CHAPTERS; objectives: no field)."""
+    import aoe2mc
+    return {k: v for k, v in aoe2mc.CHAPTERS.items() if k != "objectives"}
+
+
+def books(g, player):
+    """Give player a book and quill for each chapter (#6032), with the text of "messages" (pages of 1024 chars)."""
+    g.writers.add(player)
+    texts = g.data.get("messages", {})
+    for k, title in chapters().items():
+        t = texts.get(k, "")
+        pages = ",".join("{raw:%s}" % json.dumps(t[i:i + 1024]) for i in range(0, len(t), 1024))
+        g.command(f"give {player} minecraft:writable_book[custom_name={json.dumps(title)},"
+                  f"custom_data={{aoe_msg:\"{k}\"}},writable_book_content={{pages:[{pages}]}}]")
+
+
+TEXT = re.compile(r"""raw:\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')""")
+
+
+def unquote(q):
+    """The text of a quoted SNBT string."""
+    return re.sub(r"\\(.)", lambda m: {"n": "\n", "t": "\t"}.get(m.group(1), m.group(1)), q[1:-1])
+
+
+def read_books(g):
+    """Read the pages of the books of the writers into "messages" (the pages of a chapter in order). A
+    chapter with no book keeps its text."""
+    texts = g.data.setdefault("messages", {})
+    for player in sorted(g.writers):
+        for k in chapters():
+            out = g.command(f'data get entity {player} Inventory[{{components:{{"minecraft:custom_data":'
+                            f'{{aoe_msg:"{k}"}}}}}}].components."minecraft:writable_book_content".pages') or ""
+            if "has the following" in out:
+                texts[k] = "".join(unquote(q) for q in TEXT.findall(out))
 
 
 def save(game, out, state=None):
     """Write the world and the placed objects of state into a save folder and export it to out. Returns out."""
     game.command("save-off")
     game.command("save-all flush")
+    if state and state.writers:
+        read_books(state)
     try:
         folder = savegame.write(savegame.folder(game.world), game.world, state.dump() if state else None)
         if state:                                                      # the players of the menu (#6003)
@@ -322,6 +385,8 @@ def run(game, out, alive, state=None):
                 open_menu(state, m.group(1))
             if (m := REMOVE.search(line)) and (view := state.look(m.group(1))):
                 remove(state, m.group(1), *view)
+            if m := MESSAGES.search(line):
+                books(state, m.group(1))
             if m := PLAYERS.search(line):
                 players_menu(state, m.group(1))
         seen, n = words(game, seen)
