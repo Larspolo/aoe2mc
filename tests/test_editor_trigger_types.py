@@ -50,6 +50,7 @@ def test_a_right_click_removes(tiny_world, tmp_path):
     assert len(t.conditions) == 1 and len(t.effects) == 1
     click(s, editor.PARTS)                                           # a left click removes nothing (P9)
     assert len(t.conditions) == 1
+    editor.triggers_menu(s, "p", at // editor.PAGE, at)              # it opens the fields (#6090): back to the trigger
     click(s, editor.PARTS, right=True)
     assert not t.conditions and len(t.effects) == 1
     click(s, editor.PARTS, right=True)
