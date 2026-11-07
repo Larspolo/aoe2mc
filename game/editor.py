@@ -693,8 +693,8 @@ def fields_menu(g, player, at, index):
     t = g.scenario.trigger_manager.triggers[at]
     kind, part, name = parts(t)[index]
     fs = fields(kind, part)
-    tip = {"number": "Click: +1 · Shift click: +10 · Right click: -1", "player": "Click: next player",
-           "bool": "Click: on/off", "text": "Click: get the book"}
+    tip = dict(number="Click: +1 · Shift click: +10 · Right click: -1", player="Click: next player",
+               bool="Click: on/off", text="Click: get the book")
     items = [(i, "writable_book" if f == "text" else "player_head" if f == "player" else "comparator",
               a.replace("_", " ").title(), f"{getattr(part, a)}\n" + tip.get(f, "Click: next · Right click: before"))
              for i, (a, f) in enumerate(fs[:PAGE])]
