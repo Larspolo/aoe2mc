@@ -154,7 +154,11 @@ friends download the resource pack from GitHub.
 7. Type `options` in the chat to open the options menu: tabs Technologies, Buildings and Units. Click an item to
    disable it for the current player, click it again to enable it. Click the last item to select the next color mood
    of the map.
-8. Type `save` in the chat. The editor writes `MyMap.aoe2scenario`. Stop the server (Ctrl-C) to save it one more time.
+8. Type `triggers` in the chat to open the trigger menu. Click "Add a trigger", then open it. Click "Add condition"
+   and "Add effect" to add a type (for example Timer and Send Chat); type `triggers <word>` to see only the matching
+   types. Click a part to set its fields. For an object, a location or an area, click "Select by a look", look at it
+   and type `here` in the chat (an area: two times, at two corners).
+9. Type `save` in the chat. The editor writes `MyMap.aoe2scenario`. Stop the server (Ctrl-C) to save it one more time.
    Convert the map as in step 2, or open it in AoE2 DE.
 
 ## 4. Controls
