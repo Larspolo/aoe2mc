@@ -213,6 +213,7 @@ NOT_SAVED = (                                                          # the fie
     "fallen_at",                                                       # scenario.fallen: the next check time
     "fallen_bots",                                                     # cheats.ruin: the Gathers of defeated bots, for the recap only
     "fallen_sent",                                                     # scenario.fallen: a load sets the same score again
+    "field_books",                                                     # editor.fields_menu: the open text books; no game (#6090)
     "flares",                                                          # flare.py: the flares of a replay
     "fog",                                                             # fog.py: the next tick hides the units again; explored()
     "gaia",                                                            # gaia.py: a tick timer
