@@ -207,6 +207,7 @@ NOT_SAVED = (                                                          # the fie
     "data",                                                            # aoe2mc.json of the world
     "defend_at",                                                       # defend_wonder.py: the next check time
     "defender",                                                        # defend_wonder.setup makes it again
+    "edited",                                                          # editor.State: the triggers changed; no game (#6088)
     "enemies",                                                         # the enemy units of aoe2mc.json: a dead one has no position
     "explore_at",                                                      # score.py: the next check time
     "fallen_at",                                                       # scenario.fallen: the next check time
