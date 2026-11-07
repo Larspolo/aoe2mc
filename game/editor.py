@@ -61,7 +61,7 @@ class State:
 
 HIGH = 40                                                              # blocks over the ground that remove clears
 PAGE = 45                                                              # items per page; the last row: the tabs
-TAB_ICONS = ("armor_stand", "bricks", "gold_ore")                      # Units, Buildings, Resources (lang keys)
+TAB_ICONS = ("armor_stand", "bricks", "gold_ore", "tuff")              # Units, Buildings, Resources, Cliffs
 PLAYER = 1                                                             # the first current player
 
 
@@ -77,7 +77,15 @@ def tabs():
     return [("units", known(r["name"] for r in train.UNIT_ROWS)), ("buildings", known(build.MENU)),
             ("resources", known([t["name"] for t in gather.ROWS if {"mine", "fish", "hunt"} & set(t)] +
                                  sorted(set(rmap.FOREST_TREES.values())) +
-                                 [n for n in sorted(rmap.OBJECTS) if "BUSH" in n]))]
+                                 [n for n in sorted(rmap.OBJECTS) if "BUSH" in n])),
+            ("cliffs", cliffs())]
+
+
+def cliffs():
+    """The cliff objects of AoE2 (#6037): the CLIFF_ names of OtherInfo. The converter draws them as rock ridges
+    (aoe2mc.cliff_ridges, with the rocks of their terrain), and replay.draw of kind "O" uses that code."""
+    from AoE2ScenarioParser.datasets.other import OtherInfo
+    return [n for n in OtherInfo.__members__ if n.startswith("CLIFF")]
 
 
 def open_menu(g, player, tab=0, page=0):
@@ -154,12 +162,16 @@ def place_at(g, player, name, cell):
     k, T = kind(name), g.map.T
     rect = build.area(g, name, cell) if k == "B" else (cell[0] // T * T, cell[0] // T * T + T, cell[1] // T * T,
                                                        cell[1] // T * T + T)
+    if name.startswith("CLIFF"):                                       # 3 x 3 tiles, as the converter
+        import aoe2mc
+        c = (cell[0] // T + 0.5, cell[1] // T + 0.5)
+        rect = aoe2mc.object_footprint(dict(name=name, x=c[0], y=c[1]), T)
     if not build.free(g, rect):
         build.say(g, player, lang.text("aoe2mc.build.space", build.pretty(name).lower()))
         return None
     x0, x1, z0, z1 = rect
     tile = ((x0 + x1) / 2 / T, (z0 + z1) / 2 / T)
-    owner = 0 if name in dict(tabs())["resources"] else vars(g).get("player", PLAYER)   # a mine, fish or hunt is of Gaia
+    owner = 0 if name in dict(tabs())["resources"] or name.startswith("CLIFF") else vars(g).get("player", PLAYER)   # a mine, fish or hunt is of Gaia
     if k == "U":
         x, z = (x0 + x1) // 2, (z0 + z1) // 2
         pos = (x + 0.5, float(g.map.y(x, z)), z + 0.5)
