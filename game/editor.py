@@ -9,6 +9,9 @@ and export it to OUT (export.export): export.ground() gives each painted tile th
 Vanilla logs each chat line ("<name> text"), so the log of the server is enough: no plugin command.
 The chat word `palette` opens the palette of objects (#6013): tabs Units, Buildings and Resources; a right click on an
 object places it where the person looks (place), and the save keeps it.
+The chat word `players` opens the players menu (#6003): the current player of the palette, and the civilization, the
+start resources and the starting age of each player. They go into the players of aoe2mc.json (State.data), and save
+writes that file into the save folder: export.export reads them there, with no new code path.
 """
 import json
 import os
@@ -23,6 +26,7 @@ import numpy as np
 import savegame
 
 PALETTE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> palette\s*$")   # the chat word of the palette (#6013)
+PLAYERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> players\s*$")   # the players menu (#6003)
 CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> save\s*$")   # the chat word, as the server logs it
 
 
@@ -36,6 +40,7 @@ class State:
                 data = json.load(f)
         self.game, self.data, self.map = game, data, gather.Map(data)
         self.menus, self.placed, self.person, self.picked = {}, [], None, {}   # picked: player -> object name
+        self.player = PLAYER                                          # the owner of the next object (#6003)
 
     def command(self, cmd):
         return self.game.command(cmd)
@@ -52,7 +57,7 @@ class State:
 
 PAGE = 45                                                              # items per page; the last row: the tabs
 TAB_ICONS = ("armor_stand", "bricks", "gold_ore")                      # Units, Buildings, Resources (lang keys)
-PLAYER = 1                                                             # the current player until #6003
+PLAYER = 1                                                             # the first current player
 
 
 def tabs():
@@ -119,7 +124,7 @@ def place(g, player, name, eye, d):
         return None
     x0, x1, z0, z1 = rect
     tile = ((x0 + x1) / 2 / T, (z0 + z1) / 2 / T)
-    owner = 0 if name in dict(tabs())["resources"] else PLAYER        # a mine, fish or hunt is of Gaia
+    owner = 0 if name in dict(tabs())["resources"] else vars(g).get("player", PLAYER)   # a mine, fish or hunt is of Gaia
     if k == "U":
         x, z = (x0 + x1) // 2, (z0 + z1) // 2
         pos = (x + 0.5, float(g.map.y(x, z)), z + 0.5)
@@ -139,12 +144,58 @@ def place(g, player, name, eye, d):
     return g.placed[-1]
 
 
+STEP = 100                                                             # a click on a resource: +100, shift: -100
+CIV, RES, AGE = 9, 18, 27                                              # the first slot of each row of the menu
+RES_ICONS = ("bread", "oak_log", "gold_ingot", "cobblestone")
+
+
+def info(g, p):
+    """The entry of player p in the players of aoe2mc.json (a new player: a new entry)."""
+    return g.data.setdefault("players", {}).setdefault(str(p), {})
+
+
+def players_menu(g, player):
+    """The players menu (#6003): row 1 the current player (Gaia, 1 to 8); a click on the civilization item: the next
+    civilization (shift: the one before); row 3 the resources (click +STEP, shift -STEP); row 4 the age."""
+    import civs
+    names = [r["name"] for r in civs.ROWS]
+    p = g.player
+    me = info(g, p) if p else {}
+    items = [(i, "player_head" if i == p else "skeleton_skull", "Gaia" if i == 0 else f"Player {i}", "current" if i == p else "")
+             for i in range(9)]
+    if p:
+        age = me.get("age", "dark").lower().replace("-", "_")
+        items += [(CIV, "white_banner", (me.get("civ") or "-").title(), "Click: next · Shift click: before")]
+        items += [(RES + k, RES_ICONS[k], f"{r.title()}: {int(me.get('resources', {}).get(r, 0))}", f"Click: +{STEP} · Shift click: -{STEP}")
+                  for k, r in enumerate(export.RESOURCES)]
+        items += [(AGE + k, "clock", a.name.replace("_", " ").title(), "current" if a.name == age.upper() + "_AGE" else "")
+                  for k, a in enumerate(export.AGES)]
+
+    def click(q, slot, shift, right=False):
+        if slot < 9:
+            g.player = slot
+        elif p and slot == CIV:
+            at = names.index(me["civ"]) if me.get("civ") in names else -1
+            me["civ"] = names[(at + (-1 if shift else 1)) % len(names)]
+        elif p and RES <= slot < RES + len(export.RESOURCES):
+            res = me.setdefault("resources", {})
+            r = export.RESOURCES[slot - RES]
+            res[r] = max(0, int(res.get(r, 0)) + (-STEP if shift else STEP))
+        elif p and AGE <= slot < AGE + len(export.AGES):
+            me["age"] = export.AGES[slot - AGE].name[:-4].lower()
+        players_menu(g, q)
+    return menu.show(g, player, "Players", items, click)
+
+
 def save(game, out, state=None):
     """Write the world and the placed objects of state into a save folder and export it to out. Returns out."""
     game.command("save-off")
     game.command("save-all flush")
     try:
         folder = savegame.write(savegame.folder(game.world), game.world, state.dump() if state else None)
+        if state:                                                      # the players of the menu (#6003)
+            with open(os.path.join(folder, "world", "aoe2mc.json"), "w") as f:
+                json.dump(state.data, f)
     finally:
         game.command("save-on")
     path = export.export(folder, out, heights=True)
@@ -174,6 +225,8 @@ def run(game, out, alive, state=None):
         for line in game.server.log[seen:]:
             if m := PALETTE.search(line):
                 open_menu(state, m.group(1))
+            if m := PLAYERS.search(line):
+                players_menu(state, m.group(1))
         seen, n = words(game, seen)
         if n:
             print(f"Saved the map: {save(game, out, state)}")
