@@ -62,12 +62,17 @@ PLAYER = 1                                                             # the fir
 
 def tabs():
     """The palette tabs (#6013): [(tab, [object names])], from the data files: the units of train, the buildings of
-    the build menu, the mines, fish and hunts of gather. Only names with an AoE2 unit ID (export.unit_id)."""
+    the build menu, the mines, fish and hunts of gather, the forest trees and the bushes of
+    rmap (#6016). Only names with an AoE2 unit ID (export.unit_id)."""
     import build
     import train
+
+    import rmap
     known = lambda names: [n for n in dict.fromkeys(names) if export.unit_id(n) is not None]   # noqa: E731
     return [("units", known(r["name"] for r in train.UNIT_ROWS)), ("buildings", known(build.MENU)),
-            ("resources", known(t["name"] for t in gather.ROWS if {"mine", "fish", "hunt"} & set(t)))]
+            ("resources", known([t["name"] for t in gather.ROWS if {"mine", "fish", "hunt"} & set(t)] +
+                                 sorted(set(rmap.FOREST_TREES.values())) +
+                                 [n for n in sorted(rmap.OBJECTS) if "BUSH" in n]))]
 
 
 def open_menu(g, player, tab=0, page=0):
