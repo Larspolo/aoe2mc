@@ -315,6 +315,9 @@ def export(path, out, heights=False):
                 setattr(pl, r, int(v))
             if "age" in info:                               # "feudal" in aoe2mc.json, as the setup of the world
                 pl.starting_age = StartingAge[info["age"].upper().replace("-", "_") + "_AGE"]
+    for k, text in data.get("messages", {}).items():        # the texts of the book (#6028); objectives: no field
+        if hasattr(scn.message_manager, k):
+            setattr(scn.message_manager, k, text)
     from AoE2ScenarioParser.datasets.players import PlayerId
     with contextlib.redirect_stdout(io.StringIO()):
         for o in objects(data, state, positions(world)):
