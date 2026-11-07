@@ -1,5 +1,5 @@
 """A trigger made in the editor on a real server runs in the game program after the conversion of the save (#6092):
-"Timer 2 s, then Send Chat", and "Timer 2 s, then Kill Object" with the object selected by a look."""
+"Timer 10 s, then Send Chat", and "Timer 10 s, then Kill Object" with the object selected by a look."""
 import contextlib
 import io
 import os
@@ -39,11 +39,11 @@ def test_an_editor_trigger_runs_after_the_conversion(tmp_path):
         game.forceload()
         s = editor.State(game)
         opened(s)
-        add(s, 0, "condition", "TIMER").timer = 2
+        add(s, 0, "condition", "TIMER").timer = 10
         add(s, 0, "effect", "SEND_CHAT").message = TEXT
         placed = editor.place_at(s, 1, "ARCHER", free_cells(s, 1)[0])
         at, _ = opened(s)
-        add(s, at, "condition", "TIMER").timer = 2
+        add(s, at, "condition", "TIMER").timer = 10
         kill = add(s, at, "effect", "KILL_OBJECT")
         editor.fields_menu(s, "p", at, 1)
         s.menus["p"]("p", editor.LOOK, False, right=False)
@@ -62,6 +62,6 @@ def test_an_editor_trigger_runs_after_the_conversion(tmp_path):
         client.wait_join(lambda: "aoe2mc" in game.command("list").split(":", 1)[-1])
         archers = count(game, ARCHERS)
         game.command("tick unfreeze")
-        assert wait(lambda: "[CHAT] " + TEXT in client.text(), 20), client.text()[-2000:]
+        assert wait(lambda: "[CHAT] " + TEXT in client.text(), 30), client.text()[-2000:]
         assert wait(lambda: count(game, ARCHERS) == archers - 1, 15)
         assert datapack_problems(game.server.log) == []
