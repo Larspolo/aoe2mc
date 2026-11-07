@@ -38,7 +38,7 @@ def free_cells(s, k):
 
 def test_the_tabs_come_from_the_data_and_have_unit_ids():
     tabs = dict(editor.tabs())
-    assert list(tabs)[:4] == ["units", "buildings", "resources", "cliffs"]
+    assert list(tabs)[:4] == ["units", "buildings", "resources", "cliffs"] and "gaia" in tabs
     assert all(tabs[t] and all(export.unit_id(n) is not None for n in tabs[t]) for t in tabs)
 
 

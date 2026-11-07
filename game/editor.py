@@ -7,7 +7,7 @@ and buildings stand still. The person paints the terrain with the creative inven
 places water. The chat word `save` and the stop of the server write a save folder (savegame.write, no game state)
 and export it to OUT (export.export): export.ground() gives each painted tile the AoE2 terrain of its new top block.
 Vanilla logs each chat line ("<name> text"), so the log of the server is enough: no plugin command.
-The chat word `palette` opens the palette of objects (#6013): tabs Units, Buildings and Resources; a right click on an
+The chat word `palette` opens the palette of objects (#6013): tabs Units, Buildings, Resources and Gaia (#6036); a right click on an
 object places it where the person looks (place), and the save keeps it.
 The chat word `remove` removes the object that the person looks at (#6002): its entities, the blocks of a building
 or resource down to the ground of its tiles, and its entry of the save (State.removed: start objects; State.placed).
@@ -26,6 +26,7 @@ import lang
 import menu
 import numpy as np
 import savegame
+import table
 
 REMOVE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> remove\s*$")    # the chat word of remove (#6002)
 PALETTE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> palette\s*$")   # the chat word of the palette (#6013)
@@ -61,7 +62,8 @@ class State:
 
 HIGH = 40                                                              # blocks over the ground that remove clears
 PAGE = 45                                                              # items per page; the last row: the tabs
-TAB_ICONS = ("armor_stand", "bricks", "gold_ore", "tuff", "golden_helmet")   # Units, Buildings, Resources, Cliffs, Heroes
+TAB_ICONS = ("armor_stand", "bricks", "gold_ore", "tuff", "golden_helmet", "decorated_pot")   # Units, Buildings, Resources, Cliffs, Heroes, Gaia
+GAIA_MARKS = tuple(r["name"] for r in table.load("editor_gaia.jsonl"))   # name parts that place_objects draws (#6036)
 PLAYER = 1                                                             # the first current player
 
 
@@ -84,7 +86,7 @@ def tabs():
             ("resources", known([t["name"] for t in gather.ROWS if {"mine", "fish", "hunt"} & set(t)] +
                                  sorted(set(rmap.FOREST_TREES.values())) +
                                  [n for n in sorted(rmap.OBJECTS) if "BUSH" in n])),
-            ("cliffs", cliffs()), ("heroes", shown((e.name for e in HeroInfo), True))]
+            ("cliffs", cliffs()), ("heroes", shown((e.name for e in HeroInfo), True)), ("gaia", known(gaia_names()))]
 
 
 def cliffs():
@@ -92,6 +94,17 @@ def cliffs():
     (aoe2mc.cliff_ridges, with the rocks of their terrain), and replay.draw of kind "O" uses that code."""
     from AoE2ScenarioParser.datasets.other import OtherInfo
     return [n for n in OtherInfo.__members__ if n.startswith("CLIFF")]
+
+
+def gaia_names():
+    """The other objects (OtherInfo) that the converter draws (#6036): relics, rocks, ruins, mountains, monuments and
+    decor, as the rules of aoe2mc.place_objects. Not the cliffs (the tab Cliffs, #6037), the trees, mines and bushes
+    of the Resources tab, the flags (of a player) and the objects with no blocks."""
+    import aoe2mc
+    names = sorted({v[1] for v in aoe2mc.object_kinds(old=False).values() if v[0][:1] == "O"})
+    shown = tuple(k for k, r in aoe2mc.OBJECT.items() if not {"mob", "no_blocks", "rocks"} & set(r))
+    return [n for n in names if kind(n) == "O" and not n.startswith(("CLIFF", "UNKNOWN")) and not any(k in n for k in ("BUSH", "FLAG",
+            "MINE", "TREE")) and (any(k in n for k in GAIA_MARKS) or n.startswith(shown + aoe2mc.MOUNTAINS))]
 
 
 def open_menu(g, player, tab=0, page=0):
@@ -177,7 +190,7 @@ def place_at(g, player, name, cell):
         return None
     x0, x1, z0, z1 = rect
     tile = ((x0 + x1) / 2 / T, (z0 + z1) / 2 / T)
-    owner = 0 if name in dict(tabs())["resources"] or name.startswith("CLIFF") else vars(g).get("player", PLAYER)   # a mine, fish or hunt is of Gaia
+    owner = 0 if name in (t := dict(tabs()))["resources"] + t["gaia"] or name.startswith("CLIFF") else vars(g).get("player", PLAYER)   # a resource, a relic or a cliff is of Gaia
     if k == "U":
         x, z = (x0 + x1) // 2, (z0 + z1) // 2
         pos = (x + 0.5, float(g.map.y(x, z)), z + 0.5)

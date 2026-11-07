@@ -18,6 +18,7 @@ steering/system/DECISIONS.md merge=union
 game/data/civs.jsonl merge=jsonl
 # One JSON object per key of civs.jsonl: what it does, its issue (#2281).
 game/data/civ_keys.jsonl merge=jsonl
+game/data/editor_gaia.jsonl merge=jsonl
 # One JSON object per key of train.jsonl that train.value() reads (#2507).
 game/data/train_keys.jsonl merge=jsonl
 # One JSON object per key of setup.jsonl: its type, what it does, its issue (#2558).
