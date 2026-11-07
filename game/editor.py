@@ -483,12 +483,15 @@ def read_books(g):
             out = g.command(f'data get entity {player} Inventory[{{components:{{"minecraft:custom_data":'
                             f'{{aoe_field:"{key}"}}}}}}].components."minecraft:writable_book_content".pages') or ""
             if "has the following" in out:
-                setattr(part, attr, "".join(unquote(q) for q in TEXT.findall(out)))
-                g.edited = True
+                text = "".join(unquote(q) for q in TEXT.findall(out))
+                if text or not hasattr(part, "trigger_id"):                  # an empty name keeps the old one (#6111)
+                    setattr(part, attr, text)
+                    g.edited = True
 
 
 TRIGGER, LOOP, DROP, BACK, ADD = 0, 1, 8, PAGE, PAGE          # the slots of the trigger menu; ADD: the list, BACK: a trigger
 NEW_CONDITION, NEW_EFFECT, PARTS = 2, 3, 9                     # add a condition or effect (#6089); PARTS: the first slot of the list
+NAME, DESCRIPTION = 4, 5                                       # the name and the description of a trigger, as books (#6111)
 KINDS = {"condition": "trigger_conditions.jsonl", "effect": "trigger_effects.jsonl"}   # the type pages (#6089)
 # The converter data (units.py): data/ of the checkout, or "data" next to table.FROZEN in an app bundle (#2839).
 CONVERTER_DATA = os.path.join(os.path.dirname(table.DIR) if table.DIR.endswith(table.FROZEN)
@@ -571,6 +574,8 @@ def triggers_menu(g, player, page=0, at=None, word=None):
                  (LOOP, "repeater", f"Looping: {'yes' if t.looping else 'no'}", "Click: change"),
                  (NEW_CONDITION, "comparator", "Add condition", ""),
                  (NEW_EFFECT, "dispenser", "Add effect", ""),
+                 (NAME, "writable_book", "Name", t.name + "\nClick: get the book"),
+                 (DESCRIPTION, "writable_book", "Description", (t.description or "") + "\nClick: get the book"),
                  (DROP, "barrier", "Remove", "Shift click: remove the trigger"),
                  (BACK, "arrow", "Back", "")]
         listed = parts(t)[:PAGE - PARTS]                             # the conditions, then the effects (#6089)
@@ -586,6 +591,10 @@ def triggers_menu(g, player, page=0, at=None, word=None):
                 return fields_menu(g, p, at, slot - PARTS)
             elif slot in (NEW_CONDITION, NEW_EFFECT):
                 return types_menu(g, p, at, ("condition",) if slot == NEW_CONDITION else ("effect",))
+            elif slot in (NAME, DESCRIPTION):                              # a text field: its book (#6111)
+                attr = "name" if slot == NAME else "description"
+                vars(g).setdefault("field_books", {})[f"{at}.{attr}"] = (t, attr)
+                field_book(g, p, f"{at}.{attr}", attr.title(), getattr(t, attr) or "")
             elif slot in (TRIGGER, LOOP):
                 attr = "enabled" if slot == TRIGGER else "looping"
                 setattr(t, attr, not getattr(t, attr))
