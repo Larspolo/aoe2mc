@@ -17,6 +17,9 @@ writes that file into the save folder: export.export reads them there, with no n
 The players menu also sets the team of the current player and the victory setting (#6032). The chat word `messages`
 gives the person a book and quill for each chapter of the scenario texts (a vanilla item); save reads the pages of
 the books back into "messages" of aoe2mc.json.
+The chat word `triggers` opens the trigger menu (#6088): add, turn on and off, loop and remove a trigger. The triggers
+live in the AoE2ScenarioParser scenario of the world (State.scenario: the source copy, else a new one); save writes it
+as the source of the save folder, and export.triggers() copies it.
 The chat word `options` opens the options menu (#6085): it disables technologies, buildings and units of the current
 player ("disabled" of its entry in aoe2mc.json, as read_scenario writes it).
 """
@@ -39,6 +42,7 @@ PALETTE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> palette(?:\s+(.*
 MESSAGES = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> messages\s*$")   # the books of the texts (#6032)
 OPTIONS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> options\s*$")   # the options menu (#6085)
 PLAYERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> players\s*$")   # the players menu (#6003)
+TRIGGERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> triggers\s*$")   # the trigger menu (#6088)
 TEST = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> test\s*$")   # save and convert to a test world (#6081)
 CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> save\s*$")   # the chat word, as the server logs it
 
@@ -56,6 +60,14 @@ class State:
         self.removed = set()                                           # the indices of removed start objects (#6002)
         self.writers = set()                                          # the persons with the books (#6032)
         self.player = PLAYER                                          # the owner of the next object (#6003)
+        self.edited = False                                           # the triggers changed: save writes them (#6088)
+
+    @functools.cached_property
+    def scenario(self):
+        """The AoE2ScenarioParser scenario that holds the triggers of the editor (#6088): the copy of the source scenario
+        (aoe2mc.json "source", #6031), else a new empty one. save() writes it as the source of the save folder, so
+        export.triggers() copies the triggers with all their fields, and no second form of a trigger exists."""
+        return export.source(self.game.world, self.data) or export.scenarios.new_scenario(self.data["map_size"])
 
     def command(self, cmd):
         return self.game.command(cmd)
@@ -461,6 +473,71 @@ def read_books(g):
                 texts[k] = "".join(unquote(q) for q in TEXT.findall(out))
 
 
+TRIGGER, LOOP, DROP, BACK, ADD = 0, 1, 8, PAGE, PAGE          # the slots of the trigger menu; ADD: the list, BACK: a trigger
+
+
+def triggers_menu(g, player, page=0, at=None):
+    """The trigger menu (#6088), as the Triggers tab of the AoE2 editor. The list: one item per trigger (a redstone torch:
+    on, a lever: off); a click opens it, a shift click turns it on or off; the last row: add a trigger and the pages. A
+    trigger (at: its index): on/off, looping, remove (a shift click: no loss by a slip, P9) and back to the list."""
+    tm = g.scenario.trigger_manager
+    ts = tm.triggers
+
+    def state(t):
+        return ("On" if t.enabled else "Off") + (" · Looping" if t.looping else "")
+    if at is not None and at < len(ts):
+        t = ts[at]
+        items = [(TRIGGER, "redstone_torch" if t.enabled else "lever", t.name, state(t) + "\nClick: on/off"),
+                 (LOOP, "repeater", f"Looping: {'yes' if t.looping else 'no'}", "Click: change"),
+                 (DROP, "barrier", "Remove", "Shift click: remove the trigger"),
+                 (BACK, "arrow", "Back", "")]
+
+        def click(p, slot, shift, right=False):
+            if slot in (TRIGGER, LOOP):
+                attr = "enabled" if slot == TRIGGER else "looping"
+                setattr(t, attr, not getattr(t, attr))
+                g.edited = True
+            elif slot == DROP and shift:
+                tm.remove_trigger(t.trigger_id)
+                g.edited = True
+                return triggers_menu(g, p, at // PAGE)
+            elif slot == BACK:
+                return triggers_menu(g, p, at // PAGE)
+            triggers_menu(g, p, page, at)
+        return menu.show(g, player, "Trigger", items, click)
+    pages = max(1, -(-len(ts) // PAGE))
+    page = min(page, pages - 1)
+    shown = ts[page * PAGE:(page + 1) * PAGE]
+    items = [(i, "redstone_torch" if t.enabled else "lever", t.name, state(t) + "\nClick: open · Shift click: on/off")
+             for i, t in enumerate(shown)]
+    items += [(ADD, "emerald", "Add a trigger", "")]
+    if pages > 1:
+        items += [(PAGE + 7, "arrow", "<", f"{page + 1}/{pages}"), (PAGE + 8, "spectral_arrow", ">", f"{page + 1}/{pages}")]
+
+    def click(p, slot, shift, right=False):
+        if slot < len(shown) and shift:
+            shown[slot].enabled = not shown[slot].enabled
+            g.edited = True
+        elif slot < len(shown):
+            return triggers_menu(g, p, page, page * PAGE + slot)
+        elif slot == ADD:
+            tm.add_trigger(f"Trigger {len(tm.triggers)}")           # the name of a new trigger in AoE2 DE
+            g.edited = True
+            return triggers_menu(g, p, (len(tm.triggers) - 1) // PAGE)   # the page of the new trigger (P9)
+        elif slot in (PAGE + 7, PAGE + 8) and pages > 1:
+            return triggers_menu(g, p, (page + (1 if slot == PAGE + 8 else -1)) % pages)
+        triggers_menu(g, p, page)
+    return menu.show(g, player, "Triggers", items, click)
+
+
+def write_source(state, world):
+    """Write the scenario of the triggers (State.scenario) into the world folder as its source (aoe2mc.SOURCE) and name
+    it in state.data (#6088): export.export() then copies the triggers of the editor."""
+    import aoe2mc
+    export.scenarios.save(state.scenario, os.path.join(world, aoe2mc.SOURCE))
+    state.data["source"] = aoe2mc.SOURCE
+
+
 def save(game, out, state=None):
     """Write the world and the placed objects of state into a save folder and export it to out. Returns out."""
     game.command("save-off")
@@ -469,6 +546,8 @@ def save(game, out, state=None):
         read_books(state)
     try:
         folder = savegame.write(savegame.folder(game.world), game.world, state.dump() if state else None)
+        if state and state.edited:                                     # the triggers of the menu (#6088)
+            write_source(state, os.path.join(folder, "world"))
         if state:                                                      # the players of the menu (#6003)
             with open(os.path.join(folder, "world", "aoe2mc.json"), "w") as f:
                 json.dump(state.data, f)
@@ -584,6 +663,8 @@ def run(game, out, alive, state=None):
                 books(state, m.group(1))
             if m := PLAYERS.search(line):
                 players_menu(state, m.group(1))
+            if m := TRIGGERS.search(line):
+                triggers_menu(state, m.group(1))
             if TEST.search(line):
                 print(f"Test world: {test_world(game, out, state)}")
             if m := OPTIONS.search(line):
