@@ -507,6 +507,23 @@ def tick(state):
 
 OPTION_TABS = ("technologies", "buildings", "units")                    # the tabs of the options menu (#6085)
 OPTION_ICONS = ("enchanted_book", "bricks", "armor_stand")
+MOOD_SLOT = PAGE + 8                                                     # the last slot of the menu: the color mood (#6086)
+
+
+def next_mood(mood):
+    """The key of aoe2mc.MOODS after mood (in the order of the table; an unknown mood gives the first key)."""
+    import aoe2mc
+    keys = list(aoe2mc.MOODS)
+    return keys[(keys.index(mood) + 1) % len(keys)] if mood in keys else keys[0]
+
+
+def set_mood(g, mood):
+    """Set the color mood of the map (the Map tab of the AoE2 editor, #6086) and show it at once with the commands of
+    the converted world (aoe2mc.mood_lines: the time of MOODS, the rain of RAIN); export.options writes it."""
+    import aoe2mc
+    g.data["mood"] = mood
+    for c in aoe2mc.mood_lines({"mood": mood}, type("C", (), {"mood": True})):
+        g.command(c)
 
 
 def option_names(tab):
@@ -537,6 +554,9 @@ def options_menu(g, player, tab=0, page=0):
             options_menu(g, p, slot - PAGE)
         elif slot in (PAGE + len(OPTION_TABS), PAGE + len(OPTION_TABS) + 1):
             options_menu(g, p, tab, (page + (1 if slot == PAGE + len(OPTION_TABS) + 1 else -1)) % pages)
+        elif slot == MOOD_SLOT:
+            set_mood(g, next_mood(g.data.get("mood", "DEFAULT")))
+            options_menu(g, p, tab, page)
     items = [(i, "barrier" if n in off else build.ICONS.get(n) or icons().get(n) or OPTION_ICONS[tab], build.pretty(n),
               word("disabled" if n in off else "enabled"))
              for i, n in enumerate(shown)]

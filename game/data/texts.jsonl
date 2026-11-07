@@ -46,6 +46,8 @@
 {"name": "aoe2mc.editor.options.buildings", "en_us": "Buildings"}
 {"name": "aoe2mc.editor.options.disabled", "en_us": "Disabled"}
 {"name": "aoe2mc.editor.options.enabled", "en_us": "Click: disable"}
+{"name": "aoe2mc.editor.options.mood", "en_us": "Color mood"}
+{"name": "aoe2mc.editor.options.next", "en_us": "Click: next mood"}
 {"name": "aoe2mc.editor.options.technologies", "en_us": "Technologies"}
 {"name": "aoe2mc.editor.options.title", "en_us": "Options"}
 {"name": "aoe2mc.editor.options.units", "en_us": "Units"}
