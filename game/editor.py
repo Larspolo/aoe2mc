@@ -18,6 +18,7 @@ The players menu also sets the team of the current player and the victory settin
 gives the person a book and quill for each chapter of the scenario texts (a vanilla item); save reads the pages of
 the books back into "messages" of aoe2mc.json.
 """
+import functools
 import json
 import os
 import re
@@ -32,7 +33,7 @@ import savegame
 import table
 
 REMOVE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> remove\s*$")    # the chat word of remove (#6002)
-PALETTE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> palette\s*$")   # the chat word of the palette (#6013)
+PALETTE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> palette(?:\s+(.*?))?\s*$")   # the chat word of the palette (#6013); a word searches (#6058)
 MESSAGES = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> messages\s*$")   # the books of the texts (#6032)
 PLAYERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> players\s*$")   # the players menu (#6003)
 CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> save\s*$")   # the chat word, as the server logs it
@@ -72,6 +73,7 @@ GAIA_MARKS = tuple(r["name"] for r in table.load("editor_gaia.jsonl"))   # name 
 PLAYER = 1                                                             # the first current player
 
 
+@functools.lru_cache(maxsize=None)                                   # the data does not change while the editor runs (#6056)
 def tabs():
     """The palette tabs (#6013): [(tab, [object names])], from the data files: the units of train, the buildings of
     the build menu, the mines, fish and hunts of gather, the forest trees and the bushes of
@@ -167,18 +169,27 @@ def icons():
     return _ICONS
 
 
-def open_menu(g, player, tab=0, page=0):
+def open_menu(g, player, tab=0, page=0, word=None):
     """Show tab of the palette at page. A click on a tab opens it; a click on an object picks it (the next right click
-    places it), a right click on an object places it at once where the person looks."""
+    places it), a right click on an object places it at once where the person looks. A word (#6058): the objects of
+    all tabs whose shown name has it, as the search box of the AoE2 editor; no match: a chat text and no menu."""
     import build
     all_tabs = tabs()
     names = all_tabs[tab][1]
+    icon = {}
+    if word:
+        found = [(n, TAB_ICONS[k]) for k, (_, ns) in enumerate(all_tabs) for n in ns if word.lower() in build.pretty(n).lower()]
+        icon = dict(reversed(found))                                    # the icon of the first tab of a name
+        names = list(dict.fromkeys(n for n, _ in found))
+        if not names:
+            build.say(g, player, lang.text("aoe2mc.editor.no_match", word))
+            return None
     shown = names[page * PAGE:(page + 1) * PAGE]
     pages = max(1, -(-len(names) // PAGE))
 
     def click(p, slot, shift, right=False):
         if slot >= PAGE + len(all_tabs) and slot - PAGE - len(all_tabs) < 2:   # the page buttons
-            open_menu(g, p, tab, (page + (1 if slot == PAGE + len(all_tabs) + 1 else -1)) % pages)
+            open_menu(g, p, tab, (page + (1 if slot == PAGE + len(all_tabs) + 1 else -1)) % pages, word)
         elif slot >= PAGE:
             if slot - PAGE < len(all_tabs):
                 open_menu(g, p, slot - PAGE)
@@ -186,7 +197,8 @@ def open_menu(g, player, tab=0, page=0):
             g.picked[p] = shown[slot]
             if right and (view := g.look(p)):
                 place(g, p, shown[slot], *view)
-    items = [(i, build.ICONS.get(n) or icons().get(n, TAB_ICONS[tab]), build.pretty(n), "") for i, n in enumerate(shown)]
+    items = [(i, build.ICONS.get(n) or icons().get(n) or icon.get(n, TAB_ICONS[tab]), build.pretty(n), "")
+             for i, n in enumerate(shown)]
     items += [(PAGE + k, TAB_ICONS[k], t.title(), "")
               for k, (t, _) in enumerate(all_tabs)]
     if pages > 1:
@@ -461,7 +473,7 @@ def run(game, out, alive, state=None):
         tick(state)
         for line in game.server.log[seen:]:
             if m := PALETTE.search(line):
-                open_menu(state, m.group(1))
+                open_menu(state, m.group(1), word=m.group(2))
             if (m := REMOVE.search(line)) and (view := state.look(m.group(1))):
                 remove(state, m.group(1), *view)
             if m := MESSAGES.search(line):

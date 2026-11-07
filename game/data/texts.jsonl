@@ -39,6 +39,7 @@
 {"name": "aoe2mc.controls.groups", "en_us": "Control groups: select units, take a group item (hotbar keys 5 to 9) and Shift + right click to save the selection. Right click: select the group."}
 {"name": "aoe2mc.defeat", "en_us": "Defeat"}
 {"name": "aoe2mc.editor.start", "en_us": "Map editor: write palette in the chat to place objects, players to set the players, remove to remove the object that you look at, save to save the map."}
+{"name": "aoe2mc.editor.no_match", "en_us": "No object of the palette has the word %s."}
 {"name": "aoe2mc.editor.saved", "en_us": "Saved the map: %s"}
 {"name": "aoe2mc.flare.placed", "en_us": "%s: Flare at %s %s"}
 {"name": "aoe2mc.follow.refuse_follow", "en_us": "Follow: click an own unit"}
