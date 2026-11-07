@@ -2,8 +2,8 @@
 """Close an epic by itself when the ticket of its last criterion merges (#835).
 
 The epic check (`queue.md`, "Epics and refill") ends its comment with the line `Close this epic when #N merges.` when
-all other criteria are met. When #N then closes as completed by a merged PR, and the epic has no other open sub-issue
-and no open "Part of #E" ticket, `close.yml` runs this tool: an evidence comment and the label `close`. Before this, the
+all other criteria are met. When #N then closes as completed by a merged PR (or by the label `close`, #6065), and the
+epic has no other open sub-issue and no open "Part of #E" ticket, `close.yml` runs this tool: an evidence comment and the label `close`. Before this, the
 pacer started one more deep run only to read the criteria again (7 % of the list price of 100 PRs, 2026-11-03).
 
     python3 framework/tools/epic_autoclose.py            # print the epics that close, change nothing
@@ -81,7 +81,8 @@ def comments_of(number):
 
 
 def merged_pr(number):
-    """The number of the merged PR that closed #number as completed, else None (closed as not planned, by hand, open)."""
+    """The number of the merged PR that closed #number as completed, `LABEL` when it closed as completed after the label
+    `close` of an owner login (a check ticket with no PR, #6065), else None (closed as not planned, by hand, open)."""
     import dashboard
     issue = dashboard.api(f"issues/{number}")
     if issue.get("state") != "closed" or issue.get("state_reason") != "completed":
@@ -102,9 +103,18 @@ def merged_pr(number):
         for p in dashboard.api(f"commits/{e['commit_id']}/pulls"):
             if p.get("merged_at") and 0 <= at - stamp(p["merged_at"]) <= API_CLOSE:
                 return p["number"]
-    return None
+    return LABEL if by_label(events, at) else None
 
 
+def by_label(events, at):
+    """True when an owner login (the runs post as the owner) added the label `close` before the close at `at`: close.yml
+    then closed the ticket after the evidence comment of the run (`owner.md`, "Close an issue")."""
+    from agent_config import owners
+    return any(e.get("event") == "labeled" and (e.get("label") or {}).get("name") == LABEL
+               and (e.get("actor") or {}).get("login") in owners() and stamp(e.get("created_at")) <= at for e in events)
+
+
+LABEL = "close"           # merged_pr: the ticket closed by the label `close` (dashboard.CLOSE), not by a PR
 API_CLOSE = 15 * 60       # seconds from the merge of a PR to the close of its ticket by automerge.yml
 
 
@@ -126,8 +136,9 @@ def ready(epic):
 
 
 def evidence(n, pr, comment):
+    how = "it closed with the label `close`" if pr == LABEL else f"PR #{pr} merged it"
     return (f"All criteria are met: the epic check ({comment.get('html_url', 'the last agent comment')}) left only #{n}, "
-            f"and PR #{pr} merged it. Closed by `close.yml` (`framework/tools/epic_autoclose.py`, #835). The roadmap "
+            f"and {how}. Closed by `close.yml` (`framework/tools/epic_autoclose.py`, #835). The roadmap "
             "line of this epic gets `[x]` in the next roadmap review.")
 
 
@@ -137,7 +148,7 @@ def main(argv=None):
     args = ap.parse_args(argv)
     import dashboard
     for e, n, pr, comment in select(dashboard.pages("issues?state=open"), comments_of, merged_pr):
-        print(f"#{e}: #{n} merged by PR #{pr}", file=sys.stderr)
+        print(f"#{e}: #{n} " + ("closed by the label close" if pr == LABEL else f"merged by PR #{pr}"), file=sys.stderr)
         if args.apply:
             dashboard.api(f"issues/{e}/comments", "POST", {"body": evidence(n, pr, comment)})
             dashboard.api(f"issues/{e}/labels", "POST", {"labels": [dashboard.CLOSE]})
