@@ -78,7 +78,10 @@ class State:
 
     def place(self, unit_id, player, tile):
         """Add an object to the save: tile (x, y) in the tiles of the world."""
-        self.placed.append({"id": int(unit_id), "player": int(player), "tile": [float(v) for v in tile]})
+        refs = [o["ref"] for o in self.data["objects"] if o.get("ref") is not None] + [o["ref"] for o in self.placed if "ref" in o]
+        self.top = max([getattr(self, "top", -1), *refs])              # a removed object keeps its ref (#6107)
+        self.top += 1
+        self.placed.append({"id": int(unit_id), "player": int(player), "tile": [float(v) for v in tile], "ref": self.top})
 
     def dump(self):
         return {"placed": list(self.placed), "removed": sorted(self.removed)}

@@ -52,7 +52,8 @@ def test_a_placed_object_is_in_the_save_and_the_scenario(tiny_world, tmp_path):
         editor.save(state.game, out, state)
     saves = os.path.join(tmp_path, "saves")
     folder = os.path.join(saves, os.listdir(saves)[0])
-    assert json.load(open(os.path.join(folder, "savegame.json")))["placed"] == [{"id": 83, "player": 2, "tile": [5.5, 6.5]}]
+    assert json.load(open(os.path.join(folder, "savegame.json")))["placed"] == [{"id": 83, "player": 2, "tile": [5.5, 6.5],
+                                                                                    "ref": state.placed[0]["ref"]}]
     with contextlib.redirect_stdout(io.StringIO()):
         scn = AoE2DEScenario.from_file(out)
     units = [(u.unit_const, round(u.x, 1), round(u.y, 1)) for u in scn.unit_manager.units[2]]
