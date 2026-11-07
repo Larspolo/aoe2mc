@@ -76,6 +76,18 @@ GAIA_MARKS = tuple(r["name"] for r in table.load("editor_gaia.jsonl"))   # name 
 PLAYER = 1                                                             # the first current player
 
 
+def new_world(world, size):
+    """A new empty map (#6077): all tiles GRASS_1 (the default terrain), two players, converted into world."""
+    import scenarios
+
+    import aoe2mc
+    scn = scenarios.new_scenario(size)
+    scn.player_manager.active_players = 2
+    src = scenarios.save(scn, os.path.abspath(world).rstrip(os.sep) + ".new.aoe2scenario")
+    aoe2mc.convert(src, world)
+    return world
+
+
 @functools.lru_cache(maxsize=None)                                   # the data does not change while the editor runs (#6056)
 def tabs():
     """The palette tabs (#6013): [(tab, [object names])], from the data files: the units of train, the buildings of
