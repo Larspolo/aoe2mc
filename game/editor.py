@@ -18,6 +18,7 @@ The players menu also sets the team of the current player and the victory settin
 gives the person a book and quill for each chapter of the scenario texts (a vanilla item); save reads the pages of
 the books back into "messages" of aoe2mc.json.
 """
+import functools
 import json
 import os
 import re
@@ -72,6 +73,7 @@ GAIA_MARKS = tuple(r["name"] for r in table.load("editor_gaia.jsonl"))   # name 
 PLAYER = 1                                                             # the first current player
 
 
+@functools.lru_cache(maxsize=None)                                   # the data does not change while the editor runs (#6056)
 def tabs():
     """The palette tabs (#6013): [(tab, [object names])], from the data files: the units of train, the buildings of
     the build menu, the mines, fish and hunts of gather, the forest trees and the bushes of
