@@ -62,7 +62,7 @@ class State:
 
 HIGH = 40                                                              # blocks over the ground that remove clears
 PAGE = 45                                                              # items per page; the last row: the tabs
-TAB_ICONS = ("armor_stand", "bricks", "gold_ore", "decorated_pot")     # Units, Buildings, Resources, Gaia (lang keys)
+TAB_ICONS = ("armor_stand", "bricks", "gold_ore", "tuff", "decorated_pot")   # Units, Buildings, Resources, Cliffs, Gaia
 GAIA_MARKS = tuple(r["name"] for r in table.load("editor_gaia.jsonl"))   # name parts that place_objects draws (#6036)
 PLAYER = 1                                                             # the first current player
 
@@ -80,12 +80,19 @@ def tabs():
             ("resources", known([t["name"] for t in gather.ROWS if {"mine", "fish", "hunt"} & set(t)] +
                                  sorted(set(rmap.FOREST_TREES.values())) +
                                  [n for n in sorted(rmap.OBJECTS) if "BUSH" in n])),
-            ("gaia", known(gaia_names()))]
+            ("cliffs", cliffs()), ("gaia", known(gaia_names()))]
+
+
+def cliffs():
+    """The cliff objects of AoE2 (#6037): the CLIFF_ names of OtherInfo. The converter draws them as rock ridges
+    (aoe2mc.cliff_ridges, with the rocks of their terrain), and replay.draw of kind "O" uses that code."""
+    from AoE2ScenarioParser.datasets.other import OtherInfo
+    return [n for n in OtherInfo.__members__ if n.startswith("CLIFF")]
 
 
 def gaia_names():
     """The other objects (OtherInfo) that the converter draws (#6036): relics, rocks, ruins, mountains, monuments and
-    decor, as the rules of aoe2mc.place_objects. Not the cliffs (a later ticket of #6033), the trees, mines and bushes
+    decor, as the rules of aoe2mc.place_objects. Not the cliffs (the tab Cliffs, #6037), the trees, mines and bushes
     of the Resources tab, the flags (of a player) and the objects with no blocks."""
     import aoe2mc
     names = sorted({v[1] for v in aoe2mc.object_kinds(old=False).values() if v[0][:1] == "O"})
@@ -134,21 +141,50 @@ def place(g, player, name, eye, d):
     unit as an entity (units.make_entity), a resource with its blocks. Not on the footprint of another object
     (build.free). Returns the placed object (dict of State.placed) or None."""
     import build
-    import replay
-
-    import units
     cell = g.map.pick_ground(eye, d)
     if cell is None:
         return None
+    if name in build.WALLS:
+        return wall(g, player, name, cell)
+    return place_at(g, player, name, cell)
+
+
+def wall(g, player, name, cell):
+    """A wall line as the AoE2 editor (#6038): the first click keeps the start cell (the action bar says it); the
+    second places a segment on each tile from the start to cell (aoe2mc.wall_tiles, as build.wall). Returns the
+    first placed segment or None."""
+    import build
+    start = vars(g).setdefault("wall_start", {}).pop(player, None)
+    if start is None or start[0] != name:
+        g.wall_start[player] = (name, cell)
+        g.command(f"title {player} actionbar " + json.dumps(lang.text("aoe2mc.build.wall_end", build.pretty(name),
+                                                                       color="gray")))
+        return None
+    T = g.map.T
+    done = [place_at(g, player, name, (x * T + T // 2, z * T + T // 2))
+            for x, z in build.wall_tiles(start[1][0] // T, start[1][1] // T, cell[0] // T, cell[1] // T)]
+    return next((o for o in done if o), None)
+
+
+def place_at(g, player, name, cell):
+    """Place object name at block cell (x, z) of the ground (place)."""
+    import build
+    import replay
+
+    import units
     k, T = kind(name), g.map.T
     rect = build.area(g, name, cell) if k == "B" else (cell[0] // T * T, cell[0] // T * T + T, cell[1] // T * T,
                                                        cell[1] // T * T + T)
+    if name.startswith("CLIFF"):                                       # 3 x 3 tiles, as the converter
+        import aoe2mc
+        c = (cell[0] // T + 0.5, cell[1] // T + 0.5)
+        rect = aoe2mc.object_footprint(dict(name=name, x=c[0], y=c[1]), T)
     if not build.free(g, rect):
         build.say(g, player, lang.text("aoe2mc.build.space", build.pretty(name).lower()))
         return None
     x0, x1, z0, z1 = rect
     tile = ((x0 + x1) / 2 / T, (z0 + z1) / 2 / T)
-    owner = 0 if name in (t := dict(tabs()))["resources"] + t["gaia"] else vars(g).get("player", PLAYER)   # a resource or a relic is of Gaia
+    owner = 0 if name in (t := dict(tabs()))["resources"] + t["gaia"] or name.startswith("CLIFF") else vars(g).get("player", PLAYER)   # a resource, a relic or a cliff is of Gaia
     if k == "U":
         x, z = (x0 + x1) // 2, (z0 + z1) // 2
         pos = (x + 0.5, float(g.map.y(x, z)), z + 0.5)

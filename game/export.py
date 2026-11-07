@@ -11,7 +11,9 @@ entities of the world give the last position of each unit (its UUID). The tiles 
 orientation of the source scenario (the turn of --orientation, #5674). The resources and the starting age of each
 player: the end of the game with a save, else those of aoe2mc.json. A tile whose ground a player changed (most of
 its T x T block columns have a new top block) gets the AoE2 terrain of the new top block (`ground()`); the
-elevation stays the one of aoe2mc.json (a dug hole does not change the AoE2 elevation).
+elevation stays the one of aoe2mc.json (a dug hole does not change the AoE2 elevation). A world of a DE scenario
+with triggers or variables (aoe2mc.json "source") gives them back (#6031): each start object keeps the reference ID of
+the source, so a trigger selects the same object; a new object gets an ID above them.
 """
 import argparse
 import contextlib
@@ -31,6 +33,7 @@ import build  # noqa: E402
 import savegame  # noqa: E402
 import scenarios  # noqa: E402
 from AoE2ScenarioParser.datasets.object_support import Civilization, StartingAge  # noqa: E402
+from AoE2ScenarioParser.datasets.trigger_lists import DiplomacyState  # noqa: E402
 
 import aoe2mc  # noqa: E402
 import units as unitlib  # noqa: E402
@@ -66,8 +69,9 @@ def alive(state):
 
 
 def objects(data, state, pos):
-    """The objects at the end of the game: dicts with "id", "player", "tile" (x, y) and "rotation". A save of the
-    editor has only "placed": the objects that the person placed (editor.State, #6012), no game state."""
+    """The objects at the end of the game: dicts with "id", "player", "tile" (x, y) and "rotation"; a start object
+    also has its "ref" (the reference ID of the source, or None). A save of the editor has only "placed": the objects
+    that the person placed (editor.State, #6012), no game state."""
     T, out = data["tile_size"], []
     placed = (state or {}).get("placed", [])
     removed = set((state or {}).get("removed", []))                    # start objects removed in the editor (#6002)
@@ -104,7 +108,7 @@ def objects(data, state, pos):
         if o.get("uuid") in pos:
             tile = tuple(v / T for v in pos[o["uuid"]])
         player = live.get(o.get("uuid"), o["player"]) if live else o["player"]   # a converted unit (monk)
-        out.append({"id": o["id"], "player": player, "tile": tile, "rotation": o.get("rotation", 0.0)})
+        out.append({"id": o["id"], "player": player, "tile": tile, "rotation": o.get("rotation", 0.0), "ref": o.get("ref")})
     start = {o.get("uuid") for o in data["objects"]}
     names = {}
     for x in (state or {}).get("players", {}).values():
@@ -272,12 +276,28 @@ def raised(world, data, elevation):
 def unit_id(name):
     """The AoE2 ID of a unit, building or other object name of AoE2ScenarioParser, or None."""
     from AoE2ScenarioParser.datasets.buildings import BuildingInfo
+    from AoE2ScenarioParser.datasets.heroes import HeroInfo
     from AoE2ScenarioParser.datasets.other import OtherInfo
     from AoE2ScenarioParser.datasets.units import UnitInfo
-    for info in (UnitInfo, BuildingInfo, OtherInfo):
+    for info in (UnitInfo, HeroInfo, BuildingInfo, OtherInfo):
         if name in info.__members__:
             return info[name].ID
     return None
+
+
+def victory(scn, win):
+    """Set the tab "Global Victory" of scn from "victory" of aoe2mc.json: the inverse of read_scenario (#6030)."""
+    if not win:
+        return
+    from AoE2ScenarioParser.datasets.trigger_lists import SecondaryGameMode, VictoryCondition
+    om = scn.option_manager
+    om.victory_condition = VictoryCondition[win["condition"].upper().replace("-", "_")].value
+    if "score" in win:
+        om.victory_score = int(win["score"])
+    if "years" in win:
+        om.victory_years = int(win["years"])
+    if win.get("modes"):
+        om.secondary_game_modes = sum(SecondaryGameMode[m.upper().replace("-", "_")].value for m in win["modes"])
 
 
 def export(path, out, heights=False):
@@ -304,6 +324,18 @@ def export(path, out, heights=False):
         if civ in Civilization.__members__:
             scn.player_manager.players[p].civilization = Civilization[civ]
         pl, info = scn.player_manager.players[p], data["players"][str(p)]
+        pl.population_cap = int(info.get("pop_limit", 200))       # the tab "Players" of the editor (#6029)
+        pl.human = not info.get("computer", False)
+        pl.tribe_name = info.get("name", f"Player {p}")
+        pl.lock_civ = bool(info.get("lock_civ", False))
+        if info.get("ai"):
+            pl.ai_script = info["ai"]
+        for q in players:                       # the Diplomacy tab, as aoe2mc.scenario_teams reads it back
+            if q != p:
+                team = info.get("team")
+                ally = team is not None and team == data["players"][str(q)].get("team")
+                pl.set_player_diplomacy(q, DiplomacyState.ALLY if ally else DiplomacyState.NEUTRAL
+                                        if q in info.get("neutral", ()) else DiplomacyState.ENEMY)
         if state and str(p) in state.get("players", {}):           # the end of the game (#5673)
             s = state["players"][str(p)]
             for r in RESOURCES:
@@ -315,12 +347,64 @@ def export(path, out, heights=False):
                 setattr(pl, r, int(v))
             if "age" in info:                               # "feudal" in aoe2mc.json, as the setup of the world
                 pl.starting_age = StartingAge[info["age"].upper().replace("-", "_") + "_AGE"]
+    victory(scn, data.get("victory"))
+    for k, text in data.get("messages", {}).items():        # the texts of the book (#6028); objectives: no field
+        if hasattr(scn.message_manager, k):
+            setattr(scn.message_manager, k, text)
     from AoE2ScenarioParser.datasets.players import PlayerId
+    src = source(world, data)
+    keep = src is not None and bool(src.trigger_manager.triggers or src.trigger_manager.variables)
+    top = max((o["ref"] for o in data["objects"] if o.get("ref") is not None), default=-1)
+    refs = set()
     with contextlib.redirect_stdout(io.StringIO()):
         for o in objects(data, state, positions(world)):
             x, y = (min(max(v, 0), n - 0.01) for v in o["tile"])
-            scn.unit_manager.add_unit(PlayerId(o["player"]), o["id"], x=x, y=y, rotation=o["rotation"])
+            ref = None
+            if keep:                                    # the triggers name the objects by their reference ID (#6031)
+                ref = o.get("ref")
+                if ref is None or ref in refs:          # a placed or trained object: an ID above the source IDs
+                    top += 1
+                    ref = top
+                refs.add(ref)
+            scn.unit_manager.add_unit(PlayerId(o["player"]), o["id"], x=x, y=y, rotation=o["rotation"], reference_id=ref)
+    if keep:
+        for line in triggers(scn, src, refs):
+            print(line)
     return scenarios.save(scn, out)
+
+
+def source(world, data):
+    """The source scenario of the world (aoe2mc.json "source", the copy of aoe2mc.convert, #6031), or None."""
+    path = os.path.join(world, data["source"]) if data.get("source") else None
+    if path is None or not os.path.exists(path):
+        return None
+    from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
+    with contextlib.redirect_stdout(io.StringIO()):
+        return AoE2DEScenario.from_file(path)
+
+
+def object_refs(trigger):
+    """The reference IDs of the objects that the conditions and effects of trigger select."""
+    out = set()
+    for c in trigger.conditions:
+        out |= {r for r in (c.unit_object, c.next_object) if r is not None and r >= 0}
+    for e in trigger.effects:
+        out |= {r for r in (e.selected_object_ids or []) if r is not None and r >= 0}
+        if e.location_object_reference is not None and e.location_object_reference >= 0:
+            out.add(e.location_object_reference)
+    return out
+
+
+def triggers(scn, src, refs):
+    """Copy the variables and triggers of the source scenario src into scn. refs: the reference IDs of the objects of
+    scn. Returns one line for each trigger that selects an object that is not in scn (the person removed it): the
+    trigger stays."""
+    for v in src.trigger_manager.variables:
+        scn.trigger_manager.add_variable(v.name, v.variable_id)
+    with contextlib.redirect_stdout(io.StringIO()):
+        scn.trigger_manager.import_triggers(src.trigger_manager.triggers)
+    return [f"trigger {t.name!r}: its object {', '.join(map(str, sorted(gone)))} is not in the export"
+            for t in scn.trigger_manager.triggers if (gone := object_refs(t) - refs)]
 
 
 def main(argv=None):
