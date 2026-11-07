@@ -51,6 +51,28 @@ def depends(issue):
     return [int(n) for line in lines for n in re.findall(r"#(\d+)", re.sub(r"\([^)]*\)?", "", line))]
 
 
+def parent(issue):
+    """The number of the parent issue of a sub-issue (its epic), or None."""
+    tail = (issue.get("parent_issue_url") or "").rsplit("/", 1)[-1]
+    return int(tail) if tail.isdigit() else None
+
+
+def ancestors(issue, by_number):
+    """The numbers of the parent epics of the issue, up the tree (by_number: the known issues by number)."""
+    out, n = [], parent(issue)
+    while n is not None and n not in out:
+        out.append(n)
+        n = parent(by_number[n]) if n in by_number else None
+    return out
+
+
+def blockers(issue, open_numbers, by_number):
+    """The open "Depends on" items that hold the issue. A parent epic of the issue does not: an epic closes only after
+    its sub-issues, so #6016 waited for its own epic #6001 and the pacer started no run for 20 hours (#6049)."""
+    up = set(ancestors(issue, by_number))
+    return [d for d in depends(issue) if d in open_numbers and d not in up]
+
+
 def start_after(issue):
     """The time of the "Start after: YYYY-MM-DD HH:MM UTC" line of the issue body (at the start of a line), or None."""
     m = re.search(r"^Start after:\s*(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}:\d{2}))?", issue.get("body") or "", re.M)
@@ -177,14 +199,13 @@ def candidates(issues, busy=frozenset(), now=None, lane=None, reserved=RESERVED,
     by_number = {i["number"]: i for i in issues}
 
     def parked(i):          # the parent epic waits for the release or the owner muted it (#5169)
-        url = i.get("parent_issue_url") or ""
-        parent = by_number.get(int(url.rsplit("/", 1)[1])) if url.rsplit("/", 1)[-1].isdigit() else None
-        return bool(parent and labels(parent) & {AFTER, MUTED})
+        up = by_number.get(parent(i))
+        return bool(up and labels(up) & {AFTER, MUTED})
 
     def rank(i):
         p = next((k for k, name in enumerate(PRIORITY) if name in labels(i)), len(PRIORITY))
         return lane is None and any(n.startswith(LANE) for n in labels(i)), p, len(overlap(i, busy)), i["number"]
-    ready = [i for i in issues if not labels(i) & SKIP and not any(d in open_numbers for d in depends(i))
+    ready = [i for i in issues if not labels(i) & SKIP and not blockers(i, open_numbers, by_number)
              and not i.get("title", "").startswith("Decide:") and not parked(i)
              and (LANE + lane in labels(i) if lane else not {LANE + r for r in reserved} & labels(i))
              and not held(i, now, after)]                   # last: it reads GitHub
@@ -242,7 +263,7 @@ def orphans(issues, after=prs_after):
                            "the label `automerge` (#3383): ask the owner on the ticket to add it or to merge"))
         elif i.get("title", "").startswith("Decide:"):
             out.append((n, "a decision with no `needs-human`: act on the owner's answer, or add `needs-human`"))
-        elif "blocked" in labels(i) and not any(d in open_numbers for d in depends(i)):
+        elif "blocked" in labels(i) and not blockers(i, open_numbers, tickets):
             out.append((n, "`blocked` with no open \"Depends on\" ticket: remove `blocked`, or add `needs-human` "
                            "and the question"))
         elif cycle(n):
