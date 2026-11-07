@@ -120,12 +120,37 @@ def place(g, player, name, eye, d):
     unit as an entity (units.make_entity), a resource with its blocks. Not on the footprint of another object
     (build.free). Returns the placed object (dict of State.placed) or None."""
     import build
-    import replay
-
-    import units
     cell = g.map.pick_ground(eye, d)
     if cell is None:
         return None
+    if name in build.WALLS:
+        return wall(g, player, name, cell)
+    return place_at(g, player, name, cell)
+
+
+def wall(g, player, name, cell):
+    """A wall line as the AoE2 editor (#6038): the first click keeps the start cell (the action bar says it); the
+    second places a segment on each tile from the start to cell (aoe2mc.wall_tiles, as build.wall). Returns the
+    first placed segment or None."""
+    import build
+    start = vars(g).setdefault("wall_start", {}).pop(player, None)
+    if start is None or start[0] != name:
+        g.wall_start[player] = (name, cell)
+        g.command(f"title {player} actionbar " + json.dumps(lang.text("aoe2mc.build.wall_end", build.pretty(name),
+                                                                       color="gray")))
+        return None
+    T = g.map.T
+    done = [place_at(g, player, name, (x * T + T // 2, z * T + T // 2))
+            for x, z in build.wall_tiles(start[1][0] // T, start[1][1] // T, cell[0] // T, cell[1] // T)]
+    return next((o for o in done if o), None)
+
+
+def place_at(g, player, name, cell):
+    """Place object name at block cell (x, z) of the ground (place)."""
+    import build
+    import replay
+
+    import units
     k, T = kind(name), g.map.T
     rect = build.area(g, name, cell) if k == "B" else (cell[0] // T * T, cell[0] // T * T + T, cell[1] // T * T,
                                                        cell[1] // T * T + T)
