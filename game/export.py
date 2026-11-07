@@ -353,6 +353,8 @@ def export(path, out, heights=False):
             setattr(scn.message_manager, k, text)
     from AoE2ScenarioParser.datasets.players import PlayerId
     src = source(world, data)
+    if src is not None:
+        settings(scn, src, players)
     keep = src is not None and bool(src.trigger_manager.triggers or src.trigger_manager.variables)
     top = max((o["ref"] for o in data["objects"] if o.get("ref") is not None), default=-1)
     refs = set()
@@ -381,6 +383,38 @@ def source(world, data):
     from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
     with contextlib.redirect_stdout(io.StringIO()):
         return AoE2DEScenario.from_file(path)
+
+
+OPTIONS = ("allow_players_choose_teams", "collide_and_correct", "lock_coop_alliances", "lock_teams",
+           "random_start_points", "villager_force_drop")
+MAP = ("no_waves_on_shore", "script_name", "water_definition")          # the Map section; also its lighting fields
+
+
+def settings(scn, src, players):
+    """Copy the tabs that a person cannot change in Minecraft (#6052) from src into scn: the Options tab (the disabled
+    technologies, buildings and units, the team and game options), the map settings and the Cinematics tab. A field
+    that one of the two formats does not have (UnsupportedAttributeError) stays as it is."""
+    from AoE2ScenarioParser.exceptions.asp_exceptions import UnsupportedAttributeError
+
+    def copy(to, frm, name):
+        try:
+            setattr(to, name, getattr(frm, name))
+        except (UnsupportedAttributeError, AttributeError, KeyError):
+            pass
+    for p in players:
+        for k in ("disabled_techs", "disabled_buildings", "disabled_units"):
+            copy(scn.player_manager.players[p], src.player_manager.players[p], k)
+    for k in OPTIONS:
+        copy(scn.option_manager, src.option_manager, k)
+    copy(scn.map_manager, src.map_manager, "map_color_mood")
+    a, b = scn.sections["Map"], src.sections["Map"]
+    for k in MAP + tuple(n for n in b.retriever_map if "light" in n and n in a.retriever_map):
+        copy(a, b, k)
+    for sec in ("Cinematics", "BackgroundImage"):
+        a, b = scn.sections.get(sec), src.sections.get(sec)
+        for k in (b.retriever_map if a is not None and b is not None else ()):
+            if k in a.retriever_map:
+                copy(a, b, k)
 
 
 def object_refs(trigger):
