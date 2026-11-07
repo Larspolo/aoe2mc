@@ -19,7 +19,9 @@ gives the person a book and quill for each chapter of the scenario texts (a vani
 the books back into "messages" of aoe2mc.json.
 The chat word `triggers` opens the trigger menu (#6088): add, turn on and off, loop and remove a trigger. The triggers
 live in the AoE2ScenarioParser scenario of the world (State.scenario: the source copy, else a new one); save writes it
-as the source of the save folder, and export.triggers() copies it.
+as the source of the save folder, and export.triggers() copies it. In a trigger, "Add condition" and "Add effect" open the
+types of data/trigger_conditions.jsonl and data/trigger_effects.jsonl (#6089); a right click removes one; `triggers <word>`
+shows only the types with the word.
 The chat word `options` opens the options menu (#6085): it disables technologies, buildings and units of the current
 player ("disabled" of its entry in aoe2mc.json, as read_scenario writes it).
 """
@@ -42,7 +44,7 @@ PALETTE = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> palette(?:\s+(.*
 MESSAGES = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> messages\s*$")   # the books of the texts (#6032)
 OPTIONS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> options\s*$")   # the options menu (#6085)
 PLAYERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> players\s*$")   # the players menu (#6003)
-TRIGGERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> triggers\s*$")   # the trigger menu (#6088)
+TRIGGERS = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> triggers(?:\s+(.*?))?\s*$")   # the trigger menu (#6088); a word: the types (#6089)
 TEST = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> test\s*$")   # save and convert to a test world (#6081)
 CHAT = re.compile(r"INFO\]: (?:\[Not Secure\] )?<(\w{1,16})> save\s*$")   # the chat word, as the server logs it
 
@@ -474,14 +476,80 @@ def read_books(g):
 
 
 TRIGGER, LOOP, DROP, BACK, ADD = 0, 1, 8, PAGE, PAGE          # the slots of the trigger menu; ADD: the list, BACK: a trigger
+NEW_CONDITION, NEW_EFFECT, PARTS = 2, 3, 9                     # add a condition or effect (#6089); PARTS: the first slot of the list
+KINDS = {"condition": "trigger_conditions.jsonl", "effect": "trigger_effects.jsonl"}   # the type pages (#6089)
+# The converter data (units.py): data/ of the checkout, or "data" next to table.FROZEN in an app bundle (#2839).
+CONVERTER_DATA = os.path.join(os.path.dirname(table.DIR) if table.DIR.endswith(table.FROZEN)
+                              else os.path.dirname(os.path.dirname(table.DIR)), "data")
 
 
-def triggers_menu(g, player, page=0, at=None):
+def trigger_types(kinds, word=None):
+    """The (kind, name, text) of the types of the data files of kinds; a word: only the names with it (as palette <word>)."""
+    rows = [(k, r["name"], r["text"]) for k in kinds for r in table.load(os.path.join(CONVERTER_DATA, KINDS[k]))]
+    return [r for r in rows if not word or word.lower() in r[1].lower().replace("_", " ")]
+
+
+def add_part(trigger, kind, name):
+    """Add a condition or effect of type name with the default fields of the parser (AND, OR: and_, or_)."""
+    new = trigger.new_condition if kind == "condition" else trigger.new_effect
+    n = name.lower()
+    return getattr(new, n if hasattr(new, n) else n + "_")()
+
+
+def parts(trigger):
+    """The (kind, object, type name) of the conditions and effects of trigger in their order."""
+    from AoE2ScenarioParser.datasets.conditions import ConditionId
+    from AoE2ScenarioParser.datasets.effects import EffectId
+
+    def name(ids, t):
+        try:
+            return ids(t).name
+        except ValueError:
+            return str(t)
+    return ([("condition", c, name(ConditionId, c.condition_type)) for c in trigger.conditions]
+            + [("effect", e, name(EffectId, e.effect_type)) for e in trigger.effects])
+
+
+def types_menu(g, player, at, kinds, page=0, word=None):
+    """The types of kinds (a page of 45, the text as the lore); a click adds one to trigger at and opens the trigger."""
+    rows = trigger_types(kinds, word)
+    pages = max(1, -(-len(rows) // PAGE))
+    page = min(page, pages - 1)
+    shown = rows[page * PAGE:(page + 1) * PAGE]
+    items = [(i, "comparator" if k == "condition" else "dispenser", n.replace("_", " ").title(), t)
+             for i, (k, n, t) in enumerate(shown)]
+    items += [(BACK, "arrow", "Back", "")]
+    if pages > 1:
+        items += [(PAGE + 7, "arrow", "<", f"{page + 1}/{pages}"), (PAGE + 8, "spectral_arrow", ">", f"{page + 1}/{pages}")]
+
+    def click(p, slot, shift, right=False):
+        ts = g.scenario.trigger_manager.triggers
+        if slot < len(shown) and at < len(ts):
+            add_part(ts[at], *shown[slot][:2])
+            g.edited = True
+            return triggers_menu(g, p, at // PAGE, at)
+        if slot == BACK:
+            return triggers_menu(g, p, at // PAGE, at)
+        if slot in (PAGE + 7, PAGE + 8) and pages > 1:
+            return types_menu(g, p, at, kinds, (page + (1 if slot == PAGE + 8 else -1)) % pages, word)
+    return menu.show(g, player, "Add " + " or ".join(kinds), items, click)
+
+
+def triggers_menu(g, player, page=0, at=None, word=None):
     """The trigger menu (#6088), as the Triggers tab of the AoE2 editor. The list: one item per trigger (a redstone torch:
     on, a lever: off); a click opens it, a shift click turns it on or off; the last row: add a trigger and the pages. A
     trigger (at: its index): on/off, looping, remove (a shift click: no loss by a slip, P9) and back to the list."""
     tm = g.scenario.trigger_manager
     ts = tm.triggers
+    if word:                                                         # triggers <word>: the matching types (#6089)
+        if not trigger_types(KINDS, word):
+            import build
+            build.say(g, player, lang.text("aoe2mc.editor.no_match", word))
+            return None
+        if not ts:
+            tm.add_trigger("Trigger 0")
+            g.edited = True
+        return types_menu(g, player, len(ts) - 1 if at is None else at, tuple(KINDS), word=word)
 
     def state(t):
         return ("On" if t.enabled else "Off") + (" · Looping" if t.looping else "")
@@ -489,11 +557,22 @@ def triggers_menu(g, player, page=0, at=None):
         t = ts[at]
         items = [(TRIGGER, "redstone_torch" if t.enabled else "lever", t.name, state(t) + "\nClick: on/off"),
                  (LOOP, "repeater", f"Looping: {'yes' if t.looping else 'no'}", "Click: change"),
+                 (NEW_CONDITION, "comparator", "Add condition", ""),
+                 (NEW_EFFECT, "dispenser", "Add effect", ""),
                  (DROP, "barrier", "Remove", "Shift click: remove the trigger"),
                  (BACK, "arrow", "Back", "")]
+        listed = parts(t)[:PAGE - PARTS]                             # the conditions, then the effects (#6089)
+        items += [(PARTS + i, "comparator" if k == "condition" else "dispenser", n.replace("_", " ").title(),
+                   k.title() + "\nRight click: remove") for i, (k, _, n) in enumerate(listed)]
 
         def click(p, slot, shift, right=False):
-            if slot in (TRIGGER, LOOP):
+            if PARTS <= slot < PARTS + len(listed) and right:
+                k, o, _ = listed[slot - PARTS]
+                (t.remove_condition if k == "condition" else t.remove_effect)(**{k: o})
+                g.edited = True
+            elif slot in (NEW_CONDITION, NEW_EFFECT):
+                return types_menu(g, p, at, ("condition",) if slot == NEW_CONDITION else ("effect",))
+            elif slot in (TRIGGER, LOOP):
                 attr = "enabled" if slot == TRIGGER else "looping"
                 setattr(t, attr, not getattr(t, attr))
                 g.edited = True
@@ -664,7 +743,7 @@ def run(game, out, alive, state=None):
             if m := PLAYERS.search(line):
                 players_menu(state, m.group(1))
             if m := TRIGGERS.search(line):
-                triggers_menu(state, m.group(1))
+                triggers_menu(state, m.group(1), word=m.group(2))
             if TEST.search(line):
                 print(f"Test world: {test_world(game, out, state)}")
             if m := OPTIONS.search(line):
