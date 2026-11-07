@@ -44,7 +44,7 @@ name each missing item. When `steering/project/PRINCIPLES.md` has the section "T
 (for example a `needs-human` test ticket, or a build); the epic waits for it. Close the epic with a comment only when all criteria are met
 (name the evidence for each, then the label `close`: `owner.md`, "Close an issue", #1740). When the epic waits only for one open
 ticket #N (all other criteria met), end the check comment with the line `Close this epic when #N merges.`: when #N
-closes as completed by a merged PR, `close.yml` adds the evidence comment and the label `close`
+closes as completed by a merged PR or by the label `close` of a run (a check ticket with no PR, #6065), `close.yml` adds the evidence comment and the label `close`
 (`framework/tools/epic_autoclose.py`), and the pacer starts no epic check for it. When an open criterion waits only for
 an open ticket of another epic, add a line "Part of #E" to the body of that ticket: else the pacer starts a deep run
 for the epic check of E in each cycle (`usage.refill_need`). Else lock the epic first: `python3 framework/tools/claim.py E --refill`
