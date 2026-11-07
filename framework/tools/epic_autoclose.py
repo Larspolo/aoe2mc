@@ -86,12 +86,32 @@ def merged_pr(number):
     issue = dashboard.api(f"issues/{number}")
     if issue.get("state") != "closed" or issue.get("state_reason") != "completed":
         return None
-    closed = [e for e in dashboard.pages(f"issues/{number}/events") if e.get("event") == "closed"]
-    sha = closed[-1].get("commit_id") if closed else None
-    if not sha:
+    events = dashboard.pages(f"issues/{number}/events")
+    closed = [e for e in events if e.get("event") == "closed"]
+    if not closed:
         return None
-    prs = [p for p in dashboard.api(f"commits/{sha}/pulls") if p.get("merged_at")]
-    return prs[0]["number"] if prs else None
+    if sha := closed[-1].get("commit_id"):
+        prs = [p for p in dashboard.api(f"commits/{sha}/pulls") if p.get("merged_at")]
+        return prs[0]["number"] if prs else None
+    # automerge.yml closes the ticket by the API before the closing word does (#4847): that event has no commit
+    # (#6061). Then take the merge commit of a "referenced" event whose PR merged at most API_CLOSE before the close.
+    at = stamp(closed[-1].get("created_at"))
+    for e in reversed(events):
+        if e.get("event") != "referenced" or not e.get("commit_id"):
+            continue
+        for p in dashboard.api(f"commits/{e['commit_id']}/pulls"):
+            if p.get("merged_at") and 0 <= at - stamp(p["merged_at"]) <= API_CLOSE:
+                return p["number"]
+    return None
+
+
+API_CLOSE = 15 * 60       # seconds from the merge of a PR to the close of its ticket by automerge.yml
+
+
+def stamp(text):
+    """Unix seconds of a GitHub time ("2026-11-07T14:51:46Z"); no time: 0."""
+    import datetime
+    return datetime.datetime.fromisoformat(text.replace("Z", "+00:00")).timestamp() if text else 0
 
 
 def ready(epic):
